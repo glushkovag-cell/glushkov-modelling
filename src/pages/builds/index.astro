@@ -1,0 +1,36 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getBuildPosts } from '../../lib/wordpress';
+
+const posts = await getBuildPosts();
+---
+
+<BaseLayout title="Builds | Glushkov Modelling">
+  <section class="page-section">
+    <div class="container">
+      <span class="eyebrow">Build Catalogue</span>
+      <h1 class="section-title">Current and completed models</h1>
+      <div class="builds-grid">
+        {posts.map((post) => (
+          <article class="build-card">
+            {post.featuredImage?.node?.sourceUrl && (
+              <img
+                src={post.featuredImage.node.sourceUrl}
+                alt={post.featuredImage.node.altText || post.title}
+                loading="lazy"
+              />
+            )}
+
+            <div class="build-card-body">
+              <h2>{post.title}</h2>
+              <p>
+                Scale: {post.buildLog?.modelScale || '—'} · Manufacturer: {post.buildLog?.manufacturer || '—'}
+              </p>
+              <a class="build-link" href={`/builds/${post.slug}`}>Open build log →</a>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
