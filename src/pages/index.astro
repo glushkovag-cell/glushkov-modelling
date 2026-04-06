@@ -1,11 +1,381 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import Layout from '../layouts/BaseLayout.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const featuredBuilds = [
+  {
+    title: 'Le Requin',
+    meta: '1750 French xebec',
+    description:
+      'An in-depth build focused on one of the most elegant Mediterranean warships of the eighteenth century. The project follows the model through structure, rigging, and the layered discipline of historical detail.',
+    href: '/builds/le-requin',
+  },
+  {
+    title: 'HMS Bounty',
+    meta: '1:60 scale • Amati',
+    description:
+      'A detailed study of one of the most recognisable ships in maritime history. Hull work, deck elements, sails, and rigging are documented as the build moves forward.',
+    href: '/builds/bounty',
+  },
+  {
+    title: 'Blériot XI',
+    meta: '1:10 scale • Amati',
+    description:
+      'A shift from naval subjects to early aviation, where exposed structure and mechanical lightness become part of the visual language. It broadens the workshop while keeping the same careful approach to craft and documentation.',
+    href: '/builds/bleriot-xi',
+  },
+];
+
+const socialLinks = [
+  {
+    title: 'Telegram',
+    description: 'Quick updates, workshop notes, and work-in-progress fragments.',
+    href: 'https://t.me/glushkovmodelling',
+  },
+  {
+    title: 'YouTube',
+    description: 'Longer-form videos focused on builds, process, and presentation.',
+    href: '#',
+  },
+  {
+    title: 'Instagram',
+    description: 'Selected visuals, close details, and photographed moments from the bench.',
+    href: '#',
+  },
+  {
+    title: 'Facebook',
+    description: 'Published posts, project updates, and a broader social archive.',
+    href: '#',
+  },
+];
 ---
 
 <Layout>
-	<Welcome />
+  <main class="home">
+    <section class="hero">
+      <div class="container hero__inner">
+        <p class="eyebrow">Scale Models • Build Logs • Historical Craft</p>
+        <h1>GLUSHKOV MODELLING</h1>
+        <p class="hero__lead">
+          A personal workshop dedicated to detailed scale builds, historical research, and
+          the quiet discipline of making — from sailing vessels to early aviation.
+        </p>
+
+        <div class="hero__actions">
+          <a class="button button--primary" href="/builds">Explore Builds</a>
+          <a class="button button--secondary" href="/about">About the Project</a>
+        </div>
+
+        <p class="hero__note">
+          Careful construction, visual documentation, and long-form project notes.
+        </p>
+      </div>
+    </section>
+
+    <section class="about-teaser">
+      <div class="container narrow">
+        <p class="section-label">About</p>
+        <h2>A workshop built around process, patience, and detail</h2>
+        <p>
+          GLUSHKOV MODELLING brings together long-form build logs, selected photography,
+          and notes from the workbench. The focus is not only on finished models, but on
+          the process itself — structure, materials, historical character, and the small
+          decisions that shape each stage.
+        </p>
+        <p>
+          The project grows from a personal practice of building and documenting complex
+          models over time. It serves both as an archive of ongoing work and as a public
+          record of how each build gradually takes form.
+        </p>
+        <a class="text-link" href="/about">Read About</a>
+      </div>
+    </section>
+
+    <section class="featured-builds">
+      <div class="container">
+        <p class="section-label">Featured Builds</p>
+        <div class="section-heading">
+          <h2>Three current directions</h2>
+          <p>
+            The site is currently centered around three major projects, each with its own
+            pace, material logic, and visual character.
+          </p>
+        </div>
+
+        <div class="cards cards--three">
+          {featuredBuilds.map((build) => (
+            <article class="card">
+              <p class="card__meta">{build.meta}</p>
+              <h3>{build.title}</h3>
+              <p>{build.description}</p>
+              <a class="text-link" href={build.href}>View build log</a>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section class="social-hub">
+      <div class="container">
+        <p class="section-label">Social Hub</p>
+        <div class="section-heading">
+          <h2>Follow the work as it develops</h2>
+          <p>
+            Different platforms serve different parts of the process — quick progress notes,
+            longer videos, selected images, and published updates.
+          </p>
+        </div>
+
+        <div class="cards cards--four">
+          {socialLinks.map((item) => (
+            <article class="card card--compact">
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
+              <a
+                class="text-link"
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open {item.title}
+              </a>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
 </Layout>
+
+<style>
+  :root {
+    --color-bg: #f7f6f2;
+    --color-surface: #f9f8f5;
+    --color-surface-2: #fbfbf9;
+    --color-border: #d4d1ca;
+    --color-text: #28251d;
+    --color-text-muted: #7a7974;
+    --color-primary: #01696f;
+    --color-primary-hover: #0c4e54;
+
+    --container: 1200px;
+    --container-narrow: 760px;
+
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-10: 2.5rem;
+    --space-12: 3rem;
+    --space-16: 4rem;
+    --space-20: 5rem;
+
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+
+    --text-sm: 0.95rem;
+    --text-base: 1.05rem;
+    --text-lg: clamp(1.25rem, 1.1rem + 0.6vw, 1.6rem);
+    --text-xl: clamp(2rem, 1.4rem + 2vw, 3.2rem);
+    --text-hero: clamp(3rem, 1.5rem + 5vw, 6rem);
+  }
+
+  .home {
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  .container {
+    width: min(100% - 2rem, var(--container));
+    margin: 0 auto;
+  }
+
+  .narrow {
+    max-width: var(--container-narrow);
+  }
+
+  .home section {
+    padding: clamp(4rem, 8vw, 7rem) 0;
+  }
+
+  .hero {
+    padding-top: clamp(5rem, 10vw, 9rem);
+  }
+
+  .hero__inner {
+    max-width: 900px;
+  }
+
+  .eyebrow,
+  .section-label,
+  .card__meta {
+    margin: 0 0 var(--space-4);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  h1,
+  h2,
+  h3,
+  p {
+    margin-top: 0;
+  }
+
+  h1 {
+    margin-bottom: var(--space-6);
+    font-size: var(--text-hero);
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+
+  h2 {
+    margin-bottom: var(--space-6);
+    font-size: var(--text-xl);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+
+  h3 {
+    margin-bottom: var(--space-4);
+    font-size: var(--text-lg);
+    line-height: 1.15;
+  }
+
+  p {
+    max-width: 68ch;
+    margin-bottom: var(--space-4);
+    font-size: var(--text-base);
+  }
+
+  .hero__lead {
+    max-width: 42rem;
+    margin-bottom: var(--space-8);
+    font-size: clamp(1.15rem, 1rem + 0.5vw, 1.4rem);
+    color: var(--color-text);
+  }
+
+  .hero__note {
+    margin-top: var(--space-6);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-bottom: var(--space-2);
+  }
+
+  .button,
+  .text-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: 180ms ease;
+  }
+
+  .button {
+    min-height: 44px;
+    padding: 0.9rem 1.25rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: var(--text-sm);
+  }
+
+  .button--primary {
+    background: var(--color-primary);
+    color: #f9f8f4;
+  }
+
+  .button--primary:hover {
+    background: var(--color-primary-hover);
+  }
+
+  .button--secondary {
+    border-color: var(--color-border);
+    background: transparent;
+  }
+
+  .button--secondary:hover {
+    background: var(--color-surface);
+  }
+
+  .section-heading {
+    margin-bottom: var(--space-8);
+    max-width: 52rem;
+  }
+
+  .cards {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .cards--three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .cards--four {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--space-8);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+
+  .card--compact {
+    min-height: 220px;
+  }
+
+  .card p:last-of-type {
+    margin-bottom: var(--space-6);
+  }
+
+  .text-link {
+    width: fit-content;
+    color: var(--color-primary);
+    font-size: var(--text-sm);
+  }
+
+  .text-link:hover {
+    color: var(--color-primary-hover);
+  }
+
+  @media (max-width: 960px) {
+    .cards--three,
+    .cards--four {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 640px) {
+    .container {
+      width: min(100% - 1.25rem, var(--container));
+    }
+
+    .home section {
+      padding: 3.5rem 0;
+    }
+
+    .cards--three,
+    .cards--four {
+      grid-template-columns: 1fr;
+    }
+
+    .card {
+      padding: var(--space-6);
+    }
+
+    h1 {
+      line-height: 1;
+    }
+  }
+</style>
