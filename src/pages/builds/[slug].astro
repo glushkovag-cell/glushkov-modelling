@@ -1,11 +1,15 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getAllBuilds, getBuildBySlug } from '../../lib/wordpress';
+import {
+  getAllBuilds,
+  getBuildBySlug,
+  getBuildPartsByModel,
+  getModelBySlug,
+} from '../../lib/wordpress';
 
 export async function getStaticPaths() {
   const builds = await getAllBuilds();
-
-  return builds.map((build) => ({
+  return builds.map((build: any) => ({
     params: { slug: build.slug },
   }));
 }
@@ -14,36 +18,46 @@ const { slug } = Astro.params;
 const post = await getBuildBySlug(slug!);
 
 if (!post) {
-  throw Astro.redirect('/builds');
+  return Astro.redirect('/builds');
 }
 
-const { title, content, featuredImage, buildLog } = post;
-const status = Array.isArray(buildLog?.buildStatus)
-  ? buildLog.buildStatus.join(', ')
-  : buildLog?.buildStatus;
+const { title, featuredImage, buildlog } = post;
+const modelSlug = buildlog?.modelslug;
+const currentPart = buildlog?.partnumber;
+
+const [parts, model] = await Promise.all([
+  modelSlug ? getBuildPartsByModel(modelSlug) : Promise.resolve([]),
+  modelSlug ? getModelBySlug(modelSlug) : Promise.resolve(null),
+]);
+
+const info = model?.modelinfo;
 ---
 
 <BaseLayout title={`${title} | Glushkov Modelling`}>
+
+  <!-- 1. HERO -->
   <section class="hero">
     <div class="container hero-grid">
-      <div class="hero-card hero-copy">
+      <div class="hero-copy">
         <a href="/builds" class="back-link">← Back to builds</a>
         <span class="eyebrow">Build Log</span>
         <h1>{title}</h1>
-        <p>
-          A documented model ship build with historical accuracy, material notes,
-          construction decisions, and visual progress from workshop to finished display.
-        </p>
-
         <div class="hero-meta">
-          {buildLog?.modelScale && <span class="meta-pill">Scale: {buildLog.modelScale}</span>}
-          {buildLog?.manufacturer && <span class="meta-pill">Kit: {buildLog.manufacturer}</span>}
-          {status && <span class="meta-pill">Status: {status}</span>}
-          {buildLog?.partNumber && <span class="meta-pill">Part: {buildLog.partNumber}</span>}
+          {info?.buildstatus && (
+            <span class="meta-pill status">{info.buildstatus}</span>
+          )}
+          {info?.modelscale && (
+            <span class="meta-pill">Scale: {info.modelscale}</span>
+          )}
+          {info?.manufacturer && (
+            <span class="meta-pill">{info.manufacturer}</span>
+          )}
+          {currentPart && (
+            <span class="meta-pill">Part {currentPart}</span>
+          )}
         </div>
       </div>
-
-      <div class="hero-card hero-image">
+      <div class="hero-image">
         {featuredImage?.node?.sourceUrl ? (
           <img
             src={featuredImage.node.sourceUrl}
@@ -51,63 +65,131 @@ const status = Array.isArray(buildLog?.buildStatus)
             loading="lazy"
           />
         ) : (
-          <div class="gallery-placeholder">No featured image yet</div>
+          <div class="image-placeholder">No image yet</div>
         )}
       </div>
     </div>
   </section>
 
-  <section class="page-section">
-    <div class="container section-grid">
-      <article class="content-card">
-        <span class="eyebrow">Project Notes</span>
-        <h2 class="section-title">Build narrative</h2>
-        <div class="content-html" set:html={content} />
-      </article>
-
-      <aside class="info-card">
-        <span class="eyebrow">Project Specs</span>
-        <h3 class="card-title">Build info</h3>
-
-        <div class="spec-list">
-          <div class="spec-item">
-            <span class="spec-label">Model</span>
-            <span class="spec-value">{title}</span>
-          </div>
-
-          <div class="spec-item">
-            <span class="spec-label">Scale</span>
-            <span class="spec-value">{buildLog?.modelScale || '—'}</span>
-          </div>
-
-          <div class="spec-item">
-            <span class="spec-label">Manufacturer</span>
-            <span class="spec-value">{buildLog?.manufacturer || '—'}</span>
-          </div>
-
-          <div class="spec-item">
-            <span class="spec-label">Status</span>
-            <span class="spec-value">{status || '—'}</span>
-          </div>
-
-          <div class="spec-item">
-            <span class="spec-label">Part Number</span>
-            <span class="spec-value">{buildLog?.partNumber || '—'}</span>
-          </div>
-        </div>
-      </aside>
-    </div>
-  </section>
-
-  <section class="page-section">
-    <div class="container">
-      <div class="gallery-card">
-        <span class="eyebrow">Gallery</span>
-        <h2 class="section-title">Detailed views</h2>
-        <div class="gallery-placeholder">
-          Gallery block will go here next: lightbox, process photos, and detail shots.
+  <!-- 2. КРАТКАЯ ХАРАКТЕРИСТИКА -->
+  {info?.shortdescription && (
+    <section class="page-section">
+      <div class="container">
+        <div class="content-card">
+          <span class="eyebrow">About the Model</span>
+          <p class="short-desc">{info.shortdescription}</p>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
+
+  <!-- 3. ИСТОРИЧЕСКАЯ СПРАВКА -->
+  {info?.historicalnote && (
+    <section class="page-section">
+      <div class="container">
+        <div class="content-card">
+          <span class="eyebrow">Historical Background</span>
+          <h2 class="section-title">History</h2>
+          <div class="content-html" set:html={info.historicalnote} />
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- 4. STEPPER -->
+  {parts.length > 0 && (
+    <section class="page-section stepper-section">
+      <div class="container">
+        <span class="eyebrow">Build Log</span>
+        <nav class="stepper" aria-label="Build parts">
+          {parts.map((part: any) => (
+            <a
+              href={`/builds/${part.slug}`}
+              class:list={[
+                'stepper-item',
+                { active: part.buildlog?.partnumber === currentPart }
+              ]}
+            >
+              <span class="stepper-number">Part {part.buildlog?.partnumber}</span>
+              <span class="stepper-title">{part.title}</span>
+            </a>
+          ))}
+        </nav>
+      </div>
+    </section>
+  )}
+
+  <!-- 5. ГАЛЕРЕЯ / КОНТЕНТ ЧАСТИ -->
+  {buildlog?.partcontent && (
+    <section class="page-section">
+      <div class="container">
+        <div class="gallery-card">
+          <span class="eyebrow">Part {currentPart}</span>
+          <h2 class="section-title">{title}</h2>
+          <div class="content-html glightbox-gallery" set:html={buildlog.partcontent} />
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- 6. SPEC SIDEBAR -->
+  {info && (
+    <section class="page-section">
+      <div class="container">
+        <aside class="info-card">
+          <span class="eyebrow">Project Specs</span>
+          <h3 class="card-title">Model Info</h3>
+          <div class="spec-list">
+            <div class="spec-item">
+              <span class="spec-label">Model</span>
+              <span class="spec-value">{model?.title || '—'}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Scale</span>
+              <span class="spec-value">{info.modelscale || '—'}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Manufacturer</span>
+              <span class="spec-value">{info.manufacturer || '—'}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Length</span>
+              <span class="spec-value">{info.modellength || '—'}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Historical Year</span>
+              <span class="spec-value">{info.historicalyear || '—'}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Total Parts</span>
+              <span class="spec-value">{info.totalparts || '—'}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Status</span>
+              <span class="spec-value">{info.buildstatus || '—'}</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  )}
+
 </BaseLayout>
+
+//cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.glightbox-gallery img').forEach((img) => {
+      if (!img.parentElement?.classList.contains('glightbox')) {
+        const a = document.createElement('a');
+        a.href = (img as HTMLImageElement).src;
+        a.classList.add('glightbox');
+        img.parentNode?.insertBefore(a, img);
+        a.appendChild(img);
+      }
+    });
+    // @ts-ignore
+    GLightbox({ selector: '.glightbox' });
+  });
+</script>
