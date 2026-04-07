@@ -1,6 +1,11 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getAllBuilds, getBuildBySlug, getModelBySlug, getBuildPartsByModel } from '../../lib/wordpress';
+import {
+  getAllBuilds,
+  getBuildBySlug,
+  getBuildPartsByModel,
+  getModelBySlug,
+} from '../../lib/wordpress';
 
 export async function getStaticPaths() {
   const builds = await getAllBuilds();
@@ -16,387 +21,176 @@ if (!post) {
   return Astro.redirect('/builds');
 }
 
-const { title, content, buildlog } = post;
+const { title, featuredImage, buildlog } = post;
+const modelSlug = buildlog?.modelslug;
+const currentPart = buildlog?.partnumber;
 
-const model = buildlog?.modelslug
-  ? await getModelBySlug(buildlog.modelslug)
-  : null;
+const [parts, model] = await Promise.all([
+  modelSlug ? getBuildPartsByModel(modelSlug) : Promise.resolve([]),
+  modelSlug ? getModelBySlug(modelSlug) : Promise.resolve(null),
+]);
 
-const parts = buildlog?.modelslug
-  ? await getBuildPartsByModel(buildlog.modelslug)
-  : [];
-
-const heroImage = model?.featuredImage?.node ?? post.featuredImage?.node ?? null;
-const currentPart = buildlog?.partnumber ?? 1;
+const info = model?.modelinfo;
 ---
 
-<BaseLayout title={`${model?.title || title} | Glushkov Modelling`}>
+<BaseLayout title={`${title} | Glushkov Modelling`}>
 
-  <!-- ── Hero ─────────────────────────────────────────────────────── -->
-  <section class="build-hero">
-    <div class="container">
-
-      <a class="back-link" href="/builds">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M19 12H5M12 5l-7 7 7 7"/>
-        </svg>
-        Back to builds
-      </a>
-
-      <div class="build-hero-inner">
-
-        <div class="build-hero-text">
-          <span class="eyebrow">Build Log</span>
-          <h1 class="build-title">{model?.title || title}</h1>
-
-          {model?.modelinfo?.shortdescription && (
-            <p class="build-description">{model.modelinfo.shortdescription}</p>
+  <!-- 1. HERO -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-card hero-copy">
+        <a href="/builds" class="back-link">← Back to builds</a>
+        <span class="eyebrow">Build Log</span>
+        <h1>{title}</h1>
+        <div class="hero-meta">
+          {info?.buildstatus && (
+            <span class="meta-pill">{info.buildstatus}</span>
           )}
-
-          <dl class="build-meta">
-            {model?.modelinfo?.modelscale && (
-              <>
-                <dt>Scale</dt>
-                <dd>{model.modelinfo.modelscale}</dd>
-              </>
-            )}
-            {model?.modelinfo?.manufacturer && (
-              <>
-                <dt>Kit</dt>
-                <dd>{model.modelinfo.manufacturer}</dd>
-              </>
-            )}
-            {model?.modelinfo?.historicalyear && (
-              <>
-                <dt>Year</dt>
-                <dd>{model.modelinfo.historicalyear}</dd>
-              </>
-            )}
-            {model?.modelinfo?.modellength && (
-              <>
-                <dt>Length</dt>
-                <dd>{model.modelinfo.modellength} mm</dd>
-              </>
-            )}
-            {model?.modelinfo?.buildstatus && (
-              <>
-                <dt>Status</dt>
-                <dd>
-                  <span class={`status-pill status-${
-  Array.isArray(model.modelinfo.buildstatus)
-    ? model.modelinfo.buildstatus[0]?.toLowerCase().replace(/\s+/g, '-')
-    : String(model.modelinfo.buildstatus).toLowerCase().replace(/\s+/g, '-')
-}`}>
-  {Array.isArray(model.modelinfo.buildstatus)
-    ? model.modelinfo.buildstatus.join(', ')
-    : model.modelinfo.buildstatus}
-</span>
-                </dd>
-              </>
-            )}
-          </dl>
-        </div>
-
-        <div class="build-hero-image">
-          {heroImage?.sourceUrl ? (
-            <img
-              src={heroImage.sourceUrl}
-              alt={heroImage.altText || model?.title || title}
-              width={heroImage.mediaDetails?.width}
-              height={heroImage.mediaDetails?.height}
-              loading="eager"
-              decoding="async"
-            />
-          ) : (
-            <div class="image-placeholder">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="2"/>
-                <circle cx="8.5" cy="8.5" r="1.5"/>
-                <path d="M21 15l-5-5L5 21"/>
-              </svg>
-              <span>No image yet</span>
-            </div>
+          {info?.modelscale && (
+            <span class="meta-pill">Scale: {info.modelscale}</span>
+          )}
+          {info?.manufacturer && (
+            <span class="meta-pill">{info.manufacturer}</span>
+          )}
+          {currentPart && (
+            <span class="meta-pill">Part {currentPart}</span>
           )}
         </div>
-
+      </div>
+      <div class="hero-card hero-image">
+        {featuredImage?.node?.sourceUrl ? (
+          <img
+            src={featuredImage.node.sourceUrl}
+            alt={featuredImage.node.altText || title}
+            loading="lazy"
+          />
+        ) : (
+          <div class="gallery-placeholder">No image yet</div>
+        )}
       </div>
     </div>
   </section>
 
-  <!-- ── Historical note ──────────────────────────────────────────── -->
-  {model?.modelinfo?.historicalnote && (
-    <section class="page-section build-history">
-      <div class="container container--narrow">
-        <span class="eyebrow">Historical Background</span>
-        <div class="prose" set:html={model.modelinfo.historicalnote} />
-      </div>
-    </section>
-  )}
-
-  <!-- ── Part stepper ─────────────────────────────────────────────── -->
-  {parts.length > 1 && (
-    <section class="page-section build-stepper">
+  <!-- 2. КРАТКАЯ ХАРАКТЕРИСТИКА -->
+  {info?.shortdescription && (
+    <section class="page-section">
       <div class="container">
-        <span class="eyebrow">Series Navigation</span>
-        <ol class="stepper">
-          {parts.map((part: any) => {
-            const isCurrent = part.buildlog?.partnumber === currentPart;
-            return (
-              <li class={`stepper-item${isCurrent ? ' stepper-item--active' : ''}`}>
-                <a href={`/builds/${part.slug}`} class="stepper-link" aria-current={isCurrent ? 'page' : undefined}>
-                  <span class="stepper-number">Part {part.buildlog?.partnumber ?? '—'}</span>
-                  <span class="stepper-label">{part.title}</span>
-                </a>
-              </li>
-            );
-          })}
-        </ol>
+        <div class="content-card">
+          <span class="eyebrow">About the Model</span>
+          <p class="short-desc">{info.shortdescription}</p>
+        </div>
       </div>
     </section>
   )}
 
-  <!-- ── Part content ─────────────────────────────────────────────── -->
-  <section class="page-section build-content-section">
-    <div class="container container--narrow">
-      <span class="eyebrow">Part {currentPart}</span>
-      <h2 class="section-title">{title}</h2>
-
-      {content ? (
-        <div class="prose" set:html={content} />
-      ) : (
-        <p class="text-muted">Content coming soon.</p>
-      )}
-    </div>
-  </section>
-
-  <!-- ── Gallery placeholder ──────────────────────────────────────── -->
-  <section class="page-section build-gallery">
-    <div class="container">
-      <span class="eyebrow">Gallery</span>
-      <h2 class="section-title">Process & Detail Shots</h2>
-      <div class="gallery-placeholder">
-        <p class="text-muted">Lightbox gallery coming in the next update.</p>
+  <!-- 3. ИСТОРИЧЕСКАЯ СПРАВКА -->
+  {info?.historicalnote && (
+    <section class="page-section">
+      <div class="container">
+        <div class="content-card">
+          <span class="eyebrow">Historical Background</span>
+          <h2 class="section-title">History</h2>
+          <div class="content-html" set:html={info.historicalnote} />
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  )}
+
+  <!-- 4. STEPPER -->
+  {parts.length > 0 && (
+    <section class="page-section stepper-section">
+      <div class="container">
+        <span class="eyebrow">Build Log</span>
+        <nav class="stepper" aria-label="Build parts">
+          {parts.map((part: any) => (
+            <a
+              href={`/builds/${part.slug}`}
+              class:list={[
+                'stepper-item',
+                { active: part.buildlog?.partnumber === currentPart }
+              ]}
+            >
+              <span class="stepper-number">Part {part.buildlog?.partnumber}</span>
+              <span class="stepper-title">{part.title}</span>
+            </a>
+          ))}
+        </nav>
+      </div>
+    </section>
+  )}
+
+  <!-- 5. КОНТЕНТ ЧАСТИ -->
+  {buildlog?.partcontent && (
+    <section class="page-section">
+      <div class="container">
+        <div class="gallery-card">
+          <span class="eyebrow">Part {currentPart}</span>
+          <h2 class="section-title">{title}</h2>
+          <div class="content-html glightbox-gallery" set:html={buildlog.partcontent} />
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- 6. SPEC SIDEBAR -->
+  {info && (
+    <section class="page-section">
+      <div class="container section-grid">
+        <div></div>
+        <aside class="info-card">
+          <span class="eyebrow">Project Specs</span>
+          <h3 class="card-title">Model Info</h3>
+          <div class="spec-list">
+            <div class="spec-item">
+              <span class="spec-label">Model</span>
+              <span class="spec-value">{model?.title || '—'}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Scale</span>
+              <span class="spec-value">{info.modelscale || '—'}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Manufacturer</span>
+              <span class="spec-value">{info.manufacturer || '—'}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Length</span>
+              <span class="spec-value">{info.modellength || '—'}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Historical Year</span>
+              <span class="spec-value">{info.historicalyear || '—'}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Total Parts</span>
+              <span class="spec-value">{info.totalparts || '—'}</span>
+            </div>
+            <div class="spec-item">
+              <span class="spec-label">Status</span>
+              <span class="spec-value">{info.buildstatus || '—'}</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  )}
 
 </BaseLayout>
 
-<style>
-/* ── Hero ─────────────────────────────────────────────────────────── */
-.build-hero {
-  padding-block: var(--space-12) var(--space-16);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  text-decoration: none;
-  margin-bottom: var(--space-10);
-  transition: color var(--transition-interactive);
-}
-.back-link:hover { color: var(--color-primary); }
-
-.build-hero-inner {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-12);
-  align-items: start;
-}
-
-.build-hero-text { display: flex; flex-direction: column; gap: var(--space-6); }
-
-.build-title {
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  color: var(--color-text);
-  line-height: 1.1;
-}
-
-.build-description {
-  font-size: var(--text-base);
-  color: var(--color-text-muted);
-  max-width: 52ch;
-}
-
-/* Meta dl */
-.build-meta {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--space-1) var(--space-6);
-  font-size: var(--text-sm);
-}
-.build-meta dt {
-  color: var(--color-text-muted);
-  font-weight: 500;
-}
-.build-meta dd { color: var(--color-text); }
-
-/* Status pill */
-.status-pill {
-  display: inline-block;
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  background: var(--color-primary-highlight);
-  color: var(--color-primary);
-}
-.status-pill.status-completed {
-  background: color-mix(in oklch, var(--color-success) 12%, transparent);
-  color: var(--color-success);
-}
-.status-pill.status-planned {
-  background: var(--color-surface-offset);
-  color: var(--color-text-muted);
-}
-
-/* Hero image */
-.build-hero-image {
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  aspect-ratio: 4 / 3;
-  background: var(--color-surface-offset);
-}
-.build-hero-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.image-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  color: var(--color-text-faint);
-  font-size: var(--text-sm);
-}
-
-/* ── Sections ─────────────────────────────────────────────────────── */
-.page-section { padding-block: var(--space-16); }
-.page-section + .page-section { border-top: 1px solid var(--color-border); }
-
-.container--narrow { max-width: var(--content-narrow); }
-
-.eyebrow {
-  display: block;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-primary);
-  margin-bottom: var(--space-4);
-}
-
-.section-title {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  color: var(--color-text);
-  margin-bottom: var(--space-8);
-}
-
-/* ── Prose ────────────────────────────────────────────────────────── */
-.prose {
-  font-size: var(--text-base);
-  color: var(--color-text);
-  line-height: 1.75;
-  max-width: 68ch;
-}
-.prose :global(p + p) { margin-top: var(--space-4); }
-.prose :global(h2), .prose :global(h3) {
-  font-family: var(--font-display);
-  margin-top: var(--space-8);
-  margin-bottom: var(--space-3);
-  color: var(--color-text);
-}
-.prose :global(ul), .prose :global(ol) {
-  padding-left: var(--space-6);
-  margin-block: var(--space-4);
-}
-.prose :global(li + li) { margin-top: var(--space-2); }
-.prose :global(img) {
-  border-radius: var(--radius-md);
-  margin-block: var(--space-6);
-}
-
-/* ── Stepper ──────────────────────────────────────────────────────── */
-.stepper {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  list-style: none;
-  padding: 0;
-  margin-top: var(--space-4);
-}
-.stepper-link {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  text-decoration: none;
-  transition: border-color var(--transition-interactive),
-              background var(--transition-interactive);
-}
-.stepper-link:hover {
-  border-color: var(--color-primary);
-  background: var(--color-primary-highlight);
-}
-.stepper-item--active .stepper-link {
-  border-color: var(--color-primary);
-  background: var(--color-primary-highlight);
-}
-.stepper-number {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--color-primary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.stepper-label {
-  font-size: var(--text-sm);
-  color: var(--color-text);
-  max-width: 20ch;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ── Gallery placeholder ──────────────────────────────────────────── */
-.gallery-placeholder {
-  padding: var(--space-16);
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-lg);
-  text-align: center;
-  color: var(--color-text-muted);
-}
-
-.text-muted { color: var(--color-text-muted); }
-
-/* ── Mobile ───────────────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .build-hero-inner {
-    grid-template-columns: 1fr;
-  }
-  .build-hero-image {
-    order: -1;
-    aspect-ratio: 16 / 9;
-  }
-  .build-title { font-size: var(--text-xl); }
-  .stepper { flex-direction: column; }
-  .stepper-label { max-width: 100%; white-space: normal; }
-}
-</style>
+//cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.glightbox-gallery img').forEach((img) => {
+      if (!img.parentElement?.classList.contains('glightbox')) {
+        const a = document.createElement('a');
+        a.href = (img as HTMLImageElement).src;
+        a.classList.add('glightbox');
+        img.parentNode?.insertBefore(a, img);
+        a.appendChild(img);
+      }
+    });
+    // @ts-ignore
+    GLightbox({ selector: '.glightbox' });
+  });
+</script>
