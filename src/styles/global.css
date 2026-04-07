@@ -207,11 +207,14 @@ button {
   height: 42px;
   border-radius: var(--radius-full);
   object-fit: cover;
-  transition: opacity var(--transition);
+  background: #ffffff;
+  padding: 2px;
+  transition: opacity var(--transition), filter var(--transition);
 }
 
 [data-theme="dark"] .brand-logo {
-  filter: brightness(0.85) contrast(1.1);
+  background: #ffffff;
+  filter: brightness(1.5) contrast(1.05);
 }
 
 .brand-text {
