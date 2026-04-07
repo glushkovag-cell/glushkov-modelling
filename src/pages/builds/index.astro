@@ -1,8 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getBuildPosts } from '../../lib/wordpress';
+import { getModelsWithFirstPart } from '../../lib/wordpress';
 
-const posts = await getBuildPosts();
+const models = await getModelsWithFirstPart();
 ---
 
 <BaseLayout title="Builds | Glushkov Modelling">
@@ -11,22 +11,29 @@ const posts = await getBuildPosts();
       <span class="eyebrow">Build Catalogue</span>
       <h1 class="section-title">Current and completed models</h1>
       <div class="builds-grid">
-        {posts.map((post) => (
+        {models.map((model: any) => (
           <article class="build-card">
-            {post.featuredImage?.node?.sourceUrl && (
+            {model.featuredImage?.node?.sourceUrl && (
               <img
-                src={post.featuredImage.node.sourceUrl}
-                alt={post.featuredImage.node.altText || post.title}
+                src={model.featuredImage.node.sourceUrl}
+                alt={model.featuredImage.node.altText || model.title}
                 loading="lazy"
               />
             )}
-
             <div class="build-card-body">
-              <h2>{post.title}</h2>
+              <h2>{model.title}</h2>
               <p>
-                Scale: {post.buildLog?.modelScale || '—'} · Manufacturer: {post.buildLog?.manufacturer || '—'}
+                Scale: {model.modelinfo?.modelscale || '—'} · {model.modelinfo?.manufacturer || '—'}
               </p>
-              <a class="build-link" href={`/builds/${post.slug}`}>Open build log →</a>
+              {model.modelinfo?.buildstatus && (
+                <span class="meta-pill">{model.modelinfo.buildstatus}</span>
+              )}
+              <a
+                class="build-link"
+                href={model.firstPartSlug ? `/builds/${model.firstPartSlug}` : '/builds'}
+              >
+                Open build log →
+              </a>
             </div>
           </article>
         ))}
