@@ -1,5 +1,5 @@
 ---
-import Layout from '../layouts/BaseLayout.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
 
 const featuredBuilds = [
   {
@@ -49,373 +49,121 @@ const socialLinks = [
 ];
 ---
 
-<Layout>
-  <main class="home" id="top">
-   <section class="hero" id="top">
-  <div class="container">
-    <div class="hero__inner">
-      <p class="section-label">Virtual Shipyard</p>
-      <h1>GLUSHKOV MODELLING</h1>
-      <p class="hero__lead">
-        A curated archive of historically researched ship models, build logs,
-        and workshop notes focused on wooden sailing vessels of the 18th and 19th centuries.
-      </p>
+<BaseLayout title="Glushkov Modelling">
 
-      <div class="hero__actions">
-        <a href="/builds" class="button button--primary">Explore Builds</a>
-        <a href="/about" class="button button--secondary">About the Builder</a>
-      </div>
-
-      <div class="hero__jump-links" aria-label="Quick navigation">
-        <a href="#about" class="jump-link">About</a>
-        <a href="#featured-builds" class="jump-link">Featured Builds</a>
-        <a href="#social-hub" class="jump-link">Social Hub</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-    <section class="about-teaser" id="about">
-  <div class="container narrow">
-    <p class="section-label">About</p>
-    <h2>A workshop built around process, patience, and detail</h2>
-    <p>
-      GLUSHKOV MODELLING brings together long-form build logs, selected photography,
-      and notes from the workbench. The focus is not only on finished models, but on
-      the process itself — structure, materials, historical character, and the small
-      decisions that shape each stage.
-    </p>
-    <p>
-      The project grows from a personal practice of building and documenting complex
-      models over time. It serves both as an archive of ongoing work and as a public
-      record of how each build gradually takes form.
-    </p>
-    <div class="section-footer">
-      <a class="text-link" href="/about">Read About</a>
-      <a class="back-to-top" href="#top" aria-label="Back to top">↑ Top</a>
-    </div>
-  </div>
-</section>
-
-    <section class="featured-builds" id="featured-builds">
-      <div class="container">
-        <p class="section-label">Featured Builds</p>
-        <div class="section-heading">
-          <h2>Three current directions</h2>
-          <p>
-            The site is currently centered around three major projects, each with its own
-            pace, material logic, and visual character.
-          </p>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-card hero-copy">
+          <span class="eyebrow">Virtual Shipyard</span>
+          <h1>Glushkov Modelling</h1>
+          <p>A curated archive of historically researched ship models, build logs, and workshop notes focused on wooden sailing vessels of the 18th and 19th centuries.</p>
+          <div class="hero-meta">
+            <a href="/builds" class="meta-pill">Explore Builds</a>
+            <a href="/about" class="meta-pill meta-pill--outline">About the Builder</a>
+          </div>
         </div>
+        <div class="hero-card hero-image">
+          <div class="hero-image-placeholder">
+            <span>Workshop</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-        <div class="cards cards--three">
-          {featuredBuilds.map((build) => (
-            <article class="card">
-              <p class="card__meta">{build.meta}</p>
-              <h3>{build.title}</h3>
+  <!-- FEATURED BUILDS -->
+  <section class="page-section">
+    <div class="container">
+      <span class="eyebrow">Featured Builds</span>
+      <h2 class="section-title">Three current directions</h2>
+      <p class="short-desc">The site is currently centered around three major projects, each with its own pace, material logic, and visual character.</p>
+      <div class="builds-grid" style="margin-top: 28px;">
+        {featuredBuilds.map((build) => (
+          <article class="build-card">
+            <div class="build-card-body">
+              <p style="margin: 0 0 6px; font-size: 0.85rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.08em;">{build.meta}</p>
+              <h2>{build.title}</h2>
               <p>{build.description}</p>
-              <a class="text-link" href={build.href}>View build log</a>
-            </article>
-          ))}
-        </div>
-        <a href="#top" class="back-to-top">↑ Back to top</a>
+              <a href={build.href} class="build-link">View build log →</a>
+            </div>
+          </article>
+        ))}
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="social-hub" id="social-hub">
-      <div class="container">
-        <p class="section-label">Social Hub</p>
-        <div class="section-heading">
-          <h2>Follow the work as it develops</h2>
-          <p>
-            Different platforms serve different parts of the process — quick progress notes,
-            longer videos, selected images, and published updates.
-          </p>
+  <!-- ABOUT TEASER -->
+  <section class="page-section">
+    <div class="container">
+      <div class="section-grid">
+        <div class="content-card">
+          <span class="eyebrow">About</span>
+          <h2 class="card-title">A workshop built around process, patience, and detail</h2>
+          <p class="content-html">GLUSHKOV MODELLING brings together long-form build logs, selected photography, and notes from the workbench. The focus is not only on finished models, but on the process itself — structure, materials, historical character, and the small decisions that shape each stage.</p>
+          <a href="/about" class="build-link">Read About →</a>
         </div>
+        <div class="info-card">
+          <span class="eyebrow">Navigation</span>
+          <div class="spec-grid" style="margin-top: 8px;">
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Build Logs</span><span class="spec-value"><a href="/builds" style="color: var(--color-primary);">All builds →</a></span></div>
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Le Requin</span><span class="spec-value"><a href="/builds/le-requin" style="color: var(--color-primary);">Open log →</a></span></div>
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">HMS Bounty</span><span class="spec-value"><a href="/builds/bounty" style="color: var(--color-primary);">Open log →</a></span></div>
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Blériot XI</span><span class="spec-value"><a href="/builds/bleriot-xi" style="color: var(--color-primary);">Open log →</a></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-        <div class="cards cards--four">
-          {socialLinks.map((item) => (
-            <article class="card card--compact">
-              <h3>{item.title}</h3>
+  <!-- SOCIAL HUB -->
+  <section class="page-section">
+    <div class="container">
+      <span class="eyebrow">Social Hub</span>
+      <h2 class="section-title">Follow the work as it develops</h2>
+      <p class="short-desc">Different platforms serve different parts of the process — quick progress notes, longer videos, selected images, and published updates.</p>
+      <div class="builds-grid" style="margin-top: 28px; grid-template-columns: repeat(2, minmax(0, 1fr));">
+        {socialLinks.map((item) => (
+          <article class="build-card">
+            <div class="build-card-body">
+              <h2 style="font-size: 1.6rem;">{item.title}</h2>
               <p>{item.description}</p>
-              <a
-                class="text-link"
-                href={item.href}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Open {item.title}
-              </a>
-            </article>
-          ))}
-        </div>
-        <a href="#top" class="back-to-top">↑ Back to top</a>
+              <a href={item.href} class="build-link" target="_blank" rel="noopener">Open {item.title} →</a>
+            </div>
+          </article>
+        ))}
       </div>
-    </section>
-  </main>
-</Layout>
+    </div>
+  </section>
+
+</BaseLayout>
 
 <style>
-
-  .home {
-    background: var(--color-bg);
+  .meta-pill--outline {
+    background: transparent;
+    border: 1px solid var(--color-border);
     color: var(--color-text);
   }
-
-  .narrow {
-    max-width: var(--container-narrow);
+  .meta-pill--outline:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
   }
-
-  .home section {
-    padding: clamp(4rem, 8vw, 7rem) 0;
-  }
-
-  .hero {
-    padding-top: clamp(5rem, 10vw, 9rem);
-  }
-
-  .hero__inner {
-    max-width: 900px;
-  }
-
-  .section-label,
-  .card__meta {
-    margin: 0 0 var(--space-4);
-    color: var(--color-text-muted);
-    font-size: var(--text-sm);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-
-  .home h1,
-  .home h2,
-  .home h3,
-  .home p {
-    margin-top: 0;
-  }
-
-  .home h1 {
-    margin-bottom: var(--space-6);
-    font-size: var(--text-hero);
-    line-height: 0.95;
-    letter-spacing: -0.03em;
-  }
-
-  .home h2 {
-    margin-bottom: var(--space-6);
-    font-size: var(--text-xl);
-    line-height: 1.05;
-    letter-spacing: -0.02em;
-  }
-
-  .home h3 {
-    margin-bottom: var(--space-4);
-    font-size: var(--text-lg);
-    line-height: 1.15;
-  }
-
-  .home p {
-    max-width: 68ch;
-    margin-bottom: var(--space-4);
-    font-size: var(--text-base);
-  }
-
-  .hero__lead {
-    max-width: 42rem;
-    margin-bottom: var(--space-8);
-    font-size: clamp(1.15rem, 1rem + 0.5vw, 1.4rem);
-    color: var(--color-text);
-  }
-
-  .hero__note {
-    margin-top: var(--space-6);
-    color: var(--color-text-muted);
-    font-size: var(--text-sm);
-  }
-
-  .hero__actions {
+  .hero-image-placeholder {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4);
-    margin-bottom: var(--space-2);
-  }
-
-  .button,
-  .text-link {
-    display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: 180ms ease;
-  }
-
-  .button {
-    min-height: 44px;
-    padding: 0.9rem 1.25rem;
-    border-radius: 999px;
-    border: 1px solid transparent;
-    font-size: var(--text-sm);
-  }
-
-  .button--primary {
-    background: var(--color-primary);
-    color: #f9f8f4;
-  }
-
-  .button--primary:hover {
-    background: var(--color-primary-hover);
-  }
-
-  .button--secondary {
-    border-color: var(--color-border);
-    background: transparent;
-  }
-
-  .button--secondary:hover {
-    background: var(--color-surface);
-  }
-
-  .section-heading {
-    margin-bottom: var(--space-8);
-    max-width: 52rem;
-  }
-
-  .cards {
-    display: grid;
-    gap: var(--space-6);
-  }
-
-  .cards--three {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .cards--four {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .card {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: var(--space-8);
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-  }
-
-  .card--compact {
-    min-height: 220px;
-  }
-
-  .card p:last-of-type {
-    margin-bottom: var(--space-6);
-  }
-
-  .text-link {
-    width: fit-content;
-    color: var(--color-primary);
-    font-size: var(--text-sm);
-  }
-
-  .text-link:hover {
-    color: var(--color-primary-hover);
-  }
-
-  @media (max-width: 960px) {
-    .cards--three,
-    .cards--four {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  @media (max-width: 640px) {
-    .container {
-      width: min(100% - 1.25rem, var(--container));
-    }
-
-    .home section {
-      padding: 3.5rem 0;
-    }
-
-    .cards--three,
-    .cards--four {
-      grid-template-columns: 1fr;
-    }
-
-    .card {
-      padding: var(--space-6);
-    }
-
-    h1 {
-      line-height: 1;
-    }
-  }
-  .hero__jump-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: var(--space-6);
-}
-
-.jump-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0.7rem 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  background: var(--color-surface);
-  color: var(--color-text);
-  font-size: var(--text-sm);
-  text-decoration: none;
-  transition: 180ms ease;
-}
-
-.jump-link:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  background: var(--color-surface);
-}
-
-.back-to-top {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: var(--space-6);
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  text-decoration: none;
-  transition: color 180ms ease;
-}
-
-.back-to-top:hover {
-  color: var(--color-primary);
-}
-
-@media (max-width: 640px) {
-  .hero__jump-links {
-    gap: var(--space-2);
-  }
-
-  .jump-link {
     width: 100%;
-    justify-content: center;
+    height: 100%;
+    min-height: 320px;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-primary) 8%, var(--color-surface)),
+      color-mix(in srgb, var(--color-primary) 3%, var(--color-surface))
+    );
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
   }
-}
-.section-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: var(--space-6);
-}
-
-.back-to-top {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  transition: color var(--transition);
-}
-
-.back-to-top:hover {
-  color: var(--color-primary);
-}
 </style>
