@@ -50,47 +50,54 @@ const socialLinks = [
 ---
 
 <Layout>
-  <main class="home">
-    <section class="hero">
-      <div class="container hero__inner">
-        <p class="eyebrow">Scale Models • Build Logs • Historical Craft</p>
-        <h1>GLUSHKOV MODELLING</h1>
-        <p class="hero__lead">
-          A personal workshop dedicated to detailed scale builds, historical research, and
-          the quiet discipline of making — from sailing vessels to early aviation.
-        </p>
+  <main class="home" id="top">
+   <section class="hero" id="top">
+  <div class="container">
+    <div class="hero__inner">
+      <p class="section-label">Virtual Shipyard</p>
+      <h1>GLUSHKOV MODELLING</h1>
+      <p class="hero__lead">
+        A curated archive of historically researched ship models, build logs,
+        and workshop notes focused on wooden sailing vessels of the 18th and 19th centuries.
+      </p>
 
-        <div class="hero__actions">
-          <a class="button button--primary" href="/builds">Explore Builds</a>
-          <a class="button button--secondary" href="/about">About the Project</a>
-        </div>
-
-        <p class="hero__note">
-          Careful construction, visual documentation, and long-form project notes.
-        </p>
+      <div class="hero__actions">
+        <a href="/builds" class="button button--primary">Explore Builds</a>
+        <a href="/about" class="button button--secondary">About the Builder</a>
       </div>
-    </section>
 
-    <section class="about-teaser">
-      <div class="container narrow">
-        <p class="section-label">About</p>
-        <h2>A workshop built around process, patience, and detail</h2>
-        <p>
-          GLUSHKOV MODELLING brings together long-form build logs, selected photography,
-          and notes from the workbench. The focus is not only on finished models, but on
-          the process itself — structure, materials, historical character, and the small
-          decisions that shape each stage.
-        </p>
-        <p>
-          The project grows from a personal practice of building and documenting complex
-          models over time. It serves both as an archive of ongoing work and as a public
-          record of how each build gradually takes form.
-        </p>
-        <a class="text-link" href="/about">Read About</a>
+      <div class="hero__jump-links" aria-label="Quick navigation">
+        <a href="#about" class="jump-link">About</a>
+        <a href="#featured-builds" class="jump-link">Featured Builds</a>
+        <a href="#social-hub" class="jump-link">Social Hub</a>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <section class="featured-builds">
+    <section class="about-teaser" id="about">
+  <div class="container narrow">
+    <p class="section-label">About</p>
+    <h2>A workshop built around process, patience, and detail</h2>
+    <p>
+      GLUSHKOV MODELLING brings together long-form build logs, selected photography,
+      and notes from the workbench. The focus is not only on finished models, but on
+      the process itself — structure, materials, historical character, and the small
+      decisions that shape each stage.
+    </p>
+    <p>
+      The project grows from a personal practice of building and documenting complex
+      models over time. It serves both as an archive of ongoing work and as a public
+      record of how each build gradually takes form.
+    </p>
+    <div class="section-footer">
+      <a class="text-link" href="/about">Read About</a>
+      <a class="back-to-top" href="#top" aria-label="Back to top">↑ Top</a>
+    </div>
+  </div>
+</section>
+
+    <section class="featured-builds" id="featured-builds">
       <div class="container">
         <p class="section-label">Featured Builds</p>
         <div class="section-heading">
@@ -111,10 +118,11 @@ const socialLinks = [
             </article>
           ))}
         </div>
+        <a href="#top" class="back-to-top">↑ Back to top</a>
       </div>
     </section>
 
-    <section class="social-hub">
+    <section class="social-hub" id="social-hub">
       <div class="container">
         <p class="section-label">Social Hub</p>
         <div class="section-heading">
@@ -141,6 +149,7 @@ const socialLinks = [
             </article>
           ))}
         </div>
+        <a href="#top" class="back-to-top">↑ Back to top</a>
       </div>
     </section>
   </main>
@@ -340,4 +349,73 @@ const socialLinks = [
       line-height: 1;
     }
   }
+  .hero__jump-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.jump-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition: 180ms ease;
+}
+
+.jump-link:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-surface);
+}
+
+.back-to-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: var(--space-6);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+
+.back-to-top:hover {
+  color: var(--color-primary);
+}
+
+@media (max-width: 640px) {
+  .hero__jump-links {
+    gap: var(--space-2);
+  }
+
+  .jump-link {
+    width: 100%;
+    justify-content: center;
+  }
+}
+.section-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-6);
+}
+
+.back-to-top {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  transition: color var(--transition);
+}
+
+.back-to-top:hover {
+  color: var(--color-primary);
+}
 </style>
