@@ -595,6 +595,7 @@ button {
   color: var(--color-text-muted);
   max-width: 68ch;
 }
+
 /* ---- Responsive ------------------------------------------- */
 @media (max-width: 900px) {
   .hero-grid,
@@ -612,10 +613,34 @@ button {
   }
 
   .stepper {
-  flex-direction: column;
+    flex-direction: column;
+  }
+
+  .stepper-item {
+    min-width: unset;
+  }
 }
 
-.stepper-item {
-  min-width: unset;
-}
+:root {
+  --container: 1200px;
+  --container-narrow: 760px;
+
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+
+  --text-sm: 0.95rem;
+  --text-base: 1.05rem;
+  --text-lg: clamp(1.25rem, 1.1rem + 0.6vw, 1.6rem);
+  --text-xl: clamp(2rem, 1.4rem + 2vw, 3.2rem);
+  --text-hero: clamp(3rem, 1.5rem + 5vw, 6rem);
 }
