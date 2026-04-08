@@ -35,41 +35,43 @@ const info = model?.modelinfo;
 
 <BaseLayout title={`${title} | Glushkov Modelling`}>
 
-  <!-- 1. HERO -->
-  <section class="hero">
-    <div class="container hero-grid">
-      <div class="hero-card hero-copy">
-        <a href="/builds" class="back-link">← Back to builds</a>
-        <span class="eyebrow">Build Log</span>
-        <h1>{title}</h1>
-        <div class="hero-meta">
-          {info?.buildstatus && (
-            <span class="meta-pill">{info.buildstatus}</span>
-          )}
-          {info?.modelscale && (
-            <span class="meta-pill">Scale: {info.modelscale}</span>
-          )}
-          {info?.manufacturer && (
-            <span class="meta-pill">{info.manufacturer}</span>
-          )}
-          {currentPart && (
-            <span class="meta-pill">Part {currentPart}</span>
-          )}
-        </div>
-      </div>
-      <div class="hero-card hero-image">
-        {featuredImage?.node?.sourceUrl ? (
-          <img
-            src={featuredImage.node.sourceUrl}
-            alt={featuredImage.node.altText || title}
-            loading="lazy"
-          />
-        ) : (
-          <div class="gallery-placeholder">No image yet</div>
+ <!-- 1. HERO -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="hero-card hero-copy">
+      <a href="/builds" class="back-link">← Back to builds</a>
+      <span class="eyebrow">Build Log</span>
+      <h1>{model?.title || title}</h1>
+      <div class="hero-meta">
+        {info?.buildstatus && (
+          <span class="meta-pill">{info.buildstatus}</span>
+        )}
+        {info?.modelscale && (
+          <span class="meta-pill">Scale: {info.modelscale}</span>
+        )}
+        {info?.manufacturer && (
+          <span class="meta-pill">{info.manufacturer}</span>
         )}
       </div>
     </div>
-  </section>
+    <div class="hero-card hero-image">
+    {info?.modelimageurl ? (
+    <img
+      src={info.modelimageurl}
+      alt={model?.title || title}
+      loading="lazy"
+    />
+  ) : (
+    <div class="gallery-placeholder">No image yet</div>
+  )}
+</div>
+  ) : (
+    <div class="gallery-placeholder">No image yet</div>
+  )}
+</div>
+    </div>
+  </div>
+</section>
 
   <!-- 2. КРАТКАЯ ХАРАКТЕРИСТИКА -->
   {info?.shortdescription && (

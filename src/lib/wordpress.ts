@@ -132,16 +132,6 @@ export async function getModelBySlug(slug: string) {
           model(id: $slug, idType: SLUG) {
             slug
             title
-            featuredImage {
-              node {
-                sourceUrl
-                altText
-                mediaDetails {
-                  width
-                  height
-                }
-              }
-            }
             modelinfo {
               shortdescription
               historicalnote
@@ -151,6 +141,7 @@ export async function getModelBySlug(slug: string) {
               modellength
               historicalyear
               buildstatus
+              modelimageurl
             }
           }
         }
@@ -181,9 +172,16 @@ export async function getAllModels() {
                 }
               }
               modelinfo {
+                shortdescription
                 modelscale
                 manufacturer
                 buildstatus
+                modelimage {
+                  node {
+                    sourceUrl
+                    altText
+                  }
+                }
               }
             }
           }
@@ -191,8 +189,24 @@ export async function getAllModels() {
       `,
     }),
   });
+
   const json = await res.json();
-  return json.data?.models?.nodes ?? [];
+
+  return (json.data?.models?.nodes ?? []).map((model: any) => ({
+    ...model,
+    heroImage:
+      model?.featuredImage?.node?.sourceUrl ||
+      model?.modelinfo?.modelimage?.node?.sourceUrl ||
+      null,
+    heroImageAlt:
+      model?.featuredImage?.node?.altText ||
+      model?.modelinfo?.modelimage?.node?.altText ||
+      model?.title ||
+      '',
+    buildstatusText: Array.isArray(model?.modelinfo?.buildstatus)
+      ? model.modelinfo.buildstatus.join(', ')
+      : model?.modelinfo?.buildstatus ?? '',
+  }));
 }
 
 // ─── Каталог моделей с первой частью build log ───────────────────────────────
