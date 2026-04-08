@@ -35,40 +35,43 @@ const info = model?.modelinfo;
 
 <BaseLayout title={`${title} | Glushkov Modelling`}>
 
- <!-- 1. HERO -->
+<!-- 1. HERO -->
 <section class="hero">
   <div class="container hero-grid">
     <div class="hero-card hero-copy">
       <a href="/builds" class="back-link">← Back to builds</a>
       <span class="eyebrow">Build Log</span>
       <h1>{model?.title || title}</h1>
+
       <div class="hero-meta">
         {info?.buildstatus && (
-          <span class="meta-pill">{info.buildstatus}</span>
+          <span class="meta-pill">
+            {Array.isArray(info.buildstatus)
+              ? info.buildstatus.join(', ')
+              : info.buildstatus}
+          </span>
         )}
+
         {info?.modelscale && (
           <span class="meta-pill">Scale: {info.modelscale}</span>
         )}
+
         {info?.manufacturer && (
           <span class="meta-pill">{info.manufacturer}</span>
         )}
       </div>
     </div>
+
     <div class="hero-card hero-image">
-    {info?.modelimageurl ? (
-    <img
-      src={info.modelimageurl}
-      alt={model?.title || title}
-      loading="lazy"
-    />
-  ) : (
-    <div class="gallery-placeholder">No image yet</div>
-  )}
-</div>
-  ) : (
-    <div class="gallery-placeholder">No image yet</div>
-  )}
-</div>
+      {info?.modelimageurl ? (
+        <img
+          src={info.modelimageurl}
+          alt={model?.title || title}
+          loading="lazy"
+        />
+      ) : (
+        <div class="gallery-placeholder">No image yet</div>
+      )}
     </div>
   </div>
 </section>
@@ -126,56 +129,57 @@ const info = model?.modelinfo;
     <section class="page-section">
       <div class="container">
         <div class="gallery-card">
-          <span class="eyebrow">Part {currentPart}</span>
-          <h2 class="section-title">{title}</h2>
           <div class="content-html glightbox-gallery" set:html={buildlog.partcontent} />
         </div>
       </div>
     </section>
   )}
 
-  <!-- 6. SPEC SIDEBAR -->
-  {info && (
-    <section class="page-section">
-      <div class="container section-grid">
-        <div></div>
-        <aside class="info-card">
-          <span class="eyebrow">Project Specs</span>
-          <h3 class="card-title">Model Info</h3>
-          <div class="spec-list">
-            <div class="spec-item">
-              <span class="spec-label">Model</span>
-              <span class="spec-value">{model?.title || '—'}</span>
-            </div>
-            <div class="spec-item">
-              <span class="spec-label">Scale</span>
-              <span class="spec-value">{info.modelscale || '—'}</span>
-            </div>
-            <div class="spec-item">
-              <span class="spec-label">Manufacturer</span>
-              <span class="spec-value">{info.manufacturer || '—'}</span>
-            </div>
-            <div class="spec-item">
-              <span class="spec-label">Length</span>
-              <span class="spec-value">{info.modellength || '—'}</span>
-            </div>
-            <div class="spec-item">
-              <span class="spec-label">Historical Year</span>
-              <span class="spec-value">{info.historicalyear || '—'}</span>
-            </div>
-            <div class="spec-item">
-              <span class="spec-label">Total Parts</span>
-              <span class="spec-value">{info.totalparts || '—'}</span>
-            </div>
-            <div class="spec-item">
-              <span class="spec-label">Status</span>
-              <span class="spec-value">{info.buildstatus || '—'}</span>
-            </div>
+<!-- 6. SPEC SIDEBAR -->
+{info && (
+  <section class="page-section">
+    <div class="container">
+      <aside class="info-card">
+        <span class="eyebrow">Project Specs</span>
+        <h3 class="card-title">Model Info</h3>
+        <div class="spec-grid">
+          <div class="spec-item">
+            <span class="spec-label">Model</span>
+            <span class="spec-value">{model?.title || '—'}</span>
           </div>
-        </aside>
-      </div>
-    </section>
-  )}
+          <div class="spec-item">
+            <span class="spec-label">Scale</span>
+            <span class="spec-value">{info.modelscale || '—'}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Manufacturer</span>
+            <span class="spec-value">{info.manufacturer || '—'}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Length</span>
+            <span class="spec-value">{info.modellength ? `${info.modellength} mm` : '—'}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Historical Year</span>
+            <span class="spec-value">{info.historicalyear || '—'}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Total Parts</span>
+            <span class="spec-value">{info.totalparts || '—'}</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Status</span>
+            <span class="spec-value">
+              {Array.isArray(info.buildstatus)
+                ? info.buildstatus.join(', ')
+                : info.buildstatus || '—'}
+            </span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+)}
 
 </BaseLayout>
 

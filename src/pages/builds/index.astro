@@ -10,24 +10,36 @@ const models = await getModelsWithFirstPart();
     <div class="container">
       <span class="eyebrow">Build Catalogue</span>
       <h1 class="section-title">Current and completed models</h1>
+
       <div class="builds-grid">
         {models.map((model: any) => (
           <article class="build-card">
-            {model.featuredImage?.node?.sourceUrl && (
+            {model.heroImage && (
               <img
-                src={model.featuredImage.node.sourceUrl}
-                alt={model.featuredImage.node.altText || model.title}
+                src={model.heroImage}
+                alt={model.heroImageAlt || model.title}
                 loading="lazy"
+                class="build-card-image"
               />
             )}
+
             <div class="build-card-body">
               <h2>{model.title}</h2>
+
               <p>
                 Scale: {model.modelinfo?.modelscale || '—'} · {model.modelinfo?.manufacturer || '—'}
               </p>
-              {model.modelinfo?.buildstatus && (
-                <span class="meta-pill">{model.modelinfo.buildstatus}</span>
+
+              {model.modelinfo?.shortdescription && (
+                <p class="build-card-description">{model.modelinfo.shortdescription}</p>
               )}
+
+              {model.buildstatusText && (
+                <span class={`meta-pill status-${model.buildstatusClass}`}>
+                  {model.buildstatusText}
+                </span>
+              )}
+
               <a
                 class="build-link"
                 href={model.firstPartSlug ? `/builds/${model.firstPartSlug}` : '/builds'}

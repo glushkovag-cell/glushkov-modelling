@@ -165,23 +165,12 @@ export async function getAllModels() {
             nodes {
               slug
               title
-              featuredImage {
-                node {
-                  sourceUrl
-                  altText
-                }
-              }
               modelinfo {
                 shortdescription
                 modelscale
                 manufacturer
                 buildstatus
-                modelimage {
-                  node {
-                    sourceUrl
-                    altText
-                  }
-                }
+                modelimageurl
               }
             }
           }
@@ -194,21 +183,16 @@ export async function getAllModels() {
 
   return (json.data?.models?.nodes ?? []).map((model: any) => ({
     ...model,
-    heroImage:
-      model?.featuredImage?.node?.sourceUrl ||
-      model?.modelinfo?.modelimage?.node?.sourceUrl ||
-      null,
-    heroImageAlt:
-      model?.featuredImage?.node?.altText ||
-      model?.modelinfo?.modelimage?.node?.altText ||
-      model?.title ||
-      '',
+    heroImage: model?.modelinfo?.modelimageurl || null,
+    heroImageAlt: model?.title || '',
     buildstatusText: Array.isArray(model?.modelinfo?.buildstatus)
       ? model.modelinfo.buildstatus.join(', ')
       : model?.modelinfo?.buildstatus ?? '',
+    buildstatusClass: Array.isArray(model?.modelinfo?.buildstatus)
+      ? String(model.modelinfo.buildstatus[0] ?? '').toLowerCase().replace(/\s+/g, '-')
+      : String(model?.modelinfo?.buildstatus ?? '').toLowerCase().replace(/\s+/g, '-'),
   }));
 }
-
 // ─── Каталог моделей с первой частью build log ───────────────────────────────
 export async function getModelsWithFirstPart() {
   const [models, posts] = await Promise.all([
@@ -227,6 +211,7 @@ export async function getModelsWithFirstPart() {
     return {
       ...model,
       firstPartSlug: parts.length > 0 ? parts[0].slug : null,
+      partsCount: parts.length,
     };
   });
 }
