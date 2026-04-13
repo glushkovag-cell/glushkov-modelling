@@ -109,6 +109,7 @@ const info = model.modelinfo;
       <div class="container">
         <span class="eyebrow">Historical Background</span>
         <h2>History</h2>
+        <div class="historical-note" set:html={info.historicalnote} />
       </div>
     </section>
   )}
@@ -319,6 +320,31 @@ const info = model.modelinfo;
   .build-part-header h3 {
     margin: 0;
     font-size: 1.25rem;
+  }
+
+  .historical-note {
+    margin-top: 16px;
+  }
+
+  .historical-note :global(p) {
+    margin: 0 0 12px;
+  }
+
+  .historical-note :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin: 12px 0;
+  }
+
+  .historical-note :global(ul),
+  .historical-note :global(ol) {
+    padding-left: 20px;
+    margin: 12px 0;
+  }
+
+  .historical-note :global(li) {
+    margin-bottom: 6px;
   }
 
   .part-content img {
