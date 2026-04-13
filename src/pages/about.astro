@@ -7,7 +7,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <!-- HERO -->
   <section class="hero">
     <div class="container">
-      <div class="hero-grid">
+                <div class="hero-grid" style="align-items: stretch;">
         <div class="hero-card hero-copy">
           <span class="eyebrow">About</span>
           <h1>Glushkov Modelling</h1>
@@ -16,7 +16,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             <a href="/builds" class="meta-pill">View Builds</a>
           </div>
         </div>
-        <div class="hero-card info-card" style="display: flex; flex-direction: column; gap: 0;">
+                  <div class="hero-card info-card" style="display: flex; flex-direction: column; gap: 0; height: 100%;">
           <span class="eyebrow">Quick links</span>
           <div class="spec-grid" style="margin-top: 8px;">
             <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Build Catalogue</span><span class="spec-value"><a href="/builds" style="color: var(--color-primary);">All builds →</a></span></div>
