@@ -1,10 +1,9 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getModelsWithFirstPart } from '../../lib/wordpress';
+import { getAllModels } from '../../lib/wordpress';
 
-const models = await getModelsWithFirstPart();
+const models = await getAllModels();
 ---
-
 <BaseLayout title="Builds | Glushkov Modelling">
   <section class="page-section">
     <div class="container">
@@ -27,7 +26,7 @@ const models = await getModelsWithFirstPart();
               <h2>{model.title}</h2>
 
               <p>
-                Scale: {model.modelinfo?.modelscale || '—'} · {model.modelinfo?.manufacturer || '—'}
+                Scale: {model.modelinfo?.modelscale || '\u2014'} \u00b7 {model.modelinfo?.manufacturer || '\u2014'}
               </p>
 
               {model.modelinfo?.shortdescription && (
@@ -42,9 +41,9 @@ const models = await getModelsWithFirstPart();
 
               <a
                 class="build-link"
-                href={model.firstPartSlug ? `/builds/${model.firstPartSlug}` : '/builds'}
+                href={`/builds/${model.slug}`}
               >
-                Open build log →
+                Open build log \u2192
               </a>
             </div>
           </article>
