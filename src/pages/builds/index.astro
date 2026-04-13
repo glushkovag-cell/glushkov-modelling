@@ -26,7 +26,7 @@ const models = await getAllModels();
               <h2>{model.title}</h2>
 
               <p>
-                Scale: {model.modelinfo?.modelscale || '\u2014'} \u00b7 {model.modelinfo?.manufacturer || '\u2014'}
+                Scale: {model.modelinfo?.modelscale || '&#8212;'} &#183; {model.modelinfo?.manufacturer || '&#8212;'}
               </p>
 
               {model.modelinfo?.shortdescription && (
@@ -43,7 +43,7 @@ const models = await getAllModels();
                 class="build-link"
                 href={`/builds/${model.slug}`}
               >
-                Open build log \u2192
+                Open build log &#8594;
               </a>
             </div>
           </article>
