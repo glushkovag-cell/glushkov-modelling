@@ -11,14 +11,14 @@ const featuredBuilds = [
   },
   {
     title: 'HMS Bounty',
-    meta: '1:60 scale • Amati',
+    meta: '1:60 scale \u2022 Amati',
     description:
       'A detailed study of one of the most recognisable ships in maritime history. Hull work, deck elements, sails, and rigging are documented as the build moves forward.',
     href: '/builds/bounty',
   },
   {
-    title: 'Blériot XI',
-    meta: '1:10 scale • Amati',
+    title: 'Bl\u00e9riot XI',
+    meta: '1:10 scale \u2022 Amati',
     description:
       'A shift from naval subjects to early aviation, where exposed structure and mechanical lightness become part of the visual language. It broadens the workshop while keeping the same careful approach to craft and documentation.',
     href: '/builds/bleriot-xi',
@@ -52,7 +52,7 @@ const socialLinks = [
 <BaseLayout title="Glushkov Modelling">
 
   <!-- HERO -->
-  <section class="hero">
+  <section class="hero" id="top">
     <div class="container">
       <div class="hero-grid">
         <div class="hero-card hero-copy">
@@ -61,58 +61,70 @@ const socialLinks = [
           <p>A curated archive of historically researched ship models, build logs, and workshop notes focused on wooden sailing vessels of the 18th and 19th centuries.</p>
           <div class="hero-meta">
             <a href="/builds" class="meta-pill">Explore Builds</a>
-            <a href="/about" class="meta-pill meta-pill--outline">About the Builder</a>
+            <a href="/about" class="meta-pill">About the Builder</a>
+          </div>
+          <!-- Quick navigation -->
+          <div class="hero-meta" style="margin-top: 12px;">
+            <a href="#featured-builds" class="meta-pill meta-pill--outline">Featured Builds</a>
+            <a href="#about" class="meta-pill meta-pill--outline">About</a>
+            <a href="#social-hub" class="meta-pill meta-pill--outline">Social Hub</a>
           </div>
         </div>
         <div class="hero-card hero-image">
-          <img
-            src="https://cms.glushkov-modelling.com/wordpress/wp-content/uploads/2026/04/A59F363E-B30F-4B6B-BE14-E6F9BB1873FA_1_105_c-e1776070135300.jpeg"
-            alt="Workshop bench — model ship building in progress"
-            loading="eager"
-          />
+          <img src="/workshop-bench.jpg" alt="Workshop bench \u2014 model ship building in progress" />
         </div>
       </div>
     </div>
   </section>
 
   <!-- FEATURED BUILDS -->
-  <section class="page-section">
+  <section class="page-section" id="featured-builds">
     <div class="container">
-      <span class="eyebrow">Featured Builds</span>
-      <h2 class="section-title">Three current directions</h2>
-      <p class="short-desc">The site is currently centered around three major projects, each with its own pace, material logic, and visual character.</p>
-      <div class="builds-grid" style="margin-top: 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px;">
+        <div>
+          <span class="eyebrow">Featured Builds</span>
+          <h2 class="section-title" style="margin: 0;">Three current directions</h2>
+          <p style="color: var(--color-text-muted); margin-top: 8px;">The site is currently centered around three major projects, each with its own pace, material logic, and visual character.</p>
+        </div>
+        <a href="#top" class="meta-pill meta-pill--outline" style="flex-shrink: 0; margin-left: 24px;">\u2191 Top</a>
+      </div>
+      <div class="builds-grid">
         {featuredBuilds.map((build) => (
-          <article class="build-card">
+          <div class="build-card">
             <div class="build-card-body">
-              <p style="margin: 0 0 6px; font-size: 0.85rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.08em;">{build.meta}</p>
+              <span class="eyebrow">{build.meta}</span>
               <h2>{build.title}</h2>
               <p>{build.description}</p>
-              <a href={build.href} class="build-link">View build log →</a>
+              <a href={build.href} class="build-link">View build log \u2192</a>
             </div>
-          </article>
+          </div>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- ABOUT TEASER -->
-  <section class="page-section">
+  <!-- ABOUT -->
+  <section class="page-section" id="about">
     <div class="container">
-      <div class="section-grid">
+      <div class="section-grid section-grid--equal">
         <div class="content-card">
           <span class="eyebrow">About</span>
           <h2 class="card-title">A workshop built around process, patience, and detail</h2>
-          <p class="content-html">GLUSHKOV MODELLING brings together long-form build logs, selected photography, and notes from the workbench. The focus is not only on finished models, but on the process itself — structure, materials, historical character, and the small decisions that shape each stage.</p>
-          <a href="/about" class="build-link">Read About →</a>
+          <div class="content-html">
+            <p>GLUSHKOV MODELLING brings together long-form build logs, selected photography, and notes from the workbench. The focus is not only on finished models, but on the process itself \u2014 structure, materials, historical character, and the small decisions that shape each stage.</p>
+          </div>
+          <a href="/about" class="build-link" style="margin-top: 8px; display: inline-block;">Read About \u2192</a>
         </div>
-        <div class="info-card">
+        <div class="content-card">
           <span class="eyebrow">Navigation</span>
           <div class="spec-grid" style="margin-top: 8px;">
-            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Build Logs</span><span class="spec-value"><a href="/builds" style="color: var(--color-primary);">All builds →</a></span></div>
-            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Le Requin</span><span class="spec-value"><a href="/builds/le-requin" style="color: var(--color-primary);">Open log →</a></span></div>
-            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">HMS Bounty</span><span class="spec-value"><a href="/builds/bounty" style="color: var(--color-primary);">Open log →</a></span></div>
-            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Blériot XI</span><span class="spec-value"><a href="/builds/bleriot-xi" style="color: var(--color-primary);">Open log →</a></span></div>
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Build Logs</span><span class="spec-value"><a href="/builds" style="color: var(--color-primary);">All builds \u2192</a></span></div>
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Le Requin</span><span class="spec-value"><a href="/builds/le-requin" style="color: var(--color-primary);">Open log \u2192</a></span></div>
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">HMS Bounty</span><span class="spec-value"><a href="/builds/bounty" style="color: var(--color-primary);">Open log \u2192</a></span></div>
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Bl\u00e9riot XI</span><span class="spec-value"><a href="/builds/bleriot-xi" style="color: var(--color-primary);">Open log \u2192</a></span></div>
+          </div>
+          <div style="text-align: right; margin-top: 16px;">
+            <a href="#top" class="meta-pill meta-pill--outline">\u2191 Top</a>
           </div>
         </div>
       </div>
@@ -120,20 +132,25 @@ const socialLinks = [
   </section>
 
   <!-- SOCIAL HUB -->
-  <section class="page-section">
+  <section class="page-section" id="social-hub">
     <div class="container">
-      <span class="eyebrow">Social Hub</span>
-      <h2 class="section-title">Follow the work as it develops</h2>
-      <p class="short-desc">Different platforms serve different parts of the process — quick progress notes, longer videos, selected images, and published updates.</p>
-      <div class="builds-grid" style="margin-top: 28px; grid-template-columns: repeat(2, minmax(0, 1fr));">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px;">
+        <div>
+          <span class="eyebrow">Social Hub</span>
+          <h2 class="section-title" style="margin: 0;">Follow the work as it develops</h2>
+          <p style="color: var(--color-text-muted); margin-top: 8px;">Different platforms serve different parts of the process \u2014 quick progress notes, longer videos, selected images, and published updates.</p>
+        </div>
+        <a href="#top" class="meta-pill meta-pill--outline" style="flex-shrink: 0; margin-left: 24px;">\u2191 Top</a>
+      </div>
+      <div class="builds-grid">
         {socialLinks.map((item) => (
-          <article class="build-card">
+          <div class="build-card">
             <div class="build-card-body">
-              <h2 style="font-size: 1.6rem;">{item.title}</h2>
+              <h2>{item.title}</h2>
               <p>{item.description}</p>
-              <a href={item.href} class="build-link" target="_blank" rel="noopener">Open {item.title} →</a>
+              <a href={item.href} target="_blank" rel="noopener" class="build-link">Open {item.title} \u2192</a>
             </div>
-          </article>
+          </div>
         ))}
       </div>
     </div>
