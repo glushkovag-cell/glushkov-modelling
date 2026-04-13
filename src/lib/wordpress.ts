@@ -4,7 +4,7 @@ if (!WP_API) {
   throw new Error('WP_GRAPHQL_URL is not defined');
 }
 
-// ─── Каталог: все slugи для getStaticPaths ──────────────────────────────────
+// --- getAllBuilds: slugи постов для getStaticPaths ---
 export async function getAllBuilds() {
   const res = await fetch(WP_API, {
     method: 'POST',
@@ -25,7 +25,7 @@ export async function getAllBuilds() {
   return json.data?.posts?.nodes ?? [];
 }
 
-// ─── Каталог: карточки для /builds ───────────────────────────────────────
+// --- getBuildPosts: карточки для /builds ---
 export async function getBuildPosts() {
   const res = await fetch(WP_API, {
     method: 'POST',
@@ -57,7 +57,8 @@ export async function getBuildPosts() {
   return json.data?.posts?.nodes ?? [];
 }
 
-// ─── Страница части: одна запись по slug ─────────────────────────────────────export async function getBuildBySlug(slug: string) {
+// --- getBuildBySlug: одна запись по slug ---
+export async function getBuildBySlug(slug: string) {
   const res = await fetch(WP_API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -89,7 +90,7 @@ export async function getBuildPosts() {
   return json.data?.post ?? null;
 }
 
-// ─── Stepper: все части одной модели ──────────────────────────────────────────
+// --- getBuildPartsByModel: все части одной модели ---
 export async function getBuildPartsByModel(modelSlug: string) {
   const res = await fetch(WP_API, {
     method: 'POST',
@@ -128,7 +129,8 @@ export async function getBuildPartsByModel(modelSlug: string) {
     );
 }
 
-// ─── CPT Model: данные модели по slug ──────────────────────────────────────────export async function getModelBySlug(slug: string) {
+// --- getModelBySlug: данные модели по slug ---
+export async function getModelBySlug(slug: string) {
   const res = await fetch(WP_API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -159,7 +161,7 @@ export async function getBuildPartsByModel(modelSlug: string) {
   return json.data?.model ?? null;
 }
 
-// ─── Все модели CPT с featuredImage и meta ────────────────────────────────────
+// --- getAllModels: все модели CPT ---
 export async function getAllModels() {
   const res = await fetch(WP_API, {
     method: 'POST',
@@ -198,7 +200,7 @@ export async function getAllModels() {
   }));
 }
 
-// ─── Каталог моделей с первой частью build log ──────────────────────────────
+// --- getModelsWithFirstPart: модели с первой частью build log ---
 export async function getModelsWithFirstPart() {
   const [models, posts] = await Promise.all([
     getAllModels(),
