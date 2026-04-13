@@ -26,13 +26,14 @@ if (!model) {
 
 const info = model.modelinfo;
 ---
+
 <BaseLayout title={`${model.title} | Glushkov Modelling`}>
 
   <!-- 1. HERO -->
   <section class="hero">
     <div class="container hero-grid">
       <div class="hero-card hero-copy">
-        <a href="/builds" class="back-link">&#8592; Back to builds</a>
+        <a href="/builds" class="back-link">&larr; Back to builds</a>
         <span class="eyebrow">Build Log</span>
         <h1>{model.title}</h1>
 
@@ -51,36 +52,44 @@ const info = model.modelinfo;
             <span class="meta-pill">{info.manufacturer}</span>
           )}
         </div>
-
-        {parts.length > 1 && (
-          <nav class="part-stepper" aria-label="Build log parts">
-            {parts.map((part: any) => (
-              <a
-                href={`#part-${part.buildlog?.partnumber}`}
-                class="part-step"
-              >
-                Part {part.buildlog?.partnumber}
-              </a>
-            ))}
-          </nav>
-        )}
-      </div>
-
-      <div class="hero-card hero-image">
-        {info?.modelimageurl ? (
-          <img
-            src={info.modelimageurl}
-            alt={model.title}
-            class="glightbox"
-          />
-        ) : (
-          <div class="no-image">No image yet</div>
-        )}
       </div>
     </div>
   </section>
 
-  <!-- 2. SHORT DESCRIPTION -->
+  <!-- 2. PART STEPPER -->
+  {parts.length > 1 && (
+    <div class="container">
+      <nav class="part-stepper">
+        {parts.map((part: any) => (
+          <a
+            href={`#part-${part.buildlog?.partnumber}`}
+            class="part-step"
+          >
+            {part.featuredImage?.node?.sourceUrl && (
+              <img
+                src={part.featuredImage.node.sourceUrl}
+                alt={part.featuredImage.node.altText || `Part ${part.buildlog?.partnumber}`}
+                class="part-step-thumb"
+                loading="lazy"
+              />
+            )}
+            <span>Part {part.buildlog?.partnumber}</span>
+          </a>
+        ))}
+      </nav>
+    </div>
+  )}
+
+  <!-- 3. HERO IMAGE -->
+  <div class="container">
+    {info?.modelimageurl ? (
+      <img src={info.modelimageurl} alt={model.title} class="model-hero-image" />
+    ) : (
+      <div class="no-image">No image yet</div>
+    )}
+  </div>
+
+  <!-- 4. ABOUT -->
   {info?.shortdescription && (
     <section class="page-section">
       <div class="container">
@@ -90,7 +99,6 @@ const info = model.modelinfo;
     </section>
   )}
 
-  <!-- 3. HISTORICAL NOTE -->
   {info?.historicalnote && (
     <section class="page-section">
       <div class="container">
@@ -100,58 +108,53 @@ const info = model.modelinfo;
     </section>
   )}
 
-  <!-- 4. BUILD LOG PARTS -->
+  <!-- 5. BUILD LOG PARTS -->
   {parts.length > 0 && (
     <section class="page-section">
       <div class="container">
         <span class="eyebrow">Build Log</span>
-        <h2 class="section-title">All parts</h2>
+        <h2>All parts</h2>
 
         {parts.map((part: any) => (
-          <article
-            id={`part-${part.buildlog?.partnumber}`}
-            class="build-part"
-          >
+          <div class="build-part" id={`part-${part.buildlog?.partnumber}`}>
             <div class="build-part-header">
               <span class="part-number">Part {part.buildlog?.partnumber}</span>
               <h3>{part.title}</h3>
             </div>
 
             {part.featuredImage?.node?.sourceUrl && (
-              <div class="build-part-image">
+              <div class="build-part-image glightbox-gallery">
                 <img
                   src={part.featuredImage.node.sourceUrl}
-                  alt={part.featuredImage.node.altText || part.title}
-                  class="glightbox"
-                  loading="lazy"
+                  alt={part.featuredImage.node.altText}
                 />
               </div>
             )}
 
             {part.content && (
-              <div class="build-part-content content-html" set:html={part.content} />
+              <div set:html={part.content} />
             )}
-          </article>
+          </div>
         ))}
       </div>
     </section>
   )}
 
-  <!-- 5. PROJECT SPECS -->
+  <!-- 6. SPECS -->
   {info && (
     <section class="page-section">
       <div class="container">
         <span class="eyebrow">Project Specs</span>
-        <h2 class="section-title">Model Info</h2>
-        <div class="spec-grid">
-          <div class="spec-item"><span class="spec-label">Model</span><span class="spec-value">{model.title || '&#8212;'}</span></div>
-          <div class="spec-item"><span class="spec-label">Scale</span><span class="spec-value">{info.modelscale || '&#8212;'}</span></div>
-          <div class="spec-item"><span class="spec-label">Manufacturer</span><span class="spec-value">{info.manufacturer || '&#8212;'}</span></div>
-          <div class="spec-item"><span class="spec-label">Length</span><span class="spec-value">{info.modellength ? `${info.modellength} mm` : '&#8212;'}</span></div>
-          <div class="spec-item"><span class="spec-label">Historical Year</span><span class="spec-value">{info.historicalyear || '&#8212;'}</span></div>
-          <div class="spec-item"><span class="spec-label">Total Parts</span><span class="spec-value">{info.totalparts || '&#8212;'}</span></div>
-          <div class="spec-item"><span class="spec-label">Status</span><span class="spec-value">{Array.isArray(info.buildstatus) ? info.buildstatus.join(', ') : info.buildstatus || '&#8212;'}</span></div>
-        </div>
+        <h2>Model Info</h2>
+        <dl class="specs-list">
+          <div><dt>Model</dt><dd>{model.title || '&#8212;'}</dd></div>
+          <div><dt>Scale</dt><dd>{info.modelscale || '&#8212;'}</dd></div>
+          <div><dt>Manufacturer</dt><dd>{info.manufacturer || '&#8212;'}</dd></div>
+          <div><dt>Length</dt><dd>{info.modellength ? `${info.modellength} mm` : '&#8212;'}</dd></div>
+          <div><dt>Historical Year</dt><dd>{info.historicalyear || '&#8212;'}</dd></div>
+          <div><dt>Total Parts</dt><dd>{info.totalparts || '&#8212;'}</dd></div>
+          <div><dt>Status</dt><dd>{Array.isArray(info.buildstatus) ? info.buildstatus.join(', ') : info.buildstatus || '&#8212;'}</dd></div>
+        </dl>
       </div>
     </section>
   )}
@@ -173,12 +176,17 @@ const info = model.modelinfo;
     flex-wrap: wrap;
     gap: 8px;
     margin-top: 16px;
+    margin-bottom: 24px;
   }
   .part-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
     font-size: 0.78rem;
-    padding: 3px 10px;
+    padding: 6px 10px;
     border: 1px solid var(--color-border);
-    border-radius: 999px;
+    border-radius: 12px;
     color: var(--color-text-muted);
     text-decoration: none;
     opacity: 0.7;
@@ -188,6 +196,21 @@ const info = model.modelinfo;
     color: var(--color-primary);
     border-color: var(--color-primary);
     opacity: 1;
+  }
+  .part-step-thumb {
+    width: 48px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 4px;
+    display: block;
+  }
+
+  .model-hero-image {
+    width: 100%;
+    max-height: 480px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin: 24px 0;
   }
 
   .build-part {
