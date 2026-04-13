@@ -26,6 +26,8 @@ if (!model) {
 }
 
 const info = model.modelinfo;
+const heroImage = model.featuredImage?.node?.sourceUrl;
+const heroImageAlt = model.featuredImage?.node?.altText || model.title;
 ---
 
 <BaseLayout title={`${model.title} | Glushkov Modelling`}>
@@ -56,11 +58,11 @@ const info = model.modelinfo;
           </div>
         </div>
 
-        {info?.modelimageurl && (
+        {heroImage && (
           <div class="hero-image">
             <img
-              src={info.modelimageurl}
-              alt={model.title}
+              src={heroImage}
+              alt={heroImageAlt}
               loading="lazy"
             />
           </div>
@@ -108,7 +110,6 @@ const info = model.modelinfo;
     <section class="page-section">
       <div class="container">
         <span class="eyebrow">Historical Background</span>
-        <h2>History</h2>
         <div class="historical-note" set:html={info.historicalnote} />
       </div>
     </section>
@@ -152,34 +153,39 @@ const info = model.modelinfo;
     <section class="page-section">
       <div class="container">
         <span class="eyebrow">Project Specs</span>
-        <h2>Model Info</h2>
 
-        <dl class="specs-list">
-          <div>
+        <dl class="specs-grid">
+          <div class="spec-card">
             <dt>Model</dt>
             <dd>{model.title || '—'}</dd>
           </div>
-          <div>
+
+          <div class="spec-card">
             <dt>Scale</dt>
             <dd>{info.modelscale || '—'}</dd>
           </div>
-          <div>
+
+          <div class="spec-card">
             <dt>Manufacturer</dt>
             <dd>{info.manufacturer || '—'}</dd>
           </div>
-          <div>
+
+          <div class="spec-card">
             <dt>Length</dt>
             <dd>{info.modellength ? `${info.modellength} mm` : '—'}</dd>
           </div>
-          <div>
+
+          <div class="spec-card">
             <dt>Historical Year</dt>
             <dd>{info.historicalyear || '—'}</dd>
           </div>
-          <div>
+
+          <div class="spec-card">
             <dt>Total Parts</dt>
             <dd>{info.totalparts || '—'}</dd>
           </div>
-          <div>
+
+          <div class="spec-card">
             <dt>Status</dt>
             <dd>
               {Array.isArray(info.buildstatus)
@@ -289,6 +295,31 @@ const info = model.modelinfo;
     border: 1px solid var(--color-border);
   }
 
+  .historical-note {
+    margin-top: 8px;
+  }
+
+  .historical-note :global(p) {
+    margin: 0 0 12px;
+  }
+
+  .historical-note :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    margin: 12px 0;
+  }
+
+  .historical-note :global(ul),
+  .historical-note :global(ol) {
+    padding-left: 20px;
+    margin: 12px 0;
+  }
+
+  .historical-note :global(li) {
+    margin-bottom: 6px;
+  }
+
   .build-part {
     border-top: 1px solid var(--color-border);
     padding-top: 32px;
@@ -322,31 +353,6 @@ const info = model.modelinfo;
     font-size: 1.25rem;
   }
 
-  .historical-note {
-    margin-top: 16px;
-  }
-
-  .historical-note :global(p) {
-    margin: 0 0 12px;
-  }
-
-  .historical-note :global(img) {
-    max-width: 100%;
-    height: auto;
-    border-radius: 6px;
-    margin: 12px 0;
-  }
-
-  .historical-note :global(ul),
-  .historical-note :global(ol) {
-    padding-left: 20px;
-    margin: 12px 0;
-  }
-
-  .historical-note :global(li) {
-    margin-bottom: 6px;
-  }
-
   .part-content img {
     max-width: 100%;
     height: auto;
@@ -371,6 +377,35 @@ const info = model.modelinfo;
 
   .part-back-link:hover {
     color: var(--color-primary);
+  }
+
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .spec-card {
+    padding: 14px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+  }
+
+  .spec-card dt {
+    margin: 0 0 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .spec-card dd {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--color-text);
   }
 
   .no-content {
