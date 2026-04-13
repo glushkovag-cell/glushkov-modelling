@@ -102,7 +102,6 @@ export async function getBuildPartsByModel(modelSlug: string) {
             nodes {
               slug
               title
-              content
               featuredImage {
                 node {
                   sourceUrl
@@ -112,6 +111,7 @@ export async function getBuildPartsByModel(modelSlug: string) {
               buildlog {
                 modelslug
                 partnumber
+                partcontent
               }
             }
           }
