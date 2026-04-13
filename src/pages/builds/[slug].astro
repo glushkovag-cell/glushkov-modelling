@@ -8,6 +8,7 @@ import {
 
 export async function getStaticPaths() {
   const models = await getAllModels();
+
   return models.map((model: any) => ({
     params: { slug: model.slug },
   }));
@@ -28,14 +29,11 @@ const info = model.modelinfo;
 ---
 
 <BaseLayout title={`${model.title} | Glushkov Modelling`}>
-
-  <!-- 1. HERO: title left, model image right -->
   <section class="hero">
     <div class="container">
       <div class="hero-inner">
-        <!-- Left: text -->
         <div class="hero-copy">
-          <a href="/builds" class="back-link">&larr; Back to builds</a>
+          <a href="/builds" class="back-link">← Back to builds</a>
           <span class="eyebrow">Build Log</span>
           <h1>{model.title}</h1>
 
@@ -47,16 +45,17 @@ const info = model.modelinfo;
                   : info.buildstatus}
               </span>
             )}
+
             {info?.modelscale && (
               <span class="meta-pill">Scale: {info.modelscale}</span>
             )}
+
             {info?.manufacturer && (
               <span class="meta-pill">{info.manufacturer}</span>
             )}
           </div>
         </div>
 
-        <!-- Right: model image -->
         {info?.modelimageurl && (
           <div class="hero-image">
             <img
@@ -70,7 +69,6 @@ const info = model.modelinfo;
     </div>
   </section>
 
-  <!-- 2. PART STEPPER -->
   {parts.length > 1 && (
     <div class="container">
       <nav class="part-stepper">
@@ -94,7 +92,6 @@ const info = model.modelinfo;
     </div>
   )}
 
-  <!-- 3. ABOUT -->
   {info?.shortdescription && (
     <section class="page-section">
       <div class="container">
@@ -113,7 +110,6 @@ const info = model.modelinfo;
     </section>
   )}
 
-  <!-- 4. BUILD LOG PARTS: only partContent -->
   {parts.length > 0 && (
     <section class="page-section">
       <div class="container">
@@ -140,25 +136,27 @@ const info = model.modelinfo;
     </section>
   )}
 
-  <!-- 5. SPECS -->
   {info && (
     <section class="page-section">
       <div class="container">
         <span class="eyebrow">Project Specs</span>
         <h2>Model Info</h2>
+
         <dl class="specs-list">
-          <div><dt>Model</dt><dd>{model.title || '&#8212;'}</dd></div>
-          <div><dt>Scale</dt><dd>{info.modelscale || '&#8212;'}</dd></div>
-          <div><dt>Manufacturer</dt><dd>{info.manufacturer || '&#8212;'}</dd></div>
-          <div><dt>Length</dt><dd>{info.modellength ? `${info.modellength} mm` : '&#8212;'}</dd></div>
-          <div><dt>Historical Year</dt><dd>{info.historicalyear || '&#8212;'}</dd></div>
-          <div><dt>Total Parts</dt><dd>{info.totalparts || '&#8212;'}</dd></div>
-          <div><dt>Status</dt><dd>{Array.isArray(info.buildstatus) ? info.buildstatus.join(', ') : info.buildstatus || '&#8212;'}</dd></div>
+          <div><dt>Model</dt><dd>{model.title || '—'}</dd></div>
+          <div><dt>Scale</dt><dd>{info.modelscale || '—'}</dd></div>
+          <div><dt>Manufacturer</dt><dd>{info.manufacturer || '—'}</dd></div>
+          <div><dt>Length</dt><dd>{info.modellength ? `${info.modellength} mm` : '—'}</dd></div>
+          <div><dt>Historical Year</dt><dd>{info.historicalyear || '—'}</dd></div>
+          <div><dt>Total Parts</dt><dd>{info.totalparts || '—'}</dd></div>
+          <div>
+            <dt>Status</dt>
+            <dd>{Array.isArray(info.buildstatus) ? info.buildstatus.join(', ') : info.buildstatus || '—'}</dd>
+          </div>
         </dl>
       </div>
     </section>
   )}
-
 </BaseLayout>
 
 <style>
@@ -169,37 +167,54 @@ const info = model.modelinfo;
     color: var(--color-text-muted);
     text-decoration: none;
   }
-  .back-link:hover { color: var(--color-primary); }
 
-  /* Hero: two-column layout */
+  .back-link:hover {
+    color: var(--color-primary);
+  }
+
   .hero-inner {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
     gap: 32px;
     align-items: center;
   }
-  .hero-copy { min-width: 0; }
-  .hero-image {
-    flex-shrink: 0;
-    max-width: 320px;
-    width: 100%;
+
+  .hero-copy {
+    min-width: 0;
   }
+
+  .hero-image {
+    width: 100%;
+    max-width: 420px;
+    justify-self: end;
+  }
+
   .hero-image img {
     width: 100%;
-    height: auto;
-    border-radius: 8px;
+    height: 180px;
     display: block;
-    object-fit: cover;
-    max-height: 240px;
+    border-radius: 8px;
+    object-fit: contain;
+    object-position: center;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
   }
+
   @media (max-width: 640px) {
     .hero-inner {
       grid-template-columns: 1fr;
     }
-    .hero-image { max-width: 100%; }
+
+    .hero-image {
+      max-width: 100%;
+      justify-self: start;
+    }
+
+    .hero-image img {
+      height: 160px;
+    }
   }
 
-  /* Part stepper */
   .part-stepper {
     display: flex;
     flex-wrap: wrap;
@@ -207,6 +222,7 @@ const info = model.modelinfo;
     margin-top: 16px;
     margin-bottom: 24px;
   }
+
   .part-step {
     display: flex;
     flex-direction: column;
@@ -221,36 +237,43 @@ const info = model.modelinfo;
     opacity: 0.7;
     transition: color 0.15s, border-color 0.15s, opacity 0.15s;
   }
+
   .part-step:hover {
     color: var(--color-primary);
     border-color: var(--color-primary);
     opacity: 1;
   }
+
   .part-step-thumb {
-    width: 48px;
-    height: 36px;
-    object-fit: cover;
+    width: 56px;
+    height: 40px;
+    object-fit: contain;
+    object-position: center;
     border-radius: 4px;
     display: block;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
   }
 
-  /* Build parts */
   .build-part {
     border-top: 1px solid var(--color-border);
     padding-top: 32px;
     margin-top: 32px;
   }
+
   .build-part:first-child {
     border-top: none;
     margin-top: 0;
     padding-top: 0;
   }
+
   .build-part-header {
     display: flex;
     align-items: baseline;
     gap: 16px;
     margin-bottom: 20px;
   }
+
   .part-number {
     font-size: 0.75rem;
     font-weight: 600;
@@ -259,16 +282,19 @@ const info = model.modelinfo;
     color: var(--color-text-muted);
     white-space: nowrap;
   }
+
   .build-part-header h3 {
     margin: 0;
     font-size: 1.25rem;
   }
+
   .part-content img {
     max-width: 100%;
     height: auto;
     border-radius: 6px;
     margin: 12px 0;
   }
+
   .no-content {
     color: var(--color-text-muted);
     font-style: italic;
