@@ -71,7 +71,7 @@ const info = model.modelinfo;
 
   {parts.length > 1 && (
     <div class="container">
-      <nav class="part-stepper">
+      <nav class="part-stepper" id="parts-nav">
         {parts.map((part: any) => (
           <a
             href={`#part-${part.buildlog?.partnumber}`}
@@ -80,7 +80,10 @@ const info = model.modelinfo;
             {part.featuredImage?.node?.sourceUrl && (
               <img
                 src={part.featuredImage.node.sourceUrl}
-                alt={part.featuredImage.node.altText || `Part ${part.buildlog?.partnumber}`}
+                alt={
+                  part.featuredImage.node.altText ||
+                  `Part ${part.buildlog?.partnumber}`
+                }
                 class="part-step-thumb"
                 loading="lazy"
               />
@@ -130,6 +133,14 @@ const info = model.modelinfo;
             ) : (
               <p class="no-content">Content coming soon.</p>
             )}
+
+            {parts.length > 1 && (
+              <div class="part-back">
+                <a href="#parts-nav" class="part-back-link">
+                  ↑ Back to all parts
+                </a>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -143,15 +154,37 @@ const info = model.modelinfo;
         <h2>Model Info</h2>
 
         <dl class="specs-list">
-          <div><dt>Model</dt><dd>{model.title || '—'}</dd></div>
-          <div><dt>Scale</dt><dd>{info.modelscale || '—'}</dd></div>
-          <div><dt>Manufacturer</dt><dd>{info.manufacturer || '—'}</dd></div>
-          <div><dt>Length</dt><dd>{info.modellength ? `${info.modellength} mm` : '—'}</dd></div>
-          <div><dt>Historical Year</dt><dd>{info.historicalyear || '—'}</dd></div>
-          <div><dt>Total Parts</dt><dd>{info.totalparts || '—'}</dd></div>
+          <div>
+            <dt>Model</dt>
+            <dd>{model.title || '—'}</dd>
+          </div>
+          <div>
+            <dt>Scale</dt>
+            <dd>{info.modelscale || '—'}</dd>
+          </div>
+          <div>
+            <dt>Manufacturer</dt>
+            <dd>{info.manufacturer || '—'}</dd>
+          </div>
+          <div>
+            <dt>Length</dt>
+            <dd>{info.modellength ? `${info.modellength} mm` : '—'}</dd>
+          </div>
+          <div>
+            <dt>Historical Year</dt>
+            <dd>{info.historicalyear || '—'}</dd>
+          </div>
+          <div>
+            <dt>Total Parts</dt>
+            <dd>{info.totalparts || '—'}</dd>
+          </div>
           <div>
             <dt>Status</dt>
-            <dd>{Array.isArray(info.buildstatus) ? info.buildstatus.join(', ') : info.buildstatus || '—'}</dd>
+            <dd>
+              {Array.isArray(info.buildstatus)
+                ? info.buildstatus.join(', ')
+                : info.buildstatus || '—'}
+            </dd>
           </div>
         </dl>
       </div>
@@ -293,6 +326,25 @@ const info = model.modelinfo;
     height: auto;
     border-radius: 6px;
     margin: 12px 0;
+  }
+
+  .part-back {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--color-border);
+  }
+
+  .part-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  .part-back-link:hover {
+    color: var(--color-primary);
   }
 
   .no-content {
