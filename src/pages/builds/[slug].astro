@@ -29,29 +29,43 @@ const info = model.modelinfo;
 
 <BaseLayout title={`${model.title} | Glushkov Modelling`}>
 
-  <!-- 1. HERO -->
+  <!-- 1. HERO: title left, model image right -->
   <section class="hero">
-    <div class="container hero-grid">
-      <div class="hero-card hero-copy">
-        <a href="/builds" class="back-link">&larr; Back to builds</a>
-        <span class="eyebrow">Build Log</span>
-        <h1>{model.title}</h1>
+    <div class="container">
+      <div class="hero-inner">
+        <!-- Left: text -->
+        <div class="hero-copy">
+          <a href="/builds" class="back-link">&larr; Back to builds</a>
+          <span class="eyebrow">Build Log</span>
+          <h1>{model.title}</h1>
 
-        <div class="hero-meta">
-          {info?.buildstatus && (
-            <span class="meta-pill">
-              {Array.isArray(info.buildstatus)
-                ? info.buildstatus.join(', ')
-                : info.buildstatus}
-            </span>
-          )}
-          {info?.modelscale && (
-            <span class="meta-pill">Scale: {info.modelscale}</span>
-          )}
-          {info?.manufacturer && (
-            <span class="meta-pill">{info.manufacturer}</span>
-          )}
+          <div class="hero-meta">
+            {info?.buildstatus && (
+              <span class="meta-pill">
+                {Array.isArray(info.buildstatus)
+                  ? info.buildstatus.join(', ')
+                  : info.buildstatus}
+              </span>
+            )}
+            {info?.modelscale && (
+              <span class="meta-pill">Scale: {info.modelscale}</span>
+            )}
+            {info?.manufacturer && (
+              <span class="meta-pill">{info.manufacturer}</span>
+            )}
+          </div>
         </div>
+
+        <!-- Right: model image -->
+        {info?.modelimageurl && (
+          <div class="hero-image">
+            <img
+              src={info.modelimageurl}
+              alt={model.title}
+              loading="lazy"
+            />
+          </div>
+        )}
       </div>
     </div>
   </section>
@@ -80,16 +94,7 @@ const info = model.modelinfo;
     </div>
   )}
 
-  <!-- 3. HERO IMAGE -->
-  <div class="container">
-    {info?.modelimageurl ? (
-      <img src={info.modelimageurl} alt={model.title} class="model-hero-image" />
-    ) : (
-      <div class="no-image">No image yet</div>
-    )}
-  </div>
-
-  <!-- 4. ABOUT -->
+  <!-- 3. ABOUT -->
   {info?.shortdescription && (
     <section class="page-section">
       <div class="container">
@@ -108,7 +113,7 @@ const info = model.modelinfo;
     </section>
   )}
 
-  <!-- 5. BUILD LOG PARTS -->
+  <!-- 4. BUILD LOG PARTS: only partContent -->
   {parts.length > 0 && (
     <section class="page-section">
       <div class="container">
@@ -122,17 +127,12 @@ const info = model.modelinfo;
               <h3>{part.title}</h3>
             </div>
 
-            {part.featuredImage?.node?.sourceUrl && (
-              <div class="build-part-image glightbox-gallery">
-                <img
-                  src={part.featuredImage.node.sourceUrl}
-                  alt={part.featuredImage.node.altText}
-                />
-              </div>
-            )}
-
-            {part.content && (
-              <div set:html={part.content} />
+            {part.buildlog?.partcontent ? (
+              <div class="part-content" set:html={part.buildlog.partcontent} />
+            ) : part.content ? (
+              <div class="part-content" set:html={part.content} />
+            ) : (
+              <p class="no-content">Content coming soon.</p>
             )}
           </div>
         ))}
@@ -140,7 +140,7 @@ const info = model.modelinfo;
     </section>
   )}
 
-  <!-- 6. SPECS -->
+  <!-- 5. SPECS -->
   {info && (
     <section class="page-section">
       <div class="container">
@@ -171,6 +171,35 @@ const info = model.modelinfo;
   }
   .back-link:hover { color: var(--color-primary); }
 
+  /* Hero: two-column layout */
+  .hero-inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+    align-items: center;
+  }
+  .hero-copy { min-width: 0; }
+  .hero-image {
+    flex-shrink: 0;
+    max-width: 320px;
+    width: 100%;
+  }
+  .hero-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    object-fit: cover;
+    max-height: 240px;
+  }
+  @media (max-width: 640px) {
+    .hero-inner {
+      grid-template-columns: 1fr;
+    }
+    .hero-image { max-width: 100%; }
+  }
+
+  /* Part stepper */
   .part-stepper {
     display: flex;
     flex-wrap: wrap;
@@ -205,14 +234,7 @@ const info = model.modelinfo;
     display: block;
   }
 
-  .model-hero-image {
-    width: 100%;
-    max-height: 480px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin: 24px 0;
-  }
-
+  /* Build parts */
   .build-part {
     border-top: 1px solid var(--color-border);
     padding-top: 32px;
@@ -241,40 +263,14 @@ const info = model.modelinfo;
     margin: 0;
     font-size: 1.25rem;
   }
-  .build-part-image {
-    margin-bottom: 24px;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .build-part-image img {
-    width: 100%;
+  .part-content img {
+    max-width: 100%;
     height: auto;
-    display: block;
+    border-radius: 6px;
+    margin: 12px 0;
   }
-  .no-image {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 200px;
-    background: var(--color-surface);
+  .no-content {
     color: var(--color-text-muted);
-    border-radius: 8px;
-    font-size: 0.9rem;
+    font-style: italic;
   }
 </style>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.glightbox-gallery img').forEach((img) => {
-      if (!img.parentElement?.classList.contains('glightbox')) {
-        const a = document.createElement('a');
-        a.href = (img as HTMLImageElement).src;
-        a.classList.add('glightbox');
-        img.parentNode?.insertBefore(a, img);
-        a.appendChild(img);
-      }
-    });
-    // @ts-ignore
-    GLightbox({ selector: '.glightbox' });
-  });
-</script>
