@@ -1,190 +1,224 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import {
-  getAllBuilds,
-  getBuildBySlug,
+  getAllModels,
   getBuildPartsByModel,
   getModelBySlug,
 } from '../../lib/wordpress';
 
 export async function getStaticPaths() {
-  const builds = await getAllBuilds();
-  return builds.map((build: any) => ({
-    params: { slug: build.slug },
+  const models = await getAllModels();
+  return models.map((model: any) => ({
+    params: { slug: model.slug },
   }));
 }
 
 const { slug } = Astro.params;
-const post = await getBuildBySlug(slug!);
 
-if (!post) {
+const [model, parts] = await Promise.all([
+  getModelBySlug(slug!),
+  getBuildPartsByModel(slug!),
+]);
+
+if (!model) {
   return Astro.redirect('/builds');
 }
 
-const { title, featuredImage, buildlog } = post;
-const modelSlug = buildlog?.modelslug;
-const currentPart = buildlog?.partnumber;
-
-const [parts, model] = await Promise.all([
-  modelSlug ? getBuildPartsByModel(modelSlug) : Promise.resolve([]),
-  modelSlug ? getModelBySlug(modelSlug) : Promise.resolve(null),
-]);
-
-const info = model?.modelinfo;
+const info = model.modelinfo;
 ---
+<BaseLayout title={`${model.title} | Glushkov Modelling`}>
 
-<BaseLayout title={`${title} | Glushkov Modelling`}>
+  <!-- 1. HERO -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-card hero-copy">
+        <a href="/builds" class="back-link">&#8592; Back to builds</a>
+        <span class="eyebrow">Build Log</span>
+        <h1>{model.title}</h1>
 
-<!-- 1. HERO -->
-<section class="hero">
-  <div class="container hero-grid">
-    <div class="hero-card hero-copy">
-      <a href="/builds" class="back-link">← Back to builds</a>
-      <span class="eyebrow">Build Log</span>
-      <h1>{model?.title || title}</h1>
+        <div class="hero-meta">
+          {info?.buildstatus && (
+            <span class="meta-pill">
+              {Array.isArray(info.buildstatus)
+                ? info.buildstatus.join(', ')
+                : info.buildstatus}
+            </span>
+          )}
+          {info?.modelscale && (
+            <span class="meta-pill">Scale: {info.modelscale}</span>
+          )}
+          {info?.manufacturer && (
+            <span class="meta-pill">{info.manufacturer}</span>
+          )}
+        </div>
 
-      <div class="hero-meta">
-        {info?.buildstatus && (
-          <span class="meta-pill">
-            {Array.isArray(info.buildstatus)
-              ? info.buildstatus.join(', ')
-              : info.buildstatus}
-          </span>
+        {/* Stepper: якоря по номеру части */}
+        {parts.length > 1 && (
+          <nav class="part-stepper" aria-label="Build log parts">
+            {parts.map((part: any) => (
+              <a
+                href={`#part-${part.buildlog?.partnumber}`}
+                class="part-step"
+              >
+                Part {part.buildlog?.partnumber}
+              </a>
+            ))}
+          </nav>
         )}
+      </div>
 
-        {info?.modelscale && (
-          <span class="meta-pill">Scale: {info.modelscale}</span>
-        )}
-
-        {info?.manufacturer && (
-          <span class="meta-pill">{info.manufacturer}</span>
+      <div class="hero-card hero-image">
+        {info?.modelimageurl ? (
+          <img
+            src={info.modelimageurl}
+            alt={model.title}
+            class="glightbox"
+          />
+        ) : (
+          <div class="no-image">No image yet</div>
         )}
       </div>
     </div>
+  </section>
 
-    <div class="hero-card hero-image">
-      {info?.modelimageurl ? (
-        <img
-          src={info.modelimageurl}
-          alt={model?.title || title}
-          loading="lazy"
-        />
-      ) : (
-        <div class="gallery-placeholder">No image yet</div>
-      )}
-    </div>
-  </div>
-</section>
-
-  <!-- 2. КРАТКАЯ ХАРАКТЕРИСТИКА -->
+  <!-- 2. SHORT DESCRIPTION -->
   {info?.shortdescription && (
     <section class="page-section">
       <div class="container">
-        <div class="content-card">
-          <span class="eyebrow">About the Model</span>
-          <p class="short-desc">{info.shortdescription}</p>
-        </div>
+        <span class="eyebrow">About the Model</span>
+        <p>{info.shortdescription}</p>
       </div>
     </section>
   )}
 
-  <!-- 3. ИСТОРИЧЕСКАЯ СПРАВКА -->
+  <!-- 3. HISTORICAL NOTE -->
   {info?.historicalnote && (
     <section class="page-section">
       <div class="container">
-        <div class="content-card">
-          <span class="eyebrow">Historical Background</span>
-          <h2 class="section-title">History</h2>
-          <div class="content-html" set:html={info.historicalnote} />
-        </div>
+        <span class="eyebrow">Historical Background</span>
+        <h2>History</h2>
       </div>
     </section>
   )}
 
-  <!-- 4. STEPPER -->
+  <!-- 4. BUILD LOG PARTS (все части последовательно) -->
   {parts.length > 0 && (
-    <section class="page-section stepper-section">
-      <div class="container">
-        <span class="eyebrow">Build Log</span>
-        <nav class="stepper" aria-label="Build parts">
-          {parts.map((part: any) => (
-            <a
-              href={`/builds/${part.slug}`}
-              class:list={[
-                'stepper-item',
-                { active: part.buildlog?.partnumber === currentPart }
-              ]}
-            >
-              <span class="stepper-number">Part {part.buildlog?.partnumber}</span>
-              <span class="stepper-title">{part.title}</span>
-            </a>
-          ))}
-        </nav>
-      </div>
-    </section>
-  )}
-
-  <!-- 5. КОНТЕНТ ЧАСТИ -->
-  {buildlog?.partcontent && (
     <section class="page-section">
       <div class="container">
-        <div class="gallery-card">
-          <div class="content-html glightbox-gallery" set:html={buildlog.partcontent} />
+        <span class="eyebrow">Build Log</span>
+        <h2 class="section-title">All parts</h2>
+
+        {parts.map((part: any) => (
+          <article
+            id={`part-${part.buildlog?.partnumber}`}
+            class="build-part"
+          >
+            <div class="build-part-header">
+              <span class="part-number">Part {part.buildlog?.partnumber}</span>
+              <h3>{part.title}</h3>
+            </div>
+            {part.content && (
+              <div class="build-part-content content-html" set:html={part.content} />
+            )}
+          </article>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <!-- 5. PROJECT SPECS -->
+  {info && (
+    <section class="page-section">
+      <div class="container">
+        <span class="eyebrow">Project Specs</span>
+        <h2 class="section-title">Model Info</h2>
+        <div class="spec-grid">
+          <div class="spec-item"><span class="spec-label">Model</span><span class="spec-value">{model.title || '\u2014'}</span></div>
+          <div class="spec-item"><span class="spec-label">Scale</span><span class="spec-value">{info.modelscale || '\u2014'}</span></div>
+          <div class="spec-item"><span class="spec-label">Manufacturer</span><span class="spec-value">{info.manufacturer || '\u2014'}</span></div>
+          <div class="spec-item"><span class="spec-label">Length</span><span class="spec-value">{info.modellength ? `${info.modellength} mm` : '\u2014'}</span></div>
+          <div class="spec-item"><span class="spec-label">Historical Year</span><span class="spec-value">{info.historicalyear || '\u2014'}</span></div>
+          <div class="spec-item"><span class="spec-label">Total Parts</span><span class="spec-value">{info.totalparts || '\u2014'}</span></div>
+          <div class="spec-item"><span class="spec-label">Status</span><span class="spec-value">{Array.isArray(info.buildstatus) ? info.buildstatus.join(', ') : info.buildstatus || '\u2014'}</span></div>
         </div>
       </div>
     </section>
   )}
 
-<!-- 6. SPEC SIDEBAR -->
-{info && (
-  <section class="page-section">
-    <div class="container">
-      <aside class="info-card">
-        <span class="eyebrow">Project Specs</span>
-        <h3 class="card-title">Model Info</h3>
-        <div class="spec-grid">
-          <div class="spec-item">
-            <span class="spec-label">Model</span>
-            <span class="spec-value">{model?.title || '—'}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Scale</span>
-            <span class="spec-value">{info.modelscale || '—'}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Manufacturer</span>
-            <span class="spec-value">{info.manufacturer || '—'}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Length</span>
-            <span class="spec-value">{info.modellength ? `${info.modellength} mm` : '—'}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Historical Year</span>
-            <span class="spec-value">{info.historicalyear || '—'}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Total Parts</span>
-            <span class="spec-value">{info.totalparts || '—'}</span>
-          </div>
-          <div class="spec-item">
-            <span class="spec-label">Status</span>
-            <span class="spec-value">
-              {Array.isArray(info.buildstatus)
-                ? info.buildstatus.join(', ')
-                : info.buildstatus || '—'}
-            </span>
-          </div>
-        </div>
-      </aside>
-    </div>
-  </section>
-)}
+</BaseLayout>
 
+<style>
+  .back-link {
+    display: inline-block;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+  .back-link:hover { color: var(--color-primary); }
 
+  .part-stepper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .part-step {
+    font-size: 0.78rem;
+    padding: 3px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    opacity: 0.7;
+    transition: color 0.15s, border-color 0.15s, opacity 0.15s;
+  }
+  .part-step:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+    opacity: 1;
+  }
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
+  .build-part {
+    border-top: 1px solid var(--color-border);
+    padding-top: 32px;
+    margin-top: 32px;
+  }
+  .build-part:first-child {
+    border-top: none;
+    margin-top: 0;
+    padding-top: 0;
+  }
+  .build-part-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .part-number {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+  .build-part-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+  .no-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    border-radius: 8px;
+    font-size: 0.9rem;
+  }
+</style>
+
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.glightbox-gallery img').forEach((img) => {
@@ -200,4 +234,3 @@ const info = model?.modelinfo;
     GLightbox({ selector: '.glightbox' });
   });
 </script>
-</BaseLayout>
