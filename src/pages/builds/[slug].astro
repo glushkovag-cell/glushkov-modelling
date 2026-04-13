@@ -52,7 +52,6 @@ const info = model.modelinfo;
           )}
         </div>
 
-        {/* Stepper: якоря по номеру части */}
         {parts.length > 1 && (
           <nav class="part-stepper" aria-label="Build log parts">
             {parts.map((part: any) => (
@@ -101,7 +100,7 @@ const info = model.modelinfo;
     </section>
   )}
 
-  <!-- 4. BUILD LOG PARTS (все части последовательно) -->
+  <!-- 4. BUILD LOG PARTS -->
   {parts.length > 0 && (
     <section class="page-section">
       <div class="container">
@@ -117,6 +116,18 @@ const info = model.modelinfo;
               <span class="part-number">Part {part.buildlog?.partnumber}</span>
               <h3>{part.title}</h3>
             </div>
+
+            {part.featuredImage?.node?.sourceUrl && (
+              <div class="build-part-image">
+                <img
+                  src={part.featuredImage.node.sourceUrl}
+                  alt={part.featuredImage.node.altText || part.title}
+                  class="glightbox"
+                  loading="lazy"
+                />
+              </div>
+            )}
+
             {part.content && (
               <div class="build-part-content content-html" set:html={part.content} />
             )}
@@ -133,13 +144,13 @@ const info = model.modelinfo;
         <span class="eyebrow">Project Specs</span>
         <h2 class="section-title">Model Info</h2>
         <div class="spec-grid">
-          <div class="spec-item"><span class="spec-label">Model</span><span class="spec-value">{model.title || '\u2014'}</span></div>
-          <div class="spec-item"><span class="spec-label">Scale</span><span class="spec-value">{info.modelscale || '\u2014'}</span></div>
-          <div class="spec-item"><span class="spec-label">Manufacturer</span><span class="spec-value">{info.manufacturer || '\u2014'}</span></div>
-          <div class="spec-item"><span class="spec-label">Length</span><span class="spec-value">{info.modellength ? `${info.modellength} mm` : '\u2014'}</span></div>
-          <div class="spec-item"><span class="spec-label">Historical Year</span><span class="spec-value">{info.historicalyear || '\u2014'}</span></div>
-          <div class="spec-item"><span class="spec-label">Total Parts</span><span class="spec-value">{info.totalparts || '\u2014'}</span></div>
-          <div class="spec-item"><span class="spec-label">Status</span><span class="spec-value">{Array.isArray(info.buildstatus) ? info.buildstatus.join(', ') : info.buildstatus || '\u2014'}</span></div>
+          <div class="spec-item"><span class="spec-label">Model</span><span class="spec-value">{model.title || '&#8212;'}</span></div>
+          <div class="spec-item"><span class="spec-label">Scale</span><span class="spec-value">{info.modelscale || '&#8212;'}</span></div>
+          <div class="spec-item"><span class="spec-label">Manufacturer</span><span class="spec-value">{info.manufacturer || '&#8212;'}</span></div>
+          <div class="spec-item"><span class="spec-label">Length</span><span class="spec-value">{info.modellength ? `${info.modellength} mm` : '&#8212;'}</span></div>
+          <div class="spec-item"><span class="spec-label">Historical Year</span><span class="spec-value">{info.historicalyear || '&#8212;'}</span></div>
+          <div class="spec-item"><span class="spec-label">Total Parts</span><span class="spec-value">{info.totalparts || '&#8212;'}</span></div>
+          <div class="spec-item"><span class="spec-label">Status</span><span class="spec-value">{Array.isArray(info.buildstatus) ? info.buildstatus.join(', ') : info.buildstatus || '&#8212;'}</span></div>
         </div>
       </div>
     </section>
@@ -206,6 +217,16 @@ const info = model.modelinfo;
   .build-part-header h3 {
     margin: 0;
     font-size: 1.25rem;
+  }
+  .build-part-image {
+    margin-bottom: 24px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .build-part-image img {
+    width: 100%;
+    height: auto;
+    display: block;
   }
   .no-image {
     display: flex;
