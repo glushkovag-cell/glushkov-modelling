@@ -26,22 +26,28 @@ if (!model) {
 }
 
 const info = model.modelinfo;
-const heroImage = model.featuredImage?.node?.sourceUrl;
-const heroImageAlt = model.featuredImage?.node?.altText || model.title;
+const heroImage = info?.modelimageurl || null;
+const heroImageAlt = model.title;
 ---
 
-<BaseLayout title={`${model.title} | Glushkov Modelling`}>
-  <section class="hero">
+<BaseLayout
+  title={`${model.title} — Build Log`}
+  description={info?.shortdescription || `Build log for ${model.title}`}
+>
+  <div id="top"></div>
+
+  <section class="build-hero">
     <div class="container">
-      <div class="hero-inner">
+      <a href="/builds" class="back-link">← Back to builds</a>
+
+      <div class="hero-grid">
         <div class="hero-copy">
-          <a href="/builds" class="back-link">← Back to builds</a>
-          <span class="eyebrow">Build Log</span>
+          <p class="eyebrow">Build Log</p>
           <h1>{model.title}</h1>
 
           <div class="hero-meta">
             {info?.buildstatus && (
-              <span class="meta-pill">
+              <span class={`meta-pill status-pill ${model.buildstatusClass || ''}`}>
                 {Array.isArray(info.buildstatus)
                   ? info.buildstatus.join(', ')
                   : info.buildstatus}
@@ -56,15 +62,15 @@ const heroImageAlt = model.featuredImage?.node?.altText || model.title;
               <span class="meta-pill">{info.manufacturer}</span>
             )}
           </div>
+
+          {info?.shortdescription && (
+            <p class="hero-summary">{info.shortdescription}</p>
+          )}
         </div>
 
         {heroImage && (
-          <div class="hero-image">
-            <img
-              src={heroImage}
-              alt={heroImageAlt}
-              loading="lazy"
-            />
+          <div class="hero-image-wrap">
+            <img class="hero-image" src={heroImage} alt={heroImageAlt} />
           </div>
         )}
       </div>
@@ -72,344 +78,474 @@ const heroImageAlt = model.featuredImage?.node?.altText || model.title;
   </section>
 
   {parts.length > 1 && (
-    <div class="container">
-      <nav class="part-stepper" id="parts-nav">
-        {parts.map((part: any) => (
-          <a
-            href={`#part-${part.buildlog?.partnumber}`}
-            class="part-step"
-          >
-            {part.featuredImage?.node?.sourceUrl && (
-              <img
-                src={part.featuredImage.node.sourceUrl}
-                alt={
-                  part.featuredImage.node.altText ||
-                  `Part ${part.buildlog?.partnumber}`
-                }
-                class="part-step-thumb"
-                loading="lazy"
-              />
-            )}
-            <span>Part {part.buildlog?.partnumber}</span>
-          </a>
-        ))}
-      </nav>
-    </div>
-  )}
-
-  {info?.shortdescription && (
-    <section class="page-section">
+    <section class="parts-strip-section">
       <div class="container">
-        <span class="eyebrow">About the Model</span>
-        <p>{info.shortdescription}</p>
+        <div class="section-head">
+          <h2>Build Parts</h2>
+          <a href="#build-log" class="section-link">Jump to full log</a>
+        </div>
+
+        <div class="parts-strip-wrap">
+          <div class="parts-strip">
+            {parts.map((part: any) => (
+              <a href={`#part-${part.partNumber}`} class="part-thumb-card">
+                {part.heroImage ? (
+                  <img
+                    src={part.heroImage}
+                    alt={part.heroImageAlt}
+                    class="part-thumb-image"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div class="part-thumb-placeholder">Part {part.partNumber}</div>
+                )}
+
+                <div class="part-thumb-body">
+                  <span class="part-thumb-number">Part {part.partNumber}</span>
+                  <span class="part-thumb-title">{part.title}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   )}
 
   {info?.historicalnote && (
-    <section class="page-section">
-      <div class="container">
-        <span class="eyebrow">Historical Background</span>
-        <div class="historical-note" set:html={info.historicalnote} />
+    <section class="section">
+      <div class="container narrow prose-card">
+        <h2>Historical Background</h2>
+        <div set:html={info.historicalnote} />
       </div>
     </section>
   )}
 
   {parts.length > 0 && (
-    <section class="page-section">
-      <div class="container">
-        <span class="eyebrow">Build Log</span>
-        <h2>All parts</h2>
+    <section class="section">
+      <div class="container narrow" id="build-log">
+        <h2>Build Log</h2>
 
         {parts.map((part: any) => (
-          <div class="build-part" id={`part-${part.buildlog?.partnumber}`}>
-            <div class="build-part-header">
-              <span class="part-number">Part {part.buildlog?.partnumber}</span>
+          <article id={`part-${part.partNumber}`} class="build-part-card">
+            <header class="part-header">
+              <p class="eyebrow">Part {part.partNumber}</p>
               <h3>{part.title}</h3>
-            </div>
+            </header>
 
-            {part.buildlog?.partcontent ? (
-              <div class="part-content" set:html={part.buildlog.partcontent} />
-            ) : part.content ? (
-              <div class="part-content" set:html={part.content} />
+            {part.partContent ? (
+              <div class="part-content" set:html={part.partContent} />
             ) : (
-              <p class="no-content">Content coming soon.</p>
+              <p>Content coming soon.</p>
             )}
 
             {parts.length > 1 && (
-              <div class="part-back">
-                <a href="#parts-nav" class="part-back-link">
-                  ↑ Back to all parts
-                </a>
-              </div>
+              <p class="back-top">
+                <a href="#top">↑ Back to all parts</a>
+              </p>
             )}
-          </div>
+          </article>
         ))}
       </div>
     </section>
   )}
 
   {info && (
-    <section class="page-section">
-      <div class="container">
-        <span class="eyebrow">Project Specs</span>
-
-        <dl class="specs-grid">
-          <div class="spec-card">
-            <dt>Model</dt>
-            <dd>{model.title || '—'}</dd>
+    <section class="section specs-shell">
+      <div class="container narrow">
+        <div class="specs-card">
+          <div class="section-head specs-head">
+            <h2>Project Specs</h2>
           </div>
 
-          <div class="spec-card">
-            <dt>Scale</dt>
-            <dd>{info.modelscale || '—'}</dd>
-          </div>
+          <dl class="specs-grid">
+            <div class="spec-item">
+              <dt>Model</dt>
+              <dd>{model.title || '—'}</dd>
+            </div>
 
-          <div class="spec-card">
-            <dt>Manufacturer</dt>
-            <dd>{info.manufacturer || '—'}</dd>
-          </div>
+            <div class="spec-item">
+              <dt>Scale</dt>
+              <dd>{info.modelscale || '—'}</dd>
+            </div>
 
-          <div class="spec-card">
-            <dt>Length</dt>
-            <dd>{info.modellength ? `${info.modellength} mm` : '—'}</dd>
-          </div>
+            <div class="spec-item">
+              <dt>Manufacturer</dt>
+              <dd>{info.manufacturer || '—'}</dd>
+            </div>
 
-          <div class="spec-card">
-            <dt>Historical Year</dt>
-            <dd>{info.historicalyear || '—'}</dd>
-          </div>
+            <div class="spec-item">
+              <dt>Length</dt>
+              <dd>{info.modellength ? `${info.modellength} mm` : '—'}</dd>
+            </div>
 
-          <div class="spec-card">
-            <dt>Total Parts</dt>
-            <dd>{info.totalparts || '—'}</dd>
-          </div>
+            <div class="spec-item">
+              <dt>Historical Year</dt>
+              <dd>{info.historicalyear || '—'}</dd>
+            </div>
 
-          <div class="spec-card">
-            <dt>Status</dt>
-            <dd>
-              {Array.isArray(info.buildstatus)
-                ? info.buildstatus.join(', ')
-                : info.buildstatus || '—'}
-            </dd>
-          </div>
-        </dl>
+            <div class="spec-item">
+              <dt>Total Parts</dt>
+              <dd>{info.totalparts || '—'}</dd>
+            </div>
+
+            <div class="spec-item">
+              <dt>Status</dt>
+              <dd>
+                {Array.isArray(info.buildstatus)
+                  ? info.buildstatus.join(', ')
+                  : info.buildstatus || '—'}
+              </dd>
+            </div>
+          </dl>
+        </div>
       </div>
     </section>
   )}
 </BaseLayout>
 
 <style>
+  .container {
+    width: min(1120px, calc(100% - 2rem));
+    margin: 0 auto;
+  }
+
+  .container.narrow {
+    width: min(820px, calc(100% - 2rem));
+  }
+
+  .build-hero {
+    padding: 2.5rem 0 2rem;
+  }
+
   .back-link {
     display: inline-block;
-    margin-bottom: 12px;
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
+    margin-bottom: 1.5rem;
+    color: inherit;
     text-decoration: none;
+    opacity: 0.72;
   }
 
   .back-link:hover {
-    color: var(--color-primary);
-  }
-
-  .hero-inner {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
-    gap: 32px;
-    align-items: center;
-  }
-
-  .hero-copy {
-    min-width: 0;
-  }
-
-  .hero-image {
-    width: 100%;
-    max-width: 420px;
-    justify-self: end;
-  }
-
-  .hero-image img {
-    width: 100%;
-    height: 180px;
-    display: block;
-    border-radius: 8px;
-    object-fit: contain;
-    object-position: center;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-  }
-
-  @media (max-width: 640px) {
-    .hero-inner {
-      grid-template-columns: 1fr;
-    }
-
-    .hero-image {
-      max-width: 100%;
-      justify-self: start;
-    }
-
-    .hero-image img {
-      height: 160px;
-    }
-  }
-
-  .part-stepper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 16px;
-    margin-bottom: 24px;
-  }
-
-  .part-step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.78rem;
-    padding: 6px 10px;
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    color: var(--color-text-muted);
-    text-decoration: none;
-    opacity: 0.7;
-    transition: color 0.15s, border-color 0.15s, opacity 0.15s;
-  }
-
-  .part-step:hover {
-    color: var(--color-primary);
-    border-color: var(--color-primary);
     opacity: 1;
   }
 
-  .part-step-thumb {
-    width: 56px;
-    height: 40px;
-    object-fit: contain;
-    object-position: center;
-    border-radius: 4px;
-    display: block;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+    gap: 2rem;
+    align-items: start;
   }
 
-  .historical-note {
-    margin-top: 8px;
-  }
-
-  .historical-note :global(p) {
-    margin: 0 0 12px;
-  }
-
-  .historical-note :global(img) {
-    max-width: 100%;
-    height: auto;
-    border-radius: 6px;
-    margin: 12px 0;
-  }
-
-  .historical-note :global(ul),
-  .historical-note :global(ol) {
-    padding-left: 20px;
-    margin: 12px 0;
-  }
-
-  .historical-note :global(li) {
-    margin-bottom: 6px;
-  }
-
-  .build-part {
-    border-top: 1px solid var(--color-border);
-    padding-top: 32px;
-    margin-top: 32px;
-  }
-
-  .build-part:first-child {
-    border-top: none;
-    margin-top: 0;
-    padding-top: 0;
-  }
-
-  .build-part-header {
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
-    margin-bottom: 20px;
-  }
-
-  .part-number {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
+  .eyebrow {
+    margin: 0 0 0.5rem;
+    font-size: 0.82rem;
+    line-height: 1.2;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--color-text-muted);
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+
+  .hero-copy h1 {
+    margin: 0;
+  }
+
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+
+  .meta-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding: 0.55rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 0.95rem;
+    line-height: 1;
     white-space: nowrap;
   }
 
-  .build-part-header h3 {
-    margin: 0;
-    font-size: 1.25rem;
+  .status-pill {
+    background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+    color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+    font-weight: 600;
   }
 
-  .part-content img {
+  .hero-summary {
+    margin-top: 1.25rem;
+    max-width: 62ch;
+    color: var(--color-text-muted);
+  }
+
+  .hero-image-wrap {
+    border-radius: 1rem;
+    overflow: hidden;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .hero-image {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+
+  .section {
+    padding: 2.5rem 0;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+
+  .section-link:hover {
+    text-decoration: underline;
+  }
+
+  .parts-strip-section {
+    padding: 0.5rem 0 1rem;
+  }
+
+  .parts-strip-wrap {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.5rem;
+  }
+
+  .parts-strip {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .parts-strip-wrap::-webkit-scrollbar {
+    height: 10px;
+  }
+
+  .parts-strip-wrap::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 999px;
+  }
+
+  .part-thumb-card {
+    flex: 0 0 210px;
+    width: 210px;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .part-thumb-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-md);
+  }
+
+  .part-thumb-image,
+  .part-thumb-placeholder {
+    display: block;
+    width: 100%;
+    height: 130px;
+    flex: 0 0 130px;
+  }
+
+  .part-thumb-image {
+    object-fit: cover;
+  }
+
+  .part-thumb-placeholder {
+    background: var(--color-surface-offset);
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+  }
+
+  .part-thumb-body {
+    display: grid;
+    gap: 0.3rem;
+    padding: 0.85rem 0.95rem 1rem;
+  }
+
+  .part-thumb-number {
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+
+  .part-thumb-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.35;
+    font-weight: 600;
+  }
+
+  .prose-card,
+  .build-part-card,
+  .specs-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 1.25rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .prose-card {
+    padding: 1.5rem;
+  }
+
+  .build-part-card {
+    padding: 1.5rem;
+  }
+
+  .build-part-card + .build-part-card {
+    margin-top: 1.5rem;
+  }
+
+  .part-header h3 {
+    margin-top: 0.15rem;
+  }
+
+  .part-content :global(p) {
+    margin: 1rem 0;
+  }
+
+  .part-content :global(img) {
+    display: block;
     max-width: 100%;
     height: auto;
-    border-radius: 6px;
-    margin: 12px 0;
+    margin: 1.25rem 0;
+    border-radius: 0.75rem;
   }
 
-  .part-back {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px dashed var(--color-border);
+  .back-top {
+    margin-top: 1.25rem;
   }
 
-  .part-back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
+  .back-top a {
     text-decoration: none;
+    color: var(--color-primary);
   }
 
-  .part-back-link:hover {
-    color: var(--color-primary);
+  .back-top a:hover {
+    text-decoration: underline;
+  }
+
+  .specs-shell {
+    padding-top: 1rem;
+    padding-bottom: 3rem;
+  }
+
+  .specs-card {
+    padding: 1.5rem;
+  }
+
+  .specs-head {
+    margin-bottom: 1.25rem;
   }
 
   .specs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-    margin-top: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
   }
 
-  .spec-card {
-    padding: 14px 16px;
+  .spec-item {
+    padding: 1rem 1rem 0.95rem;
     border: 1px solid var(--color-border);
-    border-radius: 12px;
-    background: var(--color-surface);
+    border-radius: 1rem;
+    background: var(--color-surface-2);
   }
 
-  .spec-card dt {
-    margin: 0 0 6px;
-    font-size: 0.75rem;
-    font-weight: 600;
+  .spec-item dt {
+    margin-bottom: 0.4rem;
+    font-size: 0.78rem;
+    line-height: 1.2;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--color-text-muted);
+    font-weight: 700;
   }
 
-  .spec-card dd {
+  .spec-item dd {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.02rem;
+    line-height: 1.45;
     color: var(--color-text);
+    font-weight: 600;
   }
 
-  .no-content {
-    color: var(--color-text-muted);
-    font-style: italic;
+  @media (max-width: 900px) {
+    .hero-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-image-wrap {
+      max-width: 760px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .build-hero {
+      padding-top: 2rem;
+    }
+
+    .section {
+      padding: 2rem 0;
+    }
+
+    .part-thumb-card {
+      flex-basis: 185px;
+      width: 185px;
+    }
+
+    .part-thumb-image,
+    .part-thumb-placeholder {
+      height: 116px;
+      flex-basis: 116px;
+    }
+
+    .specs-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .section-head {
+      align-items: flex-start;
+      flex-direction: column;
+    }
   }
 </style>

@@ -1,71 +1,232 @@
-const WP_API = import.meta.env.WP_GRAPHQL_URL;
+const WP_GRAPHQL_URL = import.meta.env.WP_GRAPHQL_URL;
 
-if (!WP_API) {
-  throw new Error('WP_GRAPHQL_URL is not defined');
+type Variables = Record<string, unknown>;
+
+interface GraphQLErrorItem {
+  message?: string;
 }
 
-// --- getAllBuilds: slugи постов для getStaticPaths ---
-export async function getAllBuilds() {
-  const res = await fetch(WP_API, {
+interface FeaturedImageNode {
+  sourceUrl?: string | null;
+  altText?: string | null;
+}
+
+interface FeaturedImage {
+  node?: FeaturedImageNode | null;
+}
+
+interface ModelInfo {
+  manufacturer?: string | null;
+  modelscale?: string | null;
+  modelimageurl?: string | null;
+  shortdescription?: string | null;
+  historicalyear?: string | null;
+  modellength?: string | null;
+  totalparts?: string | null;
+  buildstatus?: string[] | string | null;
+  historicalnote?: string | null;
+}
+
+interface ModelNode {
+  id: string;
+  slug: string;
+  title: string;
+  featuredImage?: FeaturedImage | null;
+  modelinfo?: ModelInfo | null;
+}
+
+interface NormalizedModel extends ModelNode {
+  heroImage: string | null;
+  heroImageAlt: string;
+  buildstatusText: string;
+  buildstatusClass: string;
+}
+
+interface BuildLog {
+  modelslug?: string | null;
+  partnumber?: string | number | null;
+  partcontent?: string | null;
+}
+
+interface BuildPostNode {
+  id: string;
+  slug: string;
+  title: string;
+  content?: string | null;
+  featuredImage?: FeaturedImage | null;
+  buildlog?: BuildLog | null;
+}
+
+interface NormalizedBuildPart extends BuildPostNode {
+  heroImage: string | null;
+  heroImageAlt: string;
+  partNumber: number;
+  partContent: string;
+}
+
+interface GetAllModelsResponse {
+  models: {
+    nodes: ModelNode[];
+  };
+}
+
+interface GetModelBySlugResponse {
+  model: ModelNode | null;
+}
+
+interface GetBuildPartsByModelResponse {
+  posts: {
+    nodes: BuildPostNode[];
+  };
+}
+
+async function fetchAPI<T>(query: string, variables: Variables = {}): Promise<T> {
+  if (!WP_GRAPHQL_URL) {
+    throw new Error('WP_GRAPHQL_URL is not defined');
+  }
+
+  const response = await fetch(WP_GRAPHQL_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({
-      query: `
-        query {
-          posts(where: { categoryName: "builds" }) {
-            nodes {
-              slug
-            }
-          }
-        }
-      `,
+      query,
+      variables,
     }),
   });
-  const json = await res.json();
-  return json.data?.posts?.nodes ?? [];
+
+  if (!response.ok) {
+    throw new Error(`WPGraphQL HTTP error: ${response.status} ${response.statusText}`);
+  }
+
+  const json = await response.json();
+
+  if (json.errors?.length) {
+    const message = json.errors
+      .map((error: GraphQLErrorItem) => error.message || 'Unknown GraphQL error')
+      .join('; ');
+
+    throw new Error(message);
+  }
+
+  return json.data as T;
 }
 
-// --- getBuildPosts: карточки для /builds ---
-export async function getBuildPosts() {
-  const res = await fetch(WP_API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      query: `
-        query {
-          posts(where: { categoryName: "builds" }) {
-            nodes {
-              slug
-              title
-              featuredImage {
-                node {
-                  sourceUrl
-                  altText
-                }
-              }
-              buildlog {
-                modelslug
-                partnumber
-              }
+function slugifyStatus(status: string): string {
+  return status.toLowerCase().trim().replace(/\s+/g, '-');
+}
+
+function normalizeModel(model: ModelNode): NormalizedModel {
+  const rawStatus = model.modelinfo?.buildstatus;
+
+  const buildstatusText = Array.isArray(rawStatus)
+    ? rawStatus.join(', ')
+    : rawStatus || '';
+
+  const buildstatusClass = Array.isArray(rawStatus)
+    ? rawStatus[0]
+      ? slugifyStatus(rawStatus[0])
+      : ''
+    : rawStatus
+      ? slugifyStatus(rawStatus)
+      : '';
+
+  return {
+    ...model,
+    heroImage: model.featuredImage?.node?.sourceUrl || model.modelinfo?.modelimageurl || null,
+    heroImageAlt: model.featuredImage?.node?.altText || model.title,
+    buildstatusText,
+    buildstatusClass,
+  };
+}
+
+function normalizeBuildPart(post: BuildPostNode): NormalizedBuildPart {
+  const partNumber = Number(post.buildlog?.partnumber || 0);
+
+  return {
+    ...post,
+    heroImage: post.featuredImage?.node?.sourceUrl || null,
+    heroImageAlt: post.featuredImage?.node?.altText || post.title,
+    partNumber,
+    partContent: post.buildlog?.partcontent || post.content || '',
+  };
+}
+
+export async function getAllModels(): Promise<NormalizedModel[]> {
+  const data = await fetchAPI<GetAllModelsResponse>(`
+    query GetAllModels {
+      models(first: 100) {
+        nodes {
+          id
+          slug
+          title
+          featuredImage {
+            node {
+              sourceUrl
+              altText
             }
           }
+          modelinfo {
+            manufacturer
+            modelscale
+            modelimageurl
+            shortdescription
+            historicalyear
+            modellength
+            totalparts
+            buildstatus
+            historicalnote
+          }
         }
-      `,
-    }),
-  });
-  const json = await res.json();
-  return json.data?.posts?.nodes ?? [];
+      }
+    }
+  `);
+
+  return data.models.nodes.map(normalizeModel);
 }
 
-// --- getBuildBySlug: одна запись по slug ---
-export async function getBuildBySlug(slug: string) {
-  const res = await fetch(WP_API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      query: `
-        query ($slug: ID!) {
-          post(id: $slug, idType: SLUG) {
+export async function getModelBySlug(slug: string): Promise<NormalizedModel | null> {
+  const data = await fetchAPI<GetModelBySlugResponse>(
+    `
+      query GetModelBySlug($slug: ID!) {
+        model(id: $slug, idType: SLUG) {
+          id
+          slug
+          title
+          featuredImage {
+            node {
+              sourceUrl
+              altText
+            }
+          }
+          modelinfo {
+            manufacturer
+            modelscale
+            modelimageurl
+            shortdescription
+            historicalyear
+            modellength
+            totalparts
+            buildstatus
+            historicalnote
+          }
+        }
+      }
+    `,
+    { slug }
+  );
+
+  return data.model ? normalizeModel(data.model) : null;
+}
+
+export async function getBuildPartsByModel(slug: string): Promise<NormalizedBuildPart[]> {
+  const data = await fetchAPI<GetBuildPartsByModelResponse>(
+    `
+      query GetBuildPartsByModel {
+        posts(where: { categoryName: "Builds" }, first: 100) {
+          nodes {
+            id
             slug
             title
             content
@@ -77,146 +238,17 @@ export async function getBuildBySlug(slug: string) {
             }
             buildlog {
               modelslug
-              partcontent
               partnumber
+              partcontent
             }
           }
         }
-      `,
-      variables: { slug },
-    }),
-  });
-  const json = await res.json();
-  return json.data?.post ?? null;
-}
+      }
+    `
+  );
 
-// --- getBuildPartsByModel: все части одной модели ---
-export async function getBuildPartsByModel(modelSlug: string) {
-  const res = await fetch(WP_API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      query: `
-        query {
-          posts(where: { categoryName: "builds" }) {
-            nodes {
-              slug
-              title
-              featuredImage {
-                node {
-                  sourceUrl
-                  altText
-                }
-              }
-              buildlog {
-                modelslug
-                partnumber
-                partcontent
-              }
-            }
-          }
-        }
-      `,
-    }),
-  });
-  const json = await res.json();
-  const all = json.data?.posts?.nodes ?? [];
-  return all
-    .filter((p: any) => p.buildlog?.modelslug === modelSlug)
-    .sort(
-      (a: any, b: any) =>
-        (a.buildlog?.partnumber ?? 0) - (b.buildlog?.partnumber ?? 0)
-    );
-}
-
-// --- getModelBySlug: данные модели по slug ---
-export async function getModelBySlug(slug: string) {
-  const res = await fetch(WP_API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      query: `
-        query ($slug: ID!) {
-          model(id: $slug, idType: SLUG) {
-            slug
-            title
-            modelinfo {
-              shortdescription
-              historicalnote
-              modelscale
-              manufacturer
-              totalparts
-              modellength
-              historicalyear
-              buildstatus
-              modelimageurl
-            }
-          }
-        }
-      `,
-      variables: { slug },
-    }),
-  });
-  const json = await res.json();
-  return json.data?.model ?? null;
-}
-
-// --- getAllModels: все модели CPT ---
-export async function getAllModels() {
-  const res = await fetch(WP_API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      query: `
-        query {
-          models {
-            nodes {
-              slug
-              title
-              modelinfo {
-                shortdescription
-                modelscale
-                manufacturer
-                buildstatus
-                modelimageurl
-              }
-            }
-          }
-        }
-      `,
-    }),
-  });
-  const json = await res.json();
-  return (json.data?.models?.nodes ?? []).map((model: any) => ({
-    ...model,
-    heroImage: model?.modelinfo?.modelimageurl || null,
-    heroImageAlt: model?.title || '',
-    buildstatusText: Array.isArray(model?.modelinfo?.buildstatus)
-      ? model.modelinfo.buildstatus.join(', ')
-      : model?.modelinfo?.buildstatus ?? '',
-    buildstatusClass: Array.isArray(model?.modelinfo?.buildstatus)
-      ? String(model.modelinfo.buildstatus[0] ?? '').toLowerCase().replace(/\s+/g, '-')
-      : String(model?.modelinfo?.buildstatus ?? '').toLowerCase().replace(/\s+/g, '-'),
-  }));
-}
-
-// --- getModelsWithFirstPart: модели с первой частью build log ---
-export async function getModelsWithFirstPart() {
-  const [models, posts] = await Promise.all([
-    getAllModels(),
-    getBuildPosts(),
-  ]);
-  return models.map((model: any) => {
-    const parts = posts
-      .filter((p: any) => p.buildlog?.modelslug === model.slug)
-      .sort(
-        (a: any, b: any) =>
-          (a.buildlog?.partnumber ?? 0) - (b.buildlog?.partnumber ?? 0)
-      );
-    return {
-      ...model,
-      firstPartSlug: parts.length > 0 ? parts[0].slug : null,
-      partsCount: parts.length,
-    };
-  });
+  return data.posts.nodes
+    .filter((post) => post.buildlog?.modelslug === slug)
+    .map(normalizeBuildPart)
+    .sort((a, b) => a.partNumber - b.partNumber);
 }
