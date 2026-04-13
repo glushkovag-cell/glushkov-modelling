@@ -48,9 +48,7 @@ const socialLinks = [
   },
 ];
 ---
-
 <BaseLayout title="Glushkov Modelling">
-
   <!-- HERO -->
   <section class="hero" id="top">
     <div class="container">
@@ -65,13 +63,13 @@ const socialLinks = [
           </div>
           <!-- Quick navigation -->
           <div class="hero-meta" style="margin-top: 12px;">
-            <a href="#featured-builds" class="meta-pill meta-pill--outline">Featured Builds</a>
-            <a href="#about" class="meta-pill meta-pill--outline">About</a>
-            <a href="#social-hub" class="meta-pill meta-pill--outline">Social Hub</a>
+            <a href="#featured-builds" class="nav-link-light">Featured Builds</a>
+            <a href="#about" class="nav-link-light">About</a>
+            <a href="#social-hub" class="nav-link-light">Social Hub</a>
           </div>
         </div>
         <div class="hero-card hero-image">
-          <img src="/workshop-bench.jpg" alt="Workshop bench \u2014 model ship building in progress" />
+          <img src="https://cms.glushkov-modelling.com/wordpress/wp-content/uploads/2026/04/A59F363E-B30F-4B6B-BE14-E6F9BB1873FA_1_105_c-e1776070135300.jpeg" alt="Workshop bench &#8212; model ship building in progress" />
         </div>
       </div>
     </div>
@@ -86,7 +84,7 @@ const socialLinks = [
           <h2 class="section-title" style="margin: 0;">Three current directions</h2>
           <p style="color: var(--color-text-muted); margin-top: 8px;">The site is currently centered around three major projects, each with its own pace, material logic, and visual character.</p>
         </div>
-        <a href="#top" class="meta-pill meta-pill--outline" style="flex-shrink: 0; margin-left: 24px;">\u2191 Top</a>
+        <a href="#top" class="nav-link-light" style="flex-shrink: 0; margin-left: 24px;">&#8593; Top</a>
       </div>
       <div class="builds-grid">
         {featuredBuilds.map((build) => (
@@ -95,7 +93,7 @@ const socialLinks = [
               <span class="eyebrow">{build.meta}</span>
               <h2>{build.title}</h2>
               <p>{build.description}</p>
-              <a href={build.href} class="build-link">View build log \u2192</a>
+              <a href={build.href} class="build-link">View build log &#8594;</a>
             </div>
           </div>
         ))}
@@ -111,20 +109,20 @@ const socialLinks = [
           <span class="eyebrow">About</span>
           <h2 class="card-title">A workshop built around process, patience, and detail</h2>
           <div class="content-html">
-            <p>GLUSHKOV MODELLING brings together long-form build logs, selected photography, and notes from the workbench. The focus is not only on finished models, but on the process itself \u2014 structure, materials, historical character, and the small decisions that shape each stage.</p>
+            <p>GLUSHKOV MODELLING brings together long-form build logs, selected photography, and notes from the workbench. The focus is not only on finished models, but on the process itself &#8212; structure, materials, historical character, and the small decisions that shape each stage.</p>
           </div>
-          <a href="/about" class="build-link" style="margin-top: 8px; display: inline-block;">Read About \u2192</a>
+          <a href="/about" class="build-link" style="margin-top: 8px; display: inline-block;">Read About &#8594;</a>
         </div>
         <div class="content-card">
           <span class="eyebrow">Navigation</span>
           <div class="spec-grid" style="margin-top: 8px;">
-            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Build Logs</span><span class="spec-value"><a href="/builds" style="color: var(--color-primary);">All builds \u2192</a></span></div>
-            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Le Requin</span><span class="spec-value"><a href="/builds/le-requin" style="color: var(--color-primary);">Open log \u2192</a></span></div>
-            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">HMS Bounty</span><span class="spec-value"><a href="/builds/bounty" style="color: var(--color-primary);">Open log \u2192</a></span></div>
-            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Bl\u00e9riot XI</span><span class="spec-value"><a href="/builds/bleriot-xi" style="color: var(--color-primary);">Open log \u2192</a></span></div>
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Build Logs</span><span class="spec-value"><a href="/builds" style="color: var(--color-primary);">All builds &#8594;</a></span></div>
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Le Requin</span><span class="spec-value"><a href="/builds/le-requin" style="color: var(--color-primary);">Open log &#8594;</a></span></div>
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">HMS Bounty</span><span class="spec-value"><a href="/builds/bounty" style="color: var(--color-primary);">Open log &#8594;</a></span></div>
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Bl&#233;riot XI</span><span class="spec-value"><a href="/builds/bleriot-xi" style="color: var(--color-primary);">Open log &#8594;</a></span></div>
           </div>
           <div style="text-align: right; margin-top: 16px;">
-            <a href="#top" class="meta-pill meta-pill--outline">\u2191 Top</a>
+            <a href="#top" class="nav-link-light">&#8593; Top</a>
           </div>
         </div>
       </div>
@@ -138,9 +136,9 @@ const socialLinks = [
         <div>
           <span class="eyebrow">Social Hub</span>
           <h2 class="section-title" style="margin: 0;">Follow the work as it develops</h2>
-          <p style="color: var(--color-text-muted); margin-top: 8px;">Different platforms serve different parts of the process \u2014 quick progress notes, longer videos, selected images, and published updates.</p>
+          <p style="color: var(--color-text-muted); margin-top: 8px;">Different platforms serve different parts of the process &#8212; quick progress notes, longer videos, selected images, and published updates.</p>
         </div>
-        <a href="#top" class="meta-pill meta-pill--outline" style="flex-shrink: 0; margin-left: 24px;">\u2191 Top</a>
+        <a href="#top" class="nav-link-light" style="flex-shrink: 0; margin-left: 24px;">&#8593; Top</a>
       </div>
       <div class="builds-grid">
         {socialLinks.map((item) => (
@@ -148,24 +146,32 @@ const socialLinks = [
             <div class="build-card-body">
               <h2>{item.title}</h2>
               <p>{item.description}</p>
-              <a href={item.href} target="_blank" rel="noopener" class="build-link">Open {item.title} \u2192</a>
+              <a href={item.href} target="_blank" rel="noopener" class="build-link">Open {item.title} &#8594;</a>
             </div>
           </div>
         ))}
       </div>
     </div>
   </section>
-
 </BaseLayout>
 
 <style>
-  .meta-pill--outline {
-    background: transparent;
+  .nav-link-light {
+    font-size: 0.78rem;
+    font-weight: 400;
+    color: var(--color-text-muted);
+    opacity: 0.7;
+    text-decoration: none;
     border: 1px solid var(--color-border);
-    color: var(--color-text);
+    border-radius: 999px;
+    padding: 3px 10px;
+    background: transparent;
+    transition: color 0.15s, border-color 0.15s, opacity 0.15s;
+    white-space: nowrap;
   }
-  .meta-pill--outline:hover {
-    border-color: var(--color-primary);
+  .nav-link-light:hover {
     color: var(--color-primary);
+    border-color: var(--color-primary);
+    opacity: 1;
   }
 </style>
