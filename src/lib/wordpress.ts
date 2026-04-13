@@ -4,7 +4,7 @@ if (!WP_API) {
   throw new Error('WP_GRAPHQL_URL is not defined');
 }
 
-// ─── Каталог: все slugи для getStaticPaths ───────────────────────────────────
+// ─── Каталог: все slugи для getStaticPaths ──────────────────────────────────
 export async function getAllBuilds() {
   const res = await fetch(WP_API, {
     method: 'POST',
@@ -25,7 +25,7 @@ export async function getAllBuilds() {
   return json.data?.posts?.nodes ?? [];
 }
 
-// ─── Каталог: карточки для /builds ──────────────────────────────────────────
+// ─── Каталог: карточки для /builds ───────────────────────────────────────
 export async function getBuildPosts() {
   const res = await fetch(WP_API, {
     method: 'POST',
@@ -57,8 +57,7 @@ export async function getBuildPosts() {
   return json.data?.posts?.nodes ?? [];
 }
 
-// ─── Страница части: одна запись по slug ─────────────────────────────────────
-export async function getBuildBySlug(slug: string) {
+// ─── Страница части: одна запись по slug ─────────────────────────────────────export async function getBuildBySlug(slug: string) {
   const res = await fetch(WP_API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -90,7 +89,7 @@ export async function getBuildBySlug(slug: string) {
   return json.data?.post ?? null;
 }
 
-// ─── Stepper: все части одной модели ─────────────────────────────────────────
+// ─── Stepper: все части одной модели ──────────────────────────────────────────
 export async function getBuildPartsByModel(modelSlug: string) {
   const res = await fetch(WP_API, {
     method: 'POST',
@@ -102,6 +101,13 @@ export async function getBuildPartsByModel(modelSlug: string) {
             nodes {
               slug
               title
+              content
+              featuredImage {
+                node {
+                  sourceUrl
+                  altText
+                }
+              }
               buildlog {
                 modelslug
                 partnumber
@@ -116,13 +122,13 @@ export async function getBuildPartsByModel(modelSlug: string) {
   const all = json.data?.posts?.nodes ?? [];
   return all
     .filter((p: any) => p.buildlog?.modelslug === modelSlug)
-    .sort((a: any, b: any) =>
-      (a.buildlog?.partnumber ?? 0) - (b.buildlog?.partnumber ?? 0)
+    .sort(
+      (a: any, b: any) =>
+        (a.buildlog?.partnumber ?? 0) - (b.buildlog?.partnumber ?? 0)
     );
 }
 
-// ─── CPT Model: данные модели по slug ────────────────────────────────────────
-export async function getModelBySlug(slug: string) {
+// ─── CPT Model: данные модели по slug ──────────────────────────────────────────export async function getModelBySlug(slug: string) {
   const res = await fetch(WP_API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -153,7 +159,7 @@ export async function getModelBySlug(slug: string) {
   return json.data?.model ?? null;
 }
 
-// ─── Все модели CPT с featuredImage и meta ───────────────────────────────────
+// ─── Все модели CPT с featuredImage и meta ────────────────────────────────────
 export async function getAllModels() {
   const res = await fetch(WP_API, {
     method: 'POST',
@@ -178,9 +184,7 @@ export async function getAllModels() {
       `,
     }),
   });
-
   const json = await res.json();
-
   return (json.data?.models?.nodes ?? []).map((model: any) => ({
     ...model,
     heroImage: model?.modelinfo?.modelimageurl || null,
@@ -193,13 +197,13 @@ export async function getAllModels() {
       : String(model?.modelinfo?.buildstatus ?? '').toLowerCase().replace(/\s+/g, '-'),
   }));
 }
-// ─── Каталог моделей с первой частью build log ───────────────────────────────
+
+// ─── Каталог моделей с первой частью build log ──────────────────────────────
 export async function getModelsWithFirstPart() {
   const [models, posts] = await Promise.all([
     getAllModels(),
     getBuildPosts(),
   ]);
-
   return models.map((model: any) => {
     const parts = posts
       .filter((p: any) => p.buildlog?.modelslug === model.slug)
@@ -207,7 +211,6 @@ export async function getModelsWithFirstPart() {
         (a: any, b: any) =>
           (a.buildlog?.partnumber ?? 0) - (b.buildlog?.partnumber ?? 0)
       );
-
     return {
       ...model,
       firstPartSlug: parts.length > 0 ? parts[0].slug : null,
