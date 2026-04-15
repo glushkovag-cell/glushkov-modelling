@@ -46,6 +46,7 @@ interface BuildLog {
   modelslug?: string | null;
   partnumber?: string | number | null;
   partcontent?: string | null;
+  recordday?: string | null;
 }
 
 interface BuildPostNode {
@@ -62,6 +63,7 @@ interface NormalizedBuildPart extends BuildPostNode {
   heroImageAlt: string;
   partNumber: number;
   partContent: string;
+  recordDay: string | null;
 }
 
 interface GetAllModelsResponse {
@@ -150,6 +152,7 @@ function normalizeBuildPart(post: BuildPostNode): NormalizedBuildPart {
     heroImageAlt: post.featuredImage?.node?.altText || post.title,
     partNumber,
     partContent: post.buildlog?.partcontent || post.content || '',
+    recordDay: post.buildlog?.recordday || null,
   };
 }
 
@@ -240,6 +243,7 @@ export async function getBuildPartsByModel(slug: string): Promise<NormalizedBuil
               modelslug
               partnumber
               partcontent
+              recordday
             }
           }
         }
