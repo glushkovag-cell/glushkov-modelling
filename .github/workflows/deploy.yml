@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "22"
           cache: "npm"
@@ -27,17 +27,34 @@ jobs:
         run: npm run build
 
       - name: Prepare SSH
+        shell: bash
         run: |
+          set -euxo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/github_actions_deploy
           chmod 600 ~/.ssh/github_actions_deploy
-          ssh-keyscan -p ${{ secrets.DEPLOY_PORT }} -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+          test -s ~/.ssh/github_actions_deploy
+          test -n "${{ secrets.DEPLOY_HOST }}"
+          test -n "${{ secrets.DEPLOY_PORT }}"
+          test -n "${{ secrets.DEPLOY_USER }}"
+          test -n "${{ secrets.DEPLOY_PATH }}"
+
+          ssh-keyscan -p "${{ secrets.DEPLOY_PORT }}" -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+
+      - name: Test SSH connection
+        run: |
+          ssh -p "${{ secrets.DEPLOY_PORT }}" \
+            -i ~/.ssh/github_actions_deploy \
+            -o StrictHostKeyChecking=yes \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "echo connected"
 
       - name: Deploy via rsync
         run: |
           rsync -az --delete \
-            -e "ssh -p ${{ secrets.DEPLOY_PORT }} -i ~/.ssh/github_actions_deploy" \
+            -e "ssh -p ${{ secrets.DEPLOY_PORT }} -i ~/.ssh/github_actions_deploy -o StrictHostKeyChecking=yes" \
             dist/ \
             ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}
