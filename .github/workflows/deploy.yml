@@ -24,6 +24,8 @@ jobs:
         run: npm ci
 
       - name: Build project
+        env:
+          WP_GRAPHQL_URL: ${{ secrets.WP_GRAPHQL_URL }}
         run: npm run build
 
       - name: Prepare SSH
