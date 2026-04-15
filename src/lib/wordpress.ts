@@ -146,15 +146,20 @@ function normalizeModel(model: ModelNode): NormalizedModel {
 function normalizeBuildPart(post: BuildPostNode): NormalizedBuildPart {
   const partNumber = Number(post.buildlog?.partnumber || 0);
 
+  const recordDay = post.buildlog?.recordday
+    ? new Date(post.buildlog.recordday).toLocaleDateString('ru-RU')
+    : null;
+
   return {
     ...post,
     heroImage: post.featuredImage?.node?.sourceUrl || null,
     heroImageAlt: post.featuredImage?.node?.altText || post.title,
     partNumber,
     partContent: post.buildlog?.partcontent || post.content || '',
-    recordDay: post.buildlog?.recordday || null,
+    recordDay,
   };
 }
+
 
 export async function getAllModels(): Promise<NormalizedModel[]> {
   const data = await fetchAPI<GetAllModelsResponse>(`
