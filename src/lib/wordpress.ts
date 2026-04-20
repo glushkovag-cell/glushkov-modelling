@@ -25,6 +25,7 @@ interface ModelInfo {
   totalparts?: string | null;
   buildstatus?: string[] | string | null;
   historicalnote?: string | null;
+  donedate?: string | null;
 }
 
 interface ModelNode {
@@ -185,13 +186,20 @@ export async function getAllModels(): Promise<NormalizedModel[]> {
             totalparts
             buildstatus
             historicalnote
+            donedate
           }
         }
       }
     }
   `);
 
-  return data.models.nodes.map(normalizeModel);
+  return data.models.nodes
+    .map(normalizeModel)
+    .sort((a, b) => {
+      const dateA = a.modelinfo?.donedate ? new Date(a.modelinfo.donedate).getTime() : 0;
+      const dateB = b.modelinfo?.donedate ? new Date(b.modelinfo.donedate).getTime() : 0;
+      return dateB - dateA; // убывание: новые сверху
+    });
 }
 
 export async function getModelBySlug(slug: string): Promise<NormalizedModel | null> {
@@ -218,6 +226,7 @@ export async function getModelBySlug(slug: string): Promise<NormalizedModel | nu
             totalparts
             buildstatus
             historicalnote
+            donedate
           }
         }
       }
