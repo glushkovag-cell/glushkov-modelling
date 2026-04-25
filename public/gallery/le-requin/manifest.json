@@ -1,0 +1,109 @@
+{
+  "slug": "le-requin",
+  "title": "Le Requin",
+  "scale": "1:48",
+  "galleryTitle": "Le Requin — Gallery",
+  "buildLogUrl": "/builds/le-requin",
+  "breadcrumbs": [
+    { "label": "Builds",    "href": "/builds" },
+    { "label": "Le Requin", "href": "/builds/le-requin" },
+    { "label": "Gallery",   "href": "/builds/le-requin/gallery" }
+  ],
+  "meta": {
+    "status": "In progress",
+    "focus": "Overall views, rigging, deck details",
+    "viewerMode": "hi-res overlay"
+  },
+  "images": [
+    {
+      "file": "001-overall-starboard.webp",
+      "order": 1,
+      "section": "overall",
+      "caption": "Overall starboard view",
+      "alt": "Le Requin, overall starboard view",
+      "lead": true,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "/gallery/le-requin/low-res/001-overall-starboard.webp",
+        "hiRes":  "/gallery/le-requin/hi-res/001-overall-starboard.webp"
+      }
+    },
+    {
+      "file": "002-rigging-study.webp",
+      "order": 2,
+      "section": "rigging",
+      "caption": "Rigging study around the foremast",
+      "alt": "Le Requin, rigging study around the foremast",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "/gallery/le-requin/low-res/002-rigging-study.webp",
+        "hiRes":  "/gallery/le-requin/hi-res/002-rigging-study.webp"
+      }
+    },
+    {
+      "file": "003-deck-stern.webp",
+      "order": 3,
+      "section": "deck",
+      "caption": "Deck furniture and stern area",
+      "alt": "Le Requin, deck furniture and stern area",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "/gallery/le-requin/low-res/003-deck-stern.webp",
+        "hiRes":  "/gallery/le-requin/hi-res/003-deck-stern.webp"
+      }
+    },
+    {
+      "file": "004-hull-planking.webp",
+      "order": 4,
+      "section": "hull",
+      "caption": "Hull shape and planking detail",
+      "alt": "Le Requin, hull shape and planking detail",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "/gallery/le-requin/low-res/004-hull-planking.webp",
+        "hiRes":  "/gallery/le-requin/hi-res/004-hull-planking.webp"
+      }
+    },
+    {
+      "file": "005-foremast-detail.webp",
+      "order": 5,
+      "section": "rigging",
+      "caption": "Foremast area with standing rigging",
+      "alt": "Le Requin, foremast area with standing rigging",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "/gallery/le-requin/low-res/005-foremast-detail.webp",
+        "hiRes":  "/gallery/le-requin/hi-res/005-foremast-detail.webp"
+      }
+    },
+    {
+      "file": "006-stern-ornament.webp",
+      "order": 6,
+      "section": "deck",
+      "caption": "Stern ornament and quarter gallery",
+      "alt": "Le Requin, stern ornament and quarter gallery",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "/gallery/le-requin/low-res/006-stern-ornament.webp",
+        "hiRes":  "/gallery/le-requin/hi-res/006-stern-ornament.webp"
+      }
+    }
+  ]
+}

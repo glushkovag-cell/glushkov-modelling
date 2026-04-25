@@ -1,0 +1,491 @@
+---
+/**
+ * HiResViewer.astro
+ *
+ * Full-browser overlay component for immersive hi-res image inspection.
+ * Drop this into any page that renders a gallery grid.
+ *
+ * Usage:
+ *   <HiResViewer />
+ *
+ * Triggering (from sibling JS):
+ *   document.dispatchEvent(new CustomEvent('gallery:open', {
+ *     detail: { src, title, caption, total, index }
+ *   }));
+ *
+ * The viewer exports a minimal public API via window.__viewer:
+ *   window.__viewer.open({ src, title, caption, total, index })
+ *   window.__viewer.close()
+ */
+---
+
+<div
+  class="viewer-overlay"
+  id="hiResViewer"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="viewerTitle"
+  hidden
+>
+  <div class="viewer-shell">
+    <!-- Top bar -->
+    <div class="viewer-topbar">
+      <div class="viewer-left">
+        <button class="viewer-btn viewer-btn--primary" id="viewerClose" aria-label="Back to gallery">
+          ← Back to gallery
+        </button>
+        <div class="viewer-title">
+          <strong id="viewerTitle"></strong>
+          <span id="viewerCaption"></span>
+        </div>
+      </div>
+      <div class="viewer-right">
+        <button class="viewer-btn viewer-btn--icon" id="viewerPrev" aria-label="Previous image">‹</button>
+        <span class="viewer-counter" id="viewerCounter" aria-live="polite"></span>
+        <button class="viewer-btn viewer-btn--icon" id="viewerNext" aria-label="Next image">›</button>
+        <div class="viewer-divider" aria-hidden="true"></div>
+        <button class="viewer-btn viewer-btn--icon" id="viewerZoomOut" aria-label="Zoom out">−</button>
+        <button class="viewer-btn viewer-btn--zoom" id="viewerZoomReadout" aria-label="Current zoom level">100%</button>
+        <button class="viewer-btn viewer-btn--icon" id="viewerZoomIn" aria-label="Zoom in">+</button>
+        <button class="viewer-btn" id="viewerReset">Reset</button>
+        <button class="viewer-btn" id="viewerFullscreen">Fullscreen</button>
+      </div>
+    </div>
+
+    <!-- Stage -->
+    <div class="viewer-stage" id="viewerStage">
+      <div class="viewer-viewport" id="viewerViewport">
+        <img
+          id="viewerImage"
+          class="viewer-image"
+          src=""
+          alt=""
+          draggable="false"
+        />
+        <div class="viewer-loader" id="viewerLoader" aria-hidden="true"></div>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="viewer-bottombar">
+      <div class="viewer-hint">Hi-res viewer · 4K WebP source</div>
+      <div class="viewer-shortcuts" aria-label="Keyboard shortcuts">
+        <span>Wheel / pinch — zoom</span>
+        <span>Drag — pan</span>
+        <span><kbd>←</kbd><kbd>→</kbd> navigate</span>
+        <span><kbd>Esc</kbd> close</span>
+        <span><kbd>F</kbd> fullscreen</span>
+        <span><kbd>0</kbd> reset</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Overlay */
+  .viewer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(17, 16, 14, 0.93);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  .viewer-overlay[hidden] { display: none; }
+
+  /* Shell: three rows */
+  .viewer-shell {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  /* Top bar */
+  .viewer-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(249, 248, 244, 0.10);
+    background: linear-gradient(to bottom, rgba(14, 14, 12, 0.52), rgba(14, 14, 12, 0.18));
+    color: #f3efe8;
+  }
+  .viewer-left,
+  .viewer-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .viewer-title {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .viewer-title strong {
+    font-size: 0.95rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 40ch;
+  }
+  .viewer-title span {
+    font-size: 0.78rem;
+    color: rgba(249, 248, 244, 0.65);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 44ch;
+  }
+
+  /* Buttons */
+  .viewer-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 13px;
+    border-radius: 999px;
+    border: 1px solid rgba(249, 248, 244, 0.14);
+    background: rgba(249, 248, 244, 0.06);
+    color: #f9f8f4;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  .viewer-btn:hover {
+    background: rgba(249, 248, 244, 0.13);
+    border-color: rgba(249, 248, 244, 0.28);
+  }
+  .viewer-btn--primary {
+    background: rgba(79, 152, 163, 0.18);
+    border-color: rgba(79, 152, 163, 0.32);
+  }
+  .viewer-btn--primary:hover {
+    background: rgba(79, 152, 163, 0.28);
+  }
+  .viewer-btn--icon {
+    width: 36px;
+    padding: 0;
+    font-size: 1.1rem;
+  }
+  .viewer-btn--zoom {
+    min-width: 52px;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.82rem;
+  }
+  .viewer-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .viewer-divider {
+    width: 1px;
+    height: 22px;
+    background: rgba(249, 248, 244, 0.12);
+    margin: 0 4px;
+  }
+  .viewer-counter {
+    font-size: 0.82rem;
+    color: rgba(249, 248, 244, 0.6);
+    font-variant-numeric: tabular-nums;
+    min-width: 44px;
+    text-align: center;
+  }
+
+  /* Stage */
+  .viewer-stage {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    padding: 20px 28px;
+  }
+  .viewer-viewport {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  .viewer-image {
+    max-width: min(94vw, 1800px);
+    max-height: calc(100vh - 172px);
+    border-radius: 8px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    transform-origin: center center;
+    transition: transform 0.16s ease, opacity 0.2s ease;
+    user-select: none;
+    cursor: default;
+    display: block;
+  }
+  .viewer-image.is-draggable { cursor: grab; }
+  .viewer-image.is-dragging  { cursor: grabbing; }
+  .viewer-image.is-loading   { opacity: 0.4; }
+
+  /* Loader spinner */
+  .viewer-loader {
+    position: absolute;
+    inset: 0;
+    display: none;
+    place-items: center;
+    pointer-events: none;
+  }
+  .viewer-loader.is-active { display: grid; }
+  .viewer-loader::after {
+    content: '';
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid rgba(249, 248, 244, 0.15);
+    border-top-color: rgba(249, 248, 244, 0.7);
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Bottom bar */
+  .viewer-bottombar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 11px 20px;
+    border-top: 1px solid rgba(249, 248, 244, 0.08);
+    background: linear-gradient(to top, rgba(14, 14, 12, 0.48), rgba(14, 14, 12, 0.14));
+    color: rgba(249, 248, 244, 0.55);
+    font-size: 0.82rem;
+  }
+  .viewer-shortcuts {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 5px;
+    border: 1px solid rgba(249, 248, 244, 0.16);
+    background: rgba(249, 248, 244, 0.05);
+    font-size: 0.72rem;
+    color: rgba(249, 248, 244, 0.7);
+    font-family: inherit;
+  }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .viewer-topbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+    }
+    .viewer-right { flex-wrap: wrap; }
+    .viewer-shortcuts { display: none; }
+    .viewer-stage { padding: 10px; }
+    .viewer-image {
+      max-width: 100%;
+      max-height: calc(100vh - 210px);
+    }
+  }
+</style>
+
+<script>
+  (() => {
+    // ── State ──────────────────────────────────────────────────────────────
+    interface SlideData {
+      src: string;
+      title: string;
+      caption: string;
+    }
+
+    let slides: SlideData[] = [];
+    let currentIndex = 0;
+    let scale = 1;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let lastTrigger: Element | null = null;
+
+    const MIN_SCALE = 1;
+    const MAX_SCALE = 5;
+    const ZOOM_STEP = 0.25;
+    const WHEEL_STEP = 0.10;
+
+    // ── Elements ───────────────────────────────────────────────────────────
+    const overlay      = document.getElementById('hiResViewer')!;
+    const img          = document.getElementById('viewerImage') as HTMLImageElement;
+    const loader       = document.getElementById('viewerLoader')!;
+    const titleEl      = document.getElementById('viewerTitle')!;
+    const captionEl    = document.getElementById('viewerCaption')!;
+    const counterEl    = document.getElementById('viewerCounter')!;
+    const zoomReadout  = document.getElementById('viewerZoomReadout')!;
+
+    const btnClose     = document.getElementById('viewerClose')!;
+    const btnPrev      = document.getElementById('viewerPrev')!;
+    const btnNext      = document.getElementById('viewerNext')!;
+    const btnZoomIn    = document.getElementById('viewerZoomIn')!;
+    const btnZoomOut   = document.getElementById('viewerZoomOut')!;
+    const btnReset     = document.getElementById('viewerReset')!;
+    const btnFullscreen= document.getElementById('viewerFullscreen')!;
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+    const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+
+    function updateTransform() {
+      img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+      zoomReadout.textContent = `${Math.round(scale * 100)}%`;
+      const draggable = scale > 1;
+      img.classList.toggle('is-draggable', draggable && !isDragging);
+      img.classList.toggle('is-dragging', isDragging);
+    }
+
+    function resetView() {
+      scale = 1;
+      translateX = 0;
+      translateY = 0;
+      isDragging = false;
+      updateTransform();
+    }
+
+    function zoomBy(delta: number) {
+      scale = clamp(scale + delta, MIN_SCALE, MAX_SCALE);
+      if (scale === MIN_SCALE) { translateX = 0; translateY = 0; }
+      updateTransform();
+    }
+
+    function updateNav() {
+      (btnPrev as HTMLButtonElement).disabled = currentIndex === 0;
+      (btnNext as HTMLButtonElement).disabled = currentIndex === slides.length - 1;
+      counterEl.textContent = slides.length > 1 ? `${currentIndex + 1} / ${slides.length}` : '';
+    }
+
+    function loadSlide(index: number) {
+      if (index < 0 || index >= slides.length) return;
+      currentIndex = index;
+      const slide = slides[index];
+
+      titleEl.textContent = slide.title;
+      captionEl.textContent = slide.caption;
+      updateNav();
+
+      img.classList.add('is-loading');
+      loader.classList.add('is-active');
+
+      // Prefer hi-res src stored in data-hires, else use the gallery src
+      img.src = slide.src;
+      img.alt = slide.caption;
+
+      img.onload = () => {
+        img.classList.remove('is-loading');
+        loader.classList.remove('is-active');
+        resetView();
+      };
+      img.onerror = () => {
+        img.classList.remove('is-loading');
+        loader.classList.remove('is-active');
+      };
+    }
+
+    // ── Open / Close ───────────────────────────────────────────────────────
+    function openViewer(allSlides: SlideData[], startIndex: number, trigger: Element | null) {
+      slides = allSlides;
+      lastTrigger = trigger;
+      overlay.hidden = false;
+      document.body.style.overflow = 'hidden';
+      loadSlide(startIndex);
+      btnClose.focus();
+    }
+
+    function closeViewer() {
+      overlay.hidden = true;
+      document.body.style.overflow = '';
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      lastTrigger instanceof HTMLElement && lastTrigger.focus();
+    }
+
+    // ── Navigation ─────────────────────────────────────────────────────────
+    function prevSlide() { if (currentIndex > 0) loadSlide(currentIndex - 1); }
+    function nextSlide() { if (currentIndex < slides.length - 1) loadSlide(currentIndex + 1); }
+
+    // ── Button wiring ──────────────────────────────────────────────────────
+    btnClose.addEventListener('click', closeViewer);
+    btnPrev.addEventListener('click', prevSlide);
+    btnNext.addEventListener('click', nextSlide);
+    btnZoomIn.addEventListener('click', () => zoomBy(ZOOM_STEP));
+    btnZoomOut.addEventListener('click', () => zoomBy(-ZOOM_STEP));
+    btnReset.addEventListener('click', resetView);
+    btnFullscreen.addEventListener('click', () => {
+      if (!document.fullscreenElement) overlay.requestFullscreen?.().catch(() => {});
+      else document.exitFullscreen?.().catch(() => {});
+    });
+
+    // ── Wheel zoom ─────────────────────────────────────────────────────────
+    overlay.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      zoomBy(e.deltaY < 0 ? WHEEL_STEP : -WHEEL_STEP);
+    }, { passive: false });
+
+    // ── Drag to pan ────────────────────────────────────────────────────────
+    img.addEventListener('mousedown', (e) => {
+      if (scale <= 1) return;
+      isDragging = true;
+      startX = e.clientX - translateX;
+      startY = e.clientY - translateY;
+      updateTransform();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      translateX = e.clientX - startX;
+      translateY = e.clientY - startY;
+      updateTransform();
+    });
+    window.addEventListener('mouseup', () => {
+      if (!isDragging) return;
+      isDragging = false;
+      updateTransform();
+    });
+
+    // ── Touch swipe navigation ─────────────────────────────────────────────
+    let touchStartX = 0;
+    overlay.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    overlay.addEventListener('touchend', (e) => {
+      const delta = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(delta) > 50) { delta < 0 ? nextSlide() : prevSlide(); }
+    }, { passive: true });
+
+    // ── Keyboard ───────────────────────────────────────────────────────────
+    window.addEventListener('keydown', (e) => {
+      if (overlay.hidden) return;
+      switch (e.key) {
+        case 'Escape':    closeViewer(); break;
+        case 'ArrowLeft': prevSlide();   break;
+        case 'ArrowRight':nextSlide();   break;
+        case '+': case '=': zoomBy(ZOOM_STEP);  break;
+        case '-':           zoomBy(-ZOOM_STEP); break;
+        case '0':           resetView();        break;
+        case 'f': case 'F': btnFullscreen.click(); break;
+      }
+    });
+
+    // ── Public API (used by gallery pages) ─────────────────────────────────
+    (window as any).__viewer = { openViewer, closeViewer };
+
+    // ── Custom event bridge (for island-style usage) ───────────────────────
+    document.addEventListener('gallery:open', ((e: CustomEvent) => {
+      const { slides: s, index, trigger } = e.detail;
+      openViewer(s, index ?? 0, trigger ?? null);
+    }) as EventListener);
+  })();
+</script>
