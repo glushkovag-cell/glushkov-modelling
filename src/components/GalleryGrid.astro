@@ -1,0 +1,263 @@
+---
+/**
+ * GalleryGrid.astro
+ *
+ * Renders the 2-column + detail-row gallery grid for a single model page.
+ * Clicking any figure fires the gallery:open custom event picked up by
+ * HiResViewer.astro (which must be present on the same page).
+ *
+ * Props:
+ *   images   — sorted array of GalleryImage from the manifest
+ *   modelTitle — used to prefix viewer title strings
+ */
+
+import type { GalleryImage } from '../lib/gallery';
+
+interface Props {
+  images: GalleryImage[];
+  modelTitle: string;
+}
+
+const { images, modelTitle } = Astro.props;
+
+// Layout slots
+const lead      = images.find((img) => img.lead) ?? images[0];
+const side      = images.filter((img) => img !== lead).slice(0, 2);
+const detailRow = images.filter((img) => img !== lead && !side.includes(img));
+---
+
+{images.length > 0 ? (
+  <div class="gallery-grid-wrapper">
+    <div class="gallery-grid">
+      <!-- Main / lead image -->
+      {lead && (
+        <figure
+          class="gallery-main js-viewer-trigger"
+          data-index="0"
+          data-title={`${modelTitle} — ${lead.caption}`}
+          data-caption={lead.caption}
+          data-src={lead.paths.hiRes ?? lead.paths.lowRes ?? ''}
+          tabindex="0"
+          aria-label={`Open hi-res viewer: ${lead.caption}`}
+        >
+          <img
+            src={lead.paths.lowRes ?? lead.paths.hiRes ?? ''}
+            alt={lead.alt}
+            width={lead.width}
+            height={lead.height}
+            loading="eager"
+          />
+          <figcaption class="gallery-caption">Open hi-res viewer</figcaption>
+        </figure>
+      )}
+
+      <!-- Side column -->
+      {side.length > 0 && (
+        <div class="gallery-side">
+          {side.map((img, i) => (
+            <figure
+              class="js-viewer-trigger"
+              data-index={String(i + 1)}
+              data-title={`${modelTitle} — ${img.caption}`}
+              data-caption={img.caption}
+              data-src={img.paths.hiRes ?? img.paths.lowRes ?? ''}
+              tabindex="0"
+              aria-label={`Open hi-res viewer: ${img.caption}`}
+            >
+              <img
+                src={img.paths.lowRes ?? img.paths.hiRes ?? ''}
+                alt={img.alt}
+                width={img.width}
+                height={img.height}
+                loading="lazy"
+              />
+              <figcaption class="gallery-caption">{img.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
+      )}
+    </div>
+
+    <!-- Detail row -->
+    {detailRow.length > 0 && (
+      <div class="gallery-detail-row">
+        {detailRow.map((img, i) => (
+          <figure
+            class="js-viewer-trigger"
+            data-index={String(side.length + 1 + i)}
+            data-title={`${modelTitle} — ${img.caption}`}
+            data-caption={img.caption}
+            data-src={img.paths.hiRes ?? img.paths.lowRes ?? ''}
+            tabindex="0"
+            aria-label={`Open hi-res viewer: ${img.caption}`}
+          >
+            <img
+              src={img.paths.lowRes ?? img.paths.hiRes ?? ''}
+              alt={img.alt}
+              width={img.width}
+              height={img.height}
+              loading="lazy"
+            />
+            <figcaption class="gallery-caption">{img.caption}</figcaption>
+          </figure>
+        ))}
+      </div>
+    )}
+
+    <p class="gallery-hint">
+      Click any image to open the hi-res viewer.
+      Use <kbd>←</kbd><kbd>→</kbd> to navigate, <kbd>Esc</kbd> to close.
+    </p>
+  </div>
+) : (
+  <div class="gallery-empty">
+    <p>No images available yet. Add WebP files to <code>public/gallery/{images[0]?.paths?.lowRes?.split('/')[2] ?? 'model'}/low-res/</code> and run <code>scripts/update_manifest.py</code>.</p>
+  </div>
+)}
+
+<style>
+  .gallery-grid-wrapper { display: flex; flex-direction: column; gap: 14px; }
+
+  /* 2-column grid */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 14px;
+  }
+
+  /* All clickable figures */
+  .gallery-main,
+  .gallery-side figure,
+  .gallery-detail-row figure {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--color-surface-offset);
+    cursor: zoom-in;
+    border: 1px solid var(--color-border);
+  }
+
+  .gallery-main         { min-height: 460px; }
+  .gallery-side         { display: grid; gap: 14px; }
+  .gallery-side figure  { min-height: 223px; }
+
+  /* Hover scale */
+  .gallery-main img,
+  .gallery-side figure img,
+  .gallery-detail-row figure img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  figure:hover img { transform: scale(1.03); }
+
+  /* Caption overlay */
+  .gallery-caption {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    font-size: 0.78rem;
+    color: var(--color-text);
+    border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    pointer-events: none;
+  }
+
+  /* Detail row */
+  .gallery-detail-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .gallery-detail-row figure { min-height: 160px; }
+
+  /* Hint */
+  .gallery-hint {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin-top: 4px;
+  }
+  .gallery-hint kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 5px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-2);
+    font-size: 0.72rem;
+    font-family: inherit;
+    color: var(--color-text);
+  }
+
+  /* Focus ring */
+  .js-viewer-trigger:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+  }
+
+  /* Empty state */
+  .gallery-empty {
+    padding: 32px;
+    border: 1px dashed var(--color-primary-highlight);
+    border-radius: 14px;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+  .gallery-empty code {
+    font-size: 0.85em;
+    background: var(--color-surface-offset);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  @media (max-width: 900px) {
+    .gallery-grid { grid-template-columns: 1fr; }
+    .gallery-main { min-height: 320px; }
+    .gallery-side { grid-template-columns: 1fr 1fr; }
+    .gallery-detail-row { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 540px) {
+    .gallery-detail-row { grid-template-columns: 1fr; }
+    .gallery-side { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  (() => {
+    const figures = document.querySelectorAll<HTMLElement>('.js-viewer-trigger');
+
+    // Build slides array from all figures on the page (in DOM order)
+    const slides = Array.from(figures).map((fig) => ({
+      src:     fig.dataset.src     ?? '',
+      title:   fig.dataset.title   ?? '',
+      caption: fig.dataset.caption ?? '',
+    }));
+
+    function openAt(index: number, trigger: HTMLElement) {
+      document.dispatchEvent(
+        new CustomEvent('gallery:open', {
+          detail: { slides, index, trigger },
+        })
+      );
+    }
+
+    figures.forEach((fig, i) => {
+      fig.addEventListener('click', () => openAt(i, fig));
+      fig.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openAt(i, fig);
+        }
+      });
+    });
+  })();
+</script>

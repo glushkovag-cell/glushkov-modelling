@@ -1,0 +1,228 @@
+---
+/**
+ * /gallery/[slug] — Model Gallery Page
+ *
+ * Dedicated visual page for a single model.
+ * Loads images from the static manifest, renders the editorial grid,
+ * and mounts the hi-res viewer overlay.
+ *
+ * Static paths are derived from public/gallery/*/manifest.json.
+ */
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import GalleryGrid from '../../components/GalleryGrid.astro';
+import HiResViewer from '../../components/HiResViewer.astro';
+import { getGalleryManifest, getAllGallerySlugs } from '../../lib/gallery';
+
+export async function getStaticPaths() {
+  const slugs = getAllGallerySlugs();
+  return slugs.map((slug) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+const manifest = getGalleryManifest(slug!);
+
+if (!manifest) {
+  return Astro.redirect('/gallery');
+}
+
+const sortedImages = [...manifest.images].sort((a, b) => a.order - b.order);
+---
+
+<BaseLayout
+  title={`${manifest.galleryTitle} | Glushkov Modelling`}
+  description={`Hi-res gallery for ${manifest.title} scale model — ${manifest.meta.focus}`}
+>
+  <div class="page-section">
+    <div class="container">
+
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        {manifest.breadcrumbs.map((crumb, i) => (
+          <>
+            {i > 0 && <span class="breadcrumb-sep" aria-hidden="true">/</span>}
+            {i < manifest.breadcrumbs.length - 1
+              ? <a href={crumb.href} class="breadcrumb-link">{crumb.label}</a>
+              : <span class="breadcrumb-current" aria-current="page">{crumb.label}</span>
+            }
+          </>
+        ))}
+      </nav>
+
+      <!-- Model summary card -->
+      <section class="model-summary-card" aria-label="Model summary">
+        <div class="model-summary-copy">
+          <span class="eyebrow">Model Gallery</span>
+          <h1 class="model-summary-title">{manifest.title}</h1>
+          <p class="model-summary-desc">
+            {manifest.meta.focus}
+          </p>
+          <div class="model-summary-meta">
+            <span class="meta-pill">Scale {manifest.scale}</span>
+            <span class="ghost-pill">{manifest.meta.status}</span>
+            <span class="ghost-pill">{sortedImages.length} photos</span>
+          </div>
+        </div>
+        <a href={manifest.buildLogUrl} class="buildlog-btn">← Back to build log</a>
+      </section>
+
+      <!-- Gallery content card -->
+      <section class="content-card gallery-section" aria-labelledby="galleryHeading">
+        <span class="eyebrow">Hi-res viewer</span>
+        <h2 class="section-title" id="galleryHeading">Gallery with immersive 4K preview</h2>
+        <p class="gallery-intro">
+          Click any image to open the hi-res overlay. Use the zoom controls or
+          scroll wheel to inspect details up to 4K resolution.
+        </p>
+
+        <GalleryGrid images={sortedImages} modelTitle={manifest.title} />
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Hi-res viewer overlay (renders once, controlled by JS events) -->
+  <HiResViewer />
+</BaseLayout>
+
+<style>
+  /* Breadcrumb */
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 18px;
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+    flex-wrap: wrap;
+  }
+  .breadcrumb-link {
+    color: var(--color-primary);
+    transition: color var(--transition);
+  }
+  .breadcrumb-link:hover { color: var(--color-primary-hover); }
+  .breadcrumb-sep { color: var(--color-text-faint); }
+  .breadcrumb-current { color: var(--color-text-muted); }
+
+  /* Model summary card */
+  .model-summary-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    padding: 24px 28px;
+    margin-bottom: 18px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    transition: background var(--transition), border-color var(--transition);
+  }
+
+  .model-summary-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 2.4rem;
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+
+  .model-summary-desc {
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin: 0 0 14px;
+    max-width: 60ch;
+  }
+
+  .model-summary-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .meta-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 8px 13px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    border: 1px solid var(--color-primary-highlight);
+    background: var(--color-primary-highlight);
+    color: var(--color-primary);
+    white-space: nowrap;
+  }
+
+  .ghost-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 8px 13px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    background: transparent;
+    white-space: nowrap;
+  }
+
+  .buildlog-btn {
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-2);
+    color: var(--color-text);
+    font-size: 0.92rem;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition), color var(--transition), background var(--transition);
+    flex-shrink: 0;
+  }
+  .buildlog-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  /* Gallery section */
+  .gallery-section {
+    padding: 28px;
+  }
+
+  .section-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 2rem;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+    line-height: 1.05;
+  }
+
+  .gallery-intro {
+    color: var(--color-text-muted);
+    font-size: 0.97rem;
+    line-height: 1.7;
+    margin-bottom: 20px;
+    max-width: 66ch;
+  }
+
+  .content-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: background var(--transition), border-color var(--transition);
+  }
+
+  @media (max-width: 700px) {
+    .model-summary-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .model-summary-title { font-size: 1.85rem; }
+    .gallery-section { padding: 18px; }
+  }
+</style>
