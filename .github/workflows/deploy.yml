@@ -26,6 +26,7 @@ jobs:
       - name: Build project
         env:
           WP_GRAPHQL_URL: ${{ secrets.WP_GRAPHQL_URL }}
+          CMS_GALLERY_URL: ${{ secrets.CMS_GALLERY_URL }}
         run: npm run build
 
       - name: Prepare SSH

@@ -17,9 +17,10 @@ export async function getStaticPaths() {
 
 const { slug } = Astro.params;
 
-const [model, parts] = await Promise.all([
+const [model, parts, galleryManifest] = await Promise.all([
   getModelBySlug(slug!),
   getBuildPartsByModel(slug!),
+  getGalleryManifest(slug!),
 ]);
 
 if (!model) {
@@ -29,7 +30,7 @@ if (!model) {
 const info = model.modelinfo;
 const heroImage = info?.modelimageurl || null;
 const heroImageAlt = model.title;
-const hasGallery = getGalleryManifest(slug!) !== null;
+const hasGallery = !!galleryManifest;
 ---
 
 <BaseLayout
@@ -69,7 +70,6 @@ const hasGallery = getGalleryManifest(slug!) !== null;
                 View gallery →
               </a>
             )}
-
           </div>
 
           {info?.shortdescription && (
@@ -251,6 +251,7 @@ const hasGallery = getGalleryManifest(slug!) !== null;
     text-decoration: none;
     transition: background var(--transition), color var(--transition), border-color var(--transition);
   }
+
   .gallery-cta-pill:hover {
     background: var(--color-primary);
     color: var(--color-text-inverse);
@@ -331,7 +332,7 @@ const hasGallery = getGalleryManifest(slug!) !== null;
   }
 
   #build-log > h2 {
-     margin-bottom: 1.25rem;
+    margin-bottom: 1.25rem;
   }
 
   .section-head {

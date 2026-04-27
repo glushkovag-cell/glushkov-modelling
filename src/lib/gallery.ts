@@ -50,10 +50,10 @@ export interface GalleryIndexEntry {
   imageCount: number;
 }
 
-const CMS_GALLERY_URL = (import.meta.env.CMS_GALLEY_URL || '').replace(/\/$/, '');
+const CMS_GALLERY_URL = (import.meta.env.CMS_GALLERY_URL || '').replace(/\/$/, '');
 
 if (!CMS_GALLERY_URL) {
-  throw new Error('CMS_GALLEY_URL is not set');
+  throw new Error('CMS_GALLERY_URL is not set');
 }
 
 function buildCmsUrl(path: string) {
