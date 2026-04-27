@@ -82,36 +82,48 @@
 </div>
 
 <style>
-  /* Overlay */
   .viewer-overlay {
     position: fixed;
     inset: 0;
     z-index: 1000;
-    background: rgba(17, 16, 14, 0.93);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    background: color-mix(in srgb, var(--color-bg) 86%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--color-text);
   }
-  .viewer-overlay[hidden] { display: none; }
 
-  /* Shell: three rows */
+  .viewer-overlay[hidden] {
+    display: none;
+  }
+
   .viewer-shell {
     position: absolute;
-    inset: 0;
+    inset: 12px;
     display: grid;
     grid-template-rows: auto 1fr auto;
+    border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+    box-shadow: var(--shadow-lg);
   }
 
-  /* Top bar */
   .viewer-topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
     padding: 14px 20px;
-    border-bottom: 1px solid rgba(249, 248, 244, 0.10);
-    background: linear-gradient(to bottom, rgba(14, 14, 12, 0.52), rgba(14, 14, 12, 0.18));
-    color: #f3efe8;
+    border-bottom: 1px solid var(--color-divider);
+    background:
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--color-surface) 98%, transparent),
+        color-mix(in srgb, var(--color-surface-2) 92%, transparent)
+      );
+    color: var(--color-text);
   }
+
   .viewer-left,
   .viewer-right {
     display: flex;
@@ -119,30 +131,39 @@
     gap: 8px;
     min-width: 0;
   }
+
+  .viewer-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
   .viewer-title {
     min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 2px;
   }
+
   .viewer-title strong {
-    font-size: 0.95rem;
-    font-weight: 600;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-text);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 40ch;
   }
+
   .viewer-title span {
-    font-size: 0.78rem;
-    color: rgba(249, 248, 244, 0.65);
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 44ch;
   }
 
-  /* Buttons */
   .viewer-btn {
     display: inline-flex;
     align-items: center;
@@ -150,63 +171,99 @@
     gap: 6px;
     height: 36px;
     padding: 0 13px;
-    border-radius: 999px;
-    border: 1px solid rgba(249, 248, 244, 0.14);
-    background: rgba(249, 248, 244, 0.06);
-    color: #f9f8f4;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-surface-2) 94%, transparent);
+    color: var(--color-text);
     font-size: 0.88rem;
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition:
+      background var(--transition),
+      border-color var(--transition),
+      color var(--transition),
+      transform var(--transition),
+      box-shadow var(--transition);
   }
+
   .viewer-btn:hover {
-    background: rgba(249, 248, 244, 0.13);
-    border-color: rgba(249, 248, 244, 0.28);
+    background: var(--color-primary-highlight);
+    border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+    color: var(--color-primary);
+    transform: translateY(-1px);
   }
+
+  .viewer-btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
   .viewer-btn--primary {
-    background: rgba(79, 152, 163, 0.18);
-    border-color: rgba(79, 152, 163, 0.32);
+    background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+    border-color: color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
+    color: var(--color-primary);
+    font-weight: 600;
   }
+
   .viewer-btn--primary:hover {
-    background: rgba(79, 152, 163, 0.28);
+    background: color-mix(in srgb, var(--color-primary) 22%, var(--color-surface));
+    border-color: var(--color-primary);
+    color: var(--color-primary-hover);
   }
+
   .viewer-btn--icon {
     width: 36px;
     padding: 0;
     font-size: 1.1rem;
   }
+
   .viewer-btn--zoom {
-    min-width: 52px;
+    min-width: 56px;
     font-variant-numeric: tabular-nums;
     font-size: 0.82rem;
   }
+
   .viewer-btn:disabled {
-    opacity: 0.35;
+    opacity: 0.38;
     cursor: not-allowed;
+    transform: none;
   }
+
   .viewer-divider {
     width: 1px;
     height: 22px;
-    background: rgba(249, 248, 244, 0.12);
+    background: var(--color-divider);
     margin: 0 4px;
   }
+
   .viewer-counter {
     font-size: 0.82rem;
-    color: rgba(249, 248, 244, 0.6);
+    color: var(--color-text-muted);
     font-variant-numeric: tabular-nums;
     min-width: 44px;
     text-align: center;
   }
 
-  /* Stage */
   .viewer-stage {
     position: relative;
     overflow: hidden;
     display: grid;
     place-items: center;
     padding: 20px 28px;
+    background:
+      radial-gradient(
+        circle at top,
+        color-mix(in srgb, var(--color-primary) 4%, transparent),
+        transparent 38%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-surface-2) 96%, transparent),
+        color-mix(in srgb, var(--color-surface-offset) 92%, transparent)
+      );
   }
+
   .viewer-viewport {
     position: relative;
     width: 100%;
@@ -215,22 +272,33 @@
     place-items: center;
     overflow: hidden;
   }
+
   .viewer-image {
     max-width: min(94vw, 1800px);
-    max-height: calc(100vh - 172px);
-    border-radius: 8px;
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    max-height: calc(100vh - 196px);
+    border-radius: var(--radius-lg);
+    border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+    background: var(--color-surface-2);
+    box-shadow: var(--shadow-lg);
     transform-origin: center center;
     transition: transform 0.16s ease, opacity 0.2s ease;
     user-select: none;
     cursor: default;
     display: block;
   }
-  .viewer-image.is-draggable { cursor: grab; }
-  .viewer-image.is-dragging  { cursor: grabbing; }
-  .viewer-image.is-loading   { opacity: 0.4; }
 
-  /* Loader spinner */
+  .viewer-image.is-draggable {
+    cursor: grab;
+  }
+
+  .viewer-image.is-dragging {
+    cursor: grabbing;
+  }
+
+  .viewer-image.is-loading {
+    opacity: 0.45;
+  }
+
   .viewer-loader {
     position: absolute;
     inset: 0;
@@ -238,35 +306,54 @@
     place-items: center;
     pointer-events: none;
   }
-  .viewer-loader.is-active { display: grid; }
+
+  .viewer-loader.is-active {
+    display: grid;
+  }
+
   .viewer-loader::after {
     content: '';
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
-    border: 2px solid rgba(249, 248, 244, 0.15);
-    border-top-color: rgba(249, 248, 244, 0.7);
+    border: 2px solid color-mix(in srgb, var(--color-primary) 16%, var(--color-border));
+    border-top-color: var(--color-primary);
     animation: spin 0.7s linear infinite;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Bottom bar */
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   .viewer-bottombar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
     padding: 11px 20px;
-    border-top: 1px solid rgba(249, 248, 244, 0.08);
-    background: linear-gradient(to top, rgba(14, 14, 12, 0.48), rgba(14, 14, 12, 0.14));
-    color: rgba(249, 248, 244, 0.55);
+    border-top: 1px solid var(--color-divider);
+    background:
+      linear-gradient(
+        to top,
+        color-mix(in srgb, var(--color-surface) 98%, transparent),
+        color-mix(in srgb, var(--color-surface-2) 92%, transparent)
+      );
+    color: var(--color-text-muted);
     font-size: 0.82rem;
   }
+
+  .viewer-hint {
+    color: var(--color-text-muted);
+  }
+
   .viewer-shortcuts {
     display: flex;
     gap: 14px;
     flex-wrap: wrap;
   }
+
   kbd {
     display: inline-flex;
     align-items: center;
@@ -274,27 +361,60 @@
     min-width: 20px;
     height: 20px;
     padding: 0 5px;
+    margin: 0 2px;
     border-radius: 5px;
-    border: 1px solid rgba(249, 248, 244, 0.16);
-    background: rgba(249, 248, 244, 0.05);
+    border: 1px solid var(--color-border);
+    background: color-mix(in srgb, var(--color-surface-2) 96%, transparent);
     font-size: 0.72rem;
-    color: rgba(249, 248, 244, 0.7);
+    color: var(--color-text-muted);
     font-family: inherit;
+    box-shadow: var(--shadow-sm);
   }
 
-  /* Responsive */
-  @media (max-width: 700px) {
+  @media (max-width: 900px) {
+    .viewer-shell {
+      inset: 8px;
+    }
+
     .viewer-topbar {
       flex-direction: column;
       align-items: stretch;
       gap: 10px;
     }
-    .viewer-right { flex-wrap: wrap; }
-    .viewer-shortcuts { display: none; }
-    .viewer-stage { padding: 10px; }
+
+    .viewer-left,
+    .viewer-right {
+      width: 100%;
+    }
+
+    .viewer-title strong,
+    .viewer-title span {
+      max-width: 100%;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .viewer-shortcuts {
+      display: none;
+    }
+
+    .viewer-stage {
+      padding: 10px;
+    }
+
     .viewer-image {
       max-width: 100%;
-      max-height: calc(100vh - 210px);
+      max-height: calc(100vh - 228px);
+    }
+
+    .viewer-btn {
+      height: 34px;
+      padding: 0 11px;
+      font-size: 0.82rem;
+    }
+
+    .viewer-btn--icon {
+      width: 34px;
     }
   }
 </style>
@@ -480,7 +600,12 @@
     });
 
     // ── Public API (used by gallery pages) ─────────────────────────────────
-    (window as any).__viewer = { openViewer, closeViewer };
+    (window as any).__viewer = {
+      open: openViewer,
+      close: closeViewer,
+      openViewer,
+      closeViewer,
+    };
 
     // ── Custom event bridge (for island-style usage) ───────────────────────
     document.addEventListener('gallery:open', ((e: CustomEvent) => {

@@ -4,6 +4,7 @@ import { getAllModels } from '../../lib/wordpress';
 
 const models = await getAllModels();
 ---
+
 <BaseLayout title="Builds | Glushkov Modelling">
   <section class="page-section">
     <div class="container">
@@ -12,7 +13,11 @@ const models = await getAllModels();
 
       <div class="builds-grid">
         {models.map((model: any) => (
-          <article class="build-card">
+          <a
+            class="build-card"
+            href={`/builds/${model.slug}`}
+            aria-label={`Open build log: ${model.title}`}
+          >
             {model.heroImage && (
               <img
                 src={model.heroImage}
@@ -26,7 +31,7 @@ const models = await getAllModels();
               <h2>{model.title}</h2>
 
               <p>
-                Scale: {model.modelinfo?.modelscale || '&#8212;'} &#183; {model.modelinfo?.manufacturer || '&#8212;'}
+                Scale: {model.modelinfo?.modelscale || '—'} · {model.modelinfo?.manufacturer || '—'}
               </p>
 
               {model.modelinfo?.shortdescription && (
@@ -40,20 +45,16 @@ const models = await getAllModels();
                   </span>
                 )}
 
-                <a
-                  class="build-link"
-                  href={`/builds/${model.slug}`}
-                >
-                  Open build log &#8594;
-                </a>
+                <span class="build-link">Open build log →</span>
               </div>
             </div>
-          </article>
+          </a>
         ))}
       </div>
     </div>
   </section>
 </BaseLayout>
+
 <style>
   .build-card-actions {
     display: flex;

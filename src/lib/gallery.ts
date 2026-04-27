@@ -1,17 +1,6 @@
 /**
- * gallery.ts — helpers for loading static gallery manifests at build time.
- *
- * Manifests are stored in public/gallery/<slug>/manifest.json and generated
- * (or updated) by the Python script at scripts/update_manifest.py.
- *
- * During Astro SSG the helpers read the JSON files directly from the filesystem
- * so no network round-trip is needed at build time.
+ * gallery.ts — helpers for loading gallery manifests from CMS at build time.
  */
-
-import { readFileSync, existsSync, readdirSync } from 'fs';
-import { join } from 'path';
-
-// ── Types ────────────────────────────────────────────────────────────────────
 
 export interface GalleryImagePaths {
   lowRes: string | null;
@@ -61,66 +50,84 @@ export interface GalleryIndexEntry {
   imageCount: number;
 }
 
-// ── Internals ────────────────────────────────────────────────────────────────
+const CMS_GALLERY_URL = (import.meta.env.CMS_GALLEY_URL || '').replace(/\/$/, '');
 
-const GALLERY_ROOT = join(process.cwd(), 'public', 'gallery');
+if (!CMS_GALLERY_URL) {
+  throw new Error('CMS_GALLEY_URL is not set');
+}
 
-function readManifest(slug: string): GalleryManifest | null {
-  const manifestPath = join(GALLERY_ROOT, slug, 'manifest.json');
-  if (!existsSync(manifestPath)) return null;
+function buildCmsUrl(path: string) {
+  return `${CMS_GALLERY_URL}/${path.replace(/^\//, '')}`;
+}
+
+function absolutizeAsset(path: string | null): string | null {
+  if (!path) return null;
+  if (/^https?:\/\//i.test(path)) return path;
+
+  const cleaned = path
+    .replace(/^\/+/, '')
+    .replace(/^gallery\/+/, '');
+
+  return buildCmsUrl(cleaned);
+}
+
+function normalizeManifest(manifest: GalleryManifest): GalleryManifest {
+  return {
+    ...manifest,
+    images: manifest.images.map((image) => ({
+      ...image,
+      paths: {
+        lowRes: absolutizeAsset(image.paths?.lowRes ?? null),
+        hiRes: absolutizeAsset(image.paths?.hiRes ?? null),
+      },
+    })),
+  };
+}
+
+async function fetchJson<T>(url: string): Promise<T | null> {
   try {
-    return JSON.parse(readFileSync(manifestPath, 'utf-8')) as GalleryManifest;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    return (await response.json()) as T;
   } catch {
     return null;
   }
 }
 
-// ── Public API ───────────────────────────────────────────────────────────────
+export async function getAllGallerySlugs(): Promise<string[]> {
+  const url = buildCmsUrl('index/models.json');
+  /*console.log('[gallery] index url:', url);*/
 
-/**
- * Returns all gallery slugs.
- * Prefers _index/models.json; falls back to directory scan.
- */
-export function getAllGallerySlugs(): string[] {
-  const indexPath = join(GALLERY_ROOT, '_index', 'models.json');
-  if (existsSync(indexPath)) {
-    try {
-      const list = JSON.parse(readFileSync(indexPath, 'utf-8')) as string[];
-      if (Array.isArray(list)) return list;
-    } catch {
-      // fall through to scan
-    }
-  }
+  const list = await fetchJson<string[]>(url);
+  /*console.log('[gallery] index payload:', list);*/
 
-  // Fallback: scan directory
-  if (!existsSync(GALLERY_ROOT)) return [];
-  return readdirSync(GALLERY_ROOT, { withFileTypes: true })
-    .filter((dirent) => {
-      if (!dirent.isDirectory()) return false;
-      if (dirent.name.startsWith('_')) return false;
-      return existsSync(join(GALLERY_ROOT, dirent.name, 'manifest.json'));
-    })
-    .map((dirent) => dirent.name);
+  return Array.isArray(list) ? list : [];
 }
 
-/**
- * Loads a single model's gallery manifest.
- */
-export function getGalleryManifest(slug: string): GalleryManifest | null {
+async function readManifest(slug: string): Promise<GalleryManifest | null> {
+  const url = buildCmsUrl(`${slug}/manifest.json`);
+  /*console.log('[gallery] manifest url:', url);*/
+
+  const manifest = await fetchJson<GalleryManifest>(url);
+  /*console.log('[gallery] manifest loaded:', slug, !!manifest);*/
+
+  return manifest ? normalizeManifest(manifest) : null;
+}
+
+export async function getGalleryManifest(slug: string): Promise<GalleryManifest | null> {
   return readManifest(slug);
 }
 
-/**
- * Returns lightweight summaries of all gallery entries for the hub page.
- */
-export function getAllGalleryEntries(): GalleryIndexEntry[] {
-  const slugs = getAllGallerySlugs();
-  return slugs
-    .map((slug) => {
-      const manifest = readManifest(slug);
-      if (!manifest) return null;
+export async function getAllGalleryEntries(): Promise<GalleryIndexEntry[]> {
+  const slugs = await getAllGallerySlugs();
+  const manifests = await Promise.all(slugs.map((slug) => readManifest(slug)));
+
+  return manifests
+    .filter((manifest): manifest is GalleryManifest => manifest !== null)
+    .map((manifest) => {
       const sorted = [...manifest.images].sort((a, b) => a.order - b.order);
       const cover = sorted.find((img) => img.lead) ?? sorted[0] ?? null;
+
       return {
         slug: manifest.slug,
         title: manifest.title,
@@ -128,6 +135,5 @@ export function getAllGalleryEntries(): GalleryIndexEntry[] {
         cover,
         imageCount: manifest.images.length,
       } satisfies GalleryIndexEntry;
-    })
-    .filter((e): e is GalleryIndexEntry => e !== null);
+    });
 }

@@ -1,4 +1,8 @@
 ---
+/**
+ * BaseLayout.astro — updated to include Gallery nav link.
+ * Patch: added <a href="/gallery"> to the nav section.
+ */
 import '../styles/global.css';
 
 interface Props {
@@ -10,6 +14,12 @@ const {
   title = 'Glushkov Modelling',
   description = 'Virtual shipyard of a model ship builder',
 } = Astro.props;
+
+const currentPath = Astro.url.pathname;
+function isActive(href: string) {
+  if (href === '/') return currentPath === '/';
+  return currentPath.startsWith(href);
+}
 ---
 
 <!doctype html>
@@ -51,10 +61,11 @@ const {
           </span>
         </a>
 
-        <nav class="nav">
-          <a href="/">Home</a>
-          <a href="/about">About</a>
-          <a href="/builds">Builds</a>
+        <nav class="nav" aria-label="Main navigation">
+          <a href="/"        class:list={['nav-link', { 'nav-link--active': isActive('/') }]}>Home</a>
+          <a href="/about"   class:list={['nav-link', { 'nav-link--active': isActive('/about') }]}>About</a>
+          <a href="/builds"  class:list={['nav-link', { 'nav-link--active': isActive('/builds') }]}>Builds</a>
+          <a href="/gallery" class:list={['nav-link', { 'nav-link--active': isActive('/gallery') }]}>Gallery</a>
         </nav>
 
         <button
@@ -107,3 +118,10 @@ const {
     </script>
   </body>
 </html>
+
+<style>
+  /* Active nav link style */
+  .nav-link { color: var(--color-text-muted); font-weight: 500; font-size: 0.95rem; transition: color var(--transition); }
+  .nav-link:hover { color: var(--color-primary); }
+  .nav-link--active { color: var(--color-primary) !important; }
+</style>

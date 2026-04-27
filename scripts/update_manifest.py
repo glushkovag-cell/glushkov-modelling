@@ -112,8 +112,8 @@ def build_entry(
         "width":       width,
         "height":      height,
         "paths": {
-            "lowRes": f"/gallery/{slug}/low-res/{filename}" if low_path.exists() else None,
-            "hiRes":  f"/gallery/{slug}/hi-res/{filename}"  if (hi_path and hi_path.exists()) else None,
+            "lowRes": f"{slug}/low-res/{filename}" if low_path.exists() else None,
+            "hiRes":  f"{slug}/hi-res/{filename}"  if (hi_path and hi_path.exists()) else None,
         },
     }
 
@@ -214,12 +214,12 @@ def update_manifest(model_dir: Path, verbose: bool = True) -> None:
 
 
 def update_index(gallery_root: Path, slugs: list[str]) -> None:
-    """Write _index/models.json with the ordered list of gallery slugs."""
-    index_dir = gallery_root / "_index"
+    """Write index/models.json with the ordered list of gallery slugs."""
+    index_dir = gallery_root / "index"
     index_dir.mkdir(parents=True, exist_ok=True)
     index_path = index_dir / "models.json"
     index_path.write_text(json.dumps(slugs, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"  [ok] _index/models.json → {len(slugs)} entries")
+    print(f"  [ok] index/models.json → {len(slugs)} entries")
 
 
 # ── CLI entry ─────────────────────────────────────────────────────────────────

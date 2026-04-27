@@ -3,10 +3,8 @@
  * /gallery/[slug] — Model Gallery Page
  *
  * Dedicated visual page for a single model.
- * Loads images from the static manifest, renders the editorial grid,
+ * Loads images from the CMS manifest, renders the editorial grid,
  * and mounts the hi-res viewer overlay.
- *
- * Static paths are derived from public/gallery/*/manifest.json.
  */
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -15,12 +13,12 @@ import HiResViewer from '../../components/HiResViewer.astro';
 import { getGalleryManifest, getAllGallerySlugs } from '../../lib/gallery';
 
 export async function getStaticPaths() {
-  const slugs = getAllGallerySlugs();
+  const slugs = await getAllGallerySlugs();
   return slugs.map((slug) => ({ params: { slug } }));
 }
 
 const { slug } = Astro.params;
-const manifest = getGalleryManifest(slug!);
+const manifest = await getGalleryManifest(slug!);
 
 if (!manifest) {
   return Astro.redirect('/gallery');

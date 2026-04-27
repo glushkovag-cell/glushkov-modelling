@@ -5,6 +5,7 @@ import {
   getBuildPartsByModel,
   getModelBySlug,
 } from '../../lib/wordpress';
+import { getGalleryManifest } from '../../lib/gallery';
 
 export async function getStaticPaths() {
   const models = await getAllModels();
@@ -28,6 +29,7 @@ if (!model) {
 const info = model.modelinfo;
 const heroImage = info?.modelimageurl || null;
 const heroImageAlt = model.title;
+const hasGallery = getGalleryManifest(slug!) !== null;
 ---
 
 <BaseLayout
@@ -61,6 +63,13 @@ const heroImageAlt = model.title;
             {info?.manufacturer && (
               <span class="meta-pill">{info.manufacturer}</span>
             )}
+
+            {hasGallery && (
+              <a href={`/gallery/${model.slug}`} class="meta-pill gallery-cta-pill">
+                View gallery →
+              </a>
+            )}
+
           </div>
 
           {info?.shortdescription && (
@@ -233,6 +242,18 @@ const heroImageAlt = model.title;
 
   .back-link:hover {
     opacity: 1;
+  }
+
+  .gallery-cta-pill {
+    border-color: var(--color-primary);
+    background: var(--color-primary-highlight);
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: background var(--transition), color var(--transition), border-color var(--transition);
+  }
+  .gallery-cta-pill:hover {
+    background: var(--color-primary);
+    color: var(--color-text-inverse);
   }
 
   .hero-grid {

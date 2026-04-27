@@ -1,27 +1,27 @@
 /* =============================================================
-   GLUSHKOV MODELLING — Design System
-   Art direction: virtual shipyard · warm maritime tone
-   Palette: warm beige surfaces, dark teal accent
-   Typography: Cormorant Garamond (display) + Inter (body)
-   ============================================================= */
+GLUSHKOV MODELLING — Design System
+Art direction: virtual shipyard · warm maritime tone
+Palette: warm beige surfaces, dark teal accent
+Typography: Cormorant Garamond (display) + Inter (body)
+============================================================= */
 
 /* ---- Light mode (default) ---------------------------------- */
 :root,
 [data-theme="light"] {
-  --color-bg:             #F7F6F2;
-  --color-surface:        #F9F8F5;
-  --color-surface-2:      #FBFBF9;
+  --color-bg: #F7F6F2;
+  --color-surface: #F9F8F5;
+  --color-surface-2: #FBFBF9;
   --color-surface-offset: #F3F0EC;
-  --color-divider:        #DCD9D5;
-  --color-border:         #DDD7CE;
+  --color-divider: #DCD9D5;
+  --color-border: #DDD7CE;
 
-  --color-text:           #28251D;
-  --color-text-muted:     #7A7974;
-  --color-text-faint:     #BAB9B4;
-  --color-text-inverse:   #F9F8F4;
+  --color-text: #28251D;
+  --color-text-muted: #7A7974;
+  --color-text-faint: #BAB9B4;
+  --color-text-inverse: #F9F8F4;
 
-  --color-primary:        #01696F;
-  --color-primary-hover:  #0C4E54;
+  --color-primary: #01696F;
+  --color-primary-hover: #0C4E54;
   --color-primary-active: #0F3638;
   --color-primary-highlight: #CEDCD8;
 
@@ -33,7 +33,7 @@
   --radius-xl: 16px;
   --radius-full: 9999px;
 
-  --shadow:    0 10px 30px rgba(40, 37, 29, 0.08);
+  --shadow: 0 10px 30px rgba(40, 37, 29, 0.08);
   --shadow-sm: 0 1px 2px rgba(40, 37, 29, 0.06);
   --shadow-md: 0 4px 12px rgba(40, 37, 29, 0.08);
   --shadow-lg: 0 12px 32px rgba(40, 37, 29, 0.12);
@@ -43,24 +43,24 @@
 
 /* ---- Dark mode -------------------------------------------- */
 [data-theme="dark"] {
-  --color-bg:             #171614;
-  --color-surface:        #1C1B19;
-  --color-surface-2:      #201F1D;
+  --color-bg: #171614;
+  --color-surface: #1C1B19;
+  --color-surface-2: #201F1D;
   --color-surface-offset: #1D1C1A;
-  --color-divider:        #262523;
-  --color-border:         #393836;
+  --color-divider: #262523;
+  --color-border: #393836;
 
-  --color-text:           #CDCCCA;
-  --color-text-muted:     #797876;
-  --color-text-faint:     #5A5957;
-  --color-text-inverse:   #2B2A28;
+  --color-text: #CDCCCA;
+  --color-text-muted: #797876;
+  --color-text-faint: #5A5957;
+  --color-text-inverse: #2B2A28;
 
-  --color-primary:        #4F98A3;
-  --color-primary-hover:  #227F8B;
+  --color-primary: #4F98A3;
+  --color-primary-hover: #227F8B;
   --color-primary-active: #1A626B;
   --color-primary-highlight: #313B3B;
 
-  --shadow:    0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.30);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.40);
@@ -69,21 +69,21 @@
 /* System preference fallback (no manual toggle yet) */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --color-bg:             #171614;
-    --color-surface:        #1C1B19;
-    --color-surface-2:      #201F1D;
+    --color-bg: #171614;
+    --color-surface: #1C1B19;
+    --color-surface-2: #201F1D;
     --color-surface-offset: #1D1C1A;
-    --color-divider:        #262523;
-    --color-border:         #393836;
-    --color-text:           #CDCCCA;
-    --color-text-muted:     #797876;
-    --color-text-faint:     #5A5957;
-    --color-text-inverse:   #2B2A28;
-    --color-primary:        #4F98A3;
-    --color-primary-hover:  #227F8B;
+    --color-divider: #262523;
+    --color-border: #393836;
+    --color-text: #CDCCCA;
+    --color-text-muted: #797876;
+    --color-text-faint: #5A5957;
+    --color-text-inverse: #2B2A28;
+    --color-primary: #4F98A3;
+    --color-primary-hover: #227F8B;
     --color-primary-active: #1A626B;
     --color-primary-highlight: #313B3B;
-    --shadow:    0 10px 30px rgba(0, 0, 0, 0.35);
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.25);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.30);
     --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.40);
@@ -117,7 +117,11 @@ body {
   transition: background var(--transition), color var(--transition);
 }
 
-img, picture, video, canvas, svg {
+img,
+picture,
+video,
+canvas,
+svg {
   display: block;
   max-width: 100%;
   height: auto;
@@ -128,17 +132,26 @@ a {
   text-decoration: none;
 }
 
-input, button, textarea, select {
+input,
+button,
+textarea,
+select {
   font: inherit;
   color: inherit;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   text-wrap: balance;
   line-height: 1.15;
 }
 
-p, li {
+p,
+li {
   text-wrap: pretty;
   max-width: 72ch;
 }
@@ -155,7 +168,9 @@ p, li {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
@@ -269,7 +284,10 @@ button {
   background: transparent;
   cursor: pointer;
   flex-shrink: 0;
-  transition: color var(--transition), border-color var(--transition), background var(--transition);
+  transition:
+    color var(--transition),
+    border-color var(--transition),
+    background var(--transition);
 }
 
 .theme-toggle:hover {
@@ -284,11 +302,19 @@ button {
 }
 
 /* Show/hide sun and moon icons based on current theme */
-.icon-sun  { display: none; }
-.icon-moon { display: block; }
+.icon-sun {
+  display: none;
+}
+.icon-moon {
+  display: block;
+}
 
-[data-theme="dark"] .icon-sun  { display: block; }
-[data-theme="dark"] .icon-moon { display: none; }
+[data-theme="dark"] .icon-sun {
+  display: block;
+}
+[data-theme="dark"] .icon-moon {
+  display: none;
+}
 
 /* ---- Shared page sections --------------------------------- */
 .page-section {
@@ -415,6 +441,7 @@ button {
 .content-html p {
   margin: 0 0 1rem;
 }
+
 /* spec sidebar */
 .spec-grid {
   display: grid;
@@ -433,7 +460,7 @@ button {
   border-right: none;
 }
 
-.spec-item:nth-last-child(-n+3) {
+.spec-item:nth-last-child(-n + 3) {
   border-bottom: none;
 }
 
@@ -449,23 +476,6 @@ button {
   font-weight: 600;
 }
 
-@media (max-width: 900px) {
-  .spec-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .spec-item:nth-child(3n) {
-    border-right: 1px solid var(--color-divider);
-  }
-
-  .spec-item:nth-child(2n) {
-    border-right: none;
-  }
-
-  .spec-item:nth-last-child(-n+2) {
-    border-bottom: none;
-  }
-}
 /* ---- Builds grid ------------------------------------------ */
 .builds-grid {
   display: grid;
@@ -473,24 +483,36 @@ button {
   gap: 24px;
 }
 
+/* Стандартная карточка-плашка с hover-поведением в духе gallery-hub-card */
 .build-card {
   overflow: hidden;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  transition: transform 180ms ease, box-shadow 180ms ease, background var(--transition), border-color var(--transition);
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background var(--transition),
+    border-color var(--transition);
 }
 
 .build-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
 }
 
-.build-card img {
+/* изображение карточки с мягким zoom на hover */
+.build-card-image {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.build-card:hover .build-card-image {
+  transform: scale(1.04);
 }
 
 .build-card-body {
@@ -527,7 +549,11 @@ button {
   display: grid;
   place-items: center;
   color: var(--color-text-muted);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 3%, transparent), color-mix(in srgb, var(--color-primary) 1%, transparent));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-primary) 3%, transparent),
+    color-mix(in srgb, var(--color-primary) 1%, transparent)
+  );
 }
 
 .back-link {
@@ -537,6 +563,7 @@ button {
   font-weight: 700;
   transition: color var(--transition);
 }
+
 /* ---- Stepper ---------------------------------------------- */
 .stepper-section {
   padding: 32px 0;
@@ -558,7 +585,10 @@ button {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   min-width: 140px;
-  transition: background var(--transition), border-color var(--transition), transform 180ms ease;
+  transition:
+    background var(--transition),
+    border-color var(--transition),
+    transform 180ms ease;
 }
 
 .stepper-item:hover {
@@ -619,10 +649,26 @@ button {
   .stepper-item {
     min-width: unset;
   }
+
+  .spec-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .spec-item:nth-child(3n) {
+    border-right: 1px solid var(--color-divider);
+  }
+
+  .spec-item:nth-child(2n) {
+    border-right: none;
+  }
+
+  .spec-item:nth-last-child(-n + 2) {
+    border-bottom: none;
+  }
 }
 
+/* Дополнительные layout‑токены */
 :root {
-  --container: 1200px;
   --container-narrow: 760px;
 
   --space-2: 0.5rem;
