@@ -1,4 +1,3 @@
----
 /**
  * HiResViewer.astro
  *
@@ -30,16 +29,20 @@
   <div class="viewer-shell">
     <!-- Top bar -->
     <div class="viewer-topbar">
-      <div class="viewer-left">
+      <div class="viewer-topbar-row viewer-topbar-row--back">
         <button class="viewer-btn viewer-btn--primary" id="viewerClose" aria-label="Back to gallery">
           ← Back to gallery
         </button>
+      </div>
+
+      <div class="viewer-topbar-row viewer-topbar-row--title">
         <div class="viewer-title">
           <strong id="viewerTitle"></strong>
           <span id="viewerCaption"></span>
         </div>
       </div>
-      <div class="viewer-right">
+
+      <div class="viewer-topbar-row viewer-topbar-row--controls">
         <button class="viewer-btn viewer-btn--icon" id="viewerPrev" aria-label="Previous image">‹</button>
         <span class="viewer-counter" id="viewerCounter" aria-live="polite"></span>
         <button class="viewer-btn viewer-btn--icon" id="viewerNext" aria-label="Next image">›</button>
@@ -47,8 +50,8 @@
         <button class="viewer-btn viewer-btn--icon" id="viewerZoomOut" aria-label="Zoom out">−</button>
         <button class="viewer-btn viewer-btn--zoom" id="viewerZoomReadout" aria-label="Current zoom level">100%</button>
         <button class="viewer-btn viewer-btn--icon" id="viewerZoomIn" aria-label="Zoom in">+</button>
-        <button class="viewer-btn" id="viewerReset">Reset</button>
-        <button class="viewer-btn" id="viewerFullscreen">Fullscreen</button>
+        <button class="viewer-btn viewer-btn--desktop" id="viewerReset">Reset</button>
+        <button class="viewer-btn viewer-btn--desktop" id="viewerFullscreen">Fullscreen</button>
       </div>
     </div>
 
@@ -110,9 +113,8 @@
 
   .viewer-topbar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
+    flex-direction: column;
+    gap: 10px;
     padding: 14px 20px;
     border-bottom: 1px solid var(--color-divider);
     background:
@@ -124,24 +126,34 @@
     color: var(--color-text);
   }
 
-  .viewer-left,
-  .viewer-right {
+  .viewer-topbar-row {
     display: flex;
     align-items: center;
     gap: 8px;
     min-width: 0;
   }
 
-  .viewer-right {
+  .viewer-topbar-row--back {
+    justify-content: flex-start;
+  }
+
+  .viewer-topbar-row--title {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .viewer-topbar-row--controls {
     flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: flex-start;
   }
 
   .viewer-title {
     min-width: 0;
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 2px;
+    overflow: hidden;
   }
 
   .viewer-title strong {
@@ -152,7 +164,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 40ch;
+    max-width: 100%;
   }
 
   .viewer-title span {
@@ -161,7 +173,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 44ch;
+    max-width: 100%;
   }
 
   .viewer-btn {
@@ -222,6 +234,10 @@
     min-width: 56px;
     font-variant-numeric: tabular-nums;
     font-size: 0.82rem;
+  }
+
+  .viewer-btn--desktop {
+    display: inline-flex;
   }
 
   .viewer-btn:disabled {
@@ -377,14 +393,12 @@
     }
 
     .viewer-topbar {
-      flex-direction: column;
-      align-items: stretch;
+      padding: 12px 14px;
       gap: 10px;
     }
 
-    .viewer-left,
-    .viewer-right {
-      width: 100%;
+    .viewer-topbar-row--controls {
+      justify-content: flex-start;
     }
 
     .viewer-title strong,
@@ -416,19 +430,64 @@
     .viewer-btn--icon {
       width: 34px;
     }
+
+    .viewer-topbar {
+      padding: 10px 12px;
+      gap: 8px;
+    }
+
+    .viewer-title strong {
+      font-size: 1rem;
+    }
+
+    .viewer-title span {
+      font-size: 0.78rem;
+    }
+
+    .viewer-btn--desktop {
+      display: none;
+    }
+
+    .viewer-divider {
+      margin: 0 2px;
+    }
+  }
+
+  @media (min-width: 901px) {
+    .viewer-topbar {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 20px;
+    }
+
+    .viewer-topbar-row--back,
+    .viewer-topbar-row--title,
+    .viewer-topbar-row--controls {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .viewer-topbar-row--title {
+      overflow: hidden;
+    }
+
+    .viewer-topbar-row--controls {
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .viewer-title {
+      width: auto;
+    }
   }
 </style>
 
 <script>
   (() => {
-    // ── State ──────────────────────────────────────────────────────────────
-    interface SlideData {
-      src: string;
-      title: string;
-      caption: string;
-    }
-
-    let slides: SlideData[] = [];
+    let slides = [];
     let currentIndex = 0;
     let scale = 1;
     let translateX = 0;
@@ -436,32 +495,30 @@
     let isDragging = false;
     let startX = 0;
     let startY = 0;
-    let lastTrigger: Element | null = null;
+    let lastTrigger = null;
 
     const MIN_SCALE = 1;
     const MAX_SCALE = 5;
     const ZOOM_STEP = 0.25;
     const WHEEL_STEP = 0.10;
 
-    // ── Elements ───────────────────────────────────────────────────────────
-    const overlay      = document.getElementById('hiResViewer')!;
-    const img          = document.getElementById('viewerImage') as HTMLImageElement;
-    const loader       = document.getElementById('viewerLoader')!;
-    const titleEl      = document.getElementById('viewerTitle')!;
-    const captionEl    = document.getElementById('viewerCaption')!;
-    const counterEl    = document.getElementById('viewerCounter')!;
-    const zoomReadout  = document.getElementById('viewerZoomReadout')!;
+    const overlay = document.getElementById('hiResViewer');
+    const img = document.getElementById('viewerImage');
+    const loader = document.getElementById('viewerLoader');
+    const titleEl = document.getElementById('viewerTitle');
+    const captionEl = document.getElementById('viewerCaption');
+    const counterEl = document.getElementById('viewerCounter');
+    const zoomReadout = document.getElementById('viewerZoomReadout');
 
-    const btnClose     = document.getElementById('viewerClose')!;
-    const btnPrev      = document.getElementById('viewerPrev')!;
-    const btnNext      = document.getElementById('viewerNext')!;
-    const btnZoomIn    = document.getElementById('viewerZoomIn')!;
-    const btnZoomOut   = document.getElementById('viewerZoomOut')!;
-    const btnReset     = document.getElementById('viewerReset')!;
-    const btnFullscreen= document.getElementById('viewerFullscreen')!;
+    const btnClose = document.getElementById('viewerClose');
+    const btnPrev = document.getElementById('viewerPrev');
+    const btnNext = document.getElementById('viewerNext');
+    const btnZoomIn = document.getElementById('viewerZoomIn');
+    const btnZoomOut = document.getElementById('viewerZoomOut');
+    const btnReset = document.getElementById('viewerReset');
+    const btnFullscreen = document.getElementById('viewerFullscreen');
 
-    // ── Helpers ────────────────────────────────────────────────────────────
-    const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
     function updateTransform() {
       img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
@@ -479,19 +536,22 @@
       updateTransform();
     }
 
-    function zoomBy(delta: number) {
+    function zoomBy(delta) {
       scale = clamp(scale + delta, MIN_SCALE, MAX_SCALE);
-      if (scale === MIN_SCALE) { translateX = 0; translateY = 0; }
+      if (scale === MIN_SCALE) {
+        translateX = 0;
+        translateY = 0;
+      }
       updateTransform();
     }
 
     function updateNav() {
-      (btnPrev as HTMLButtonElement).disabled = currentIndex === 0;
-      (btnNext as HTMLButtonElement).disabled = currentIndex === slides.length - 1;
+      btnPrev.disabled = currentIndex === 0;
+      btnNext.disabled = currentIndex === slides.length - 1;
       counterEl.textContent = slides.length > 1 ? `${currentIndex + 1} / ${slides.length}` : '';
     }
 
-    function loadSlide(index: number) {
+    function loadSlide(index) {
       if (index < 0 || index >= slides.length) return;
       currentIndex = index;
       const slide = slides[index];
@@ -503,7 +563,6 @@
       img.classList.add('is-loading');
       loader.classList.add('is-active');
 
-      // Prefer hi-res src stored in data-hires, else use the gallery src
       img.src = slide.src;
       img.alt = slide.caption;
 
@@ -518,8 +577,7 @@
       };
     }
 
-    // ── Open / Close ───────────────────────────────────────────────────────
-    function openViewer(allSlides: SlideData[], startIndex: number, trigger: Element | null) {
+    function openViewer(allSlides, startIndex, trigger) {
       slides = allSlides;
       lastTrigger = trigger;
       overlay.hidden = false;
@@ -532,14 +590,17 @@
       overlay.hidden = true;
       document.body.style.overflow = '';
       if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-      lastTrigger instanceof HTMLElement && lastTrigger.focus();
+      if (lastTrigger instanceof HTMLElement) lastTrigger.focus();
     }
 
-    // ── Navigation ─────────────────────────────────────────────────────────
-    function prevSlide() { if (currentIndex > 0) loadSlide(currentIndex - 1); }
-    function nextSlide() { if (currentIndex < slides.length - 1) loadSlide(currentIndex + 1); }
+    function prevSlide() {
+      if (currentIndex > 0) loadSlide(currentIndex - 1);
+    }
 
-    // ── Button wiring ──────────────────────────────────────────────────────
+    function nextSlide() {
+      if (currentIndex < slides.length - 1) loadSlide(currentIndex + 1);
+    }
+
     btnClose.addEventListener('click', closeViewer);
     btnPrev.addEventListener('click', prevSlide);
     btnNext.addEventListener('click', nextSlide);
@@ -547,17 +608,15 @@
     btnZoomOut.addEventListener('click', () => zoomBy(-ZOOM_STEP));
     btnReset.addEventListener('click', resetView);
     btnFullscreen.addEventListener('click', () => {
-      if (!document.fullscreenElement) overlay.requestFullscreen?.().catch(() => {});
-      else document.exitFullscreen?.().catch(() => {});
+      if (!document.fullscreenElement) overlay.requestFullscreen && overlay.requestFullscreen().catch(() => {});
+      else document.exitFullscreen && document.exitFullscreen().catch(() => {});
     });
 
-    // ── Wheel zoom ─────────────────────────────────────────────────────────
     overlay.addEventListener('wheel', (e) => {
       e.preventDefault();
       zoomBy(e.deltaY < 0 ? WHEEL_STEP : -WHEEL_STEP);
     }, { passive: false });
 
-    // ── Drag to pan ────────────────────────────────────────────────────────
     img.addEventListener('mousedown', (e) => {
       if (scale <= 1) return;
       isDragging = true;
@@ -565,52 +624,61 @@
       startY = e.clientY - translateY;
       updateTransform();
     });
+
     window.addEventListener('mousemove', (e) => {
       if (!isDragging) return;
       translateX = e.clientX - startX;
       translateY = e.clientY - startY;
       updateTransform();
     });
+
     window.addEventListener('mouseup', () => {
       if (!isDragging) return;
       isDragging = false;
       updateTransform();
     });
 
-    // ── Touch swipe navigation ─────────────────────────────────────────────
     let touchStartX = 0;
-    overlay.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
-    overlay.addEventListener('touchend', (e) => {
-      const delta = e.changedTouches[0].clientX - touchStartX;
-      if (Math.abs(delta) > 50) { delta < 0 ? nextSlide() : prevSlide(); }
+    overlay.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
     }, { passive: true });
 
-    // ── Keyboard ───────────────────────────────────────────────────────────
+    overlay.addEventListener('touchend', (e) => {
+      const delta = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(delta) > 50) {
+        if (delta < 0) nextSlide();
+        else prevSlide();
+      }
+    }, { passive: true });
+
     window.addEventListener('keydown', (e) => {
       if (overlay.hidden) return;
       switch (e.key) {
-        case 'Escape':    closeViewer(); break;
-        case 'ArrowLeft': prevSlide();   break;
-        case 'ArrowRight':nextSlide();   break;
-        case '+': case '=': zoomBy(ZOOM_STEP);  break;
-        case '-':           zoomBy(-ZOOM_STEP); break;
-        case '0':           resetView();        break;
-        case 'f': case 'F': btnFullscreen.click(); break;
+        case 'Escape': closeViewer(); break;
+        case 'ArrowLeft': prevSlide(); break;
+        case 'ArrowRight': nextSlide(); break;
+        case '+':
+        case '=': zoomBy(ZOOM_STEP); break;
+        case '-': zoomBy(-ZOOM_STEP); break;
+        case '0': resetView(); break;
+        case 'f':
+        case 'F': btnFullscreen.click(); break;
       }
     });
 
-    // ── Public API (used by gallery pages) ─────────────────────────────────
-    (window as any).__viewer = {
+    window.__viewer = {
       open: openViewer,
       close: closeViewer,
       openViewer,
       closeViewer,
     };
 
-    // ── Custom event bridge (for island-style usage) ───────────────────────
-    document.addEventListener('gallery:open', ((e: CustomEvent) => {
-      const { slides: s, index, trigger } = e.detail;
+    document.addEventListener('gallery:open', (e) => {
+      const detail = e.detail || {};
+      const s = detail.slides;
+      const index = detail.index;
+      const trigger = detail.trigger;
       openViewer(s, index ?? 0, trigger ?? null);
-    }) as EventListener);
+    });
   })();
 </script>
