@@ -9,11 +9,11 @@
  *
  * Triggering (from sibling JS):
  *   document.dispatchEvent(new CustomEvent('gallery:open', {
- *     detail: { src, title, caption, total, index }
+ *     detail: { slides, index, trigger }
  *   }));
  *
- * The viewer exports a minimal public API via window.__viewer:
- *   window.__viewer.open({ src, title, caption, total, index })
+ * Public API:
+ *   window.__viewer.open(slides, startIndex, trigger)
  *   window.__viewer.close()
  */
 ---
@@ -85,6 +85,14 @@
 </div>
 
 <style>
+  .viewer-overlay,
+  .viewer-shell,
+  .viewer-stage,
+  .viewer-viewport,
+  .viewer-image {
+    box-sizing: border-box;
+  }
+
   .viewer-overlay {
     position: fixed;
     inset: 0;
@@ -109,6 +117,8 @@
     overflow: hidden;
     background: color-mix(in srgb, var(--color-surface) 92%, transparent);
     box-shadow: var(--shadow-lg);
+    min-width: 0;
+    min-height: 0;
   }
 
   .viewer-topbar {
@@ -264,8 +274,7 @@
   .viewer-stage {
     position: relative;
     overflow: hidden;
-    display: grid;
-    place-items: center;
+    display: block;
     padding: 20px 28px;
     background:
       radial-gradient(
@@ -278,20 +287,29 @@
         color-mix(in srgb, var(--color-surface-2) 96%, transparent),
         color-mix(in srgb, var(--color-surface-offset) 92%, transparent)
       );
+    min-width: 0;
+    min-height: 0;
   }
 
   .viewer-viewport {
     position: relative;
     width: 100%;
     height: 100%;
-    display: grid;
-    place-items: center;
+    min-width: 0;
+    min-height: 0;
     overflow: hidden;
+    touch-action: none;
   }
 
   .viewer-image {
-    max-width: min(94vw, 1800px);
-    max-height: calc(100vh - 196px);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
     border-radius: var(--radius-lg);
     border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
     background: var(--color-surface-2);
@@ -300,7 +318,7 @@
     transition: transform 0.16s ease, opacity 0.2s ease;
     user-select: none;
     cursor: default;
-    display: block;
+    will-change: transform;
   }
 
   .viewer-image.is-draggable {
@@ -413,12 +431,7 @@
     }
 
     .viewer-stage {
-      padding: 10px;
-    }
-
-    .viewer-image {
-      max-width: 100%;
-      max-height: calc(100vh - 228px);
+      padding: 8px;
     }
 
     .viewer-btn {
@@ -497,7 +510,7 @@
     let startY = 0;
     let lastTrigger = null;
 
-    const MIN_SCALE = 1;
+    const MIN_SCALE = 0.5;
     const MAX_SCALE = 5;
     const ZOOM_STEP = 0.25;
     const WHEEL_STEP = 0.10;
@@ -521,7 +534,9 @@
     const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
     function updateTransform() {
-      img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+      img.style.transform =
+        `translate(-50%, -50%) translate(${translateX}px, ${translateY}px) scale(${scale})`;
+
       zoomReadout.textContent = `${Math.round(scale * 100)}%`;
       const draggable = scale > 1;
       img.classList.toggle('is-draggable', draggable && !isDragging);
@@ -538,7 +553,7 @@
 
     function zoomBy(delta) {
       scale = clamp(scale + delta, MIN_SCALE, MAX_SCALE);
-      if (scale === MIN_SCALE) {
+      if (scale <= 1) {
         translateX = 0;
         translateY = 0;
       }
@@ -556,21 +571,25 @@
       currentIndex = index;
       const slide = slides[index];
 
-      titleEl.textContent = slide.title;
-      captionEl.textContent = slide.caption;
+      titleEl.textContent = slide.title || '';
+      captionEl.textContent = slide.caption || '';
       updateNav();
 
       img.classList.add('is-loading');
       loader.classList.add('is-active');
 
+      img.onload = null;
+      img.onerror = null;
+
       img.src = slide.src;
-      img.alt = slide.caption;
+      img.alt = slide.caption || slide.title || '';
 
       img.onload = () => {
         img.classList.remove('is-loading');
         loader.classList.remove('is-active');
         resetView();
       };
+
       img.onerror = () => {
         img.classList.remove('is-loading');
         loader.classList.remove('is-active');
@@ -578,11 +597,13 @@
     }
 
     function openViewer(allSlides, startIndex, trigger) {
-      slides = allSlides;
-      lastTrigger = trigger;
+      slides = Array.isArray(allSlides) ? allSlides : [];
+      lastTrigger = trigger ?? null;
+      if (!slides.length) return;
+
       overlay.hidden = false;
       document.body.style.overflow = 'hidden';
-      loadSlide(startIndex);
+      loadSlide(startIndex ?? 0);
       btnClose.focus();
     }
 
@@ -607,9 +628,13 @@
     btnZoomIn.addEventListener('click', () => zoomBy(ZOOM_STEP));
     btnZoomOut.addEventListener('click', () => zoomBy(-ZOOM_STEP));
     btnReset.addEventListener('click', resetView);
+
     btnFullscreen.addEventListener('click', () => {
-      if (!document.fullscreenElement) overlay.requestFullscreen && overlay.requestFullscreen().catch(() => {});
-      else document.exitFullscreen && document.exitFullscreen().catch(() => {});
+      if (!document.fullscreenElement) {
+        overlay.requestFullscreen && overlay.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen && document.exitFullscreen().catch(() => {});
+      }
     });
 
     overlay.addEventListener('wheel', (e) => {
@@ -640,12 +665,14 @@
 
     let touchStartX = 0;
     overlay.addEventListener('touchstart', (e) => {
+      if (!e.touches.length) return;
       touchStartX = e.touches[0].clientX;
     }, { passive: true });
 
     overlay.addEventListener('touchend', (e) => {
+      if (!e.changedTouches.length) return;
       const delta = e.changedTouches[0].clientX - touchStartX;
-      if (Math.abs(delta) > 50) {
+      if (Math.abs(delta) > 50 && scale <= 1) {
         if (delta < 0) nextSlide();
         else prevSlide();
       }
@@ -675,10 +702,7 @@
 
     document.addEventListener('gallery:open', (e) => {
       const detail = e.detail || {};
-      const s = detail.slides;
-      const index = detail.index;
-      const trigger = detail.trigger;
-      openViewer(s, index ?? 0, trigger ?? null);
+      openViewer(detail.slides, detail.index ?? 0, detail.trigger ?? null);
     });
   })();
 </script>
