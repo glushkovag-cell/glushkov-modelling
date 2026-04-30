@@ -534,10 +534,7 @@
     const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
     function updateTransform() {
-      //img.style.transform =
-      //  `translate(-50%, -50%) translate(${translateX}px, ${translateY}px) scale(${scale})`;
-img.style.transform =
-  `translate3d(-50%, -50%, 0) translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`;
+      img.style.transform = `translate3d(-50%, -50%, 0) translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`;
       zoomReadout.textContent = `${Math.round(scale * 100)}%`;
       const draggable = scale > 1;
       img.classList.toggle('is-draggable', draggable && !isDragging);
