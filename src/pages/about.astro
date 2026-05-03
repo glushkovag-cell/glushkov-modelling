@@ -1,8 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getAllNews, hasFreshNews } from '../lib/wordpress';
+
+const allNews = await getAllNews();
+const newsFlag = hasFreshNews(allNews);
 ---
 
-<BaseLayout title="About | Glushkov Modelling">
+<BaseLayout title="About | Glushkov Modelling" hasFreshNews={newsFlag}>
 
   <!-- HERO -->
   <section class="hero">

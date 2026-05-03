@@ -161,6 +161,260 @@ function normalizeBuildPart(post: BuildPostNode): NormalizedBuildPart {
   };
 }
 
+// --- NEWS TYPES & NORMALIZATION ---
+
+export type NewsType =
+  | 'announcement'
+  | 'social-release'
+  | 'build-log-entry'
+  | 'new-model'
+  | 'new-tutorial'
+  | 'site-update';
+
+export type ExternalSource =
+  | 'internal'
+  | 'youtube'
+  | 'telegram'
+  | 'instagram'
+  | 'facebook';
+
+interface RelatedModelNode {
+  id: string;
+  slug: string;
+  title: string;
+}
+
+interface RelatedModelConnection {
+  nodes?: RelatedModelNode[] | null;
+}
+
+// "сырые" поля как в GraphQL-ответе (newsfields)
+interface RawNewsfields {
+  newsType?: string[] | null;
+  shortText?: string | null;
+  targetUrl?: string | null;
+  targetLabel?: string | null;
+  externalSource?: string[] | null;
+  isPinned?: boolean | null;
+  eventDate?: string | null;
+  relatedModel?: RelatedModelConnection | null;
+}
+
+// Нормализованные поля для фронтенда
+export interface NewsFields {
+  newsType: NewsType;
+  shortText: string;
+  targetUrl: string;
+  targetLabel: string;
+  externalSource: ExternalSource;
+  isPinned: boolean;
+  eventDate: string | null;
+  relatedModel: RelatedModelNode | null;
+}
+
+export interface NewsItem {
+  id: string;
+  databaseId?: number;
+  title: string;
+  slug: string;
+  date: string;
+  uri?: string;
+  news: NewsFields; // уже нормализованные поля
+}
+
+interface GetAllNewsResponse {
+  newsitems: {
+    nodes: {
+      id: string;
+      databaseId?: number;
+      title: string;
+      slug: string;
+      date: string;
+      uri?: string;
+      newsfields?: RawNewsfields | null;
+    }[];
+  };
+}
+
+interface GetNewsBySlugResponse {
+  newsitem: {
+    id: string;
+    databaseId?: number;
+    title: string;
+    slug: string;
+    date: string;
+    uri?: string;
+    newsfields?: RawNewsfields | null;
+  } | null;
+}
+
+const GET_ALL_NEWS = `
+  query GetAllNews {
+    newsitems(first: 100, where: { status: PUBLISH }) {
+      nodes {
+        id
+        databaseId
+        title
+        slug
+        date
+        uri
+        newsfields {
+          newsType
+          shortText
+          targetUrl
+          targetLabel
+          externalSource
+          isPinned
+          eventDate
+          relatedModel {
+            nodes {
+              __typename
+              ... on Model {
+                id
+                slug
+                title
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+const GET_NEWS_BY_SLUG = `
+  query GetNewsBySlug($slug: ID!) {
+    newsitem(id: $slug, idType: SLUG) {
+      id
+      databaseId
+      title
+      slug
+      date
+      uri
+      newsfields {
+        newsType
+        shortText
+        targetUrl
+        targetLabel
+        externalSource
+        isPinned
+        eventDate
+        relatedModel {
+          nodes {
+            __typename
+            ... on Model {
+              id
+              slug
+              title
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+// Нормализация одного newsfields
+function normalizeNewsfields(raw?: RawNewsfields | null): NewsFields {
+  const newsTypeRaw = raw?.newsType && raw.newsType.length > 0
+    ? raw.newsType[0]
+    : 'announcement';
+
+  const externalSourceRaw = raw?.externalSource && raw.externalSource.length > 0
+    ? raw.externalSource[0]
+    : 'internal';
+
+  const relatedModelNode =
+    raw?.relatedModel?.nodes && raw.relatedModel.nodes.length > 0
+      ? raw.relatedModel.nodes[0]
+      : null;
+
+  return {
+    newsType: newsTypeRaw as NewsType,
+    shortText: raw?.shortText ?? '',
+    targetUrl: raw?.targetUrl ?? '#',
+    targetLabel: raw?.targetLabel ?? 'Open',
+    externalSource: externalSourceRaw as ExternalSource,
+    isPinned: raw?.isPinned ?? false,
+    eventDate: raw?.eventDate ?? null,
+    relatedModel: relatedModelNode,
+  };
+}
+
+// Нормализация NewsItem
+function normalizeNewsItem(node: GetAllNewsResponse['newsitems']['nodes'][number]): NewsItem {
+  return {
+    id: node.id,
+    databaseId: node.databaseId,
+    title: node.title,
+    slug: node.slug,
+    date: node.date,
+    uri: node.uri,
+    news: normalizeNewsfields(node.newsfields),
+  };
+}
+
+// Утилиты сортировки и свежести
+
+export function isFreshNews(date: string, now = new Date(), days = 7): boolean {
+  const published = new Date(date).getTime();
+  const threshold = now.getTime() - days * 24 * 60 * 60 * 1000;
+  return published >= threshold;
+}
+
+export function sortNews(items: NewsItem[]): NewsItem[] {
+  return [...items].sort((a, b) => {
+    const pinA = a.news.isPinned ? 1 : 0;
+    const pinB = b.news.isPinned ? 1 : 0;
+
+    if (pinA !== pinB) return pinB - pinA;
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  });
+}
+
+export function getFreshNews(items: NewsItem[], days = 7): NewsItem[] {
+  return sortNews(items).filter((item) => isFreshNews(item.date, new Date(), days));
+}
+
+export function hasFreshNews(items: NewsItem[], days = 7): boolean {
+  return getFreshNews(items, days).length > 0;
+}
+
+// Публичное API для Astro
+
+export async function getAllNews(): Promise<NewsItem[]> {
+  const data = await fetchAPI<GetAllNewsResponse>(GET_ALL_NEWS);
+  return data.newsitems.nodes.map(normalizeNewsItem);
+}
+
+export async function getNewsBySlug(slug: string): Promise<NewsItem | null> {
+  const data = await fetchAPI<GetNewsBySlugResponse>(GET_NEWS_BY_SLUG, { slug });
+
+  if (!data.newsitem) return null;
+
+  return normalizeNewsItem({
+    id: data.newsitem.id,
+    databaseId: data.newsitem.databaseId,
+    title: data.newsitem.title,
+    slug: data.newsitem.slug,
+    date: data.newsitem.date,
+    uri: data.newsitem.uri,
+    newsfields: data.newsitem.newsfields ?? undefined,
+  } as GetAllNewsResponse['newsitems']['nodes'][number]);
+}
+
+export async function getFreshNewsItems(limit = 3): Promise<NewsItem[]> {
+  const items = await getAllNews();
+  return getFreshNews(items).slice(0, limit);
+}
+
+export async function getRelatedModelNews(modelSlug: string, limit = 5): Promise<NewsItem[]> {
+  const items = await getAllNews();
+
+  return sortNews(
+    items.filter((item) => item.news.relatedModel?.slug === modelSlug)
+  ).slice(0, limit);
+}
 
 export async function getAllModels(): Promise<NormalizedModel[]> {
   const data = await fetchAPI<GetAllModelsResponse>(`

@@ -1,8 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { getAllModels } from '../lib/wordpress';
+import NewsStrip from '../components/news/NewsStrip.astro';
+import { getAllModels, getAllNews, getFreshNews, hasFreshNews } from '../lib/wordpress';
 
 const allModels = await getAllModels();
+const allNews = await getAllNews();
+const freshNews = getFreshNews(allNews).slice(0, 3);
+const newsFlag = hasFreshNews(allNews);
 
 // featured builds: только completed / in_progress, сортировка по modelinfo.donedate (по убыванию)
 const featuredBuilds = allModels
@@ -42,7 +46,7 @@ const socialLinks = [
 ];
 ---
 
-<BaseLayout title="Glushkov Modelling">
+<BaseLayout title="Glushkov Modelling" hasFreshNews={newsFlag}>
   <!-- HERO -->
   <section class="hero" id="top">
     <div class="container">
@@ -61,6 +65,7 @@ const socialLinks = [
           </div>
 
           <div class="hero-meta" style="margin-top: 12px;">
+            <a href="#news" class="nav-link-light">News</a>
             <a href="#featured-builds" class="nav-link-light">Featured Builds</a>
             <a href="#about" class="nav-link-light">About</a>
             <a href="#social-hub" class="nav-link-light">Social Hub</a>
@@ -77,8 +82,22 @@ const socialLinks = [
     </div>
   </section>
 
+  <!-- NEWS -->
+  {freshNews.length > 0 && (
+    <section class="page-section page-section--news" id="news">
+      <div class="container">
+        <div class="news-band">
+          <div class="news-band__inner">
+            <span class="eyebrow">News</span>
+            <NewsStrip items={freshNews} />
+          </div>
+        </div>
+      </div>
+    </section>
+  )}
+
   <!-- FEATURED BUILDS -->
-  <section class="page-section" id="featured-builds">
+  <section class="page-section page-section--featured" id="featured-builds">
     <div class="container">
       <div
         style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px;"
@@ -238,5 +257,58 @@ const socialLinks = [
     color: var(--color-primary);
     border-color: var(--color-primary);
     opacity: 1;
+  }
+
+  .page-section--news {
+    padding-top: 0;
+    padding-bottom: 8px;
+  }
+
+  .news-band {
+    width: 100%;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 38%, var(--color-border));
+    border-radius: 20px;
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--color-primary) 6%, var(--color-surface)) 0%,
+        var(--color-surface) 100%
+      );
+    box-shadow:
+      0 8px 22px rgba(0, 0, 0, 0.035),
+      0 0 0 1px color-mix(in srgb, var(--color-primary) 10%, transparent) inset;
+    overflow: hidden;
+  }
+
+  .news-band::before {
+    content: '';
+    display: block;
+    height: 3px;
+    width: 100%;
+    background: var(--color-primary);
+    opacity: 0.95;
+  }
+
+  .news-band__inner {
+    padding: 10px 22px 10px;
+  }
+
+  .page-section--featured {
+    padding-top: 20px;
+  }
+
+  @media (min-width: 900px) {
+    .page-section--news {
+      padding-top: 0;
+      padding-bottom: 2px;
+    }
+
+    .news-band__inner {
+      padding: 10px 26px 10px;
+    }
+
+    .page-section--featured {
+      padding-top: 14px;
+    }
   }
 </style>

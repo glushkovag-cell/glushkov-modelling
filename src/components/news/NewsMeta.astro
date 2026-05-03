@@ -1,0 +1,61 @@
+---
+import type { NewsItem, NewsType, ExternalSource } from '../../lib/wordpress';
+
+interface Props {
+  item: NewsItem;
+  showSource?: boolean;
+}
+
+const { item, showSource = false } = Astro.props;
+const { news } = item;
+
+const TYPE_LABELS: Record<NewsType, string> = {
+  'announcement': 'Announcement',
+  'social-release': 'Post',
+  'build-log-entry': 'Build log',
+  'new-model': 'New model',
+  'new-tutorial': 'Tutorial',
+  'site-update': 'Website update',
+};
+
+const SOURCE_LABELS: Record<ExternalSource, string> = {
+  'internal': 'Websaite',
+  'youtube': 'YouTube',
+  'telegram': 'Telegram',
+  'instagram': 'Instagram',
+  'facebook': 'Facebook',
+};
+
+const typeLabel = TYPE_LABELS[news.newsType] ?? news.newsType;
+const sourceLabel = SOURCE_LABELS[news.externalSource] ?? news.externalSource;
+
+// форматируем дату события только для announcement
+let eventDateText: string | null = null;
+if (news.newsType === 'announcement' && news.eventDate) {
+  eventDateText = new Date(news.eventDate).toLocaleString('ru-RU', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+---
+
+<div class="news-meta">
+  <span class={`news-meta__badge news-meta__badge--${news.newsType}`}>
+    {typeLabel}
+  </span>
+
+  {showSource && (
+    <span class="news-meta__source">
+      {sourceLabel}
+    </span>
+  )}
+
+  {eventDateText && (
+    <time class="news-meta__event-date" datetime={news.eventDate!}>
+      {eventDateText}
+    </time>
+  )}
+</div>

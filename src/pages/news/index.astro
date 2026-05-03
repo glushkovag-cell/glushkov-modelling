@@ -1,0 +1,74 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NewsList from '../../components/news/NewsList.astro';
+import { getAllNews, sortNews, hasFreshNews } from '../../lib/wordpress';
+
+const now = new Date();
+const cutoff = new Date();
+cutoff.setFullYear(cutoff.getFullYear() - 1);
+
+const rawNews = await getAllNews();
+
+const recentYearNews = rawNews.filter((item) => {
+  const publishedAt = new Date(item.date);
+  return publishedAt >= cutoff && publishedAt <= now;
+});
+
+const allNews = sortNews(recentYearNews);
+const newsFlag = hasFreshNews(rawNews);
+---
+
+<BaseLayout
+  title="News | Glushkov Modelling"
+  description="Short updates about builds, tutorials, new model pages, site materials, and social releases."
+  hasFreshNews={newsFlag}
+>
+  <section class="page-section page-section--news-archive">
+    <div class="container container--news">
+      <div class="news-archive-header">
+        <span class="eyebrow">News</span>
+        <h1 class="news-archive-title">Workshop updates and releases</h1>
+        <p class="news-archive-intro">
+          Recent news from the last twelve months: build log updates, new materials, tutorials, models, and selected
+          external releases.
+        </p>
+      </div>
+
+      <NewsList items={allNews} />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-section--news-archive {
+    padding-top: 40px;
+  }
+
+  .container--news {
+    max-width: 980px;
+  }
+
+  .news-archive-header {
+    margin-bottom: 22px;
+  }
+
+  .news-archive-title {
+    margin: 6px 0 10px;
+  }
+
+  .news-archive-intro {
+    margin: 0;
+    max-width: 68ch;
+    color: var(--color-text-muted);
+  }
+
+  @media (min-width: 900px) {
+    .page-section--news-archive {
+      padding-top: 48px;
+    }
+
+    .news-archive-header {
+      margin-bottom: 26px;
+    }
+  }
+</style>

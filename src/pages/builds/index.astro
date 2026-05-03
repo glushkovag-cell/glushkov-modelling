@@ -3,9 +3,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getAllModels } from '../../lib/wordpress';
 
 const models = await getAllModels();
+
+import { getAllNews, hasFreshNews } from '../../lib/wordpress';
+
+const allNews = await getAllNews();
+const newsFlag = hasFreshNews(allNews);
 ---
 
-<BaseLayout title="Builds | Glushkov Modelling">
+<BaseLayout title="Builds | Glushkov Modelling" hasFreshNews={newsFlag}>
   <section class="page-section">
     <div class="container">
       <span class="eyebrow">Build Catalogue</span>

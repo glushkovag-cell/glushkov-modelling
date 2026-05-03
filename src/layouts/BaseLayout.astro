@@ -1,21 +1,24 @@
 ---
 /**
- * BaseLayout.astro — updated to include Gallery nav link.
- * Patch: added <a href="/gallery"> to the nav section.
+ * BaseLayout.astro
+ * Updated to support News nav item + fresh news badge.
  */
 import '../styles/global.css';
 
 interface Props {
   title?: string;
   description?: string;
+  hasFreshNews?: boolean;
 }
 
 const {
   title = 'Glushkov Modelling',
   description = 'Virtual shipyard of a model ship builder',
+  hasFreshNews = false,
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
+
 function isActive(href: string) {
   if (href === '/') return currentPath === '/';
   return currentPath.startsWith(href);
@@ -62,10 +65,26 @@ function isActive(href: string) {
         </a>
 
         <nav class="nav" aria-label="Main navigation">
-          <a href="/"        class:list={['nav-link', { 'nav-link--active': isActive('/') }]}>Home</a>
-          <a href="/about"   class:list={['nav-link', { 'nav-link--active': isActive('/about') }]}>About</a>
-          <a href="/builds"  class:list={['nav-link', { 'nav-link--active': isActive('/builds') }]}>Builds</a>
-          <a href="/gallery" class:list={['nav-link', { 'nav-link--active': isActive('/gallery') }]}>Gallery</a>
+          <a href="/" class:list={['nav-link', { 'nav-link--active': isActive('/') }]}>
+            Home
+          </a>
+
+          <a href="/about" class:list={['nav-link', { 'nav-link--active': isActive('/about') }]}>
+            About
+          </a>
+
+          <a href="/builds" class:list={['nav-link', { 'nav-link--active': isActive('/builds') }]}>
+            Builds
+          </a>
+
+          <a href="/gallery" class:list={['nav-link', { 'nav-link--active': isActive('/gallery') }]}>
+            Gallery
+          </a>
+
+          <a href="/news" class:list={['nav-link', { 'nav-link--active': isActive('/news') }]}>
+            <span>News</span>
+            {hasFreshNews && <span class="nav-badge" aria-label="Fresh news available"></span>}
+          </a>
         </nav>
 
         <button
@@ -74,12 +93,31 @@ function isActive(href: string) {
           data-theme-toggle
           title="Toggle theme"
         >
-          <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <circle cx="12" cy="12" r="5"/>
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          <svg
+            class="icon-sun"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="5" />
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
           </svg>
-          <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+
+          <svg
+            class="icon-moon"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
           </svg>
         </button>
       </div>
@@ -101,6 +139,7 @@ function isActive(href: string) {
         function applyTheme(theme) {
           root.setAttribute('data-theme', theme);
           localStorage.setItem('theme', theme);
+
           if (btn) {
             btn.setAttribute(
               'aria-label',
@@ -120,8 +159,31 @@ function isActive(href: string) {
 </html>
 
 <style>
-  /* Active nav link style */
-  .nav-link { color: var(--color-text-muted); font-weight: 500; font-size: 0.95rem; transition: color var(--transition); }
-  .nav-link:hover { color: var(--color-primary); }
-  .nav-link--active { color: var(--color-primary) !important; }
+  .nav-link {
+    color: var(--color-text-muted);
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: color var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .nav-link:hover {
+    color: var(--color-primary);
+  }
+
+  .nav-link--active {
+    color: var(--color-primary) !important;
+  }
+
+  .nav-badge {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 999px;
+    background: var(--color-primary);
+    display: inline-block;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
 </style>

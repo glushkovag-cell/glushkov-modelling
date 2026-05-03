@@ -1,0 +1,106 @@
+---
+import type { NewsItem, NewsType } from '../../lib/wordpress';
+
+interface Props {
+  items: NewsItem[];
+}
+
+const { items } = Astro.props;
+
+const TYPE_LABELS: Record<NewsType, string> = {
+  'announcement': 'Announcement',
+  'social-release': 'Social release',
+  'build-log-entry': 'Build log',
+  'new-model': 'New model',
+  'new-tutorial': 'Tutorial',
+  'site-update': 'Website update',
+};
+---
+
+{items.length > 0 && (
+  <div class="news-strip">
+    <ul class="news-strip__list" role="list">
+      {items.map((item) => (
+        <li class="news-strip__item">
+          <p class="news-strip__meta">
+            <time datetime={item.date}>
+              {new Date(item.date).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+              })}
+            </time>
+            {' - '}
+            <span>{TYPE_LABELS[item.news.newsType] ?? item.news.newsType}</span>
+          </p>
+
+          <p class="news-strip__text">
+            {item.news.shortText}
+          </p>
+
+          <a
+            href={item.news.targetUrl}
+            class="news-strip__cta"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {item.news.targetLabel}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
+
+<style>
+  .news-strip {
+    margin-top: 0;
+  }
+
+  .news-strip__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0;
+  }
+
+  .news-strip__item {
+    padding: 5px 0 3px;
+    border-top: 1px solid color-mix(in srgb, var(--color-primary) 14%, var(--color-border));
+  }
+
+  .news-strip__item:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .news-strip__item:last-child {
+    padding-bottom: 0;
+  }
+
+  .news-strip__meta {
+    margin: 0 0 2px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--color-text);
+    line-height: 1.3;
+  }
+
+  .news-strip__text {
+    margin: 0 0 3px;
+    color: var(--color-text-muted);
+    max-width: 90ch;
+    line-height: 1.4;
+  }
+
+  .news-strip__cta {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .news-strip__cta:hover {
+    text-decoration: underline;
+  }
+</style>

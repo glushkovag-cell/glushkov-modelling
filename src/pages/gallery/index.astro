@@ -3,12 +3,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getAllGalleryEntries } from '../../lib/gallery';
 
 const entries = await getAllGalleryEntries();
+import { getAllNews, hasFreshNews } from '../../lib/wordpress';
+
+const allNews = await getAllNews();
+const newsFlag = hasFreshNews(allNews);
+
 /* console.log('[gallery page] entries:', JSON.stringify(entries, null, 2)); */
 ---
 
 <BaseLayout
   title="Gallery | Glushkov Modelling"
   description="Curated hi-res photo galleries for all scale model builds — rigging, hull, deck details and workshop views."
+  hasFreshNews={newsFlag}
 >
   <section class="page-section">
     <div class="container">
