@@ -11,6 +11,11 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import GalleryGrid from '../../components/GalleryGrid.astro';
 import HiResViewer from '../../components/HiResViewer.astro';
 import { getGalleryManifest, getAllGallerySlugs } from '../../lib/gallery';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAllNews, hasFreshNews } from '../../lib/wordpress';
+
+const allNews = await getAllNews();
+const newsFlag = hasFreshNews(allNews);
 
 export async function getStaticPaths() {
   const slugs = await getAllGallerySlugs();
@@ -30,6 +35,7 @@ const sortedImages = [...manifest.images].sort((a, b) => a.order - b.order);
 <BaseLayout
   title={`${manifest.galleryTitle} | Glushkov Modelling`}
   description={`Hi-res gallery for ${manifest.title} scale model — ${manifest.meta.focus}`}
+  hasFreshNews={newsFlag}
 >
   <div class="page-section">
     <div class="container">

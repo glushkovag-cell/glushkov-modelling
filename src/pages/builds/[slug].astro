@@ -6,6 +6,11 @@ import {
   getModelBySlug,
 } from '../../lib/wordpress';
 import { getGalleryManifest } from '../../lib/gallery';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAllNews, hasFreshNews } from '../../lib/wordpress';
+
+const allNews = await getAllNews();
+const newsFlag = hasFreshNews(allNews);
 
 export async function getStaticPaths() {
   const models = await getAllModels();
@@ -36,6 +41,7 @@ const hasGallery = !!galleryManifest;
 <BaseLayout
   title={`${model.title} — Build Log`}
   description={info?.shortdescription || `Build log for ${model.title}`}
+  hasFreshNews={newsFlag}
 >
   <div id="top"></div>
 
