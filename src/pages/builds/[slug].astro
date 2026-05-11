@@ -6,7 +6,6 @@ import {
   getModelBySlug,
 } from '../../lib/wordpress';
 import { getGalleryManifest } from '../../lib/gallery';
-import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getAllNews, hasFreshNews } from '../../lib/wordpress';
 
 const allNews = await getAllNews();
@@ -136,9 +135,11 @@ const hasGallery = !!galleryManifest;
     </section>
   )}
 
+  <span id="build-log" aria-hidden="true"></span>
+
   {parts.length > 0 && (
     <section class="section">
-      <div class="container narrow" id="build-log">
+      <div class="container narrow">
         <h2>Build Log</h2>
 
         {parts.map((part: any) => (
