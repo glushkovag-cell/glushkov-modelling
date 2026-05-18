@@ -1,16 +1,10 @@
+---
 /**
  * HiResViewer.astro
  *
  * Full-browser overlay component for immersive hi-res image inspection.
  * Drop this into any page that renders a gallery grid.
  *
- * Usage:
- *   <HiResViewer />
- *
- * Triggering (from sibling JS):
- *   document.dispatchEvent(new CustomEvent('gallery:open', {
- *     detail: { slides, index, trigger }
- *   }));
  *
  * Public API:
  *   window.__viewer.open(slides, startIndex, trigger)

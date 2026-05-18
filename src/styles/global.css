@@ -148,6 +148,7 @@ h5,
 h6 {
   text-wrap: balance;
   line-height: 1.15;
+  font-family: 'Cormorant Garamond', Georgia, serif;
 }
 
 p,
@@ -285,9 +286,9 @@ button {
   cursor: pointer;
   flex-shrink: 0;
   transition:
-    color var(--transition),
-    border-color var(--transition),
-    background var(--transition);
+          color var(--transition),
+          border-color var(--transition),
+          background var(--transition);
 }
 
 .theme-toggle:hover {
@@ -305,6 +306,7 @@ button {
 .icon-sun {
   display: none;
 }
+
 .icon-moon {
   display: block;
 }
@@ -312,6 +314,7 @@ button {
 [data-theme="dark"] .icon-sun {
   display: block;
 }
+
 [data-theme="dark"] .icon-moon {
   display: none;
 }
@@ -333,6 +336,25 @@ button {
 }
 
 /* ---- Cards ------------------------------------------------ */
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition:
+          transform 180ms ease,
+          box-shadow 180ms ease,
+          background var(--transition),
+          border-color var(--transition);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+}
+
 .hero-card,
 .info-card,
 .content-card,
@@ -483,7 +505,6 @@ button {
   gap: 24px;
 }
 
-/* Стандартная карточка-плашка с hover-поведением в духе gallery-hub-card */
 .build-card {
   overflow: hidden;
   background: var(--color-surface);
@@ -491,10 +512,10 @@ button {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   transition:
-    transform 180ms ease,
-    box-shadow 180ms ease,
-    background var(--transition),
-    border-color var(--transition);
+          transform 180ms ease,
+          box-shadow 180ms ease,
+          background var(--transition),
+          border-color var(--transition);
 }
 
 .build-card:hover {
@@ -503,7 +524,6 @@ button {
   border-color: var(--color-primary);
 }
 
-/* изображение карточки с мягким zoom на hover */
 .build-card-image {
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -550,9 +570,9 @@ button {
   place-items: center;
   color: var(--color-text-muted);
   background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--color-primary) 3%, transparent),
-    color-mix(in srgb, var(--color-primary) 1%, transparent)
+          180deg,
+          color-mix(in srgb, var(--color-primary) 3%, transparent),
+          color-mix(in srgb, var(--color-primary) 1%, transparent)
   );
 }
 
@@ -586,9 +606,9 @@ button {
   border-radius: var(--radius-lg);
   min-width: 140px;
   transition:
-    background var(--transition),
-    border-color var(--transition),
-    transform 180ms ease;
+          background var(--transition),
+          border-color var(--transition),
+          transform 180ms ease;
 }
 
 .stepper-item:hover {
@@ -651,7 +671,12 @@ button {
   }
 
   .spec-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .spec-item {
+    border-right: 1px solid var(--color-divider);
+    border-bottom: 1px solid var(--color-divider);
   }
 
   .spec-item:nth-child(3n) {
@@ -662,7 +687,8 @@ button {
     border-right: none;
   }
 
-  .spec-item:nth-last-child(-n + 2) {
+  .spec-grid > .spec-item:nth-last-child(1),
+  .spec-grid > .spec-item:nth-last-child(2) {
     border-bottom: none;
   }
 }
@@ -681,9 +707,6 @@ button {
   --space-16: 4rem;
   --space-20: 5rem;
 
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-
   --text-sm: 0.95rem;
   --text-base: 1.05rem;
   --text-lg: clamp(1.25rem, 1.1rem + 0.6vw, 1.6rem);
@@ -691,12 +714,12 @@ button {
   --text-hero: clamp(3rem, 1.5rem + 5vw, 6rem);
 }
 
-/* ---- Section grid modifier: equal columns -------------- */
+/* ---- Section grid modifier: equal columns ----------------- */
 .section-grid--equal {
   grid-template-columns: 1fr 1fr;
 }
 
-/* ---- Footer --------------------------------------------- */
+/* ---- Footer ----------------------------------------------- */
 .site-footer {
   border-top: 1px solid var(--color-border);
   padding: 32px 0;

@@ -10,6 +10,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      NODE_VERSION: "22"
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}      # deploy
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}      # /var/www/astro-glushkov
+      WP_GRAPHQL_URL: ${{ secrets.WP_GRAPHQL_URL }}
+      CMS_GALLERY_URL: ${{ secrets.CMS_GALLERY_URL }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -17,16 +26,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: "22"
-          cache: "npm"
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build project
         env:
-          WP_GRAPHQL_URL: ${{ secrets.WP_GRAPHQL_URL }}
-          CMS_GALLERY_URL: ${{ secrets.CMS_GALLERY_URL }}
+          WP_GRAPHQL_URL: ${{ env.WP_GRAPHQL_URL }}
+          CMS_GALLERY_URL: ${{ env.CMS_GALLERY_URL }}
         run: npm run build
 
       - name: Prepare SSH
@@ -39,25 +48,72 @@ jobs:
           chmod 600 ~/.ssh/github_actions_deploy
 
           test -s ~/.ssh/github_actions_deploy
-          test -n "${{ secrets.DEPLOY_HOST }}"
-          test -n "${{ secrets.DEPLOY_PORT }}"
-          test -n "${{ secrets.DEPLOY_USER }}"
-          test -n "${{ secrets.DEPLOY_PATH }}"
+          test -n "${DEPLOY_HOST}"
+          test -n "${DEPLOY_PORT}"
+          test -n "${DEPLOY_USER}"
+          test -n "${DEPLOY_PATH}"
 
-          ssh-keyscan -p "${{ secrets.DEPLOY_PORT }}" -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "${DEPLOY_PORT}" -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
       - name: Test SSH connection
         run: |
-          ssh -p "${{ secrets.DEPLOY_PORT }}" \
+          ssh -p "${DEPLOY_PORT}" \
             -i ~/.ssh/github_actions_deploy \
             -o StrictHostKeyChecking=yes \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "echo connected"
 
-      - name: Deploy via rsync
+      - name: Deploy dist via rsync
         run: |
           rsync -az --delete \
-            -e "ssh -p ${{ secrets.DEPLOY_PORT }} -i ~/.ssh/github_actions_deploy -o StrictHostKeyChecking=yes" \
+            -e "ssh -p ${DEPLOY_PORT} -i ~/.ssh/github_actions_deploy -o StrictHostKeyChecking=yes" \
             dist/ \
-            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}
+            "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/dist/"
+
+      - name: Deploy package.json and package-lock.json
+        run: |
+          rsync -az \
+            -e "ssh -p ${DEPLOY_PORT} -i ~/.ssh/github_actions_deploy -o StrictHostKeyChecking=yes" \
+            package.json package-lock.json \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/"
+
+      - name: Update .env on VPS
+        run: |
+          ssh -p "${DEPLOY_PORT}" \
+            -i ~/.ssh/github_actions_deploy \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
+          cat > "${DEPLOY_PATH}/.env" <<EOT
+          WP_GRAPHQL_URL=${WP_GRAPHQL_URL}
+          CMS_GALLERY_URL=${CMS_GALLERY_URL}
+          HOST=0.0.0.0
+          PORT=4321
+          DEPLOYPATH=${DEPLOY_PATH}
+          EOT
+          chmod 600 "${DEPLOY_PATH}/.env"
+          EOF
+
+      - name: Install production dependencies on VPS
+        run: |
+          ssh -p "${DEPLOY_PORT}" \
+            -i ~/.ssh/github_actions_deploy \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "cd '${DEPLOY_PATH}' && npm ci --omit=dev"
+
+      - name: Restart Astro with PM2
+        run: |
+          ssh -p "${DEPLOY_PORT}" \
+            -i ~/.ssh/github_actions_deploy \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "cd '${DEPLOY_PATH}' && pm2 restart astro-site || pm2 start dist/server/entry.mjs --name astro-site --node-args='--env-file=.env'"
+
+      - name: Save PM2 process list
+        run: |
+          ssh -p "${DEPLOY_PORT}" \
+            -i ~/.ssh/github_actions_deploy \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "pm2 save"

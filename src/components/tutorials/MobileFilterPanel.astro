@@ -1,0 +1,145 @@
+---
+import type { TutorialCategory, TutorialTag } from '../../lib/wordpress';
+import CategoryFilter from './CategoryFilter.astro';
+import TagFilter from './TagFilter.astro';
+import LevelFilter from './LevelFilter.astro';
+
+interface Props {
+    categories: TutorialCategory[];
+    tags: TutorialTag[];
+    selectedCategories: string[];
+    selectedTags: string[];
+    selectedLevel: string;
+}
+
+const { categories, tags, selectedCategories, selectedTags, selectedLevel } = Astro.props;
+---
+
+<div class="mobile-filter-overlay" id="mobileFilterOverlay" aria-hidden="true"></div>
+
+<div
+        class="mobile-filter-panel"
+        id="mobileFilterPanel"
+        aria-hidden="true"
+        aria-label="Mobile filters"
+>
+    <div class="panel-header">
+        <h3>Filters</h3>
+        <button class="close-btn" id="closeFilters" type="button" aria-label="Close filters">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" />
+            </svg>
+        </button>
+    </div>
+
+    <div class="panel-content">
+        <CategoryFilter categories={categories} selectedSlugs={selectedCategories} />
+        <TagFilter tags={tags} selectedSlugs={selectedTags} />
+        <LevelFilter selectedLevel={selectedLevel} />
+    </div>
+
+    <div class="panel-footer">
+        <button class="btn-secondary" id="clearAllFilters" type="button">Clear All</button>
+    </div>
+</div>
+
+<style>
+    .mobile-filter-overlay,
+    .mobile-filter-panel {
+        display: none;
+    }
+
+    @media (max-width: 1024px) {
+        .mobile-filter-overlay {
+            display: block;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .mobile-filter-overlay.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .mobile-filter-panel {
+            display: flex;
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: min(85%, 400px);
+            height: 100dvh;
+            background: var(--color-surface);
+            color: var(--color-text);
+            z-index: 1000;
+            flex-direction: column;
+            box-shadow: var(--shadow-lg);
+            transition: right 0.3s ease;
+        }
+
+        .mobile-filter-panel.active {
+            right: 0;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .panel-header h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            margin: 0;
+            color: var(--color-text);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            color: var(--color-text);
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .panel-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--color-border);
+            background: var(--color-surface);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--color-primary);
+            background: transparent;
+            color: var(--color-primary);
+            border-radius: 0.5rem;
+            font-family: 'General Sans', sans-serif;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-primary);
+            color: white;
+        }
+    }
+</style>
+

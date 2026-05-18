@@ -4,9 +4,10 @@ import {
   getAllModels,
   getBuildPartsByModel,
   getModelBySlug,
+  getAllNews,
+  hasFreshNews,
 } from '../../lib/wordpress';
 import { getGalleryManifest } from '../../lib/gallery';
-import { getAllNews, hasFreshNews } from '../../lib/wordpress';
 
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
@@ -38,190 +39,199 @@ const hasGallery = !!galleryManifest;
 ---
 
 <BaseLayout
-  title={`${model.title} — Build Log`}
-  description={info?.shortdescription || `Build log for ${model.title}`}
-  hasFreshNews={newsFlag}
+    title={`${model.title} — Build Log`}
+    description={info?.shortdescription || `Build log for ${model.title}`}
+    hasFreshNews={newsFlag}
 >
   <div id="top"></div>
 
   <section class="build-hero">
     <div class="container">
-      <a href="/builds" class="back-link">← Back to builds</a>
+      <button
+          type="button"
+          class="detail-back-btn"
+          id="backToBuildsBtn"
+      >
+        <span class="detail-back-icon">←</span>
+        <span>Back to builds</span>
+      </button>
 
       <div class="hero-grid">
         <div class="hero-copy">
           <p class="eyebrow">Build Log</p>
-          <h1>{model.title}</h1>
+          <h1 class="section-title">{model.title}</h1>
 
           <div class="hero-meta">
             {info?.buildstatus && (
-              <span class={`meta-pill status-pill ${model.buildstatusClass || ''}`}>
+                <span class={`meta-pill status-pill ${model.buildstatusClass || ''}`}>
                 {Array.isArray(info.buildstatus)
-                  ? info.buildstatus.join(', ')
-                  : info.buildstatus}
+                    ? info.buildstatus.join(', ')
+                    : info.buildstatus}
               </span>
             )}
 
             {info?.modelscale && (
-              <span class="meta-pill">Scale: {info.modelscale}</span>
+                <span class="meta-pill">Scale: {info.modelscale}</span>
             )}
 
             {info?.manufacturer && (
-              <span class="meta-pill">{info.manufacturer}</span>
+                <span class="meta-pill">{info.manufacturer}</span>
             )}
 
             {hasGallery && (
-              <a href={`/gallery/${model.slug}`} class="meta-pill gallery-cta-pill">
-                View gallery →
-              </a>
+                <a href={`/gallery/${model.slug}`} class="meta-pill gallery-cta-pill">
+                  View gallery →
+                </a>
             )}
           </div>
 
           {info?.shortdescription && (
-            <p class="hero-summary">{info.shortdescription}</p>
+              <p class="hero-summary">{info.shortdescription}</p>
           )}
         </div>
 
         {heroImage && (
-          <div class="hero-image-wrap">
-            <img class="hero-image" src={heroImage} alt={heroImageAlt} />
-          </div>
+            <div class="hero-image-wrap card">
+              <img class="hero-image" src={heroImage} alt={heroImageAlt} />
+            </div>
         )}
       </div>
     </div>
   </section>
 
   {parts.length > 1 && (
-    <section class="parts-strip-section">
-      <div class="container">
-        <div class="section-head">
-          <h2>Build Parts</h2>
-          <a href="#build-log" class="section-link">Jump to full log</a>
-        </div>
+      <section class="parts-strip-section">
+        <div class="container">
+          <div class="section-head">
+            <h2>Build Parts</h2>
+            <a href="#build-log" class="section-link">Jump to full log</a>
+          </div>
 
-        <div class="parts-strip-wrap">
-          <div class="parts-strip">
-            {parts.map((part: any) => (
-              <a href={`#part-${part.partNumber}`} class="part-thumb-card">
-                {part.heroImage ? (
-                  <img
-                    src={part.heroImage}
-                    alt={part.heroImageAlt}
-                    class="part-thumb-image"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div class="part-thumb-placeholder">Part {part.partNumber}</div>
-                )}
+          <div class="parts-strip-wrap">
+            <div class="parts-strip">
+              {parts.map((part: any) => (
+                  <a href={`#part-${part.partNumber}`} class="part-thumb-card">
+                    {part.heroImage ? (
+                        <img
+                            src={part.heroImage}
+                            alt={part.heroImageAlt}
+                            class="part-thumb-image"
+                            loading="lazy"
+                        />
+                    ) : (
+                        <div class="part-thumb-placeholder">Part {part.partNumber}</div>
+                    )}
 
-                <div class="part-thumb-body">
-                  <span class="part-thumb-number">Part {part.partNumber}</span>
-                  <span class="part-thumb-title">{part.title}</span>
-                </div>
-              </a>
-            ))}
+                    <div class="part-thumb-body">
+                      <span class="part-thumb-number">Part {part.partNumber}</span>
+                      <span class="part-thumb-title">{part.title}</span>
+                    </div>
+                  </a>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
   )}
 
   {info?.historicalnote && (
-    <section class="section">
-      <div class="container narrow prose-card">
-        <h2>Historical Background</h2>
-        <div set:html={info.historicalnote} />
-      </div>
-    </section>
+      <section class="section">
+        <div class="container narrow">
+          <article class="prose-card card">
+            <h2>Historical Background</h2>
+            <div set:html={info.historicalnote} />
+          </article>
+        </div>
+      </section>
   )}
 
   <span id="build-log" aria-hidden="true"></span>
 
   {parts.length > 0 && (
-    <section class="section">
-      <div class="container narrow">
-        <h2>Build Log</h2>
+      <section class="section">
+        <div class="container narrow">
+          <h2>Build Log</h2>
 
-        {parts.map((part: any) => (
-          <article id={`part-${part.partNumber}`} class="build-part-card">
-            <header class="part-header">
-              <div class="part-header-top">
-                <p class="eyebrow">Part {part.partNumber}</p>
-                {part.recordDay && (
-                  <span class="part-date">{part.recordDay}</span>
+          {parts.map((part: any) => (
+              <article id={`part-${part.partNumber}`} class="build-part-card card">
+                <header class="part-header">
+                  <div class="part-header-top">
+                    <p class="eyebrow">Part {part.partNumber}</p>
+                    {part.recordDay && (
+                        <span class="part-date">{part.recordDay}</span>
+                    )}
+                  </div>
+                  <h3>{part.title}</h3>
+                </header>
+
+                {part.partContent ? (
+                    <div class="part-content" set:html={part.partContent} />
+                ) : (
+                    <p>Content coming soon.</p>
                 )}
-              </div>
-              <h3>{part.title}</h3>
-            </header>
 
-            {part.partContent ? (
-              <div class="part-content" set:html={part.partContent} />
-            ) : (
-              <p>Content coming soon.</p>
-            )}
-
-            {parts.length > 1 && (
-              <p class="back-top">
-                <a href="#top">↑ Back to all parts</a>
-              </p>
-            )}
-          </article>
-        ))}
-      </div>
-    </section>
+                {parts.length > 1 && (
+                    <p class="back-top">
+                      <a href="#top">↑ Back to all parts</a>
+                    </p>
+                )}
+              </article>
+          ))}
+        </div>
+      </section>
   )}
 
   {info && (
-    <section class="section specs-shell">
-      <div class="container narrow">
-        <div class="specs-card">
-          <div class="section-head specs-head">
-            <h2>Project Specs</h2>
-          </div>
-
-          <dl class="specs-grid">
-            <div class="spec-item">
-              <dt>Model</dt>
-              <dd>{model.title || '—'}</dd>
+      <section class="section specs-shell">
+        <div class="container narrow">
+          <article class="specs-card card">
+            <div class="section-head specs-head">
+              <h2>Project Specs</h2>
             </div>
 
-            <div class="spec-item">
-              <dt>Scale</dt>
-              <dd>{info.modelscale || '—'}</dd>
-            </div>
+            <dl class="specs-grid">
+              <div class="spec-item">
+                <dt>Model</dt>
+                <dd>{model.title || '—'}</dd>
+              </div>
 
-            <div class="spec-item">
-              <dt>Manufacturer</dt>
-              <dd>{info.manufacturer || '—'}</dd>
-            </div>
+              <div class="spec-item">
+                <dt>Scale</dt>
+                <dd>{info.modelscale || '—'}</dd>
+              </div>
 
-            <div class="spec-item">
-              <dt>Length</dt>
-              <dd>{info.modellength ? `${info.modellength} mm` : '—'}</dd>
-            </div>
+              <div class="spec-item">
+                <dt>Manufacturer</dt>
+                <dd>{info.manufacturer || '—'}</dd>
+              </div>
 
-            <div class="spec-item">
-              <dt>Historical Year</dt>
-              <dd>{info.historicalyear || '—'}</dd>
-            </div>
+              <div class="spec-item">
+                <dt>Length</dt>
+                <dd>{info.modellength ? `${info.modellength} mm` : '—'}</dd>
+              </div>
 
-            <div class="spec-item">
-              <dt>Total Parts</dt>
-              <dd>{info.totalparts || '—'}</dd>
-            </div>
+              <div class="spec-item">
+                <dt>Historical Year</dt>
+                <dd>{info.historicalyear || '—'}</dd>
+              </div>
 
-            <div class="spec-item">
-              <dt>Status</dt>
-              <dd>
-                {Array.isArray(info.buildstatus)
-                  ? info.buildstatus.join(', ')
-                  : info.buildstatus || '—'}
-              </dd>
-            </div>
-          </dl>
+              <div class="spec-item">
+                <dt>Total Parts</dt>
+                <dd>{info.totalparts || '—'}</dd>
+              </div>
+
+              <div class="spec-item">
+                <dt>Status</dt>
+                <dd>
+                  {Array.isArray(info.buildstatus)
+                      ? info.buildstatus.join(', ')
+                      : info.buildstatus || '—'}
+                </dd>
+              </div>
+            </dl>
+          </article>
         </div>
-      </div>
-    </section>
+      </section>
   )}
 </BaseLayout>
 
@@ -239,16 +249,32 @@ const hasGallery = !!galleryManifest;
     padding: 2.5rem 0 2rem;
   }
 
-  .back-link {
-    display: inline-block;
+  /* Новый стиль Back to builds — такой же, как на tutorial */
+  .detail-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-family: 'General Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
     margin-bottom: 1.5rem;
-    color: inherit;
-    text-decoration: none;
-    opacity: 0.72;
   }
 
-  .back-link:hover {
-    opacity: 1;
+  .detail-back-btn:hover {
+    background: var(--color-surface-2); /* или var(--color-surface), если хочешь чуть менее заметный эффект */
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+  }
+
+  .detail-back-icon {
+    font-size: 0.9rem;
   }
 
   .gallery-cta-pill {
@@ -269,16 +295,6 @@ const hasGallery = !!galleryManifest;
     grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
     gap: 2rem;
     align-items: start;
-  }
-
-  .eyebrow {
-    margin: 0 0 0.5rem;
-    font-size: 0.82rem;
-    line-height: 1.2;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-primary);
-    font-weight: 700;
   }
 
   .hero-copy h1 {
@@ -321,10 +337,6 @@ const hasGallery = !!galleryManifest;
 
   .hero-image-wrap {
     border-radius: 1rem;
-    overflow: hidden;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    box-shadow: var(--shadow-sm);
   }
 
   .hero-image {
@@ -336,10 +348,6 @@ const hasGallery = !!galleryManifest;
 
   .section {
     padding: 2.5rem 0;
-  }
-
-  #build-log > h2 {
-    margin-bottom: 1.25rem;
   }
 
   .section-head {
@@ -456,18 +464,15 @@ const hasGallery = !!galleryManifest;
   .prose-card,
   .build-part-card,
   .specs-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 1.25rem;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .prose-card {
     padding: 1.5rem;
   }
 
-  .build-part-card {
-    padding: 1.5rem;
+  .prose-card h2 {
+    margin-bottom: 1.25rem;
+  }
+
+  .section > .container.narrow > h2 {
+    margin-bottom: 1.5rem;
   }
 
   .build-part-card + .build-part-card {
@@ -525,14 +530,6 @@ const hasGallery = !!galleryManifest;
   .specs-shell {
     padding-top: 1rem;
     padding-bottom: 3rem;
-  }
-
-  .specs-card {
-    padding: 1.5rem;
-  }
-
-  .specs-head {
-    margin-bottom: 1.25rem;
   }
 
   .specs-grid {
@@ -606,3 +603,22 @@ const hasGallery = !!galleryManifest;
     }
   }
 </style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('backToBuildsBtn');
+    if (!btn) return;
+
+    btn.addEventListener('click', function () {
+      var ref = document.referrer || '';
+      var cameFromBuilds =
+          ref.indexOf('/builds') !== -1 || ref.indexOf('/builds?') !== -1;
+
+      if (cameFromBuilds && window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.href = '/builds';
+      }
+    });
+  });
+</script>

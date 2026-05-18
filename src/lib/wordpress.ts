@@ -107,8 +107,8 @@ async function fetchAPI<T>(query: string, variables: Variables = {}): Promise<T>
 
   if (json.errors?.length) {
     const message = json.errors
-      .map((error: GraphQLErrorItem) => error.message || 'Unknown GraphQL error')
-      .join('; ');
+        .map((error: GraphQLErrorItem) => error.message || 'Unknown GraphQL error')
+        .join('; ');
 
     throw new Error(message);
   }
@@ -124,16 +124,16 @@ function normalizeModel(model: ModelNode): NormalizedModel {
   const rawStatus = model.modelinfo?.buildstatus;
 
   const buildstatusText = Array.isArray(rawStatus)
-    ? rawStatus.join(', ')
-    : rawStatus || '';
+      ? rawStatus.join(', ')
+      : rawStatus || '';
 
   const buildstatusClass = Array.isArray(rawStatus)
-    ? rawStatus[0]
-      ? slugifyStatus(rawStatus[0])
-      : ''
-    : rawStatus
-      ? slugifyStatus(rawStatus)
-      : '';
+      ? rawStatus[0]
+          ? slugifyStatus(rawStatus[0])
+          : ''
+      : rawStatus
+          ? slugifyStatus(rawStatus)
+          : '';
 
   return {
     ...model,
@@ -148,8 +148,8 @@ function normalizeBuildPart(post: BuildPostNode): NormalizedBuildPart {
   const partNumber = Number(post.buildlog?.partnumber || 0);
 
   const recordDay = post.buildlog?.recordday
-    ? new Date(post.buildlog.recordday).toLocaleDateString('ru-RU')
-    : null;
+      ? new Date(post.buildlog.recordday).toLocaleDateString('ru-RU')
+      : null;
 
   return {
     ...post,
@@ -161,22 +161,67 @@ function normalizeBuildPart(post: BuildPostNode): NormalizedBuildPart {
   };
 }
 
+// --- TUTORIAL TYPES
+
+export interface TutorialCategory {
+  id: string;          // глобальный ID
+  databaseId?: number; // term_id из WP
+  name: string;
+  slug: string;
+}
+
+export interface TutorialTag {
+  id: string;
+  databaseId?: number;
+  name: string;
+  slug: string;
+}
+
+export interface NormalizedTutorial {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  teaser: string;
+  level: string;
+  featuredImage?: {
+    sourceUrl: string;
+    altText: string;
+  };
+  categories: TutorialCategory[];
+  tags: TutorialTag[];
+  relatedBuilds: {
+    id: string;
+    title: string;
+    slug: string;
+    teaser: string;
+    scale: string;
+    featuredImage?: {
+      sourceUrl: string;
+      altText: string;
+    };
+    categories: TutorialCategory[];
+    tags: TutorialTag[];
+  }[];
+  relatedTutorials: NormalizedTutorial[];
+}
+
 // --- NEWS TYPES & NORMALIZATION ---
 
 export type NewsType =
-  | 'announcement'
-  | 'social-release'
-  | 'build-log-entry'
-  | 'new-model'
-  | 'new-tutorial'
-  | 'site-update';
+    | 'announcement'
+    | 'social-release'
+    | 'build-log-entry'
+    | 'new-model'
+    | 'new-tutorial'
+    | 'site-update';
 
 export type ExternalSource =
-  | 'internal'
-  | 'youtube'
-  | 'telegram'
-  | 'instagram'
-  | 'facebook';
+    | 'internal'
+    | 'youtube'
+    | 'telegram'
+    | 'instagram'
+    | 'facebook';
 
 interface RelatedModelNode {
   id: string;
@@ -219,7 +264,7 @@ export interface NewsItem {
   slug: string;
   date: string;
   uri?: string;
-  news: NewsFields; // уже нормализованные поля
+  news: NewsFields;
 }
 
 interface GetAllNewsResponse {
@@ -317,17 +362,17 @@ const GET_NEWS_BY_SLUG = `
 // Нормализация одного newsfields
 function normalizeNewsfields(raw?: RawNewsfields | null): NewsFields {
   const newsTypeRaw = raw?.newsType && raw.newsType.length > 0
-    ? raw.newsType[0]
-    : 'announcement';
+      ? raw.newsType[0]
+      : 'announcement';
 
   const externalSourceRaw = raw?.externalSource && raw.externalSource.length > 0
-    ? raw.externalSource[0]
-    : 'internal';
+      ? raw.externalSource[0]
+      : 'internal';
 
   const relatedModelNode =
-    raw?.relatedModel?.nodes && raw.relatedModel.nodes.length > 0
-      ? raw.relatedModel.nodes[0]
-      : null;
+      raw?.relatedModel?.nodes && raw.relatedModel.nodes.length > 0
+          ? raw.relatedModel.nodes[0]
+          : null;
 
   return {
     newsType: newsTypeRaw as NewsType,
@@ -380,7 +425,7 @@ export function hasFreshNews(items: NewsItem[], days = 7): boolean {
   return getFreshNews(items, days).length > 0;
 }
 
-// Публичное API для Astro
+// Публичное API для News
 
 export async function getAllNews(): Promise<NewsItem[]> {
   const data = await fetchAPI<GetAllNewsResponse>(GET_ALL_NEWS);
@@ -412,9 +457,11 @@ export async function getRelatedModelNews(modelSlug: string, limit = 5): Promise
   const items = await getAllNews();
 
   return sortNews(
-    items.filter((item) => item.news.relatedModel?.slug === modelSlug)
+      items.filter((item) => item.news.relatedModel?.slug === modelSlug)
   ).slice(0, limit);
 }
+
+// MODELS & BUILDS
 
 export async function getAllModels(): Promise<NormalizedModel[]> {
   const data = await fetchAPI<GetAllModelsResponse>(`
@@ -448,17 +495,17 @@ export async function getAllModels(): Promise<NormalizedModel[]> {
   `);
 
   return data.models.nodes
-    .map(normalizeModel)
-    .sort((a, b) => {
-      const dateA = a.modelinfo?.donedate ? new Date(a.modelinfo.donedate).getTime() : 0;
-      const dateB = b.modelinfo?.donedate ? new Date(b.modelinfo.donedate).getTime() : 0;
-      return dateB - dateA; // убывание: новые сверху
-    });
+      .map(normalizeModel)
+      .sort((a, b) => {
+        const dateA = a.modelinfo?.donedate ? new Date(a.modelinfo.donedate).getTime() : 0;
+        const dateB = b.modelinfo?.donedate ? new Date(b.modelinfo.donedate).getTime() : 0;
+        return dateB - dateA;
+      });
 }
 
 export async function getModelBySlug(slug: string): Promise<NormalizedModel | null> {
   const data = await fetchAPI<GetModelBySlugResponse>(
-    `
+      `
       query GetModelBySlug($slug: ID!) {
         model(id: $slug, idType: SLUG) {
           id
@@ -485,7 +532,7 @@ export async function getModelBySlug(slug: string): Promise<NormalizedModel | nu
         }
       }
     `,
-    { slug }
+      { slug }
   );
 
   return data.model ? normalizeModel(data.model) : null;
@@ -493,7 +540,7 @@ export async function getModelBySlug(slug: string): Promise<NormalizedModel | nu
 
 export async function getBuildPartsByModel(slug: string): Promise<NormalizedBuildPart[]> {
   const data = await fetchAPI<GetBuildPartsByModelResponse>(
-    `
+      `
       query GetBuildPartsByModel {
         posts(where: { categoryName: "Builds" }, first: 100) {
           nodes {
@@ -520,7 +567,304 @@ export async function getBuildPartsByModel(slug: string): Promise<NormalizedBuil
   );
 
   return data.posts.nodes
-    .filter((post) => post.buildlog?.modelslug === slug)
-    .map(normalizeBuildPart)
-    .sort((a, b) => a.partNumber - b.partNumber);
+      .filter((post) => post.buildlog?.modelslug === slug)
+      .map(normalizeBuildPart)
+      .sort((a, b) => a.partNumber - b.partNumber);
+}
+
+// --- TUTORIAL QUERIES & RESPONSES ---
+
+interface TutorialFieldsNode {
+  tutorialTeaser?: string | null;
+  tutorialLevel?: string | null;
+  tutorialRelatedBuilds?: { [key: string]: any } | null;
+  tutorialRelatedTutorials?: { [key: string]: any } | null;
+}
+
+interface TutorialNode {
+  id: string;
+  title: string;
+  slug: string;
+  content?: string | null;
+  tutorialFields?: TutorialFieldsNode | null;
+  featuredImage?: {
+    node?: {
+      sourceUrl?: string | null;
+      altText?: string | null;
+    } | null;
+  } | null;
+  tutorialCategories?: {
+    nodes: TutorialCategory[];
+  } | null;
+  tutorialTags?: {
+    nodes: TutorialTag[];
+  } | null;
+}
+
+interface GetTutorialsResponse {
+  tutorialsFiltered: TutorialNode[];
+}
+
+interface GetTutorialBySlugResponse {
+  tutorial: TutorialNode | null;
+}
+
+interface GetTutorialCategoriesResponse {
+  tutorialCategories: {
+    nodes: (TutorialCategory & { count?: number })[];
+  };
+}
+
+interface GetTutorialTagsResponse {
+  tutorialTags: {
+    nodes: (TutorialTag & { count?: number })[];
+  };
+}
+
+const TUTORIALS_QUERY = `
+  query GetTutorials(
+    $categoryIn: [ID]
+    $tagIn: [ID]
+  ) {
+    tutorialsFiltered(
+      where: {
+        categoryIn: $categoryIn
+        tagIn: $tagIn
+      }
+    ) {
+      id
+      title
+      slug
+      tutorialFields {
+        tutorialTeaser
+        tutorialLevel
+      }
+      featuredImage {
+        node {
+          sourceUrl
+          altText
+        }
+      }
+      tutorialCategories {
+        nodes {
+          id
+          name
+          slug
+        }
+      }
+      tutorialTags {
+        nodes {
+          id
+          name
+          slug
+        }
+      }
+    }
+  }
+`;
+
+const TUTORIAL_BY_SLUG_QUERY = `
+  query GetTutorialBySlug($slug: ID!) {
+    tutorial(id: $slug, idType: SLUG) {
+      id
+      title
+      slug
+      content
+      tutorialFields {
+        tutorialTeaser
+        tutorialLevel
+        tutorialRelatedBuilds {
+          nodes {
+            __typename
+            ... on Model {
+              id
+              title
+              slug
+              modelinfo {
+                shortdescription
+                modelscale
+              }
+              featuredImage {
+                node {
+                  sourceUrl
+                  altText
+                }
+              }
+            }
+          }
+        }
+        tutorialRelatedTutorials {
+          nodes {
+            __typename
+            ... on Tutorial {
+              id
+              title
+              slug
+              tutorialFields {
+                tutorialTeaser
+                tutorialLevel
+              }
+            }
+          }
+        }
+      }
+      featuredImage {
+        node {
+          sourceUrl
+          altText
+        }
+      }
+      tutorialCategories {
+        nodes {
+          id
+          name
+          slug
+        }
+      }
+      tutorialTags {
+        nodes {
+          id
+          name
+          slug
+        }
+      }
+    }
+  }
+`;
+
+const TUTORIAL_CATEGORIES_QUERY = `
+  query GetTutorialCategories {
+    tutorialCategories(first: 100) {
+      nodes {
+        id
+        databaseId
+        name
+        slug
+        count
+      }
+    }
+  }
+`;
+
+const TUTORIAL_TAGS_QUERY = `
+  query GetTutorialTags {
+    tutorialTags(first: 100, where: { hideEmpty: true }) {
+      nodes {
+        id
+        databaseId
+        name
+        slug
+        count
+      }
+    }
+  }
+`;
+
+// --- TUTORIAL FUNCTIONS ---
+
+export async function getAllTutorials(params?: {
+  categoryIn?: string[];
+  tagIn?: string[];
+}): Promise<NormalizedTutorial[]> {
+  const variables = {
+    categoryIn: params?.categoryIn,
+    tagIn: params?.tagIn,
+  };
+
+  const data = await fetchAPI<GetTutorialsResponse>(TUTORIALS_QUERY, variables);
+
+  return data.tutorialsFiltered.map((tutorial) => ({
+    id: tutorial.id,
+    title: tutorial.title,
+    slug: tutorial.slug,
+    content: '',
+    teaser: tutorial.tutorialFields?.tutorialTeaser || '',
+    level: Array.isArray(tutorial.tutorialFields?.tutorialLevel)
+        ? (tutorial.tutorialFields?.tutorialLevel[0] || '')
+        : (tutorial.tutorialFields?.tutorialLevel || ''),
+    featuredImage: tutorial.featuredImage?.node
+        ? {
+          sourceUrl: tutorial.featuredImage.node.sourceUrl || '',
+          altText: tutorial.featuredImage.node.altText || tutorial.title,
+        }
+        : undefined,
+    categories: tutorial.tutorialCategories?.nodes || [],
+    tags: tutorial.tutorialTags?.nodes || [],
+    relatedBuilds: [],
+    relatedTutorials: [],
+  }));
+}
+
+
+export async function getTutorialBySlug(slug: string): Promise<NormalizedTutorial | null> {
+  const data = await fetchAPI<GetTutorialBySlugResponse>(TUTORIAL_BY_SLUG_QUERY, { slug });
+
+  if (!data.tutorial) return null;
+
+  const t = data.tutorial;
+
+  const relatedBuilds =
+      t.tutorialFields?.tutorialRelatedBuilds?.nodes?.map((build: any) => ({
+        id: build.id,
+        title: build.title,
+        slug: build.slug,
+        teaser: build.modelinfo?.shortdescription || '',
+        scale: build.modelinfo?.modelscale || '',
+        featuredImage: build.featuredImage?.node
+            ? {
+              sourceUrl: build.featuredImage.node.sourceUrl || '',
+              altText: build.featuredImage.node.altText || build.title,
+            }
+            : undefined,
+        categories: [],
+        tags: [],
+      })) || [];
+
+  const relatedTutorials =
+      t.tutorialFields?.tutorialRelatedTutorials?.nodes?.map((rt: any) => ({
+        id: rt.id,
+        title: rt.title,
+        slug: rt.slug,
+        content: '',
+        teaser: rt.tutorialFields?.tutorialTeaser || '',
+        level: Array.isArray(rt.tutorialFields?.tutorialLevel)
+            ? (rt.tutorialFields?.tutorialLevel[0] || '')
+            : (rt.tutorialFields?.tutorialLevel || ''),
+        featuredImage: undefined,
+        categories: [],
+        tags: [],
+        relatedBuilds: [],
+        relatedTutorials: [],
+      })) || [];
+
+  return {
+    id: t.id,
+    title: t.title,
+    slug: t.slug,
+    content: t.content || '',
+    teaser: t.tutorialFields?.tutorialTeaser || '',
+    level: Array.isArray(t.tutorialFields?.tutorialLevel)
+        ? (t.tutorialFields?.tutorialLevel[0] || '')
+        : (t.tutorialFields?.tutorialLevel || ''),
+    featuredImage: t.featuredImage?.node
+        ? {
+          sourceUrl: t.featuredImage.node.sourceUrl || '',
+          altText: t.featuredImage.node.altText || t.title,
+        }
+        : undefined,
+    categories: t.tutorialCategories?.nodes || [],
+    tags: t.tutorialTags?.nodes || [],
+    relatedBuilds,
+    relatedTutorials,
+  };
+}
+
+export async function getTutorialCategories(): Promise<TutorialCategory[]> {
+  const data = await fetchAPI<GetTutorialCategoriesResponse>(TUTORIAL_CATEGORIES_QUERY);
+  return data.tutorialCategories.nodes.filter((cat) => (cat as any).count > 0);
+}
+
+export async function getTutorialTags(): Promise<TutorialTag[]> {
+  const data = await fetchAPI<GetTutorialTagsResponse>(TUTORIAL_TAGS_QUERY);
+  return data.tutorialTags.nodes;
 }

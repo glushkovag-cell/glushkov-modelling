@@ -1,0 +1,84 @@
+---
+interface Props {
+    selectedLevel: string;
+}
+
+const { selectedLevel } = Astro.props;
+const levels = ['Beginner', 'Intermediate', 'Advanced'];
+---
+
+<div class="level-filter" data-filter-type="level">
+    <div class="filter-label">Level:</div>
+    <div class="chip-group">
+        <button
+                class="chip chip-all"
+                data-level="all"
+                data-selected={!selectedLevel}
+                type="button"
+        >
+            All
+        </button>
+        {levels.map((level) => (
+                <button
+                        class="chip"
+                        data-level={level.toLowerCase()}
+                        data-selected={selectedLevel === level.toLowerCase()}
+                        type="button"
+                >
+                    {level}
+                </button>
+        ))}
+    </div>
+</div>
+
+<style>
+    .level-filter {
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-label {
+        font-family: 'General Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 0.75rem;
+        color: var(--color-text);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .chip-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .chip {
+        padding: 0.5rem 1rem;
+        border-radius: 1.25rem;
+        border: 1px solid var(--color-text-muted);
+        background: transparent;
+        color: var(--color-text);
+        font-family: 'General Sans', sans-serif;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .chip:hover {
+        border-color: var(--color-primary);
+    }
+
+    .chip[data-selected="true"] {
+        background: var(--color-primary);
+        color: white;
+        border-color: var(--color-primary);
+    }
+
+    @media (max-width: 768px) {
+        .chip {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+        }
+    }
+</style>
+

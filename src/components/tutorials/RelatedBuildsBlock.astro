@@ -1,0 +1,118 @@
+---
+import type { NormalizedModel } from '../../lib/wordpress';
+
+interface Props {
+    builds: NormalizedModel[];
+}
+
+const { builds } = Astro.props;
+
+if (!builds || builds.length === 0) return null;
+---
+
+<section class="related-builds">
+    <h2>Related Build Logs</h2>
+
+    <div class="builds-grid">
+        {builds.map(build => (
+                <article class="build-card card">
+                    <a href={`/builds/${build.slug}`} class="build-link">
+                        {build.featuredImage && (
+                                <img
+                                        src={build.featuredImage.sourceUrl}
+                                        alt={build.featuredImage.altText || build.title}
+                                        class="build-image"
+                                />
+                        )}
+
+                        <div class="build-info">
+                            <h3>{build.title}</h3>
+                            {build.scale && (
+                                    <p class="scale">Scale: {build.scale}</p>
+                            )}
+                            {build.teaser && (
+                                    <p class="teaser">{build.teaser}</p>
+                            )}
+                        </div>
+                    </a>
+                </article>
+        ))}
+    </div>
+</section>
+
+<style>
+    .related-builds {
+        margin: 4rem 0;
+        padding: 2rem 0;
+        border-top: 1px solid var(--color-border);
+    }
+
+    h2 {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        color: var(--color-text);
+    }
+
+    .builds-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .build-card {
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .build-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .build-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .build-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .build-info {
+        padding: 1.25rem;
+    }
+
+    h3 {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+        color: var(--color-text);
+    }
+
+    .scale {
+        font-size: 0.875rem;
+        color: var(--color-primary);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .teaser {
+        font-size: 0.875rem;
+        color: var(--color-text-muted);
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    @media (max-width: 768px) {
+        .builds-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>

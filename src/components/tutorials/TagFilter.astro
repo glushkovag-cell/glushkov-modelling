@@ -1,0 +1,222 @@
+---
+import type { TutorialTag } from '../../lib/wordpress';
+
+interface Props {
+    tags: TutorialTag[];
+    selectedSlugs: string[];
+}
+
+const { tags, selectedSlugs } = Astro.props;
+---
+
+<div class="tag-filter" data-filter-type="tag">
+    <div class="filter-label">Tags:</div>
+
+    <div class="tag-filter-container">
+        <button class="tag-dropdown-toggle" type="button">
+      <span class="toggle-text">
+        {selectedSlugs.length > 0
+            ? `${selectedSlugs.length} selected`
+            : 'Select tags...'}
+      </span>
+            <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+                <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="2" />
+            </svg>
+        </button>
+
+        <div class="tag-dropdown-menu">
+            <input
+                    type="text"
+                    class="tag-search"
+                    placeholder="Search tags..."
+            />
+
+            <div class="tag-list">
+                {tags.map((tag) => (
+                        <label class="tag-option">
+                            <input
+                                    type="checkbox"
+                                    value={tag.slug}
+                                    checked={selectedSlugs.includes(tag.slug)}
+                            />
+                            <span>{tag.name}</span>
+                        </label>
+                ))}
+            </div>
+
+            <div class="tag-actions">
+                <button type="button" class="tag-clear">Clear</button>
+                <button type="button" class="tag-apply">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    {selectedSlugs.length > 0 && (
+            <div class="selected-tags">
+                {selectedSlugs.map((slug) => {
+                    const tag = tags.find((t) => t.slug === slug);
+                    return (
+                        tag && (
+                                <span class="selected-tag" data-slug={slug}>
+              {tag.name}
+                                    <button type="button" class="remove-tag">×</button>
+            </span>
+                        )
+                    );
+                })}
+            </div>
+    )}
+</div>
+
+<style>
+    .tag-filter {
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-label {
+        font-family: 'General Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 0.75rem;
+        color: var(--color-text);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .tag-filter-container {
+        position: relative;
+    }
+
+    .tag-dropdown-toggle {
+        width: 100%;
+        max-width: 300px;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--color-text-muted);
+        border-radius: 0.5rem;
+        background: var(--color-surface);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        font-family: 'General Sans', sans-serif;
+        font-size: 0.875rem;
+    }
+
+    .tag-dropdown-menu {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        left: 0;
+        width: 100%;
+        max-width: 300px;
+        background: var(--color-surface-2);
+        border: 1px solid var(--color-border);
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        display: none;
+        flex-direction: column;
+        z-index: 100;
+    }
+
+    .tag-dropdown-menu.active {
+        display: flex;
+    }
+
+    .tag-search {
+        padding: 0.6rem;
+        border: none;
+        border-bottom: 1px solid var(--color-border);
+        font-family: 'General Sans', sans-serif;
+        font-size: 0.85rem;
+        background: var(--color-surface);
+    }
+
+    /* Компактный список: 3 строки + скролл при большем количестве */
+    .tag-list {
+        max-height: 95px;        /* под 3 строки */
+        overflow-y: auto;
+        padding: 0.15rem 0;
+    }
+
+    .tag-option {
+        display: flex;
+        align-items: center;
+        padding: 0.25rem 0.6rem;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .tag-option:hover {
+        background: var(--color-surface-offset);
+    }
+
+    .tag-option input {
+        margin-right: 0.45rem;
+    }
+
+    .tag-actions {
+        display: flex;
+        gap: 0.4rem;
+        padding: 0.4rem 0.7rem;
+        border-top: 1px solid var(--color-border);
+        background: var(--color-surface-2);
+    }
+
+    .tag-clear,
+    .tag-apply {
+        flex: 1;
+        padding: 0.35rem 0.45rem;
+        border: none;
+        border-radius: 0.375rem;
+        font-family: 'General Sans', sans-serif;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .tag-clear {
+        background: transparent;
+        color: var(--color-text-muted);
+    }
+
+    .tag-clear:hover {
+        background: var(--color-surface-offset);
+    }
+
+    .tag-apply {
+        background: var(--color-primary);
+        color: white;
+    }
+
+    .tag-apply:hover {
+        background: #016875;
+    }
+
+    .selected-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .selected-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.75rem;
+        background: var(--color-primary);
+        color: white;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+    }
+
+    .remove-tag {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+    }
+</style>
+

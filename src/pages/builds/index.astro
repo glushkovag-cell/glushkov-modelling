@@ -1,10 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getAllModels } from '../../lib/wordpress';
+import { getAllModels, getAllNews, hasFreshNews } from '../../lib/wordpress';
 
 const models = await getAllModels();
-
-import { getAllNews, hasFreshNews } from '../../lib/wordpress';
 
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
@@ -18,40 +16,41 @@ const newsFlag = hasFreshNews(allNews);
 
       <div class="builds-grid">
         {models.map((model: any) => (
-          <a
-            class="build-card"
-            href={`/builds/${model.slug}`}
-            aria-label={`Open build log: ${model.title}`}
-          >
-            {model.heroImage && (
-              <img
-                src={model.heroImage}
-                alt={model.heroImageAlt || model.title}
-                loading="lazy"
-                class="build-card-image"
-              />
-            )}
-
-            <div class="build-card-body">
-              <h2>{model.title}</h2>
-
-              <p>
-                Scale: {model.modelinfo?.modelscale || '—'} · {model.modelinfo?.manufacturer || '—'}
-              </p>
-
-              {model.modelinfo?.shortdescription && (
-                <p class="build-card-description">{model.modelinfo.shortdescription}</p>
-              )}
-
-              <div class="build-card-actions">
-                {model.buildstatusText && (
-                  <span class={`meta-pill status-${model.buildstatusClass}`}>
-                    {model.buildstatusText}
-                  </span>
+            <div class="build-card card">
+              <a
+                  href={`/builds/${model.slug}`}
+                  aria-label={`Open build log: ${model.title}`}
+              >
+                {model.heroImage && (
+                    <img
+                        src={model.heroImage}
+                        alt={model.heroImageAlt || model.title}
+                        loading="lazy"
+                        class="build-card-image"
+                    />
                 )}
-              </div>
+
+                <div class="build-card-body">
+                  <h2>{model.title}</h2>
+
+                  <p>
+                    Scale: {model.modelinfo?.modelscale || '—'} · {model.modelinfo?.manufacturer || '—'}
+                  </p>
+
+                  {model.modelinfo?.shortdescription && (
+                      <p class="build-card-description">{model.modelinfo.shortdescription}</p>
+                  )}
+
+                  <div class="build-card-actions">
+                    {model.buildstatusText && (
+                        <span class={`meta-pill status-${model.buildstatusClass}`}>
+                      {model.buildstatusText}
+                    </span>
+                    )}
+                  </div>
+                </div>
+              </a>
             </div>
-          </a>
         ))}
       </div>
     </div>
@@ -65,6 +64,11 @@ const newsFlag = hasFreshNews(allNews);
     align-items: flex-start;
     gap: 0.75rem;
     margin-top: 0.75rem;
+  }
+
+  .build-card > a {
+    display: block;
+    color: inherit;
   }
 
   .build-link {
