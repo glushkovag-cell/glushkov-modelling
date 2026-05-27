@@ -1,13 +1,5 @@
 export function initTutorialViews() {
     document.addEventListener('DOMContentLoaded', () => {
-        const btn = document.getElementById('backToTutorialsBtn');
-        if (btn) {
-            btn.addEventListener('click', () => {
-                const returnUrl = sessionStorage.getItem('tutorialsReturnUrl');
-                window.location.href = returnUrl || '/tutorials';
-            });
-        }
-
         const article = document.querySelector<HTMLElement>('.tutorial-detail');
         const idAttr = article?.dataset.tutorialId; // data-tutorial-id
         const tutorialId = idAttr ? Number(idAttr) : 0;

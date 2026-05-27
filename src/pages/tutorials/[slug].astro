@@ -212,3 +212,15 @@ const tutorialId = fullTutorial.databaseId;
 
     initTutorialViews();
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('backToTutorialsBtn');
+        if (!btn) return;
+
+        btn.addEventListener('click', function () {
+            const returnUrl = sessionStorage.getItem('tutorialsReturnUrl');
+            window.location.href = returnUrl || '/tutorials';
+        });
+    });
+</script>
