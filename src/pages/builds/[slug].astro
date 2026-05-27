@@ -21,6 +21,8 @@ export async function getStaticPaths() {
 }
 
 const { slug } = Astro.params;
+const defaultBackLabel = 'Back to builds';
+const defaultBackHref = '/builds';
 
 const [model, parts, galleryManifest] = await Promise.all([
   getModelBySlug(slug!),
@@ -47,14 +49,18 @@ const hasGallery = !!galleryManifest;
 
   <section class="build-hero">
     <div class="container">
-      <button
-          type="button"
+
+      <a
+          href={defaultBackHref}
           class="detail-back-btn"
-          id="backToBuildsBtn"
+          id="detail-back-btn"
+          data-default-href={defaultBackHref}
+          data-default-label={defaultBackLabel}
+          data-tutorial-label="Back to tutorial"
       >
         <span class="detail-back-icon">←</span>
-        <span>Back to builds</span>
-      </button>
+        <span id="detail-back-btn-label">{defaultBackLabel}</span>
+      </a>
 
       <div class="hero-grid">
         <div class="hero-copy">
@@ -234,6 +240,30 @@ const hasGallery = !!galleryManifest;
       </section>
   )}
 </BaseLayout>
+
+<script>
+  (() => {
+    const link = document.getElementById('detail-back-btn');
+    const label = document.getElementById('detail-back-btn-label');
+
+    if (!link || !label) return;
+    if (!document.referrer) return;
+
+    try {
+      const ref = new URL(document.referrer);
+      const sameOrigin = ref.origin === window.location.origin;
+
+      if (!sameOrigin) return;
+
+      if (ref.pathname.startsWith('/tutorials/')) {
+        link.href = ref.pathname + ref.search + ref.hash;
+        label.textContent = link.dataset.tutorialLabel || 'Back to tutorial';
+      }
+    } catch {
+      // keep default fallback
+    }
+  })();
+</script>
 
 <style>
   .container {
@@ -603,22 +633,3 @@ const hasGallery = !!galleryManifest;
     }
   }
 </style>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var btn = document.getElementById('backToBuildsBtn');
-    if (!btn) return;
-
-    btn.addEventListener('click', function () {
-      var ref = document.referrer || '';
-      var cameFromBuilds =
-          ref.indexOf('/builds') !== -1 || ref.indexOf('/builds?') !== -1;
-
-      if (cameFromBuilds && window.history.length > 1) {
-        window.history.back();
-      } else {
-        window.location.href = '/builds';
-      }
-    });
-  });
-</script>

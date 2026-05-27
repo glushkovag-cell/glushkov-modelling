@@ -3,9 +3,14 @@ import type { NormalizedModel } from '../../lib/wordpress';
 
 interface Props {
     builds: NormalizedModel[];
+    tutorialSlug?: string;
+    tutorialTitle?: string;
 }
 
-const { builds } = Astro.props;
+const { builds, tutorialSlug, tutorialTitle } = Astro.props;
+
+const backLabel = tutorialTitle ? `Back to "${tutorialTitle}"` : 'Back to tutorial';
+const backHref  = tutorialSlug ? `/tutorials/${tutorialSlug}` : '/tutorials';
 
 if (!builds || builds.length === 0) return null;
 ---
@@ -16,7 +21,13 @@ if (!builds || builds.length === 0) return null;
     <div class="builds-grid">
         {builds.map(build => (
                 <article class="build-card card">
-                    <a href={`/builds/${build.slug}`} class="build-link">
+                    <a
+                            href={tutorialSlug
+                                ? `/builds/${build.slug}?backLabel=${encodeURIComponent(backLabel)}&backHref=${encodeURIComponent(backHref)}`
+                                : `/builds/${build.slug}`
+                            }
+                            class="build-link"
+                    >
                         {build.featuredImage && (
                                 <img
                                         src={build.featuredImage.sourceUrl}

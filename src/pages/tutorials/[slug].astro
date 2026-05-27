@@ -76,7 +76,11 @@ const tutorialId = fullTutorial.databaseId;
             <div class="tutorial-content" set:html={fullTutorial.content}/>
 
             {fullTutorial.relatedBuilds.length > 0 && (
-                    <RelatedBuildsBlock builds={fullTutorial.relatedBuilds}/>
+                    <RelatedBuildsBlock
+                            builds={fullTutorial.relatedBuilds}
+                            tutorialSlug={tutorial.slug}
+                            tutorialTitle={fullTutorial.title}
+                    />
             )}
 
             {fullTutorial.relatedTutorials.length > 0 && (
