@@ -23,6 +23,7 @@ function isActive(href: string) {
   if (href === '/') return currentPath === '/';
   return currentPath.startsWith(href);
 }
+const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
 ---
 
 <!doctype html>
@@ -37,6 +38,7 @@ function isActive(href: string) {
       rel="stylesheet"
     />
     <slot name="head" />
+
     <script is:inline>
       (function () {
         const stored = localStorage.getItem('theme');
@@ -46,7 +48,7 @@ function isActive(href: string) {
       })();
     </script>
   </head>
-  <body>
+  <body data-wp-rest-url={wpRestUrl}>
     <header class="site-header">
       <div class="container header-inner">
         <a href="/" class="brand" aria-label="Glushkov Modelling — Home">

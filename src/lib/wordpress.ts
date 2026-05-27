@@ -880,20 +880,3 @@ export async function getTutorialTags(): Promise<TutorialTag[]> {
   const data = await fetchAPI<GetTutorialTagsResponse>(TUTORIAL_TAGS_QUERY);
   return data.tutorialTags.nodes;
 }
-
-export async function incrementTutorialViews(id: number): Promise<void> {
-  const baseUrl = import.meta.env.PUBLIC_WP_REST_URL;
-  if (!baseUrl || !id) return;
-
-  try {
-    await fetch(`${baseUrl}/glushkov/v1/tutorial-view`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id }),
-    });
-  } catch (err) {
-    console.error('Failed to increment tutorial views', err);
-  }
-}
