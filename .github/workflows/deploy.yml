@@ -18,6 +18,7 @@ jobs:
       DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}      # /var/www/astro-glushkov
       WP_GRAPHQL_URL: ${{ secrets.WP_GRAPHQL_URL }}
       CMS_GALLERY_URL: ${{ secrets.CMS_GALLERY_URL }}
+      PUBLIC_WP_REST_URL: ${{ secrets.PUBLIC_WP_REST_URL }}
 
     steps:
       - name: Checkout repository
@@ -36,6 +37,7 @@ jobs:
         env:
           WP_GRAPHQL_URL: ${{ env.WP_GRAPHQL_URL }}
           CMS_GALLERY_URL: ${{ env.CMS_GALLERY_URL }}
+          PUBLIC_WP_REST_URL: ${{ env.PUBLIC_WP_REST_URL }}
         run: npm run build
 
       - name: Prepare SSH
@@ -87,6 +89,7 @@ jobs:
           cat > "${DEPLOY_PATH}/.env" <<EOT
           WP_GRAPHQL_URL=${WP_GRAPHQL_URL}
           CMS_GALLERY_URL=${CMS_GALLERY_URL}
+          PUBLIC_WP_REST_URL=${PUBLIC_WP_REST_URL}
           HOST=0.0.0.0
           PORT=4321
           DEPLOYPATH=${DEPLOY_PATH}

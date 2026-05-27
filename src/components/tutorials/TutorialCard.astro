@@ -9,7 +9,11 @@ const { tutorial } = Astro.props;
 ---
 
 <article class="tutorial-card card">
-    <a href={`/tutorials/${tutorial.slug}`} class="card-link">
+    <a
+            href={`/tutorials/${tutorial.slug}`}
+            class="card-link"
+            data-tutorial-link="true"
+    >
         <h3>{tutorial.title}</h3>
 
         {tutorial.teaser && (
@@ -19,8 +23,8 @@ const { tutorial } = Astro.props;
         <div class="card-footer">
             {tutorial.level && (
                     <span class={`level-badge level-${String(tutorial.level).toLowerCase()}`}>
-                        {tutorial.level}
-                     </span>
+                    {tutorial.level}
+                </span>
             )}
             {tutorial.categories.length > 0 && (
                     <div class="categories">

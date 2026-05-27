@@ -204,6 +204,8 @@ export interface NormalizedTutorial {
     tags: TutorialTag[];
   }[];
   relatedTutorials: NormalizedTutorial[];
+  databaseId?: number;
+  views?: number;
 }
 
 // --- NEWS TYPES & NORMALIZATION ---
@@ -579,6 +581,7 @@ interface TutorialFieldsNode {
   tutorialLevel?: string | null;
   tutorialRelatedBuilds?: { [key: string]: any } | null;
   tutorialRelatedTutorials?: { [key: string]: any } | null;
+  views?: number | null;
 }
 
 interface TutorialNode {
@@ -599,6 +602,7 @@ interface TutorialNode {
   tutorialTags?: {
     nodes: TutorialTag[];
   } | null;
+  databaseId?: number;
 }
 
 interface GetTutorialsResponse {
@@ -633,11 +637,13 @@ const TUTORIALS_QUERY = `
       }
     ) {
       id
+      databaseId
       title
       slug
       tutorialFields {
         tutorialTeaser
         tutorialLevel
+        views
       }
       featuredImage {
         node {
@@ -667,12 +673,14 @@ const TUTORIAL_BY_SLUG_QUERY = `
   query GetTutorialBySlug($slug: ID!) {
     tutorial(id: $slug, idType: SLUG) {
       id
+      databaseId
       title
       slug
       content
       tutorialFields {
         tutorialTeaser
         tutorialLevel
+        views
         tutorialRelatedBuilds {
           nodes {
             __typename
@@ -775,6 +783,7 @@ export async function getAllTutorials(params?: {
 
   return data.tutorialsFiltered.map((tutorial) => ({
     id: tutorial.id,
+    databaseId: tutorial.databaseId,
     title: tutorial.title,
     slug: tutorial.slug,
     content: '',
@@ -792,6 +801,7 @@ export async function getAllTutorials(params?: {
     tags: tutorial.tutorialTags?.nodes || [],
     relatedBuilds: [],
     relatedTutorials: [],
+    views: Number(tutorial.tutorialFields?.views ?? 0),
   }));
 }
 
@@ -839,6 +849,7 @@ export async function getTutorialBySlug(slug: string): Promise<NormalizedTutoria
 
   return {
     id: t.id,
+    databaseId: t.databaseId,
     title: t.title,
     slug: t.slug,
     content: t.content || '',
@@ -856,6 +867,7 @@ export async function getTutorialBySlug(slug: string): Promise<NormalizedTutoria
     tags: t.tutorialTags?.nodes || [],
     relatedBuilds,
     relatedTutorials,
+    views: Number(t.tutorialFields?.views ?? 0),
   };
 }
 
@@ -867,4 +879,21 @@ export async function getTutorialCategories(): Promise<TutorialCategory[]> {
 export async function getTutorialTags(): Promise<TutorialTag[]> {
   const data = await fetchAPI<GetTutorialTagsResponse>(TUTORIAL_TAGS_QUERY);
   return data.tutorialTags.nodes;
+}
+
+export async function incrementTutorialViews(id: number): Promise<void> {
+  const baseUrl = import.meta.env.PUBLIC_WP_REST_URL;
+  if (!baseUrl || !id) return;
+
+  try {
+    await fetch(`${baseUrl}/glushkov/v1/tutorial-view`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id }),
+    });
+  } catch (err) {
+    console.error('Failed to increment tutorial views', err);
+  }
 }

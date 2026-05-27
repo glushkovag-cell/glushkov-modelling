@@ -2,18 +2,18 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import RelatedBuildsBlock from '../../components/tutorials/RelatedBuildsBlock.astro';
 import RelatedTutorialsBlock from '../../components/tutorials/RelatedTutorialsBlock.astro';
-import { getTutorialBySlug, getAllTutorials } from '../../lib/wordpress';
+import {getTutorialBySlug, getAllTutorials, incrementTutorialViews} from '../../lib/wordpress';
 
 export async function getStaticPaths() {
     const tutorials = await getAllTutorials();
 
     return tutorials.map((tutorial) => ({
-        params: { slug: tutorial.slug },
-        props: { tutorial },
+        params: {slug: tutorial.slug},
+        props: {tutorial},
     }));
 }
 
-const { tutorial } = Astro.props;
+const {tutorial} = Astro.props;
 
 if (!tutorial) {
     return Astro.redirect('/404');
@@ -24,10 +24,14 @@ const fullTutorial = await getTutorialBySlug(tutorial.slug);
 if (!fullTutorial) {
     return Astro.redirect('/404');
 }
+
+const tutorialId = fullTutorial.databaseId;
 ---
 
 <BaseLayout title={`${fullTutorial.title} - Tutorials`}>
-    <article class="tutorial-detail">
+    <article class="tutorial-detail"
+        data-tutorial-id={tutorialId}
+    >
         <div class="container">
             <div class="detail-back-row">
                 <button
@@ -69,14 +73,14 @@ if (!fullTutorial) {
                 )}
             </header>
 
-            <div class="tutorial-content" set:html={fullTutorial.content} />
+            <div class="tutorial-content" set:html={fullTutorial.content}/>
 
             {fullTutorial.relatedBuilds.length > 0 && (
-                    <RelatedBuildsBlock builds={fullTutorial.relatedBuilds} />
+                    <RelatedBuildsBlock builds={fullTutorial.relatedBuilds}/>
             )}
 
             {fullTutorial.relatedTutorials.length > 0 && (
-                    <RelatedTutorialsBlock tutorials={fullTutorial.relatedTutorials} />
+                    <RelatedTutorialsBlock tutorials={fullTutorial.relatedTutorials}/>
             )}
         </div>
     </article>
@@ -203,21 +207,8 @@ if (!fullTutorial) {
     }
 </style>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var btn = document.getElementById('backToTutorialsBtn');
-        if (!btn) return;
+<script type="module">
+    import { initTutorialViews } from '/src/scripts/tutorialViews.ts';
 
-        btn.addEventListener('click', function () {
-            var ref = document.referrer || '';
-            var cameFromTutorials =
-                ref.indexOf('/tutorials') !== -1 || ref.indexOf('/tutorials?') !== -1;
-
-            if (cameFromTutorials && window.history.length > 1) {
-                window.history.back();
-            } else {
-                window.location.href = '/tutorials';
-            }
-        });
-    });
+    initTutorialViews();
 </script>

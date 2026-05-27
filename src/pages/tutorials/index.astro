@@ -39,6 +39,9 @@ const allTutorials = await getAllTutorials({
     tagIn: selectedTagIds.length > 0 ? selectedTagIds : undefined,
 });
 
+// сортируем по убыванию просмотров
+allTutorials.sort((a, b) => (b.views || 0) - (a.views || 0));
+
 const filteredTutorials = levelParam
     ? allTutorials.filter((t) =>
         String(t.level || '').toLowerCase() === levelParam.toLowerCase()
@@ -292,6 +295,15 @@ const hasActiveFilters =
         url.searchParams.delete('page');
         window.location.href = url.toString();
     }
+    function initTutorialLinks() {
+        const links = document.querySelectorAll('[data-tutorial-link="true"]');
+        links.forEach((link) => {
+            link.addEventListener('click', () => {
+                // сохраняем текущий URL со всеми фильтрами
+                sessionStorage.setItem('tutorialsReturnUrl', window.location.href);
+            });
+        });
+    }
 
     function initCategoryFilters() {
         document
@@ -461,6 +473,7 @@ const hasActiveFilters =
         initLevelFilters();
         initTagFilters();
         initMobileFilterPanel();
+        initTutorialLinks();
     }
 
     if (document.readyState === 'loading') {
