@@ -2,7 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import RelatedBuildsBlock from '../../components/tutorials/RelatedBuildsBlock.astro';
 import RelatedTutorialsBlock from '../../components/tutorials/RelatedTutorialsBlock.astro';
-import {getTutorialBySlug, getAllTutorials} from '../../lib/wordpress';
+import {getTutorialBySlug, getAllTutorials, getAllNews, hasFreshNews} from '../../lib/wordpress';
 
 export async function getStaticPaths() {
     const tutorials = await getAllTutorials();
@@ -26,9 +26,11 @@ if (!fullTutorial) {
 }
 
 const tutorialId = fullTutorial.databaseId;
+const allNews = await getAllNews();
+const newsFlag = hasFreshNews(allNews);
 ---
 
-<BaseLayout title={`${fullTutorial.title} - Tutorials`}>
+<BaseLayout title={`${fullTutorial.title} - Tutorials`} hasFreshNews={newsFlag}>
     <article class="tutorial-detail"
         data-tutorial-id={tutorialId}
     >

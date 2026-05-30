@@ -10,7 +10,9 @@ import MobileFilterPanel from '../../components/tutorials/MobileFilterPanel.astr
 import {
     getAllTutorials,
     getTutorialCategories,
-    getTutorialTags
+    getTutorialTags,
+    getAllNews,
+    hasFreshNews
 } from '../../lib/wordpress';
 
 const url = new URL(Astro.request.url);
@@ -21,10 +23,13 @@ const levelParam = url.searchParams.get('level') || '';
 const selectedCategories = categoryParam.split(',').filter(Boolean);
 const selectedTags = tagParam.split(',').filter(Boolean);
 
-const [categories, tags] = await Promise.all([
+const [categories, tags, allNews] = await Promise.all([
     getTutorialCategories(),
     getTutorialTags(),
+    getAllNews(),
 ]);
+
+const newsFlag = hasFreshNews(allNews);
 
 const selectedCategoryIds = categories
     .filter((category) => selectedCategories.includes(category.slug))
@@ -54,7 +59,7 @@ const hasActiveFilters =
     Boolean(levelParam);
 ---
 
-<BaseLayout title="Tutorials - Ship Model Building Guides">
+<BaseLayout title="Tutorials - Ship Model Building Guides" hasFreshNews={newsFlag}>
     <div class="tutorials-page">
         <div class="container">
             <header class="page-header">
