@@ -62,9 +62,9 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
           loading="eager"
       />
       <span class="brand-text">
-            <strong>Glushkov Modelling</strong>
-            <small>Virtual Shipyard</small>
-          </span>
+        <strong>Glushkov Modelling</strong>
+        <small>Virtual Shipyard</small>
+      </span>
     </a>
 
     <nav class="nav" aria-label="Main navigation">
@@ -228,12 +228,53 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
 </html>
 
 <style>
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .brand-logo {
+    flex: 0 0 auto;
+  }
+
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .brand-text strong,
+  .brand-text small {
+    display: block;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .header-actions {
     margin-left: 0.75rem;
     display: flex;
     align-items: center;
     gap: 0.65rem;
-    flex-shrink: 0;
+    flex: 0 0 auto;
+  }
+
+  .theme-toggle,
+  .burger {
+    flex: 0 0 auto;
   }
 
   .nav-link {
@@ -343,6 +384,74 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
 
     .burger {
       display: flex;
+    }
+
+    .header-inner {
+      gap: 0.5rem;
+    }
+
+    .brand {
+      gap: 0.55rem;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+    }
+
+    .brand-text strong {
+      font-size: 1rem;
+      line-height: 1.05;
+    }
+
+    .brand-text small {
+      font-size: 0.72rem;
+      line-height: 1;
+      letter-spacing: 0.04em;
+    }
+
+    .header-actions {
+      margin-left: 0;
+      gap: 0.35rem;
+    }
+
+    .theme-toggle,
+    .burger {
+      width: 36px;
+      height: 36px;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .header-inner {
+      gap: 0.4rem;
+    }
+
+    .brand {
+      gap: 0.5rem;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+    }
+
+    .brand-text strong {
+      font-size: 0.92rem;
+    }
+
+    .brand-text small {
+      display: none;
+    }
+
+    .header-actions {
+      gap: 0.25rem;
+    }
+
+    .theme-toggle,
+    .burger {
+      width: 34px;
+      height: 34px;
     }
   }
 
