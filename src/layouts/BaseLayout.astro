@@ -87,6 +87,10 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
             <span>News</span>
             {hasFreshNews && <span class="nav-badge" aria-label="Fresh news available"></span>}
           </a>
+
+          <a href="/tutorials" class:list={['nav-link', { 'nav-link--active': isActive('/tutorials') }]}>
+            <span>Tutorials</span>
+          </a>
         </nav>
 
         <button
