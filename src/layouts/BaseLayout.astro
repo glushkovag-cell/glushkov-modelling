@@ -1,8 +1,8 @@
 ---
 /**
- * BaseLayout.astro
- * Updated to support News nav item + fresh news badge + responsive burger menu.
- */
+    * BaseLayout.astro
+    * Updated to support News nav item + fresh news badge + responsive burger menu.
+    */
 import '../styles/global.css';
 
 interface Props {
@@ -21,7 +21,7 @@ const currentPath = Astro.url.pathname;
 
 function isActive(href: string) {
   if (href === '/') return currentPath === '/';
-  return currentPath.startsWith(href);
+  return currentPath === href || currentPath.startsWith(`${href}/`);
 }
 
 const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
@@ -29,81 +29,63 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
 
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    <link
-      href="https://api.fontshare.com/v2/css?f[]=cormorant@500,600,700&f[]=general-sans@400,500,600,700&display=swap"
-      rel="stylesheet"
-    />
-    <slot name="head" />
-    <script is:inline>
-      (function () {
-        const stored = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = stored || (prefersDark ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', theme);
-      })();
-    </script>
-  </head>
-  <body data-wp-rest-url={wpRestUrl}>
-    <header class="site-header">
-      <div class="container header-inner">
-        <a href="/" class="brand" aria-label="Glushkov Modelling — Home">
-          <img
-            src="/logo_round.svg"
-            alt="Glushkov Modelling logo"
-            width="42"
-            height="42"
-            class="brand-logo"
-            loading="eager"
-          />
-          <span class="brand-text">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <slot name="head" />
+  <script is:inline>
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const theme = stored || (prefersDark ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+
+<body data-wp-rest-url={wpRestUrl}>
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="/" class="brand" aria-label="Glushkov Modelling — Home">
+      <img
+          src="/logo_round.svg"
+          alt="Glushkov Modelling logo"
+          width="42"
+          height="42"
+          class="brand-logo"
+          loading="eager"
+      />
+      <span class="brand-text">
             <strong>Glushkov Modelling</strong>
             <small>Virtual Shipyard</small>
           </span>
-        </a>
-        <nav class="nav" aria-label="Main navigation">
-          <a href="/" class:list={['nav-link', { 'nav-link--active': isActive('/') }]}>
-            Home
-          </a>
-          <a href="/about" class:list={['nav-link', { 'nav-link--active': isActive('/about') }]}>
-            About
-          </a>
-          <a href="/builds" class:list={['nav-link', { 'nav-link--active': isActive('/builds') }]}>
-            Builds
-          </a>
-          <a href="/gallery" class:list={['nav-link', { 'nav-link--active': isActive('/gallery') }]}>
-            Gallery
-          </a>
-          <a href="/news" class:list={['nav-link', { 'nav-link--active': isActive('/news') }]}>
-            <span>News</span>
-            {hasFreshNews && <span class="nav-badge" aria-label="Fresh news available"></span>}
-          </a>
-          <a href="/tutorials" class:list={['nav-link', { 'nav-link--active': isActive('/tutorials') }]}>
-            <span>Tutorials</span>
-          </a>
-        </nav>
-        <button
-          class="burger"
-          aria-label="Open navigation menu"
-          aria-expanded="false"
-          aria-controls="mobile-nav"
-          data-burger
-        >
-          <span class="burger__line"></span>
-          <span class="burger__line"></span>
-          <span class="burger__line"></span>
-        </button>
-        <button
+    </a>
+
+    <nav class="nav" aria-label="Main navigation">
+      <a href="/" class:list={['nav-link', { 'nav-link--active': isActive('/') }]}>Home</a>
+      <a href="/about" class:list={['nav-link', { 'nav-link--active': isActive('/about') }]}>About</a>
+      <a href="/builds" class:list={['nav-link', { 'nav-link--active': isActive('/builds') }]}>Builds</a>
+      <a href="/gallery" class:list={['nav-link', { 'nav-link--active': isActive('/gallery') }]}>Gallery</a>
+      <a href="/news" class:list={['nav-link', { 'nav-link--active': isActive('/news') }]}>
+        <span>News</span>
+        {hasFreshNews && <span class="nav-badge" aria-label="Fresh news available"></span>}
+      </a>
+      <a href="/tutorials" class:list={['nav-link', { 'nav-link--active': isActive('/tutorials') }]}>
+        <span>Tutorials</span>
+      </a>
+    </nav>
+
+    <div class="header-actions">
+      <button
           class="theme-toggle"
           aria-label="Switch to dark mode"
           data-theme-toggle
           title="Toggle theme"
-        >
-          <svg
+          type="button"
+      >
+        <svg
             class="icon-sun"
             width="20"
             height="20"
@@ -112,11 +94,11 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
             stroke="currentColor"
             stroke-width="2"
             aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="5" />
-            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-          </svg>
-          <svg
+        >
+          <circle cx="12" cy="12" r="5" />
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+        </svg>
+        <svg
             class="icon-moon"
             width="20"
             height="20"
@@ -125,103 +107,131 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
             stroke="currentColor"
             stroke-width="2"
             aria-hidden="true"
-          >
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-        </button>
-      </div>
-      <nav
-        id="mobile-nav"
-        class="mobile-nav"
-        aria-label="Mobile navigation"
-        hidden
-      >
-        <a href="/" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/') }]}>
-          Home
-        </a>
-        <a href="/about" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/about') }]}>
-          About
-        </a>
-        <a href="/builds" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/builds') }]}>
-          Builds
-        </a>
-        <a href="/gallery" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/gallery') }]}>
-          Gallery
-        </a>
-        <a href="/news" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/news') }]}>
-          <span>News</span>
-          {hasFreshNews && <span class="nav-badge" aria-label="Fresh news available"></span>}
-        </a>
-        <a href="/tutorials" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/tutorials') }]}>
-          <span>Tutorials</span>
-        </a>
-      </nav>
-    </header>
-    <main>
-      <slot />
-    </main>
-    <script is:inline>
-      (function () {
-        /* ---- theme toggle ---- */
-        const btn = document.querySelector('[data-theme-toggle]');
-        const root = document.documentElement;
-        function getTheme() {
-          return root.getAttribute('data-theme') || 'light';
-        }
-        function applyTheme(theme) {
-          root.setAttribute('data-theme', theme);
-          localStorage.setItem('theme', theme);
-          if (btn) {
-            btn.setAttribute(
-              'aria-label',
-              theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
-            );
-          }
-        }
-        if (btn) {
-          btn.addEventListener('click', function () {
-            applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
-          });
-        }
+        >
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      </button>
 
-        /* ---- burger menu ---- */
-        const burgerBtn = document.querySelector('[data-burger]');
-        const mobileNav = document.getElementById('mobile-nav');
-        if (burgerBtn && mobileNav) {
-          burgerBtn.addEventListener('click', function () {
-            const isOpen = burgerBtn.getAttribute('aria-expanded') === 'true';
-            burgerBtn.setAttribute('aria-expanded', String(!isOpen));
-            burgerBtn.classList.toggle('burger--open', !isOpen);
-            if (isOpen) {
-              mobileNav.setAttribute('hidden', '');
-            } else {
-              mobileNav.removeAttribute('hidden');
-            }
-          });
-          /* close on link click */
-          mobileNav.querySelectorAll('a').forEach(function (link) {
-            link.addEventListener('click', function () {
-              burgerBtn.setAttribute('aria-expanded', 'false');
-              burgerBtn.classList.remove('burger--open');
-              mobileNav.setAttribute('hidden', '');
-            });
-          });
-          /* close on resize to desktop */
-          window.addEventListener('resize', function () {
-            if (window.innerWidth > 860) {
-              burgerBtn.setAttribute('aria-expanded', 'false');
-              burgerBtn.classList.remove('burger--open');
-              mobileNav.setAttribute('hidden', '');
-            }
-          });
+      <button
+          class="burger"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="mobile-nav"
+          data-burger
+          type="button"
+      >
+        <span class="burger__line"></span>
+        <span class="burger__line"></span>
+        <span class="burger__line"></span>
+      </button>
+    </div>
+  </div>
+
+  <nav id="mobile-nav" class="mobile-nav" aria-label="Mobile navigation">
+    <a href="/" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/') }]}>Home</a>
+    <a href="/about" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/about') }]}>About</a>
+    <a href="/builds" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/builds') }]}>Builds</a>
+    <a href="/gallery" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/gallery') }]}>Gallery</a>
+    <a href="/news" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/news') }]}>
+      <span>News</span>
+      {hasFreshNews && <span class="nav-badge" aria-label="Fresh news available"></span>}
+    </a>
+    <a href="/tutorials" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/tutorials') }]}>
+      <span>Tutorials</span>
+    </a>
+  </nav>
+</header>
+
+<main>
+  <slot />
+</main>
+
+<script is:inline>
+  (function () {
+    const btn = document.querySelector('[data-theme-toggle]');
+    const root = document.documentElement;
+
+    function getTheme() {
+      return root.getAttribute('data-theme') || 'light';
+    }
+
+    function applyTheme(theme) {
+      root.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      if (btn) {
+        btn.setAttribute(
+            'aria-label',
+            theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'
+        );
+      }
+    }
+
+    if (btn) {
+      btn.addEventListener('click', function () {
+        applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+      });
+    }
+
+    const burgerBtn = document.querySelector('[data-burger]');
+    const mobileNav = document.getElementById('mobile-nav');
+
+    function closeMobileMenu() {
+      if (!burgerBtn || !mobileNav) return;
+      burgerBtn.setAttribute('aria-expanded', 'false');
+      burgerBtn.setAttribute('aria-label', 'Open navigation menu');
+      burgerBtn.classList.remove('burger--open');
+      mobileNav.classList.remove('mobile-nav--open');
+    }
+
+    function openMobileMenu() {
+      if (!burgerBtn || !mobileNav) return;
+      burgerBtn.setAttribute('aria-expanded', 'true');
+      burgerBtn.setAttribute('aria-label', 'Close navigation menu');
+      burgerBtn.classList.add('burger--open');
+      mobileNav.classList.add('mobile-nav--open');
+    }
+
+    function toggleMobileMenu() {
+      if (!burgerBtn || !mobileNav) return;
+      const isOpen = burgerBtn.classList.contains('burger--open');
+      if (isOpen) {
+        closeMobileMenu();
+      } else {
+        openMobileMenu();
+      }
+    }
+
+    if (burgerBtn && mobileNav) {
+      closeMobileMenu();
+
+      burgerBtn.addEventListener('click', toggleMobileMenu);
+
+      mobileNav.querySelectorAll('a').forEach(function (link) {
+        link.addEventListener('click', function () {
+          closeMobileMenu();
+        });
+      });
+
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 920) {
+          closeMobileMenu();
         }
-      })();
-    </script>
-  </body>
+      });
+    }
+  })();
+</script>
+</body>
 </html>
 
 <style>
-  /* ---- desktop nav links ---- */
+  .header-actions {
+    margin-left: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-shrink: 0;
+  }
+
   .nav-link {
     color: var(--color-text-muted);
     font-weight: 500;
@@ -231,12 +241,15 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
     align-items: center;
     gap: 0.45rem;
   }
+
   .nav-link:hover {
     color: var(--color-primary);
   }
+
   .nav-link--active {
     color: var(--color-primary) !important;
   }
+
   .nav-badge {
     width: 0.45rem;
     height: 0.45rem;
@@ -247,12 +260,11 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
   }
 
-  /* ---- burger button ---- */
   .burger {
     display: none;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
     gap: 5px;
     width: 36px;
     height: 36px;
@@ -260,37 +272,45 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
     background: none;
     border: none;
     cursor: pointer;
-
+    color: var(--color-text);
   }
+
   .burger__line {
     display: block;
+    width: 18px;
     height: 2px;
-    background: var(--color-text);
+    background: currentColor;
     border-radius: 2px;
     transition: transform 0.25s ease, opacity 0.25s ease;
     transform-origin: center;
   }
-  /* animate to X when open */
+
   .burger--open .burger__line:nth-child(1) {
     transform: translateY(7px) rotate(45deg);
   }
+
   .burger--open .burger__line:nth-child(2) {
     opacity: 0;
     transform: scaleX(0);
   }
+
   .burger--open .burger__line:nth-child(3) {
     transform: translateY(-7px) rotate(-45deg);
   }
 
-  /* ---- mobile nav panel ---- */
   .mobile-nav {
-    display: flex;
+    display: none;
     flex-direction: column;
     gap: 0;
     padding: 0.5rem 0 1rem;
     background: var(--color-surface);
     border-top: 1px solid var(--color-divider);
   }
+
+  .mobile-nav.mobile-nav--open {
+    display: flex;
+  }
+
   .mobile-nav__link {
     display: flex;
     align-items: center;
@@ -302,24 +322,27 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
     transition: color var(--transition), background var(--transition);
     border-radius: 0;
   }
+
   .mobile-nav__link:hover {
     color: var(--color-primary);
     background: var(--color-surface-2);
   }
+
   .mobile-nav__link--active {
     color: var(--color-primary) !important;
   }
 
-  /* ---- responsive breakpoint 860px ---- */
-  @media (max-width: 860px) {
+  @media (max-width: 920px) {
     .nav {
       display: none;
     }
+
     .burger {
       display: flex;
     }
   }
-  @media (min-width: 861px) {
+
+  @media (min-width: 921px) {
     .mobile-nav {
       display: none !important;
     }
