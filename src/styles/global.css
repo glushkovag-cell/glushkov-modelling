@@ -704,10 +704,6 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .nav {
-    display: none;
-  }
-
   .hero-image img {
     min-height: 280px;
   }
