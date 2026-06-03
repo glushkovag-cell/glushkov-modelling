@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Закрываем административный раздел CMS
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+Disallow: /graphql
+
+Sitemap: https://www.glushkov-modelling.com/sitemap.xml

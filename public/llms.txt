@@ -1,0 +1,20 @@
+# Glushkov Modelling
+> A personal archive of wooden sailing ship models from the 18th–19th centuries, with detailed build logs, workshop tutorials, and notes by Andrey Glushkov.
+
+## About
+Andrey Glushkov is a master model builder based in Russia, specialising in scale wooden ship models (1:48–1:60). The site documents completed and ongoing builds, techniques, and historical context.
+
+## Key pages
+
+- /builds — catalogue of all ship models
+- /builds/le-requin — full build log for Le Requin 1750 (French xebec, scale 1:48, admiralty style)
+- /builds/bounty — full build log for HMAV Bounty (1:60, Amati kit)
+- /tutorials — step-by-step workshops on rigging, planking, finishing, and painting
+- /gallery — photo archive of completed models
+- /about — about the builder
+
+## Social presence
+- YouTube: https://youtube.com/@glushkov-modelling
+- Instagram: https://www.instagram.com/glushkovag
+- Telegram: https://t.me/glushkov_modelling
+- Facebook: https://www.facebook.com/people/Glushkov-modelling/61577464907030/
