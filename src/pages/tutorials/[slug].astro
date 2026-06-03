@@ -1,4 +1,5 @@
 ---
+import SeoHead from '../../components/seo/SeoHead.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import RelatedBuildsBlock from '../../components/tutorials/RelatedBuildsBlock.astro';
 import RelatedTutorialsBlock from '../../components/tutorials/RelatedTutorialsBlock.astro';
@@ -28,12 +29,41 @@ if (!fullTutorial) {
 const tutorialId = fullTutorial.databaseId;
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
+// SEO helpers
+const seoTitle = `${fullTutorial.title} | Tutorials — Glushkov Modelling`;
+const seoDescription =
+    fullTutorial.teaser ||
+    `Ship modelling tutorial: ${fullTutorial.title}. Technique guide for wooden scale model builders.`;
+const seoImage =
+    fullTutorial.featuredImage?.node?.sourceUrl ||
+    'https://www.glushkov-modelling.com/og-default.jpg';
+const seoDatePublished = fullTutorial.date ?? undefined;
 ---
 
-<BaseLayout title={`${fullTutorial.title} - Tutorials`} hasFreshNews={newsFlag}>
-    <article class="tutorial-detail"
-        data-tutorial-id={tutorialId}
-    >
+<BaseLayout
+        title={seoTitle}
+        description={seoDescription}
+        hasFreshNews={newsFlag}
+        ogImage={seoImage}
+>
+    <SeoHead
+            slot="head"
+            pageType="tutorial"
+            title={seoTitle}
+            description={seoDescription}
+            ogImage={seoImage}
+            tutorialTitle={fullTutorial.title}
+            tutorialDescription={fullTutorial.teaser}
+            tutorialCategory={fullTutorial.categories?.[0]?.name}
+            tutorialLevel={fullTutorial.level}
+            datePublished={seoDatePublished}
+            breadcrumbs={[
+                { name: 'Tutorials', url: '/tutorials' },
+                { name: fullTutorial.title, url: `/tutorials/${tutorial.slug}` },
+            ]}
+    />
+
+    <article class="tutorial-detail" data-tutorial-id={tutorialId}>
         <div class="container">
             <div class="detail-back-row">
                 <button

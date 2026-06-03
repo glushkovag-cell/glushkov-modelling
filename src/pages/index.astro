@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import NewsStrip from '../components/news/NewsStrip.astro';
 import { getAllModels, getAllNews, getFreshNews, hasFreshNews } from '../lib/wordpress';
+import SeoHead from '../components/seo/SeoHead.astro';
 
 const allModels = await getAllModels();
 const allNews = await getAllNews();
@@ -45,9 +46,13 @@ const socialLinks = [
     href: 'https://www.facebook.com/share/17zLdeZUCw/?mibextid=wwXIfr',
   },
 ];
+const SEO_TITLE = 'Glushkov Modelling — Wooden Ship Model Build Logs & Tutorials';
+const SEO_DESCRIPTION = 'A curated archive of historically researched wooden sailing ship models from the 18th–19th centuries. Build logs and workshop notes by Andrey Glushkov.';
 ---
 
-<BaseLayout title="Glushkov Modelling" hasFreshNews={newsFlag}>
+
+<BaseLayout title={SEO_TITLE} description={SEO_DESCRIPTION} hasFreshNews={newsFlag}>
+    <SeoHead slot="head" pageType="home" title={SEO_TITLE} description={SEO_DESCRIPTION} />
   <!-- HERO -->
   <section class="hero" id="top">
     <div class="container">

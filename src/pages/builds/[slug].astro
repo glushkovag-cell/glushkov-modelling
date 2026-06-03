@@ -8,6 +8,7 @@ import {
   hasFreshNews,
 } from '../../lib/wordpress';
 import { getGalleryManifest } from '../../lib/gallery';
+import SeoHead from '../../components/seo/SeoHead.astro';
 
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
@@ -38,13 +39,42 @@ const info = model.modelinfo;
 const heroImage = info?.modelimageurl || null;
 const heroImageAlt = model.title;
 const hasGallery = !!galleryManifest;
+// SEO helpers
+const seoTitle = `${model.title} — Build Log | Glushkov Modelling`;
+const seoDescription =
+    info?.shortdescription ||
+    `Step-by-step build log for ${model.title}${
+        info?.modelscale ? `, scale ${info.modelscale}` : ''
+    }${info?.manufacturer ? `, ${info.manufacturer}` : ''}. Wooden ship model construction by Andrey Glushkov.`;
+const seoImage = heroImage || 'https://www.glushkov-modelling.com/og-default.jpg';
+const seoDatePublished = info?.donedate ?? undefined;
 ---
 
 <BaseLayout
-    title={`${model.title} — Build Log`}
-    description={info?.shortdescription || `Build log for ${model.title}`}
+    title={seoTitle}
+    description={seoDescription}
     hasFreshNews={newsFlag}
+    ogImage={seoImage}
 >
+  <SeoHead
+      slot="head"
+      pageType="build"
+      title={seoTitle}
+      description={seoDescription}
+      ogImage={seoImage}
+      buildTitle={model.title}
+      buildDescription={info?.shortdescription}
+      buildScale={info?.modelscale}
+      buildManufacturer={info?.manufacturer}
+      buildStatus={info?.buildstatus}
+      buildHistoricalYear={info?.historicalyear}
+      datePublished={seoDatePublished}
+      breadcrumbs={[
+        { name: 'Builds', url: '/builds' },
+        { name: model.title, url: `/builds/${slug}` },
+      ]}
+  />
+
   <div id="top"></div>
 
   <section class="build-hero">

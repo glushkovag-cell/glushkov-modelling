@@ -1,12 +1,27 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SeoHead from '../components/seo/SeoHead.astro';
 import { getAllNews, hasFreshNews } from '../lib/wordpress';
 
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
+const SEO_TITLE = 'About Andrey Glushkov — Scale Model Builder | Glushkov Modelling';
+const SEO_DESCRIPTION =
+    'Master model builder specialising in wooden sailing vessels of the 18th–19th centuries. Build logs, rigging tutorials, and workshop notes.';
 ---
 
-<BaseLayout title="About | Glushkov Modelling" hasFreshNews={newsFlag}>
+<BaseLayout
+    title={SEO_TITLE}
+    description={SEO_DESCRIPTION}
+    hasFreshNews={newsFlag}
+>
+  <SeoHead
+      slot="head"
+      pageType="about"
+      title={SEO_TITLE}
+      description={SEO_DESCRIPTION}
+      breadcrumbs={[{ name: 'About', url: '/about' }]}
+  />
 
   <!-- HERO -->
   <section class="hero">
