@@ -25,30 +25,30 @@ const SOURCE_LABELS: Record<ExternalSource, string> = {
 };
 
 const formatPublishedDate = (value: string) =>
-  new Date(value).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
+    new Date(value).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
 
 const formatEventDate = (value: string) =>
-  new Date(value).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
+    new Date(value).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
 ---
 
 {items.length === 0 ? (
-  <div class="news-list-empty">
-    <p class="news-list-empty__title">No news for the last twelve months.</p>
-    <p class="news-list-empty__text">
-      New updates, releases, model pages, and workshop announcements will appear here as they are published.
-    </p>
-  </div>
-) : (
-  <ul class="news-list" role="list">
-    {items.map((item) => (
+<div class="news-list-empty">
+  <p class="news-list-empty__title">No news for the last twelve months.</p>
+  <p class="news-list-empty__text">
+    New updates, releases, model pages, and workshop announcements will appear here as they are published.
+  </p>
+</div>
+    ) : (
+<ul class="news-list" role="list">
+  {items.map((item) => (
       <li class={`news-list__item${item.news.isPinned ? ' news-list__item--pinned' : ''}`}>
         <div class="news-list__topline">
           <div class="news-list__meta">
@@ -63,66 +63,62 @@ const formatEventDate = (value: string) =>
             </span>
 
             {item.news.isPinned && (
-              <>
-                <span class="news-list__separator">•</span>
-                <span class="news-list__pinned">Pinned</span>
-              </>
+                <>
+                  <span class="news-list__separator">•</span>
+                  <span class="news-list__pinned">Pinned</span>
+                </>
             )}
 
             {item.news.externalSource && item.news.externalSource !== 'internal' && (
-              <>
-                <span class="news-list__separator">•</span>
-                <span class="news-list__source">
+                <>
+                  <span class="news-list__separator">•</span>
+                  <span class="news-list__source">
                   {SOURCE_LABELS[item.news.externalSource] ?? item.news.externalSource}
                 </span>
-              </>
+                </>
             )}
           </div>
         </div>
 
         <div class="news-list__content">
-          <a href={`/news/${item.slug}`} class="news-list__title">
+          <h2 class="news-list__title">
             {item.title}
-          </a>
+          </h2>
 
           <p class="news-list__text">
             {item.news.shortText}
           </p>
 
           {item.news.newsType === 'announcement' && item.news.eventDate && (
-            <p class="news-list__event">
-              Event date: <time datetime={item.news.eventDate}>{formatEventDate(item.news.eventDate)}</time>
-            </p>
+              <p class="news-list__event">
+                Event date: <time datetime={item.news.eventDate}>{formatEventDate(item.news.eventDate)}</time>
+              </p>
           )}
 
           {item.news.relatedModel && (
-            <p class="news-list__related">
-              Related model:{' '}
-              <a href={`/builds/${item.news.relatedModel.slug}`}>
-                {item.news.relatedModel.title}
-              </a>
-            </p>
+              <p class="news-list__related">
+                Related model:{' '}
+                <a href={`/builds/${item.news.relatedModel.slug}`}>
+                  {item.news.relatedModel.title}
+                </a>
+              </p>
           )}
 
           <div class="news-list__actions">
-            <a href={`/news/${item.slug}`} class="news-list__more">
-              Open entry
-            </a>
-
             <a
-              href={item.news.targetUrl}
-              class="news-list__cta"
-              target="_blank"
-              rel="noopener noreferrer"
+                href={item.news.targetUrl}
+                class="news-list__cta"
+                target="_blank"
+                rel="noopener noreferrer"
             >
               {item.news.targetLabel}
             </a>
           </div>
         </div>
       </li>
-    ))}
-  </ul>
-)}
+  ))}
+</ul>
+    )}
 
 <style>
   .news-list {
@@ -144,8 +140,8 @@ const formatEventDate = (value: string) =>
   .news-list__item--pinned {
     border-color: color-mix(in srgb, var(--color-primary) 32%, var(--color-border));
     box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.035),
-      0 0 0 1px color-mix(in srgb, var(--color-primary) 10%, transparent) inset;
+        0 8px 24px rgba(0, 0, 0, 0.035),
+        0 0 0 1px color-mix(in srgb, var(--color-primary) 10%, transparent) inset;
   }
 
   .news-list__topline {
@@ -185,17 +181,11 @@ const formatEventDate = (value: string) =>
   }
 
   .news-list__title {
-    display: inline-block;
     margin: 0 0 8px;
     font-size: 1.15rem;
     font-weight: 600;
     line-height: 1.25;
     color: var(--color-text);
-    text-decoration: none;
-  }
-
-  .news-list__title:hover {
-    color: var(--color-primary);
   }
 
   .news-list__text {
@@ -230,21 +220,9 @@ const formatEventDate = (value: string) =>
     align-items: center;
   }
 
-  .news-list__more,
   .news-list__cta {
     text-decoration: none;
     font-weight: 600;
-  }
-
-  .news-list__more {
-    color: var(--color-text);
-  }
-
-  .news-list__more:hover {
-    color: var(--color-primary);
-  }
-
-  .news-list__cta {
     color: var(--color-primary);
   }
 
