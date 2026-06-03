@@ -1,28 +1,86 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import SeoHead from '../components/seo/SeoHead.astro';
 import { getAllNews, hasFreshNews } from '../lib/wordpress';
 
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
-
-const SEO_TITLE = 'About Andrey Glushkov — Scale Model Builder | Glushkov Modelling';
-const SEO_DESCRIPTION = 'Andrey Glushkov is a master model builder specialising in wooden sailing vessels of the 18th–19th centuries. Build logs, rigging tutorials, and workshop notes from a dedicated scale modeller.';
 ---
 
-<BaseLayout
-    title={SEO_TITLE}
-    description={SEO_DESCRIPTION}
-    hasFreshNews={newsFlag}
->
-  <SeoHead
-    slot="head"
-    pageType="about"
-    title={SEO_TITLE}
-    description={SEO_DESCRIPTION}
-    breadcrumbs={[{ name: 'About', url: '/about' }]}
-  />
+<BaseLayout title="About | Glushkov Modelling" hasFreshNews={newsFlag}>
 
-  <!-- остальной контент страницы остаётся без изменений -->
-  <slot />
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+                <div class="hero-grid" style="align-items: stretch;">
+        <div class="hero-card hero-copy">
+          <span class="eyebrow">About</span>
+          <h1>Glushkov Modelling</h1>
+          <p>My personal project about careful building, historical character, and the slow satisfaction of bringing complex models to life.</p>
+          <div class="hero-meta">
+            <a href="/builds" class="meta-pill">View Builds</a>
+          </div>
+        </div>
+                  <div class="hero-card info-card" style="display: flex; flex-direction: column; gap: 0; height: 100%;">
+          <span class="eyebrow">Quick links</span>
+          <div class="spec-grid" style="margin-top: 8px;">
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Build Catalogue</span><span class="spec-value"><a href="/builds" style="color: var(--color-primary);">All builds →</a></span></div>
+            <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Facebook</span><span class="spec-value"><a href="https://www.facebook.com/people/Glushkov-modelling/61577464907030/" target="_blank" rel="noopener" style="color: var(--color-primary);">Glushkov Modelling →</a></span></div>
+                <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">YouTube</span><span class="spec-value"><a href="https://youtube.com/@glushkov-modelling" target="_blank" rel="noopener" style="color: var(--color-primary);">@glushkov-modelling →</a></span></div>
+                <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Instagram</span><span class="spec-value"><a href="https://www.instagram.com/glushkovag" target="_blank" rel="noopener" style="color: var(--color-primary);">@glushkovag →</a></span></div>
+                <div class="spec-item" style="grid-column: 1 / -1;"><span class="spec-label">Telegram</span><span class="spec-value"><a href="https://t.me/glushkov_modelling" target="_blank" rel="noopener" style="color: var(--color-primary);">@glushkov_modelling →</a></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKSHOP AND INTENT -->
+  <section class="page-section">
+    <div class="container">
+      <div class="section-grid section-grid--equal">
+        <div class="content-card">
+          <span class="eyebrow">Workshop and intent</span>
+          <h2 class="card-title">Process, patience, and details</h2>
+          <div class="content-html">
+            <p>GLUSHKOV MODELLING is a workshop built around process, patience, and details. The focus is on complex scale builds that ask for research, planning, and a steady, repeatable way of working rather than quick results.</p>
+            <p>Each project starts with a kit or plan, but the interest lies in how it is interpreted: which details are emphasised, what is corrected or refined, and how the structure and character of the subject come through at scale.</p>
+          </div>
+        </div>
+        <div class="content-card">
+          <span class="eyebrow">From ships to early aviation</span>
+          <h2 class="card-title">The current subjects</h2>
+          <div class="content-html">
+            <p>The core of the site is centred on eighteenth– and nineteenth–century sailing vessels such as the French xebec Le Requin and the HMS Bounty. These builds are long, layered projects with hull work, deck fittings, rigging, and sails evolving over many small sessions.</p>
+            <p>Alongside them sits the Blériot XI in 1:10 scale — a move into early aviation, where exposed structure and mechanical lightness become part of the visual language.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOCUMENTATION -->
+  <section class="page-section">
+    <div class="container">
+      <div class="section-grid section-grid--equal">
+        <div class="content-card">
+          <span class="eyebrow">Documentation and build logs</span>
+          <h2 class="card-title">A record of the work</h2>
+          <div class="content-html">
+            <p>The site exists to keep a clear record of the work. Build logs follow projects in ordered parts, combining photography, short notes, and occasional longer reflections on decisions, mistakes, and small adjustments.</p>
+            <p>This structure makes it possible to return to earlier stages, to see how a model changed over time, and to share the work in a way that goes deeper than a single finished gallery image.</p>
+          </div>
+          <a href="/builds" class="build-link" style="margin-top: 8px;">Browse build logs →</a>
+        </div>
+        <div class="content-card">
+          <span class="eyebrow">Beyond a single platform</span>
+          <h2 class="card-title">A small ecosystem</h2>
+          <div class="content-html">
+            <p>GLUSHKOV MODELLING is not limited to one channel. The site is a stable home for build logs and selected images, while ongoing progress also appears across Telegram, YouTube, Instagram, and Facebook.</p>
+            <p>Together they form a small ecosystem: quick notes, longer videos, close photographs, and more formal posts, all pointing back to the same workshop and the same slow, incremental practice.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </BaseLayout>

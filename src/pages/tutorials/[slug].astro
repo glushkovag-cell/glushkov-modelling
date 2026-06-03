@@ -1,19 +1,19 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import SeoHead from '../../components/seo/SeoHead.astro';
 import RelatedBuildsBlock from '../../components/tutorials/RelatedBuildsBlock.astro';
 import RelatedTutorialsBlock from '../../components/tutorials/RelatedTutorialsBlock.astro';
-import { getTutorialBySlug, getAllTutorials, getAllNews, hasFreshNews } from '../../lib/wordpress';
+import {getTutorialBySlug, getAllTutorials, getAllNews, hasFreshNews} from '../../lib/wordpress';
 
 export async function getStaticPaths() {
     const tutorials = await getAllTutorials();
+
     return tutorials.map((tutorial) => ({
-        params: { slug: tutorial.slug },
-        props: { tutorial },
+        params: {slug: tutorial.slug},
+        props: {tutorial},
     }));
 }
 
-const { tutorial } = Astro.props;
+const {tutorial} = Astro.props;
 
 if (!tutorial) {
     return Astro.redirect('/404');
@@ -28,43 +28,19 @@ if (!fullTutorial) {
 const tutorialId = fullTutorial.databaseId;
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
-
-// SEO
-const seoTitle = `${fullTutorial.title} | Tutorials — Glushkov Modelling`;
-const seoDescription = fullTutorial.teaser
-  ?? `Ship modelling tutorial: ${fullTutorial.title}. Technique guide for wooden scale model builders.`;
-const seoImage = fullTutorial.featuredImage?.node?.sourceUrl
-  ?? 'https://www.glushkov-modelling.com/og-default.jpg';
-const seoDate = fullTutorial.date ?? undefined;
 ---
 
-<BaseLayout
-    title={seoTitle}
-    description={seoDescription}
-    hasFreshNews={newsFlag}
-    ogImage={seoImage}
->
-  <SeoHead
-    slot="head"
-    pageType="tutorial"
-    title={seoTitle}
-    description={seoDescription}
-    ogImage={seoImage}
-    tutorialTitle={fullTutorial.title}
-    tutorialDescription={fullTutorial.teaser}
-    tutorialCategory={fullTutorial.categories?.[0]?.name}
-    tutorialLevel={fullTutorial.level}
-    datePublished={seoDate}
-    breadcrumbs={[
-      { name: 'Tutorials', url: '/tutorials' },
-      { name: fullTutorial.title, url: `/tutorials/${tutorial.slug}` },
-    ]}
-  />
-
-    <article class="tutorial-detail" data-tutorial-id={tutorialId}>
+<BaseLayout title={`${fullTutorial.title} - Tutorials`} hasFreshNews={newsFlag}>
+    <article class="tutorial-detail"
+        data-tutorial-id={tutorialId}
+    >
         <div class="container">
             <div class="detail-back-row">
-                <button type="button" class="detail-back-btn" id="backToTutorialsBtn">
+                <button
+                        type="button"
+                        class="detail-back-btn"
+                        id="backToTutorialsBtn"
+                >
                     <span class="detail-back-icon">←</span>
                     <span>Back to tutorials</span>
                 </button>
@@ -72,38 +48,181 @@ const seoDate = fullTutorial.date ?? undefined;
 
             <header class="tutorial-header">
                 <h1>{fullTutorial.title}</h1>
+
                 <div class="tutorial-meta">
                     {fullTutorial.level && (
-                        <span class={`level-badge level-${fullTutorial.level.toLowerCase()}`}>
-                          {fullTutorial.level}
-                        </span>
+                            <span class={`level-badge level-${fullTutorial.level.toLowerCase()}`}>
+              {fullTutorial.level}
+            </span>
                     )}
+
                     {fullTutorial.categories.length > 0 && (
-                        <div class="categories">
-                            {fullTutorial.categories.map((cat) => (
-                                <a href={`/tutorials?categories=${cat.slug}`} class="category-tag">{cat.name}</a>
-                            ))}
-                        </div>
+                            <div class="categories">
+                                {fullTutorial.categories.map((cat) => (
+                                        <a
+                                                href={`/tutorials?categories=${cat.slug}`}
+                                                class="category-tag"
+                                        >
+                                            {cat.name}
+                                        </a>
+                                ))}
+                            </div>
                     )}
                 </div>
+
                 {fullTutorial.teaser && (
-                    <p class="tutorial-teaser">{fullTutorial.teaser}</p>
+                        <p class="tutorial-teaser">{fullTutorial.teaser}</p>
                 )}
             </header>
 
-            <div class="tutorial-content" set:html={fullTutorial.content} />
+            <div class="tutorial-content" set:html={fullTutorial.content}/>
 
             {fullTutorial.relatedBuilds.length > 0 && (
-                <RelatedBuildsBlock
-                    builds={fullTutorial.relatedBuilds}
-                    tutorialSlug={tutorial.slug}
-                    tutorialTitle={fullTutorial.title}
-                />
+                    <RelatedBuildsBlock
+                            builds={fullTutorial.relatedBuilds}
+                            tutorialSlug={tutorial.slug}
+                            tutorialTitle={fullTutorial.title}
+                    />
             )}
 
             {fullTutorial.relatedTutorials.length > 0 && (
-                <RelatedTutorialsBlock tutorials={fullTutorial.relatedTutorials} />
+                    <RelatedTutorialsBlock tutorials={fullTutorial.relatedTutorials}/>
             )}
         </div>
     </article>
 </BaseLayout>
+
+<style>
+    .tutorial-detail {
+        padding: 3rem 0;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    .detail-back-row {
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: 999px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-text);
+        font-family: 'General Sans', sans-serif;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+    }
+
+    .detail-back-btn:hover {
+        background: var(--color-surface-2); /* как на build log */
+        border-color: var(--color-primary);
+        transform: translateY(-1px);
+    }
+
+    .detail-back-icon {
+        font-size: 0.9rem;
+    }
+
+    .tutorial-header {
+        margin-bottom: 3rem;
+    }
+
+    h1 {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--color-text);
+    }
+
+    .tutorial-meta {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+
+    .level-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .level-beginner {
+        background-color: #d4e8e9;
+        color: var(--color-primary);
+    }
+
+    .level-intermediate {
+        background-color: var(--color-primary);
+        color: white;
+    }
+
+    .level-advanced {
+        background-color: #014952;
+        color: white;
+    }
+
+    .categories {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .category-tag {
+        font-size: 0.875rem;
+        color: var(--color-text-muted);
+        padding: 0.25rem 0.75rem;
+        border: 1px solid var(--color-text-muted);
+        border-radius: 1rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .category-tag:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+    }
+
+    .tutorial-teaser {
+        font-size: 1.125rem;
+        color: var(--color-text-muted);
+        line-height: 1.6;
+    }
+
+    .tutorial-content {
+        margin-bottom: 4rem;
+        line-height: 1.8;
+    }
+
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('backToTutorialsBtn');
+        if (!btn) return;
+
+        btn.addEventListener('click', () => {
+            const returnUrl = sessionStorage.getItem('tutorialsReturnUrl');
+            window.location.href = returnUrl || '/tutorials';
+        });
+    });
+</script>
+
+<script src="/scripts/tutorialViews.js" defer></script>
