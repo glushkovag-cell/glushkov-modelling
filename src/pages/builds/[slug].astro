@@ -9,6 +9,7 @@ import {
 } from '../../lib/wordpress';
 import { getGalleryManifest } from '../../lib/gallery';
 import SeoHead from '../../components/seo/SeoHead.astro';
+import HiResViewer from '../../components/HiResViewer.astro';
 
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
@@ -39,7 +40,7 @@ const info = model.modelinfo;
 const heroImage = info?.modelimageurl || null;
 const heroImageAlt = model.title;
 const hasGallery = !!galleryManifest;
-// SEO helpers
+
 const seoTitle = `${model.title} — Build Log | Glushkov Modelling`;
 const seoDescription =
     info?.shortdescription ||
@@ -79,7 +80,6 @@ const seoDatePublished = info?.donedate ?? undefined;
 
   <section class="build-hero">
     <div class="container">
-
       <a
           href={defaultBackHref}
           class="detail-back-btn"
@@ -201,7 +201,13 @@ const seoDatePublished = info?.donedate ?? undefined;
                 </header>
 
                 {part.partContent ? (
-                    <div class="part-content" set:html={part.partContent} />
+                    <div
+                        class="part-content"
+                        data-build-log-content
+                        data-part-title={part.title}
+                        data-part-number={part.partNumber}
+                        set:html={part.partContent}
+                    />
                 ) : (
                     <p>Content coming soon.</p>
                 )}
@@ -269,9 +275,11 @@ const seoDatePublished = info?.donedate ?? undefined;
         </div>
       </section>
   )}
+
+  <HiResViewer backLabel="← Back to build"/>
 </BaseLayout>
 
-<script>
+<script is:inline>
   (() => {
     const link = document.getElementById('detail-back-btn');
     const label = document.getElementById('detail-back-btn-label');
@@ -293,6 +301,93 @@ const seoDatePublished = info?.donedate ?? undefined;
       // keep default fallback
     }
   })();
+
+  (() => {
+    if (window.__buildLogViewerDelegated) return;
+    window.__buildLogViewerDelegated = true;
+
+    const IMAGE_EXT_RE = /\.(?:avif|gif|jpe?g|png|webp)(?:[?#].*)?$/i;
+
+    function isWpMediaFileLink(href) {
+      if (!href) return false;
+
+      try {
+        const url = new URL(href, window.location.href);
+        return url.pathname.includes('/wp-content/uploads/') && IMAGE_EXT_RE.test(url.pathname);
+      } catch {
+        return false;
+      }
+    }
+
+    function getEntries() {
+      const blocks = Array.from(document.querySelectorAll('[data-build-log-content]'));
+
+      return blocks.flatMap((block) => {
+        const partTitle = block.getAttribute('data-part-title') || '';
+        const partNumber = block.getAttribute('data-part-number') || '';
+
+        return Array.from(block.querySelectorAll('a[href]'))
+            .map((anchor) => {
+              const img = anchor.querySelector('img');
+              const href = anchor.getAttribute('href') || '';
+
+              if (!img || !isWpMediaFileLink(href)) return null;
+
+              return {
+                anchor,
+                slide: {
+                  src: href,
+                  title: partTitle
+                      ? `Part ${partNumber} — ${partTitle}`
+                      : `Part ${partNumber || ''}`.trim(),
+                  caption:
+                      img.getAttribute('alt') ||
+                      img.getAttribute('title') ||
+                      partTitle ||
+                      '',
+                },
+              };
+            })
+            .filter(Boolean);
+      });
+    }
+
+    document.addEventListener(
+        'click',
+        (event) => {
+          const target = event.target;
+          if (!(target instanceof Element)) return;
+
+          const anchor = target.closest('[data-build-log-content] a[href]');
+          if (!(anchor instanceof HTMLAnchorElement)) return;
+
+          const img = anchor.querySelector('img');
+          if (!img) return;
+
+          const href = anchor.getAttribute('href') || '';
+          if (!isWpMediaFileLink(href)) return;
+
+          const viewer = window.__viewer;
+          if (!viewer || typeof viewer.open !== 'function') return;
+
+          const entries = getEntries();
+          if (!entries.length) return;
+
+          const index = entries.findIndex((entry) => entry.anchor === anchor);
+          if (index === -1) return;
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          viewer.open(
+              entries.map((entry) => entry.slide),
+              index,
+              anchor
+          );
+        },
+        true
+    );
+  })();
 </script>
 
 <style>
@@ -309,7 +404,6 @@ const seoDatePublished = info?.donedate ?? undefined;
     padding: 2.5rem 0 2rem;
   }
 
-  /* Новый стиль Back to builds — такой же, как на tutorial */
   .detail-back-btn {
     display: inline-flex;
     align-items: center;
@@ -328,7 +422,7 @@ const seoDatePublished = info?.donedate ?? undefined;
   }
 
   .detail-back-btn:hover {
-    background: var(--color-surface-2); /* или var(--color-surface), если хочешь чуть менее заметный эффект */
+    background: var(--color-surface-2);
     border-color: var(--color-primary);
     transform: translateY(-1px);
   }
@@ -572,6 +666,10 @@ const seoDatePublished = info?.donedate ?? undefined;
     height: auto;
     margin: 1.25rem 0;
     border-radius: 0.75rem;
+  }
+
+  .part-content :global(a[href*="/wp-content/uploads/"] img) {
+    cursor: zoom-in;
   }
 
   .back-top {

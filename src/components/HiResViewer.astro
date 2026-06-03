@@ -10,6 +10,9 @@
  *   window.__viewer.open(slides, startIndex, trigger)
  *   window.__viewer.close()
  */
+const {
+  backLabel = '← Back to gallery',
+} = Astro.props;
 ---
 
 <div
@@ -24,8 +27,8 @@
     <!-- Top bar -->
     <div class="viewer-topbar">
       <div class="viewer-topbar-row viewer-topbar-row--back">
-        <button class="viewer-btn viewer-btn--primary" id="viewerClose" aria-label="Back to gallery">
-          ← Back to gallery
+        <button class="viewer-btn viewer-btn--primary" id="viewerClose" aria-label={backLabel}>
+          {backLabel}
         </button>
       </div>
 
