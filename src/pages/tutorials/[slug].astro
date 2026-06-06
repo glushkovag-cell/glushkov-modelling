@@ -3,18 +3,20 @@ import SeoHead from '../../components/seo/SeoHead.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import RelatedBuildsBlock from '../../components/tutorials/RelatedBuildsBlock.astro';
 import RelatedTutorialsBlock from '../../components/tutorials/RelatedTutorialsBlock.astro';
-import {getTutorialBySlug, getAllTutorials, getAllNews, hasFreshNews} from '../../lib/wordpress';
+import HiResViewer from '../../components/HiResViewer.astro';
+import ContentMediaViewerBridge from '../../components/ContentMediaViewerBridge.astro';
+import { getTutorialBySlug, getAllTutorials, getAllNews, hasFreshNews } from '../../lib/wordpress';
 
 export async function getStaticPaths() {
     const tutorials = await getAllTutorials();
 
     return tutorials.map((tutorial) => ({
-        params: {slug: tutorial.slug},
-        props: {tutorial},
+        params: { slug: tutorial.slug },
+        props: { tutorial },
     }));
 }
 
-const {tutorial} = Astro.props;
+const { tutorial } = Astro.props;
 
 if (!tutorial) {
     return Astro.redirect('/404');
@@ -29,7 +31,7 @@ if (!fullTutorial) {
 const tutorialId = fullTutorial.databaseId;
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
-// SEO helpers
+
 const seoTitle = `${fullTutorial.title} | Tutorials — Glushkov Modelling`;
 const seoDescription =
     fullTutorial.teaser ||
@@ -105,7 +107,12 @@ const seoDatePublished = fullTutorial.date ?? undefined;
                 )}
             </header>
 
-            <div class="tutorial-content" set:html={fullTutorial.content}/>
+            <div
+                    class="tutorial-content"
+                    data-tutorial-content
+                    data-tutorial-title={fullTutorial.title}
+                    set:html={fullTutorial.content}
+            />
 
             {fullTutorial.relatedBuilds.length > 0 && (
                     <RelatedBuildsBlock
@@ -116,10 +123,18 @@ const seoDatePublished = fullTutorial.date ?? undefined;
             )}
 
             {fullTutorial.relatedTutorials.length > 0 && (
-                    <RelatedTutorialsBlock tutorials={fullTutorial.relatedTutorials}/>
+                    <RelatedTutorialsBlock tutorials={fullTutorial.relatedTutorials} />
             )}
         </div>
     </article>
+
+    <HiResViewer backLabel="← Back to tutorial" />
+    <ContentMediaViewerBridge
+            rootSelector='[data-tutorial-content]'
+            titleAttr='data-tutorial-title'
+            itemTitleBuilder='single-title'
+            globalKey='__tutorialViewerBridgeInit'
+    />
 </BaseLayout>
 
 <style>
@@ -154,7 +169,7 @@ const seoDatePublished = fullTutorial.date ?? undefined;
     }
 
     .detail-back-btn:hover {
-        background: var(--color-surface-2); /* как на build log */
+        background: var(--color-surface-2);
         border-color: var(--color-primary);
         transform: translateY(-1px);
     }
@@ -208,6 +223,7 @@ const seoDatePublished = fullTutorial.date ?? undefined;
     .categories {
         display: flex;
         gap: 0.75rem;
+        flex-wrap: wrap;
     }
 
     .category-tag {
@@ -234,6 +250,85 @@ const seoDatePublished = fullTutorial.date ?? undefined;
     .tutorial-content {
         margin-bottom: 4rem;
         line-height: 1.8;
+    }
+
+    .tutorial-content :global(p) {
+        margin: 1rem 0;
+    }
+
+    .tutorial-content :global(figure) {
+        margin: 1.25rem 0;
+    }
+
+    .tutorial-content :global(figure.wp-block-image) {
+        width: fit-content;
+        max-width: 100%;
+        border: 1px solid var(--color-border);
+        border-radius: 0.75rem;
+        overflow: hidden;
+        background: var(--color-surface);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .tutorial-content :global(figure.wp-block-image > a) {
+        display: block;
+        line-height: 0;
+    }
+
+    .tutorial-content :global(figure img) {
+        display: block;
+        max-width: 100%;
+        width: auto;
+        height: auto;
+        margin: 0;
+        border-radius: 0;
+        vertical-align: top;
+    }
+
+    .tutorial-content :global(figure figcaption) {
+        padding: 0.75rem 1rem 0.9rem;
+        font-size: 0.92rem;
+        line-height: 1.45;
+        color: var(--color-text-muted);
+        background: var(--color-surface);
+        border-top: 1px solid var(--color-border);
+    }
+
+    .tutorial-content :global(a[href*="/wp-content/uploads/"]) {
+        display: inline-block;
+        max-width: 100%;
+        text-decoration: none;
+        line-height: 0;
+    }
+
+    .tutorial-content :global(a[href*="/wp-content/uploads/"] > img),
+    .tutorial-content :global(p > img),
+    .tutorial-content :global(.wp-block-image > img) {
+        display: block;
+        max-width: 100%;
+        width: auto;
+        height: auto;
+        margin: 1.25rem 0;
+        border: 0;
+        border-radius: 0.75rem;
+        background: transparent;
+        box-shadow: var(--shadow-sm);
+        vertical-align: top;
+    }
+
+    .tutorial-content :global(figure a[href*="/wp-content/uploads/"] > img),
+    .tutorial-content :global(figure > img) {
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        background: transparent;
+    }
+
+    .tutorial-content :global(img) {
+        display: block;
+        max-width: 100%;
+        height: auto;
     }
 
     @media (max-width: 768px) {
