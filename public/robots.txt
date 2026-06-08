@@ -6,4 +6,4 @@ Disallow: /wp-admin/
 Disallow: /wp-login.php
 Disallow: /graphql
 
-Sitemap: https://www.glushkov-modelling.com/sitemap.xml
+Sitemap: https://www.glushkov-modelling.com/sitemap-index.xml
