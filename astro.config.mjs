@@ -5,6 +5,7 @@ import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://www.glushkov-modelling.com',  // ДОБАВЛЕНО: обязательно для sitemap
+  trailingSlash: 'never',
   output: 'static',
   adapter: node({
     mode: 'standalone'
