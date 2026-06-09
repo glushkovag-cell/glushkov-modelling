@@ -1,11 +1,12 @@
 ---
 /**
- * SeoHead.astro
- * Универсальный SEO-компонент: Open Graph, Twitter Card, Canonical, JSON-LD.
- * Вставляйте в <slot name="head"> внутри BaseLayout.
- *
- * Поддерживаемые page types: 'home' | 'about' | 'build' | 'tutorial' | 'gallery' | 'default'
- */
+    * SeoHead.astro
+    * Универсальный SEO-компонент: Open Graph, Twitter Card, Canonical, JSON-LD.
+    * Вставляйте в <slot name="head"> внутри BaseLayout.
+    *
+    * Поддерживаемые page types:
+    * 'home' | 'about' | 'build' | 'tutorial' | 'gallery' | 'default'
+    */
 
 export interface Props {
   pageType?: 'home' | 'about' | 'build' | 'tutorial' | 'gallery' | 'default';
@@ -15,6 +16,7 @@ export interface Props {
   ogImage?: string;
   datePublished?: string;
   dateModified?: string;
+
   // Build-specific
   buildTitle?: string;
   buildDescription?: string;
@@ -22,12 +24,14 @@ export interface Props {
   buildManufacturer?: string;
   buildStatus?: string | string[];
   buildHistoricalYear?: string;
+
   // Tutorial-specific
   tutorialTitle?: string;
   tutorialDescription?: string;
   tutorialCategory?: string;
   tutorialLevel?: string;
   tutorialSteps?: Array<{ name: string; text: string }>;
+
   // Breadcrumbs (без Home — добавляется автоматически)
   breadcrumbs?: Array<{ name: string; url: string }>;
 }
@@ -37,13 +41,14 @@ const {
   title,
   description,
   canonicalPath,
-  ogImage = 'https://www.glushkov-modelling.com/og-default.jpg',
+  ogImage = '/og-default.jpg',
   datePublished,
   dateModified,
   buildTitle,
   buildDescription,
   buildScale,
   buildManufacturer,
+  buildStatus,
   buildHistoricalYear,
   tutorialTitle,
   tutorialDescription,
@@ -54,117 +59,242 @@ const {
 } = Astro.props;
 
 const siteUrl = 'https://www.glushkov-modelling.com';
-const canonicalUrl = siteUrl + (canonicalPath ?? Astro.url.pathname);
 
-const authorRef = { '@type': 'Person', name: 'Andrey Glushkov', url: `${siteUrl}/about` };
-const sameas = [
+function normalizePath(path: string): string {
+  if (!path) return '/';
+
+  let normalized = path.trim();
+
+  if (!normalized.startsWith('/')) {
+    normalized = `/${normalized}`;
+  }
+
+  normalized = normalized.replace(/\/{2,}/g, '/');
+
+  if (normalized !== '/' && normalized.endsWith('/')) {
+    normalized = normalized.slice(0, -1);
+  }
+
+  return normalized;
+}
+
+function toAbsoluteUrl(pathOrUrl: string): string {
+  if (/^https?:\/\//i.test(pathOrUrl)) {
+    const url = new URL(pathOrUrl);
+    if (url.origin === siteUrl) {
+      url.pathname = normalizePath(url.pathname);
+    }
+    return url.toString();
+  }
+
+  return new URL(normalizePath(pathOrUrl), siteUrl).toString();
+}
+
+const resolvedPath = normalizePath(canonicalPath ?? Astro.url.pathname);
+const canonicalUrl = toAbsoluteUrl(resolvedPath);
+const resolvedOgImage = toAbsoluteUrl(ogImage);
+
+const authorRef = {
+  '@type': 'Person',
+  name: 'Andrey Glushkov',
+  url: `${siteUrl}/about`,
+};
+
+const sameAs = [
   'https://youtube.com/@glushkov-modelling',
   'https://www.instagram.com/glushkovag',
   'https://t.me/glushkov_modelling',
   'https://www.facebook.com/people/Glushkov-modelling/61577464907030/',
 ];
 
+const ogTitle = title ?? 'Glushkov Modelling';
+const ogDescription =
+    description ??
+    'A curated archive of historically researched wooden ship models, build logs, and workshop notes.';
+
 // WebSite schema (главная)
-const websiteSchema = pageType === 'home' ? {
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: 'Glushkov Modelling',
-  url: siteUrl,
-  description: 'A personal archive of historically researched wooden ship models, build logs, and workshop tutorials by Andrey Glushkov.',
-  author: { ...authorRef, sameAs: sameas },
-} : null;
+const websiteSchema =
+    pageType === 'home'
+        ? {
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: 'Glushkov Modelling',
+          url: siteUrl,
+          description:
+              'A personal archive of historically researched wooden ship models, build logs, and workshop tutorials by Andrey Glushkov.',
+          author: { ...authorRef, sameAs },
+        }
+        : null;
 
 // Person schema (about)
-const personSchema = pageType === 'about' ? {
-  '@context': 'https://schema.org',
-  '@type': 'Person',
-  name: 'Andrey Glushkov',
-  url: `${siteUrl}/about`,
-  jobTitle: 'Scale Model Builder',
-  description: 'Master model builder specialising in wooden sailing vessels of the 18th–19th centuries, scale 1:48–1:60.',
-  knowsAbout: ['Ship modelling', 'Wooden scale models', '18th century sailing vessels', 'Model rigging', 'Scale model construction'],
-  sameAs: sameas,
-} : null;
+const personSchema =
+    pageType === 'about'
+        ? {
+          '@context': 'https://schema.org',
+          '@type': 'Person',
+          name: 'Andrey Glushkov',
+          url: `${siteUrl}/about`,
+          jobTitle: 'Scale Model Builder',
+          description:
+              'Master model builder specialising in wooden sailing vessels of the 18th–19th centuries, scale 1:48–1:60.',
+          knowsAbout: [
+            'Ship modelling',
+            'Wooden scale models',
+            '18th century sailing vessels',
+            'Model rigging',
+            'Scale model construction',
+          ],
+          sameAs,
+        }
+        : null;
 
 // Article schema (build log)
-const articleSchema = pageType === 'build' && buildTitle ? {
-  '@context': 'https://schema.org',
-  '@type': 'Article',
-  headline: buildTitle,
-  description: buildDescription ?? description ?? '',
-  image: ogImage,
-  author: authorRef,
-  publisher: { '@type': 'Organization', name: 'Glushkov Modelling', url: siteUrl },
-  url: canonicalUrl,
-  mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
-  ...(datePublished ? { datePublished } : {}),
-  ...(dateModified ? { dateModified } : {}),
-  keywords: [buildTitle, buildScale && `scale ${buildScale}`, buildManufacturer,
-    buildHistoricalYear && `${buildHistoricalYear} ship model`, 'wooden ship model', 'build log'].filter(Boolean).join(', '),
-} : null;
+const articleSchema =
+    pageType === 'build' && buildTitle
+        ? {
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: buildTitle,
+          description: buildDescription ?? description ?? '',
+          image: resolvedOgImage,
+          author: authorRef,
+          publisher: {
+            '@type': 'Organization',
+            name: 'Glushkov Modelling',
+            url: siteUrl,
+          },
+          url: canonicalUrl,
+          mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': canonicalUrl,
+          },
+          ...(datePublished ? { datePublished } : {}),
+          ...(dateModified ? { dateModified } : {}),
+          keywords: [
+            buildTitle,
+            buildScale ? `scale ${buildScale}` : null,
+            buildManufacturer,
+            buildStatus
+                ? Array.isArray(buildStatus)
+                    ? buildStatus.join(', ')
+                    : buildStatus
+                : null,
+            buildHistoricalYear ? `${buildHistoricalYear} ship model` : null,
+            'wooden ship model',
+            'build log',
+          ]
+              .filter(Boolean)
+              .join(', '),
+        }
+        : null;
 
 // HowTo schema (tutorial со шагами)
-const howToSchema = pageType === 'tutorial' && tutorialTitle && tutorialSteps.length > 0 ? {
-  '@context': 'https://schema.org',
-  '@type': 'HowTo',
-  name: tutorialTitle,
-  description: tutorialDescription ?? description ?? '',
-  image: ogImage,
-  author: authorRef,
-  url: canonicalUrl,
-  ...(datePublished ? { datePublished } : {}),
-  step: tutorialSteps.map((s, i) => ({
-    '@type': 'HowToStep',
-    position: i + 1,
-    name: s.name,
-    text: s.text,
-  })),
-} : null;
+const howToSchema =
+    pageType === 'tutorial' && tutorialTitle && tutorialSteps.length > 0
+        ? {
+          '@context': 'https://schema.org',
+          '@type': 'HowTo',
+          name: tutorialTitle,
+          description: tutorialDescription ?? description ?? '',
+          image: resolvedOgImage,
+          author: authorRef,
+          url: canonicalUrl,
+          ...(datePublished ? { datePublished } : {}),
+          ...(dateModified ? { dateModified } : {}),
+          step: tutorialSteps.map((step, index) => ({
+            '@type': 'HowToStep',
+            position: index + 1,
+            name: step.name,
+            text: step.text,
+          })),
+        }
+        : null;
 
 // Article schema (tutorial без явных шагов)
-const tutorialArticleSchema = pageType === 'tutorial' && tutorialTitle && tutorialSteps.length === 0 ? {
-  '@context': 'https://schema.org',
-  '@type': 'Article',
-  headline: tutorialTitle,
-  description: tutorialDescription ?? description ?? '',
-  image: ogImage,
-  author: authorRef,
-  url: canonicalUrl,
-  ...(datePublished ? { datePublished } : {}),
-  ...(dateModified ? { dateModified } : {}),
-  keywords: [tutorialTitle, tutorialCategory, tutorialLevel && `${tutorialLevel} level`,
-    'ship model tutorial', 'wooden ship model technique'].filter(Boolean).join(', '),
-} : null;
+const tutorialArticleSchema =
+    pageType === 'tutorial' && tutorialTitle && tutorialSteps.length === 0
+        ? {
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: tutorialTitle,
+          description: tutorialDescription ?? description ?? '',
+          image: resolvedOgImage,
+          author: authorRef,
+          publisher: {
+            '@type': 'Organization',
+            name: 'Glushkov Modelling',
+            url: siteUrl,
+          },
+          url: canonicalUrl,
+          mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': canonicalUrl,
+          },
+          ...(datePublished ? { datePublished } : {}),
+          ...(dateModified ? { dateModified } : {}),
+          keywords: [
+            tutorialTitle,
+            tutorialCategory,
+            tutorialLevel ? `${tutorialLevel} level` : null,
+            'ship model tutorial',
+            'wooden ship model technique',
+          ]
+              .filter(Boolean)
+              .join(', '),
+        }
+        : null;
 
 // BreadcrumbList
-const allCrumbs = [{ name: 'Home', url: siteUrl }, ...breadcrumbs.map(c => ({ name: c.name, url: siteUrl + c.url }))];
-const breadcrumbSchema = allCrumbs.length > 1 ? {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: allCrumbs.map((c, i) => ({ '@type': 'ListItem', position: i + 1, name: c.name, item: c.url })),
-} : null;
+const allCrumbs = [
+  { name: 'Home', url: siteUrl },
+  ...breadcrumbs.map((crumb) => ({
+    name: crumb.name,
+    url: toAbsoluteUrl(crumb.url),
+  })),
+];
 
-const schemas = [websiteSchema, personSchema, articleSchema, howToSchema, tutorialArticleSchema, breadcrumbSchema].filter(Boolean);
+const breadcrumbSchema =
+    allCrumbs.length > 1
+        ? {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: allCrumbs.map((crumb, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            name: crumb.name,
+            item: crumb.url,
+          })),
+        }
+        : null;
 
-const ogTitle = title ?? 'Glushkov Modelling';
-const ogDescription = description ?? 'A curated archive of historically researched wooden ship models, build logs, and workshop notes.';
+const schemas = [
+  websiteSchema,
+  personSchema,
+  articleSchema,
+  howToSchema,
+  tutorialArticleSchema,
+  breadcrumbSchema,
+].filter(Boolean);
 ---
 
 <link rel="canonical" href={canonicalUrl} />
 
-<meta property="og:type" content={pageType === 'build' || pageType === 'tutorial' ? 'article' : 'website'} />
+<meta
+    property="og:type"
+    content={pageType === 'build' || pageType === 'tutorial' ? 'article' : 'website'}
+/>
 <meta property="og:url" content={canonicalUrl} />
 <meta property="og:title" content={ogTitle} />
 <meta property="og:description" content={ogDescription} />
-<meta property="og:image" content={ogImage} />
+<meta property="og:image" content={resolvedOgImage} />
 <meta property="og:site_name" content="Glushkov Modelling" />
 <meta property="og:locale" content="en_US" />
 
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content={ogTitle} />
 <meta name="twitter:description" content={ogDescription} />
-<meta name="twitter:image" content={ogImage} />
+<meta name="twitter:image" content={resolvedOgImage} />
 
-{schemas.map(schema => (
-  <script type="application/ld+json" set:html={JSON.stringify(schema)} />
-))}
+{schemas.map((schema) => (
+<script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    ))}
