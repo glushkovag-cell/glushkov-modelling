@@ -331,6 +331,41 @@ const seoDatePublished = fullTutorial.date ?? undefined;
         height: auto;
     }
 
+    /* ▼▼▼ НОВОЕ: адаптивные WordPress YouTube embed (включая Shorts) ▼▼▼ */
+
+    /* Сам figure влезает в контент */
+    .tutorial-content :global(figure.wp-block-embed.wp-has-aspect-ratio) {
+        max-width: 100%;
+    }
+
+    /* Общий wrapper как позиционированный контейнер */
+    .tutorial-content :global(figure.wp-block-embed.wp-has-aspect-ratio .wp-block-embed__wrapper) {
+        position: relative;
+        width: 100%;
+        height: 0;
+        overflow: hidden;
+    }
+
+    /* Горизонтальные видео 16:9 */
+    .tutorial-content :global(.wp-embed-aspect-16-9 .wp-block-embed__wrapper) {
+        padding-bottom: 56.25%; /* 9/16 */
+    }
+
+    /* Вертикальные видео 9:16 (Shorts) */
+    .tutorial-content :global(.wp-embed-aspect-9-16 .wp-block-embed__wrapper) {
+        padding-bottom: 177.78%; /* 16/9 */
+    }
+
+    /* iframe растягивается на всю обёртку */
+    .tutorial-content :global(figure.wp-block-embed.wp-has-aspect-ratio .wp-block-embed__wrapper iframe) {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+
     @media (max-width: 768px) {
         h1 {
             font-size: 2rem;
