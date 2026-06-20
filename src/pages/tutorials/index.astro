@@ -15,13 +15,47 @@ import {
     hasFreshNews
 } from '../../lib/wordpress';
 
-const url = new URL(Astro.request.url);
-const categoryParam = url.searchParams.get('categories') || '';
-const tagParam = url.searchParams.get('tags') || '';
-const levelParam = url.searchParams.get('level') || '';
+const requestUrl = new URL(Astro.request.url);
 
-const selectedCategories = categoryParam.split(',').filter(Boolean);
-const selectedTags = tagParam.split(',').filter(Boolean);
+function normalizeListParam(raw: string | null) {
+    if (!raw) return [];
+    return [...new Set(
+        raw
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
+    )].sort();
+}
+
+const selectedCategories = normalizeListParam(requestUrl.searchParams.get('categories'));
+const selectedTags = normalizeListParam(requestUrl.searchParams.get('tags'));
+const levelParam = (requestUrl.searchParams.get('level') || '').trim();
+
+const canonicalUrl = new URL(requestUrl);
+const canonicalCategoryParam = selectedCategories.join(',');
+const canonicalTagParam = selectedTags.join(',');
+
+if (canonicalCategoryParam) {
+    canonicalUrl.searchParams.set('categories', canonicalCategoryParam);
+} else {
+    canonicalUrl.searchParams.delete('categories');
+}
+
+if (canonicalTagParam) {
+    canonicalUrl.searchParams.set('tags', canonicalTagParam);
+} else {
+    canonicalUrl.searchParams.delete('tags');
+}
+
+const currentCategoryParam = requestUrl.searchParams.get('categories') || '';
+const currentTagParam = requestUrl.searchParams.get('tags') || '';
+
+if (
+    currentCategoryParam !== canonicalCategoryParam ||
+    currentTagParam !== canonicalTagParam
+) {
+    return Astro.redirect(canonicalUrl.toString(), 302);
+}
 
 const [categories, tags, allNews] = await Promise.all([
     getTutorialCategories(),
@@ -39,12 +73,28 @@ const selectedTagIds = tags
     .filter((tag) => selectedTags.includes(tag.slug))
     .map((tag) => String(tag.databaseId));
 
-const allTutorials = await getAllTutorials({
-    categoryIn: selectedCategoryIds.length > 0 ? selectedCategoryIds : undefined,
-    tagIn: selectedTagIds.length > 0 ? selectedTagIds : undefined,
-});
+let allTutorials = [];
 
-// сортируем по убыванию просмотров
+try {
+    allTutorials = await getAllTutorials({
+        categoryIn: selectedCategoryIds.length > 0 ? selectedCategoryIds : undefined,
+        tagIn: selectedTagIds.length > 0 ? selectedTagIds : undefined,
+    });
+} catch (error) {
+    console.error('Tutorials filter error', {
+        categoryParam: currentCategoryParam,
+        canonicalCategoryParam,
+        selectedCategories,
+        selectedCategoryIds,
+        tagParam: currentTagParam,
+        canonicalTagParam,
+        selectedTags,
+        selectedTagIds,
+        error,
+    });
+    allTutorials = [];
+}
+
 allTutorials.sort((a, b) => (b.views || 0) - (a.views || 0));
 
 const filteredTutorials = levelParam
@@ -300,14 +350,26 @@ const hasActiveFilters =
         url.searchParams.delete('page');
         window.location.href = url.toString();
     }
+
     function initTutorialLinks() {
         const links = document.querySelectorAll('[data-tutorial-link="true"]');
         links.forEach((link) => {
             link.addEventListener('click', () => {
-                // сохраняем текущий URL со всеми фильтрами
-                sessionStorage.setItem('tutorialsReturnUrl', window.location.href);
+                try {
+                    sessionStorage.setItem('tutorialsReturnUrl', window.location.href);
+                } catch {}
             });
         });
+    }
+
+    function normalizeListParam(raw) {
+        if (!raw) return [];
+        return [...new Set(
+            raw
+                .split(',')
+                .map((s) => s.trim())
+                .filter(Boolean)
+        )].sort();
     }
 
     function initCategoryFilters() {
@@ -324,8 +386,9 @@ const hasActiveFilters =
                         }
 
                         const url = new URL(window.location.href);
-                        const currentCategories =
-                            url.searchParams.get('categories')?.split(',').filter(Boolean) || [];
+                        const currentCategories = normalizeListParam(
+                            url.searchParams.get('categories')
+                        );
 
                         const index = currentCategories.indexOf(slug);
                         if (index > -1) {
@@ -334,8 +397,15 @@ const hasActiveFilters =
                             currentCategories.push(slug);
                         }
 
+                        const normalizedCategories = normalizeListParam(
+                            currentCategories.join(',')
+                        );
+
                         updateURL({
-                            categories: currentCategories.length > 0 ? currentCategories.join(',') : ''
+                            categories:
+                                normalizedCategories.length > 0
+                                    ? normalizedCategories.join(',')
+                                    : ''
                         });
                     });
                 });
@@ -407,9 +477,11 @@ const hasActiveFilters =
                         selected.push(cb.value);
                     });
 
+                    const normalizedTags = normalizeListParam(selected.join(','));
+
                     const url = new URL(window.location.href);
-                    if (selected.length > 0) {
-                        url.searchParams.set('tags', selected.join(','));
+                    if (normalizedTags.length > 0) {
+                        url.searchParams.set('tags', normalizedTags.join(','));
                     } else {
                         url.searchParams.delete('tags');
                     }
@@ -424,7 +496,7 @@ const hasActiveFilters =
                         if (!slug) return;
 
                         const url = new URL(window.location.href);
-                        const tags = url.searchParams.get('tags')?.split(',').filter(Boolean) || [];
+                        const tags = normalizeListParam(url.searchParams.get('tags'));
                         const newTags = tags.filter((t) => t !== slug);
 
                         if (newTags.length > 0) {
