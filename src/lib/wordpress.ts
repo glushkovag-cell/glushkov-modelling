@@ -1,4 +1,5 @@
 const WP_GRAPHQL_URL = import.meta.env.WP_GRAPHQL_URL;
+const WP_GRAPHQL_SECRET = import.meta.env.WP_GRAPHQL_SECRET;
 
 type Variables = Record<string, unknown>;
 
@@ -88,11 +89,17 @@ async function fetchAPI<T>(query: string, variables: Variables = {}): Promise<T>
     throw new Error('WP_GRAPHQL_URL is not defined');
   }
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  if (WP_GRAPHQL_SECRET) {
+    headers['X-GraphQL-Secret'] = WP_GRAPHQL_SECRET;
+  }
+
   const response = await fetch(WP_GRAPHQL_URL, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: JSON.stringify({
       query,
       variables,
