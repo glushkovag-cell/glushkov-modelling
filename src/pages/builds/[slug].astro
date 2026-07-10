@@ -580,6 +580,22 @@ const seoDatePublished = info?.donedate ?? undefined;
     margin: 1rem 0;
   }
 
+  .part-content :global(a) {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
+    text-underline-offset: 0.14em;
+    font-weight: 500;
+  }
+
+  .part-content :global(a:hover),
+  .part-content :global(a:focus-visible) {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+    text-decoration-color: currentColor;
+    font-weight: 700;
+  }
+
   .part-content :global(img) {
     display: block;
     max-width: 100%;

@@ -12,9 +12,9 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/node": "^10.1.4",
+    "@astrojs/node": "^11.0.2",
     "@astrojs/sitemap": "^3.7.3",
-    "astro": "^6.4.8"
+    "astro": "^7.0.6"
   },
   "devDependencies": {
     "lightningcss": "^1.32.0"
