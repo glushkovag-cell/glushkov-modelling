@@ -1,4 +1,3 @@
----
 /**
  * HiResViewer.astro
  *
@@ -402,6 +401,7 @@ const {
     box-shadow: var(--shadow-sm);
   }
 
+  /* ─── Narrow screens (portrait phone) ─── */
   @media (max-width: 900px) {
     .viewer-shell {
       inset: 8px;
@@ -463,6 +463,100 @@ const {
     }
   }
 
+  /* ─── Landscape phone: low height triggers compact mobile layout ─── */
+  /* Activates when height is short (landscape orientation on phones),    */
+  /* regardless of width. Mirrors the max-width:700px mobile rules.       */
+  @media (max-height: 500px) {
+    .viewer-shell {
+      inset: 4px;
+    }
+
+    .viewer-shortcuts {
+      display: none;
+    }
+
+    .viewer-stage {
+      padding: 4px 8px;
+    }
+
+    .viewer-btn {
+      height: 30px;
+      padding: 0 10px;
+      font-size: 0.82rem;
+    }
+
+    .viewer-btn--icon {
+      width: 30px;
+    }
+
+    .viewer-topbar {
+      padding: 6px 12px;
+      gap: 6px;
+    }
+
+    .viewer-title strong {
+      font-size: 0.95rem;
+    }
+
+    .viewer-title span {
+      font-size: 0.75rem;
+    }
+
+    .viewer-btn--desktop {
+      display: none;
+    }
+
+    .viewer-divider {
+      margin: 0 2px;
+    }
+
+    .viewer-bottombar {
+      padding: 6px 12px;
+    }
+
+    .viewer-hint {
+      display: none;
+    }
+  }
+
+  /* ─── Very short landscape (e.g. iPhone SE landscape ~548px wide, 375px tall) ─── */
+  /* Collapse topbar to a single row to maximise stage space.                        */
+  @media (max-height: 420px) {
+    .viewer-topbar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+    }
+
+    .viewer-topbar-row--back,
+    .viewer-topbar-row--title,
+    .viewer-topbar-row--controls {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .viewer-topbar-row--title {
+      overflow: hidden;
+    }
+
+    .viewer-topbar-row--controls {
+      justify-content: flex-end;
+    }
+
+    /* Caption is too small on a collapsed bar — hide it */
+    .viewer-title span {
+      display: none;
+    }
+
+    .viewer-bottombar {
+      display: none;
+    }
+  }
+
+  /* ─── Wide screens: horizontal single-row topbar ─── */
   @media (min-width: 901px) {
     .viewer-topbar {
       display: grid;
