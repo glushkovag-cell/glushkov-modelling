@@ -2,6 +2,7 @@
 export const prerender = false;
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeoHead from '../../components/seo/SeoHead.astro';
 import TutorialCard from '../../components/tutorials/TutorialCard.astro';
 import CategoryFilter from '../../components/tutorials/CategoryFilter.astro';
 import TagFilter from '../../components/tutorials/TagFilter.astro';
@@ -110,6 +111,14 @@ const hasActiveFilters =
 ---
 
 <BaseLayout title="Tutorials - Ship Model Building Guides" hasFreshNews={newsFlag}>
+  <SeoHead
+    slot="head"
+    pageType="default"
+    title="Tutorials — Ship Model Building Guides"
+    description="Learn ship model building techniques, from basic to advanced skills."
+    canonicalPath={`${canonicalUrl.pathname}${canonicalUrl.search}`}
+    breadcrumbs={[{ name: 'Tutorials', url: '/tutorials' }]}
+  />
     <div class="tutorials-page">
         <div class="container">
             <header class="page-header">
