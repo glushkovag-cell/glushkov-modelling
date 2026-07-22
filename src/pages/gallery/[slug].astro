@@ -8,6 +8,7 @@
  */
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeoHead from '../../components/seo/SeoHead.astro';
 import GalleryGrid from '../../components/GalleryGrid.astro';
 import HiResViewer from '../../components/HiResViewer.astro';
 import { getGalleryManifest, getAllGallerySlugs } from '../../lib/gallery';
@@ -36,6 +37,14 @@ const sortedImages = [...manifest.images].sort((a, b) => a.order - b.order);
   description={`Hi-res gallery for ${manifest.title} scale model — ${manifest.meta.focus}`}
   hasFreshNews={newsFlag}
 >
+  <SeoHead
+    slot="head"
+    pageType="gallery"
+    title={`${manifest.galleryTitle} | Glushkov Modelling`}
+    description={`Hi-res gallery for ${manifest.title} scale model — ${manifest.meta.focus}`}
+    canonicalPath={`/gallery/${slug}`}
+    breadcrumbs={manifest.breadcrumbs.map((crumb) => ({ name: crumb.label, url: crumb.href }))}
+  />
   <div class="page-section">
     <div class="container">
 
