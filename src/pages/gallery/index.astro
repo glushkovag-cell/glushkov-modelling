@@ -1,21 +1,26 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeoHead from '../../components/seo/SeoHead.astro';
 import { getAllGalleryEntries } from '../../lib/gallery';
-
 const entries = await getAllGalleryEntries();
 import { getAllNews, hasFreshNews } from '../../lib/wordpress';
-
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
 
 /* console.log('[gallery page] entries:', JSON.stringify(entries, null, 2)); */
 ---
-
-<BaseLayout
-  title="Gallery | Glushkov Modelling"
+<BaseLayout title="Gallery | Glushkov Modelling"
   description="Curated hi-res photo galleries for all scale model builds — rigging, hull, deck details and workshop views."
   hasFreshNews={newsFlag}
 >
+  <SeoHead
+    slot="head"
+    pageType="default"
+    title="Gallery | Glushkov Modelling"
+    description="Curated hi-res photo galleries for all scale model builds — rigging, hull, deck details and workshop views."
+    canonicalPath="/gallery"
+    breadcrumbs={[{ name: 'Gallery', url: '/gallery' }]}
+  />
   <section class="page-section">
     <div class="container">
       <span class="eyebrow">Visual Archive</span>
@@ -56,7 +61,6 @@ const newsFlag = hasFreshNews(allNews);
                     </div>
                   )}
                 </div>
-
                 <div class="gallery-hub-body build-card-body">
                   <p class="eyebrow">{entry.scale}</p>
                   <h2 class="gallery-hub-title">{entry.title}</h2>
@@ -76,7 +80,6 @@ const newsFlag = hasFreshNews(allNews);
     </div>
   </section>
 </BaseLayout>
-
 <style>
   .gallery-hub-lead {
     color: var(--color-text-muted);
@@ -85,26 +88,22 @@ const newsFlag = hasFreshNews(allNews);
     margin-bottom: 28px;
     max-width: 60ch;
   }
-
   .gallery-hub-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 24px;
   }
-
   .gallery-hub-card {
     display: flex;
     flex-direction: column;
     text-decoration: none;
     color: inherit;
   }
-
   .gallery-hub-cover {
     aspect-ratio: 4 / 3;
     overflow: hidden;
     background: var(--color-surface-offset);
   }
-
   .gallery-hub-cover-empty {
     width: 100%;
     height: 100%;
@@ -112,24 +111,20 @@ const newsFlag = hasFreshNews(allNews);
     place-items: center;
     color: var(--color-text-faint);
   }
-
   .gallery-hub-body .eyebrow {
     margin-bottom: 6px;
   }
-
   .gallery-hub-title {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: 1.85rem;
     line-height: 1.05;
     margin: 0 0 8px;
   }
-
   .gallery-hub-count {
     color: var(--color-text-muted);
     font-size: 0.88rem;
     margin: 0;
   }
-
   .gallery-hub-empty {
     padding: 40px 32px;
     border: 1px dashed var(--color-primary-highlight);
@@ -137,7 +132,6 @@ const newsFlag = hasFreshNews(allNews);
     color: var(--color-text-muted);
     text-align: center;
   }
-
   .gallery-hub-empty code {
     font-size: 0.85em;
     background: var(--color-surface-offset);
@@ -145,13 +139,11 @@ const newsFlag = hasFreshNews(allNews);
     border-radius: 4px;
     white-space: nowrap;
   }
-
   @media (max-width: 900px) {
     .gallery-hub-grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }
-
   @media (max-width: 540px) {
     .gallery-hub-grid {
       grid-template-columns: 1fr;
