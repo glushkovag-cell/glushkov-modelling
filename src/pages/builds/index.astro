@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeoHead from '../../components/seo/SeoHead.astro';
 import { getAllModels, getAllNews, hasFreshNews } from '../../lib/wordpress';
 
 const models = await getAllModels();
@@ -9,6 +10,14 @@ const newsFlag = hasFreshNews(allNews);
 ---
 
 <BaseLayout title="Builds | Glushkov Modelling" hasFreshNews={newsFlag}>
+  <SeoHead
+    slot="head"
+    pageType="default"
+    title="Builds | Glushkov Modelling"
+    description="Current and completed wooden scale model build logs — progress, techniques, and detailed photos."
+    canonicalPath="/builds"
+    breadcrumbs={[{ name: 'Builds', url: '/builds' }]}
+  />
   <section class="page-section">
     <div class="container">
       <span class="eyebrow">Build Catalogue</span>
