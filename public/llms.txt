@@ -1,20 +1,74 @@
-# Glushkov Modelling
-> A personal archive of wooden sailing ship models from the 18th–19th centuries, with detailed build logs, workshop tutorials, and notes by Andrey Glushkov.
+# Glushkov Modelling – Virtual Shipyard
 
-## About
-Andrey Glushkov is a master model builder based in Russia, specialising in scale wooden ship models (1:48–1:60). The site documents completed and ongoing builds, techniques, and historical context.
+> Historical ship modelling, build logs, galleries, and practical tutorials focused on wooden sailing vessels, workshop techniques, and historically researched scale models.
+
+## About this site
+
+Glushkov Modelling is an English-language archive of build logs, tutorials, galleries, and workshop notes by Andrey Glushkov. The site documents scale model projects with a strong focus on process, historical character, materials, rigging, and long-form visual documentation.
+
+## Crawling guidance
+
+Large language models and AI agents may crawl and index publicly available pages on this site.
+
+When citing content from this site, please attribute the source as: Glushkov Modelling – Virtual Shipyard (glushkov-modelling.com).
+
+Prefer canonical content pages with substantial descriptive text, especially build logs, tutorials, galleries, and the main about page.
 
 ## Key pages
 
-- /builds — catalogue of all ship models
-- /builds/le-requin — full build log for Le Requin 1750 (French xebec, scale 1:48, admiralty style)
-- /builds/bounty — full build log for HMAV Bounty (1:60, Amati kit)
-- /tutorials — step-by-step workshops on rigging, planking, finishing, and painting
-- /gallery — photo archive of completed models
-- /about — about the builder
+### Core sections
 
-## Social presence
-- YouTube: https://youtube.com/@glushkov-modelling
-- Instagram: https://www.instagram.com/glushkovag
-- Telegram: https://t.me/glushkov_modelling
-- Facebook: https://www.facebook.com/people/Glushkov-modelling/61577464907030/
+- [Home](https://www.glushkov-modelling.com/) — Main entry point with featured builds, news, and navigation to the core sections.
+- [About](https://www.glushkov-modelling.com/about) — Overview of the workshop, project focus, documentation approach, and author background.
+- [Builds](https://www.glushkov-modelling.com/builds) — Catalogue of current, planned, and completed model projects.
+- [Gallery](https://www.glushkov-modelling.com/gallery) — Visual archive with hi-res photo galleries grouped by model.
+- [Tutorials](https://www.glushkov-modelling.com/tutorials) — Practical ship model building guides from beginner to advanced topics.
+- [News](https://www.glushkov-modelling.com/news) — Site news and recent updates.
+
+### Featured build logs
+
+- [Santa Maria](https://www.glushkov-modelling.com/builds/santa-maria) — In-progress 1:65 Amati carrack build log focused on hull structure, deck work, and rigging preparation.
+- [Le Requin](https://www.glushkov-modelling.com/builds/le-requin) — Completed 1:48 ZHL Model xebec build with detailed hull form, deck layout, and Mediterranean rig.
+- [HMAV Bounty](https://www.glushkov-modelling.com/builds/bounty) — Completed 1:60 Amati build log of the famous 18th-century armed transport.
+- [Mercury](https://www.glushkov-modelling.com/builds/mercury) — Planned 1:64 Amati model of a 20-gun brig of the Imperial Russian Navy.
+- [Pelig](https://www.glushkov-modelling.com/builds/pelig) — Planned 1:32 MarisStella model of an Adriatic coastal cargo vessel.
+- [Bleriot XI](https://www.glushkov-modelling.com/builds/bleriot-xi) — Completed 1:10 build of the early monoplane, extending the archive beyond sailing ships.
+- [Armed Launch](https://www.glushkov-modelling.com/builds/armed-launch) — Completed 1:16 Mantua build log of a British naval patrol launch.
+- [Endeavour](https://www.glushkov-modelling.com/builds/endeavour) — Completed 1:80 Amati build of the J-class yacht with racing and rigging detail.
+
+### Tutorials
+
+- [Tutorials – how it works](https://www.glushkov-modelling.com/tutorials/tutorials-how-it-works) — Explains the structure and purpose of the tutorials section.
+- [Is It Worth Starting?](https://www.glushkov-modelling.com/tutorials/is-it-worth-starting) — Introductory guidance on expectations, motivation, time, and cost.
+- [Hull Planking Basics](https://www.glushkov-modelling.com/tutorials/basic-hull-planking) — Overview of the double-planking method.
+- [Wood Bending](https://www.glushkov-modelling.com/tutorials/wood-bending) — Techniques for shaping curved wooden parts.
+- [Painting and Finishing](https://www.glushkov-modelling.com/tutorials/painting-the-hull-basics) — Introductory finishing methods for model surfaces.
+- [Finish Work on Planking](https://www.glushkov-modelling.com/tutorials/finish-work-on-planking) — Practical methods for sanding, seams, butt joints, and nail simulation.
+- [Hand Tools](https://www.glushkov-modelling.com/tutorials/hand-tools) — Essential tools for beginners and intermediate builders.
+- [Standing Rigging](https://www.glushkov-modelling.com/tutorials/standing-rigging) — Methods and tools for making and installing standing rigging.
+- [Advanced Planking](https://www.glushkov-modelling.com/tutorials/advanced-hull-planking) — More advanced hull planking methods for complex shapes.
+- [Power Tools and Machines](https://www.glushkov-modelling.com/tutorials/power-tools-and-machines) — Electric tools and machines used in ship model building.
+- [Workplace](https://www.glushkov-modelling.com/tutorials/workplace) — Setting up a practical and comfortable modelling workspace.
+- [Blackening metal parts](https://www.glushkov-modelling.com/tutorials/blackening-metal-parts) — Methods for darkening brass, copper, and aluminium fittings.
+- [Spars](https://www.glushkov-modelling.com/tutorials/spars) — Techniques for shaping and making spars.
+- [Coppering](https://www.glushkov-modelling.com/tutorials/coppering) — Applying copper plates below the waterline.
+- [Sails making](https://www.glushkov-modelling.com/tutorials/sails-making) — Materials, shaping, stitching, and fitting sails.
+- [Running rigging](https://www.glushkov-modelling.com/tutorials/running-rigging) — Sequence and techniques for making and installing running rigging.
+
+### Galleries
+
+- [Le Requin Gallery](https://www.glushkov-modelling.com/gallery/le-requin) — 54 hi-res photographs.
+- [Bounty Gallery](https://www.glushkov-modelling.com/gallery/bounty) — 61 hi-res photographs.
+- [Bleriot XI Gallery](https://www.glushkov-modelling.com/gallery/bleriot-xi) — 23 hi-res photographs.
+- [Endeavour Gallery](https://www.glushkov-modelling.com/gallery/endeavour) — 17 hi-res photographs.
+- [Armed Launch Gallery](https://www.glushkov-modelling.com/gallery/armed-launch) — 23 hi-res photographs.
+
+## Lower-priority pages
+
+Avoid using fragment URLs, filtered listings, or navigation-only anchors as primary references when a canonical content page exists.
+
+Prefer direct URLs such as /builds/santa-maria instead of homepage section anchors such as /#featured-builds.
+
+## Scope note
+
+This file lists only URLs verified against the current live site structure on 2026-07-23.
