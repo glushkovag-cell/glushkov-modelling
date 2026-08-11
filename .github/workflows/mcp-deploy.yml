@@ -1,27 +1,35 @@
-name: Deploy to VPS
+name: Deploy MCP Server to VPS
 
 on:
   push:
     branches:
       - main
-    paths-ignore:
+    paths:
       - 'mcp-server/**'
+      - '.github/workflows/mcp-deploy.yml'
   workflow_dispatch:
+
+concurrency:
+  group: mcp-deploy
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mcp-server
 
     env:
       NODE_VERSION: "22"
       DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
       DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}      # deploy
-      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}      # /var/www/astro-glushkov
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}          # deploy
+      MCP_DEPLOY_PATH: /var/www/mcp-glushkov
+      MCP_API_KEY: ${{ secrets.MCP_API_KEY }}
       WP_GRAPHQL_URL: ${{ secrets.WP_GRAPHQL_URL }}
-      CMS_GALLERY_URL: ${{ secrets.CMS_GALLERY_URL }}
-      PUBLIC_WP_REST_URL: ${{ secrets.PUBLIC_WP_REST_URL }}
-      WP_GRAPHQL_SECRET: ${{ secrets.WP_GRAPHQL_SECRET }}  # ← добавлено
+      WP_READONLY_USERNAME: ${{ secrets.WP_READONLY_USERNAME }}
+      WP_READONLY_APP_PASSWORD: ${{ secrets.WP_READONLY_APP_PASSWORD }}
 
     steps:
       - name: Checkout repository
@@ -32,16 +40,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+          cache-dependency-path: mcp-server/package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
       - name: Build project
-        env:
-          WP_GRAPHQL_URL: ${{ env.WP_GRAPHQL_URL }}
-          CMS_GALLERY_URL: ${{ env.CMS_GALLERY_URL }}
-          PUBLIC_WP_REST_URL: ${{ env.PUBLIC_WP_REST_URL }}
-          WP_GRAPHQL_SECRET: ${{ env.WP_GRAPHQL_SECRET }}  # ← добавлено
         run: npm run build
 
       - name: Prepare SSH
@@ -57,7 +61,6 @@ jobs:
           test -n "${DEPLOY_HOST}"
           test -n "${DEPLOY_PORT}"
           test -n "${DEPLOY_USER}"
-          test -n "${DEPLOY_PATH}"
 
           ssh-keyscan -p "${DEPLOY_PORT}" -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
@@ -70,19 +73,19 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "echo connected"
 
-      - name: Deploy dist via rsync
+      - name: Deploy build via rsync
         run: |
           rsync -az --delete \
             -e "ssh -p ${DEPLOY_PORT} -i ~/.ssh/github_actions_deploy -o StrictHostKeyChecking=yes" \
-            dist/ \
-            "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/dist/"
+            build/ \
+            "${DEPLOY_USER}@${DEPLOY_HOST}:${MCP_DEPLOY_PATH}/build/"
 
       - name: Deploy package.json and package-lock.json
         run: |
           rsync -az \
             -e "ssh -p ${DEPLOY_PORT} -i ~/.ssh/github_actions_deploy -o StrictHostKeyChecking=yes" \
             package.json package-lock.json \
-            "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/"
+            "${DEPLOY_USER}@${DEPLOY_HOST}:${MCP_DEPLOY_PATH}/"
 
       - name: Update .env on VPS
         run: |
@@ -90,16 +93,15 @@ jobs:
             -i ~/.ssh/github_actions_deploy \
             -o StrictHostKeyChecking=yes \
             "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
-          cat > "${DEPLOY_PATH}/.env" <<EOT
+          cat > "${MCP_DEPLOY_PATH}/.env" <<EOT
+          MCP_API_KEY=${MCP_API_KEY}
           WP_GRAPHQL_URL=${WP_GRAPHQL_URL}
-          CMS_GALLERY_URL=${CMS_GALLERY_URL}
-          PUBLIC_WP_REST_URL=${PUBLIC_WP_REST_URL}
-          WP_GRAPHQL_SECRET=${WP_GRAPHQL_SECRET}
-          HOST=0.0.0.0
-          PORT=4321
-          DEPLOYPATH=${DEPLOY_PATH}
+          WP_READONLY_USERNAME=${WP_READONLY_USERNAME}
+          WP_READONLY_APP_PASSWORD=${WP_READONLY_APP_PASSWORD}
+          HOST=127.0.0.1
+          PORT=4322
           EOT
-          chmod 600 "${DEPLOY_PATH}/.env"
+          chmod 600 "${MCP_DEPLOY_PATH}/.env"
           EOF
 
       - name: Install production dependencies on VPS
@@ -108,15 +110,15 @@ jobs:
             -i ~/.ssh/github_actions_deploy \
             -o StrictHostKeyChecking=yes \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "cd '${DEPLOY_PATH}' && npm ci --omit=dev"
+            "cd '${MCP_DEPLOY_PATH}' && npm ci --omit=dev"
 
-      - name: Restart Astro with PM2
+      - name: Restart MCP server with PM2
         run: |
           ssh -p "${DEPLOY_PORT}" \
             -i ~/.ssh/github_actions_deploy \
             -o StrictHostKeyChecking=yes \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "cd '${DEPLOY_PATH}' && pm2 restart astro-site || pm2 start dist/server/entry.mjs --name astro-site --node-args='--env-file=.env'"
+            "cd '${MCP_DEPLOY_PATH}' && pm2 restart mcp-server || pm2 start build/index.js --name mcp-server --node-args='--env-file=.env'"
 
       - name: Save PM2 process list
         run: |
