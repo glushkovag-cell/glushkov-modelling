@@ -28,6 +28,7 @@ jobs:
       MCP_DEPLOY_PATH: /var/www/mcp-glushkov
       MCP_API_KEY: ${{ secrets.MCP_API_KEY }}
       WP_GRAPHQL_URL: ${{ secrets.WP_GRAPHQL_URL }}
+      WP_GRAPHQL_SECRET: ${{ secrets.WP_GRAPHQL_SECRET }}
       WP_READONLY_USERNAME: ${{ secrets.WP_READONLY_USERNAME }}
       WP_READONLY_APP_PASSWORD: ${{ secrets.WP_READONLY_APP_PASSWORD }}
       GALLERY_MANIFEST_PATH: /var/www/cms/gallery
@@ -98,6 +99,7 @@ jobs:
           cat > "${MCP_DEPLOY_PATH}/.env" <<EOT
           MCP_API_KEY=${MCP_API_KEY}
           WP_GRAPHQL_URL=${WP_GRAPHQL_URL}
+          WP_GRAPHQL_SECRET=${WP_GRAPHQL_SECRET}
           WP_READONLY_USERNAME=${WP_READONLY_USERNAME}
           WP_READONLY_APP_PASSWORD=${WP_READONLY_APP_PASSWORD}
           GALLERY_MANIFEST_PATH=${GALLERY_MANIFEST_PATH}

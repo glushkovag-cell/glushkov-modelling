@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { errorResult } from "../lib/tool-result.js";
-// import { requestWithTimeout } from "../lib/graphql-client.js";
+import { errorResult, jsonResult } from "../lib/tool-result.js";
+import { fetchAllModels, findModelByName, statusSlugOf, statusTextOf } from "../lib/wp-models.js";
 
 const inputSchema = {
   buildName: z
@@ -10,10 +10,6 @@ const inputSchema = {
     .describe("Название постройки (например, 'Le Requin', 'Bounty')."),
 };
 
-/**
- * TODO(Этап 1): реализовать запрос значения ACF-поля buildStatus через WPGraphQL
- * для постройки с указанным названием.
- */
 export function registerGetProjectStatus(server: McpServer): void {
   server.registerTool(
     "get_project_status",
@@ -26,9 +22,24 @@ export function registerGetProjectStatus(server: McpServer): void {
     },
     async ({ buildName }) => {
       try {
-        return errorResult(
-          `get_project_status пока не реализован (запрошена постройка: ${buildName}).`,
-        );
+        const models = await fetchAllModels();
+        const model = findModelByName(models, buildName);
+
+        if (!model) {
+          return errorResult(
+            `Постройка '${buildName}' не найдена. Доступные названия: ${models
+              .map((m) => m.title)
+              .join(", ")}.`,
+          );
+        }
+
+        return jsonResult({
+          title: model.title,
+          slug: model.slug,
+          status: statusTextOf(model) || null,
+          statusSlug: statusSlugOf(model) || null,
+          doneDate: model.modelinfo?.donedate ?? null,
+        });
       } catch (error) {
         return errorResult(
           `Ошибка при получении статуса постройки: ${(error as Error).message}`,

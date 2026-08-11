@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { errorResult } from "../lib/tool-result.js";
-// import { requestWithTimeout } from "../lib/graphql-client.js";
+import { errorResult, jsonResult } from "../lib/tool-result.js";
+import { fetchAllModels, statusSlugOf, statusTextOf } from "../lib/wp-models.js";
 
 const inputSchema = {
   status: z
@@ -17,12 +17,6 @@ const inputSchema = {
     .describe("Максимальное количество построек в ответе."),
 };
 
-/**
- * TODO(Этап 1): реализовать реальный GraphQL-запрос к WPGraphQL custom post type
- * построек, когда будет доступна схема (интроспекция или примеры запросов
- * из Astro-кода). Пока — заглушка, возвращающая понятную ошибку "not implemented",
- * чтобы MCP Inspector корректно показывал зарегистрированный инструмент.
- */
 export function registerListBuilds(server: McpServer): void {
   server.registerTool(
     "list_builds",
@@ -35,10 +29,30 @@ export function registerListBuilds(server: McpServer): void {
     },
     async ({ status, limit }) => {
       try {
-        // Заглушка до реализации реального запроса к WPGraphQL.
-        return errorResult(
-          `list_builds пока не реализован (получен фильтр status=${status ?? "не задан"}, limit=${limit}).`,
-        );
+        const models = await fetchAllModels();
+
+        const filtered = status
+          ? models.filter((model) => statusSlugOf(model) === status)
+          : models;
+
+        const builds = filtered.slice(0, limit).map((model) => ({
+          slug: model.slug,
+          title: model.title,
+          manufacturer: model.modelinfo?.manufacturer ?? null,
+          scale: model.modelinfo?.modelscale ?? null,
+          status: statusTextOf(model) || null,
+          statusSlug: statusSlugOf(model) || null,
+          historicalYear: model.modelinfo?.historicalyear ?? null,
+          totalParts: model.modelinfo?.totalparts ?? null,
+          doneDate: model.modelinfo?.donedate ?? null,
+        }));
+
+        return jsonResult({
+          total: builds.length,
+          totalAvailable: filtered.length,
+          status: status ?? null,
+          builds,
+        });
       } catch (error) {
         return errorResult(
           `Ошибка при получении списка построек: ${(error as Error).message}`,

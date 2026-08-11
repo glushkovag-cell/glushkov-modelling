@@ -10,6 +10,11 @@ import { config } from "./config.js";
 function buildHeaders(): Record<string, string> {
   const headers: Record<string, string> = {};
 
+  // Тот же заголовок, что и у Astro-сайта — без него Cloudflare/WAF возвращает 404.
+  if (config.wpGraphqlSecret) {
+    headers["X-GraphQL-Secret"] = config.wpGraphqlSecret;
+  }
+
   if (config.wpReadonlyUsername && config.wpReadonlyAppPassword) {
     const token = Buffer.from(
       `${config.wpReadonlyUsername}:${config.wpReadonlyAppPassword}`,

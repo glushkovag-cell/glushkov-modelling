@@ -28,6 +28,9 @@ export const config = {
     .filter((origin) => origin.length > 0),
 
   wpGraphqlUrl: requireEnv("WP_GRAPHQL_URL"),
+  // Заголовок X-GraphQL-Secret — та же защита, что использует Astro-сайт (src/lib/wordpress.ts).
+  // Без него эндпоинт возвращает 404 (Cloudflare/WAF).
+  wpGraphqlSecret: optionalEnv("WP_GRAPHQL_SECRET", ""),
   wpReadonlyUsername: optionalEnv("WP_READONLY_USERNAME", ""),
   wpReadonlyAppPassword: optionalEnv("WP_READONLY_APP_PASSWORD", ""),
 
