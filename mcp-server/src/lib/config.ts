@@ -31,7 +31,13 @@ export const config = {
   wpReadonlyUsername: optionalEnv("WP_READONLY_USERNAME", ""),
   wpReadonlyAppPassword: optionalEnv("WP_READONLY_APP_PASSWORD", ""),
 
-  galleryManifestPath: optionalEnv("GALLERY_MANIFEST_PATH", ""),
+  // Корневой каталог галереи на файловой системе VPS (см. Этап 0/1: подтверждён доступ пользователя deploy).
+  galleryManifestPath: optionalEnv("GALLERY_MANIFEST_PATH", "/var/www/cms/gallery"),
+
+  // Публичный базовый URL, по которому /var/www/cms/gallery раздаётся веб-сервером
+  // (та же переменная, что использует Astro-сайт в src/lib/gallery.ts) — нужен,
+  // чтобы строить рабочие ссылки на изображения, а не голые относительные пути.
+  cmsGalleryUrl: requireEnv("CMS_GALLERY_URL").replace(/\/$/, ""),
 
   // Лимиты по умолчанию для read-only инструментов
   defaultResponseLimit: 50,

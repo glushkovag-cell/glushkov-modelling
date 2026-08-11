@@ -30,6 +30,8 @@ jobs:
       WP_GRAPHQL_URL: ${{ secrets.WP_GRAPHQL_URL }}
       WP_READONLY_USERNAME: ${{ secrets.WP_READONLY_USERNAME }}
       WP_READONLY_APP_PASSWORD: ${{ secrets.WP_READONLY_APP_PASSWORD }}
+      GALLERY_MANIFEST_PATH: /var/www/cms/gallery
+      CMS_GALLERY_URL: ${{ secrets.CMS_GALLERY_URL }}
 
     steps:
       - name: Checkout repository
@@ -98,6 +100,8 @@ jobs:
           WP_GRAPHQL_URL=${WP_GRAPHQL_URL}
           WP_READONLY_USERNAME=${WP_READONLY_USERNAME}
           WP_READONLY_APP_PASSWORD=${WP_READONLY_APP_PASSWORD}
+          GALLERY_MANIFEST_PATH=${GALLERY_MANIFEST_PATH}
+          CMS_GALLERY_URL=${CMS_GALLERY_URL}
           HOST=127.0.0.1
           PORT=4322
           EOT
