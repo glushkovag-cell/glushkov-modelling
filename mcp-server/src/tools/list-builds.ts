@@ -5,16 +5,16 @@ import { fetchAllModels, statusSlugOf, statusTextOf } from "../lib/wp-models.js"
 
 const inputSchema = {
   status: z
-    .enum(["in-progress", "completed", "planned"])
+    .enum(["in progress", "completed", "planned"])
     .optional()
-    .describe("Фильтр по статусу постройки. Если не указан, возвращаются все."),
+    .describe("Filter by build status. If not specified, all are returned."),
   limit: z
     .number()
     .int()
     .min(1)
     .max(100)
     .default(50)
-    .describe("Максимальное количество построек в ответе."),
+    .describe("Maximum number of builds in the response."),
 };
 
 export function registerListBuilds(server: McpServer): void {
@@ -23,8 +23,8 @@ export function registerListBuilds(server: McpServer): void {
     {
       title: "Список построек",
       description:
-        "Возвращает список моделей парусных судов на сайте: название, масштаб, " +
-        "производитель, статус постройки. Поддерживает фильтр по статусу.",
+        "Returns a list of sailing ship models on the site: name, scale, manufacturer, and build status. " +
+        "Supports filtering by status.",
       inputSchema,
     },
     async ({ status, limit }) => {
@@ -55,7 +55,7 @@ export function registerListBuilds(server: McpServer): void {
         });
       } catch (error) {
         return errorResult(
-          `Ошибка при получении списка построек: ${(error as Error).message}`,
+          `Error retrieving list of builds: ${(error as Error).message}`,
         );
       }
     },

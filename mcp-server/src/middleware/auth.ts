@@ -12,7 +12,7 @@ export function bearerAuth(req: Request, res: Response, next: NextFunction): voi
   if (scheme !== "Bearer" || !token || token !== config.mcpApiKey) {
     res.status(401).json({
       error: "unauthorized",
-      message: "Требуется корректный заголовок Authorization: Bearer <API_KEY>.",
+      message: "A valid Authorization header is required: Bearer <API_KEY>.",
     });
     return;
   }

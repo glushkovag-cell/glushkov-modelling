@@ -7,17 +7,17 @@ const inputSchema = {
   buildName: z
     .string()
     .min(1)
-    .describe("Название постройки (например, 'Le Requin', 'Bounty')."),
+    .describe("Model name (for example, 'Le Requin', 'Bounty')."),
 };
 
 export function registerGetProjectStatus(server: McpServer): void {
   server.registerTool(
     "get_project_status",
     {
-      title: "Статус постройки",
+      title: "Build status",
       description:
-        "Возвращает текущий статус постройки модели по названию: " +
-        "in-progress, completed или planned (ACF-поле buildStatus).",
+        "Returns the current build status of the model by name: " +
+        "in progress, completed или planned (ACF-field buildStatus).",
       inputSchema,
     },
     async ({ buildName }) => {
@@ -27,7 +27,7 @@ export function registerGetProjectStatus(server: McpServer): void {
 
         if (!model) {
           return errorResult(
-            `Постройка '${buildName}' не найдена. Доступные названия: ${models
+            `Model '${buildName}' not found. Available models: ${models
               .map((m) => m.title)
               .join(", ")}.`,
           );
@@ -42,7 +42,7 @@ export function registerGetProjectStatus(server: McpServer): void {
         });
       } catch (error) {
         return errorResult(
-          `Ошибка при получении статуса постройки: ${(error as Error).message}`,
+          `Error retrieving build status: ${(error as Error).message}`,
         );
       }
     },

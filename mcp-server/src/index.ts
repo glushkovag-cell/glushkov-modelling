@@ -46,7 +46,7 @@ app.post("/mcp", originCheck, bearerAuth, async (req, res) => {
       server.close();
     });
   } catch (error) {
-    console.error("Ошибка обработки MCP-запроса:", error);
+    console.error("Error processing MCP-query:", error);
     if (!res.headersSent) {
       res.status(500).json({
         jsonrpc: "2.0",
@@ -77,16 +77,16 @@ app.delete("/mcp", (_req, res) => {
 
 app.listen(config.port, config.host, () => {
   console.log(
-    `MCP-сервер glushkov-modelling слушает на ${config.host}:${config.port}`,
+    `MCP-server glushkov-modelling listen on ${config.host}:${config.port}`,
   );
 });
 
 process.on("SIGINT", () => {
-  console.log("Остановка MCP-сервера...");
+  console.log("Stop MCP-server...");
   process.exit(0);
 });
 
 process.on("SIGTERM", () => {
-  console.log("Остановка MCP-сервера...");
+  console.log("Stop MCP-server...");
   process.exit(0);
 });

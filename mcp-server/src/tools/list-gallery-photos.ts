@@ -37,13 +37,13 @@ const inputSchema = {
     .string()
     .optional()
     .describe(
-      "Slug постройки для фильтрации, например 'le-requin'. Если не указан — фото по всем постройкам.",
+      "The building slug used for filtering, e.g., 'le-requin'. If not specified, photos for all buildings are shown.",
     ),
   tag: z
     .string()
     .optional()
     .describe(
-      `Категория фото внутри постройки (поле "section" в манифесте галереи). Известные значения: ${KNOWN_SECTIONS.join(", ")}.`,
+      `Category for photos taken inside the structure (the "section" field in the gallery manifest). Known values: ${KNOWN_SECTIONS.join(", ")}.`,
     ),
   limit: z
     .number()
@@ -51,7 +51,7 @@ const inputSchema = {
     .min(1)
     .max(100)
     .default(50)
-    .describe("Максимальное количество фото в ответе."),
+    .describe("Maximum number of photos in the response."),
 };
 
 /** Собирает публичный URL из относительного пути манифеста, используя CMS_GALLERY_URL. */
@@ -93,23 +93,23 @@ export function registerListGalleryPhotos(server: McpServer): void {
     {
       title: "Фото из галереи",
       description:
-        "Возвращает список фотографий из галереи сайта (glushkov-modelling.com), с " +
-        "фильтрацией по постройке (project, например 'le-requin') и/или категории " +
-        `фото (tag: ${KNOWN_SECTIONS.join(", ")}).`,
+        "Returns a list of photos from the website gallery (glushkov-modelling.com), with" +
+        "filtering by building (project, for example 'le-requin') and/or category " +
+        `photo (tag: ${KNOWN_SECTIONS.join(", ")}).`,
       inputSchema,
     },
     async ({ project, tag, limit }) => {
       try {
         if (!config.galleryManifestPath) {
           return errorResult(
-            "GALLERY_MANIFEST_PATH не задан в конфигурации сервера.",
+            "GALLERY_MANIFEST_PATH not specified in server configuration.",
           );
         }
 
         const allSlugs = await getGallerySlugs();
         if (allSlugs.length === 0) {
           return errorResult(
-            "Не удалось получить список построек с галереей (index/models.json пуст или недоступен).",
+            "Failed to retrieve the list of buildings with a gallery (index/models.json is empty or inaccessible).",
           );
         }
 
@@ -117,7 +117,7 @@ export function registerListGalleryPhotos(server: McpServer): void {
         if (project) {
           if (!allSlugs.includes(project)) {
             return errorResult(
-              `Постройка со slug='${project}' не найдена в галерее. Доступные значения: ${allSlugs.join(", ")}.`,
+              `Build with slug='${project}' not found in gallery. Available slugs: ${allSlugs.join(", ")}.`,
             );
           }
           slugsToRead = [project];
@@ -177,13 +177,13 @@ export function registerListGalleryPhotos(server: McpServer): void {
         };
 
         if (tag && !KNOWN_SECTIONS.includes(tag)) {
-          result.note = `Тег '${tag}' не входит в известный список категорий (${KNOWN_SECTIONS.join(", ")}) — возможно, опечатка.`;
+          result.note = `Tag '${tag}' not found in known category list (${KNOWN_SECTIONS.join(", ")}) — possible typo`;
         }
 
         return jsonResult(result);
       } catch (error) {
         return errorResult(
-          `Ошибка при получении фото галереи: ${(error as Error).message}`,
+          `Error retrieving gallery photo: ${(error as Error).message}`,
         );
       }
     },

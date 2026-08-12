@@ -26,7 +26,7 @@ export function originCheck(req: Request, res: Response, next: NextFunction): vo
   if (!config.allowedOrigins.includes(origin)) {
     res.status(403).json({
       error: "forbidden_origin",
-      message: `Origin '${origin}' не входит в список разрешённых.`,
+      message: `Origin '${origin}' not allowed.`,
     });
     return;
   }

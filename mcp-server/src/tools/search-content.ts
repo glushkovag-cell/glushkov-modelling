@@ -71,7 +71,7 @@ const inputSchema = {
   query: z
     .string()
     .min(2)
-    .describe("Поисковый запрос для полнотекстового поиска по build-логам и статьям."),
+    .describe("Search query for full-text search across build logs and articles."),
   limit: z
     .number()
     .int()
@@ -87,8 +87,8 @@ export function registerSearchContent(server: McpServer): void {
     {
       title: "Поиск по контенту",
       description:
-        "Выполняет поиск по build-логам построек (полнотекстовый, через WPGraphQL) и " +
-        "обучающим статьям сайта (по названию и краткому описанию).",
+        "Searches through build logs (full-text, via WPGraphQL) and " +
+        "the site's tutorials (by title and short description).",
       inputSchema,
     },
     async ({ query, limit }) => {
@@ -133,12 +133,12 @@ export function registerSearchContent(server: McpServer): void {
           buildLogResults,
           tutorialResults,
           note:
-            "Поиск по статьям выполняется по названию и краткому описанию (тизеру), " +
-            "не по полному тексту — WPGraphQL-резолвер обучающих статей не поддерживает " +
-            "полнотекстовый поиск.",
+            "Article searches are performed based on the title and short description (teaser), " +
+            "not the full text—the WPGraphQL resolver for educational articles does not support " +
+            "full-text search.",
         });
       } catch (error) {
-        return errorResult(`Ошибка при поиске контента: ${(error as Error).message}`);
+        return errorResult(`Error searching content: ${(error as Error).message}`);
       }
     },
   );

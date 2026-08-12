@@ -132,7 +132,7 @@ const inputSchema = {
     .string()
     .optional()
     .describe(
-      "Slug конкретной обучающей статьи. Если не указан, возвращается список всех статей.",
+      "The slug of a specific educational article. If not specified, a list of all articles is returned.",
     ),
 };
 
@@ -140,9 +140,9 @@ export function registerGetTutorials(server: McpServer): void {
   server.registerTool(
     "get_tutorials",
     {
-      title: "Обучающие статьи",
+      title: "Tutorials",
       description:
-        "Возвращает список обучающих статей сайта или содержание конкретной статьи по slug.",
+        "Returns a list of the site's educational articles or the content of a specific article based on its slug.",
       inputSchema,
     },
     async ({ slug }) => {
@@ -154,7 +154,7 @@ export function registerGetTutorials(server: McpServer): void {
           );
 
           if (!data.tutorial) {
-            return errorResult(`Обучающая статья со slug='${slug}' не найдена.`);
+            return errorResult(`Tutorial with slug='${slug}' not found.`);
           }
 
           const t = data.tutorial;
@@ -204,7 +204,7 @@ export function registerGetTutorials(server: McpServer): void {
         return jsonResult({ total: tutorials.length, tutorials });
       } catch (error) {
         return errorResult(
-          `Ошибка при получении обучающих статей: ${(error as Error).message}`,
+          `Error retrieving tutorials: ${(error as Error).message}`,
         );
       }
     },

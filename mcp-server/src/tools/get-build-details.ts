@@ -14,17 +14,17 @@ const inputSchema = {
   buildName: z
     .string()
     .min(1)
-    .describe("Название постройки, о которой нужна подробная информация."),
+    .describe("Name of the build (model) for which detailed information is required."),
 };
 
 export function registerGetBuildDetails(server: McpServer): void {
   server.registerTool(
     "get_build_details",
     {
-      title: "Подробности постройки",
+      title: "Build details",
       description:
-        "Возвращает историческую справку о судне, список частей серии build-логов " +
-        "и технические заметки по указанной постройке.",
+        "Returns historical information about the vessel, a list of build-log series parts " +
+        "and technical notes regarding the specified build.",
       inputSchema,
     },
     async ({ buildName }) => {
@@ -34,7 +34,7 @@ export function registerGetBuildDetails(server: McpServer): void {
 
         if (!model) {
           return errorResult(
-            `Постройка '${buildName}' не найдена. Доступные названия: ${models
+            `Model '${buildName}' not found. Available models: ${models
               .map((m) => m.title)
               .join(", ")}.`,
           );
@@ -66,7 +66,7 @@ export function registerGetBuildDetails(server: McpServer): void {
         });
       } catch (error) {
         return errorResult(
-          `Ошибка при получении деталей постройки: ${(error as Error).message}`,
+          `Error retrieving building details: ${(error as Error).message}`,
         );
       }
     },

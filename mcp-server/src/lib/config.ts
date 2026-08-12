@@ -6,7 +6,7 @@
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value || value.trim() === "") {
-    throw new Error(`Отсутствует обязательная переменная окружения: ${name}`);
+    throw new Error(`Required environment variable is missing: ${name}`);
   }
   return value;
 }
