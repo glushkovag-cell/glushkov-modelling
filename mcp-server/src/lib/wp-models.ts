@@ -108,6 +108,16 @@ export function statusTextOf(model: ModelNode): string {
   return Array.isArray(raw) ? raw.join(", ") : raw || "";
 }
 
+/** Фильтрует модели по статусу постройки. Входной статус (например, из enum
+ * инструмента, где значения содержат пробелы: "in progress") приводится к тому
+ * же slug-формату, что и statusSlugOf, перед сравнением — устраняет несовпадение
+ * "in-progress" (ACF slug) vs "in progress" (enum), из-за которого list_builds
+ * и list_model_slugs не находили постройки со статусом "in progress". */
+export function filterModelsByStatus(models: ModelNode[], status: string): ModelNode[] {
+  const target = slugifyStatus(status);
+  return models.filter((model) => statusSlugOf(model) === target);
+}
+
 let modelsCache: { data: ModelNode[]; fetchedAt: number } | null = null;
 const CACHE_TTL_MS = 60_000;
 

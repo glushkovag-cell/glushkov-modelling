@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
-import { fetchAllModels, statusSlugOf, statusTextOf } from "../lib/wp-models.js";
+import { fetchAllModels, filterModelsByStatus, statusSlugOf, statusTextOf } from "../lib/wp-models.js";
 
 const inputSchema = {
   status: z
@@ -31,10 +31,8 @@ export function registerListBuilds(server: McpServer): void {
       try {
         const models = await fetchAllModels();
 
-        const filtered = status
-          ? models.filter((model) => statusSlugOf(model) === status)
-          : models;
-
+        const filtered = status ? filterModelsByStatus(models, status) : models;
+        
         const builds = filtered.slice(0, limit).map((model) => ({
           slug: model.slug,
           title: model.title,

@@ -3,6 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
 import {
   fetchAllModels,
+  filterModelsByStatus,
   findModelsByNamePartial,
   statusSlugOf,
   statusTextOf,
@@ -58,7 +59,7 @@ export function registerListModelSlugs(server: McpServer): void {
         let filtered = name ? findModelsByNamePartial(models, name) : models;
 
         if (status) {
-          filtered = filtered.filter((m) => statusSlugOf(m) === status);
+          filtered = filterModelsByStatus(filtered, status);
         }
 
         if (manufacturer) {
