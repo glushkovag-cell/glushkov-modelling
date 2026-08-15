@@ -151,3 +151,20 @@ export function stripHtmlAndTruncate(html: string | null | undefined, maxLength 
     .trim();
   return text.length > maxLength ? `${text.slice(0, maxLength).trim()}…` : text;
 }
+
+/**
+ * Ищет все постройки, чьё название или slug частично совпадает с запросом
+ * (без учёта регистра). В отличие от findModelByName (первое строгое совпадение),
+ * возвращает все совпадения — используется резолвером slug (list_model_slugs),
+ * чтобы явно показать клиенту неоднозначность, если она есть.
+ */
+export function findModelsByNamePartial(models: ModelNode[], query: string): ModelNode[] {
+  const needle = query.trim().toLowerCase();
+  if (!needle) return models;
+
+  return models.filter(
+    (m) =>
+      m.title.trim().toLowerCase().includes(needle) ||
+      m.slug.toLowerCase().includes(needle),
+  );
+}

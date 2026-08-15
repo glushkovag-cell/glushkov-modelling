@@ -1,131 +1,8 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
-import { requestWithTimeout } from "../lib/graphql-client.js";
 import { stripHtmlAndTruncate } from "../lib/wp-models.js";
-
-interface TutorialFieldsNode {
-  tutorialTeaser?: string | null;
-  tutorialLevel?: string[] | string | null;
-  views?: number | null;
-  tutorialRelatedBuilds?: { nodes?: RelatedBuildNode[] } | null;
-  tutorialRelatedTutorials?: { nodes?: RelatedTutorialNode[] } | null;
-}
-
-interface RelatedBuildNode {
-  __typename?: string;
-  id?: string;
-  title?: string;
-  slug?: string;
-  modelinfo?: { shortdescription?: string | null; modelscale?: string | null } | null;
-}
-
-interface RelatedTutorialNode {
-  __typename?: string;
-  id?: string;
-  title?: string;
-  slug?: string;
-  tutorialFields?: { tutorialTeaser?: string | null; tutorialLevel?: string[] | string | null } | null;
-}
-
-interface TutorialTermNode {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-interface TutorialListNode {
-  id: string;
-  databaseId?: number;
-  title: string;
-  slug: string;
-  tutorialFields?: TutorialFieldsNode | null;
-  tutorialCategories?: { nodes: TutorialTermNode[] } | null;
-  tutorialTags?: { nodes: TutorialTermNode[] } | null;
-}
-
-interface TutorialDetailNode extends TutorialListNode {
-  content?: string | null;
-}
-
-interface GetTutorialsResponse {
-  tutorialsFiltered: TutorialListNode[];
-}
-
-interface GetTutorialBySlugResponse {
-  tutorial: TutorialDetailNode | null;
-}
-
-const TUTORIALS_QUERY = `
-  query GetTutorials {
-    tutorialsFiltered(where: {}) {
-      id
-      databaseId
-      title
-      slug
-      tutorialFields {
-        tutorialTeaser
-        tutorialLevel
-        views
-      }
-      tutorialCategories {
-        nodes { id name slug }
-      }
-      tutorialTags {
-        nodes { id name slug }
-      }
-    }
-  }
-`;
-
-const TUTORIAL_BY_SLUG_QUERY = `
-  query GetTutorialBySlug($slug: ID!) {
-    tutorial(id: $slug, idType: SLUG) {
-      id
-      databaseId
-      title
-      slug
-      content
-      tutorialFields {
-        tutorialTeaser
-        tutorialLevel
-        views
-        tutorialRelatedBuilds {
-          nodes {
-            __typename
-            ... on Model {
-              id
-              title
-              slug
-              modelinfo { shortdescription modelscale }
-            }
-          }
-        }
-        tutorialRelatedTutorials {
-          nodes {
-            __typename
-            ... on Tutorial {
-              id
-              title
-              slug
-              tutorialFields { tutorialTeaser tutorialLevel }
-            }
-          }
-        }
-      }
-      tutorialCategories {
-        nodes { id name slug }
-      }
-      tutorialTags {
-        nodes { id name slug }
-      }
-    }
-  }
-`;
-
-function levelOf(raw: string[] | string | null | undefined): string {
-  return Array.isArray(raw) ? raw[0] || "" : raw || "";
-}
+import { fetchAllTutorials, fetchTutorialBySlug, levelOf } from "../lib/tutorials.js";
 
 const inputSchema = {
   slug: z
@@ -134,6 +11,18 @@ const inputSchema = {
     .describe(
       "The slug of a specific educational article. If not specified, a list of all articles is returned.",
     ),
+  tag: z
+    .string()
+    .optional()
+    .describe("Article list filter by tag (partial tag name match, case-insensitive)."),
+  category: z
+    .string()
+    .optional()
+    .describe("Filter the list of articles by category (partial match of the category name)."),
+  level: z
+    .string()
+    .optional()
+    .describe("Article list filter by difficulty level (exact match, e.g., 'beginner')."),
 };
 
 export function registerGetTutorials(server: McpServer): void {
@@ -142,22 +31,19 @@ export function registerGetTutorials(server: McpServer): void {
     {
       title: "Tutorials",
       description:
-        "Returns a list of the site's educational articles or the content of a specific article based on its slug.",
+        "Returns a list of the site's educational articles (optionally filtered by tag, category " +
+        "or level) or the full content of a specific article based on its slug.",
       inputSchema,
     },
-    async ({ slug }) => {
+    async ({ slug, tag, category, level }) => {
       try {
         if (slug) {
-          const data = await requestWithTimeout<GetTutorialBySlugResponse>(
-            TUTORIAL_BY_SLUG_QUERY,
-            { slug },
-          );
+          const t = await fetchTutorialBySlug(slug);
 
-          if (!data.tutorial) {
+          if (!t) {
             return errorResult(`Tutorial with slug='${slug}' not found.`);
           }
 
-          const t = data.tutorial;
           const relatedBuilds = (t.tutorialFields?.tutorialRelatedBuilds?.nodes || [])
             .filter((n) => n.__typename === "Model")
             .map((n) => ({
@@ -189,9 +75,27 @@ export function registerGetTutorials(server: McpServer): void {
           });
         }
 
-        const data = await requestWithTimeout<GetTutorialsResponse>(TUTORIALS_QUERY);
+        let tutorials = await fetchAllTutorials();
 
-        const tutorials = data.tutorialsFiltered.map((t) => ({
+        if (tag) {
+          const needle = tag.trim().toLowerCase();
+          tutorials = tutorials.filter((t) =>
+            (t.tutorialTags?.nodes || []).some((tg) => tg.name.toLowerCase().includes(needle)),
+          );
+        }
+
+        if (category) {
+          const needle = category.trim().toLowerCase();
+          tutorials = tutorials.filter((t) =>
+            (t.tutorialCategories?.nodes || []).some((c) => c.name.toLowerCase().includes(needle)),
+          );
+        }
+
+        if (level) {
+          tutorials = tutorials.filter((t) => levelOf(t.tutorialFields?.tutorialLevel) === level);
+        }
+
+        const results = tutorials.map((t) => ({
           title: t.title,
           slug: t.slug,
           teaser: t.tutorialFields?.tutorialTeaser ?? null,
@@ -201,7 +105,7 @@ export function registerGetTutorials(server: McpServer): void {
           tags: (t.tutorialTags?.nodes || []).map((tg) => tg.name),
         }));
 
-        return jsonResult({ total: tutorials.length, tutorials });
+        return jsonResult({ total: results.length, tutorials: results });
       } catch (error) {
         return errorResult(
           `Error retrieving tutorials: ${(error as Error).message}`,

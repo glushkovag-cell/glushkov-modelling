@@ -15,6 +15,17 @@ const inputSchema = {
     .string()
     .min(1)
     .describe("Name of the build (model) for which detailed information is required."),
+  partNumber: z
+    .union([z.string(), z.number()])
+    .optional()
+    .describe(
+        "Optional: the number of a specific build log part. If specified alongside partSlug, " +
+        "partSlug takes precedence. If neither is specified, a list of all parts is returned.",
+    ),
+  partSlug: z
+    .string()
+    .optional()
+    .describe("Optional: slug of a specific part of the build log (takes precedence over partNumber)."),
 };
 
 export function registerGetBuildDetails(server: McpServer): void {
@@ -24,10 +35,12 @@ export function registerGetBuildDetails(server: McpServer): void {
       title: "Build details",
       description:
         "Returns historical information about the vessel, a list of build-log series parts " +
-        "and technical notes regarding the specified build.",
+        "and technical notes regarding the specified build. Опционально: если указан partNumber " +
+        "или partSlug, возвращает только эту конкретную часть build-лога с полным содержимым " +
+        "(без обрезки), вместо списка всех частей.",
       inputSchema,
     },
-    async ({ buildName }) => {
+    async ({ buildName, partNumber, partSlug }) => {
       try {
         const models = await fetchAllModels();
         const model = findModelByName(models, buildName);
@@ -41,6 +54,37 @@ export function registerGetBuildDetails(server: McpServer): void {
         }
 
         const parts = await fetchBuildPartsForSlug(model.slug);
+
+        if (partSlug || partNumber !== undefined) {
+          const targetPart = partSlug
+            ? parts.find((post) => post.slug === partSlug)
+            : parts.find((post) => String(post.buildlog?.partnumber ?? "") === String(partNumber));
+
+          if (!targetPart) {
+            return errorResult(
+              `Build-log not found by ${
+                partSlug ? `partSlug='${partSlug}'` : `partNumber='${partNumber}'`
+              } in buiid '${model.title}'. Available parts: ${parts
+                .map((p) => `${p.buildlog?.partnumber ?? "?"} (${p.slug})`)
+                .join(", ")}.`,
+            );
+          }
+
+          return jsonResult({
+            title: model.title,
+            slug: model.slug,
+            part: {
+              partNumber: targetPart.buildlog?.partnumber ?? null,
+              recordDay: targetPart.buildlog?.recordday ?? null,
+              title: targetPart.title,
+              slug: targetPart.slug,
+              content: stripHtmlAndTruncate(
+                targetPart.buildlog?.partcontent || targetPart.content,
+                4000,
+              ),
+            },
+          });
+        }
 
         return jsonResult({
           title: model.title,
