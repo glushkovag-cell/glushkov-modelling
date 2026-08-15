@@ -93,7 +93,7 @@ export function registerListGalleryPhotos(server: McpServer): void {
     {
       title: "Фото из галереи",
       description:
-        "Returns a list of photos from the website gallery (glushkov-modelling.com), with" +
+        "Returns a list of photos from the website gallery (glushkov-modelling.com), with " +
         "filtering by building (project, for example 'le-requin') and/or category " +
         `photo (tag: ${KNOWN_SECTIONS.join(", ")}).`,
       inputSchema,
