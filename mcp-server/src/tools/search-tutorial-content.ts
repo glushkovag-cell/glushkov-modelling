@@ -1,84 +1,108 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
-import { stripHtmlAndTruncate } from "../lib/wp-models.js";
 import { fetchAllTutorials, levelOf } from "../lib/tutorials.js";
+import {
+    createExcerpt,
+    findTutorialTextMatch,
+    getSearchTerms,
+} from "../lib/tutorial-search.js";
 
 /**
  * Полнотекстовый поиск по содержимому статей (не только по title/teaser, как в search_content).
- * Фильтрация выполняется на клиенте (в MCP-сервере), поскольку кастомный резолвер
- * tutorialsFiltered не подтверждён на поддержку аргумента search на уровне WPGraphQL.
- * CMS и MCP работают на одном VPS, поэтому клиентская фильтрация полного списка статей
- * не создаёт заметной сетевой или временной задержки.
+ * Фильтрация выполняется на стороне MCP-сервера, поскольку custom resolver
+ * tutorialsFiltered не подтверждён на поддержку search в WPGraphQL.
  */
 
 const inputSchema = {
-  query: z
-    .string()
-    .min(2)
-    .describe("Search query for full-text search of the content of educational articles."),
-  limit: z
-    .number()
-    .int()
-    .min(1)
-    .max(50)
-    .default(20)
-    .describe("Maximum number of results."),
+    query: z
+        .string()
+        .min(2)
+        .describe(
+            "Search query for full-text search within educational article content.",
+        ),
+    limit: z
+        .number()
+        .int()
+        .min(1)
+        .max(50)
+        .default(20)
+        .describe("Maximum number of results."),
 };
 
 export function registerSearchTutorialContent(server: McpServer): void {
-  server.registerTool(
-    "search_tutorial_content",
-    {
-      title: "Search within tutorials content",
-      description:
-          "Searches for educational articles based on their full content (not just the title " +
-          "and summary, as with search_content). Use this when the desired term or technique " +
-          "might appear within the article rather than in its title.",
-      inputSchema,
-    },
-    async ({ query, limit }) => {
-      try {
-        const tutorials = await fetchAllTutorials();
-        const needle = query.trim().toLowerCase();
+    server.registerTool(
+        "search_tutorial_content",
+        {
+            title: "Search within tutorial content",
+            description:
+                "Searches educational articles by full body content, title, and summary. " +
+                "Unlike search_content, this tool searches within the complete article text. " +
+                "Use it when the requested term, technique, material, or instruction may occur " +
+                "inside an article rather than in its title or teaser.",
+            inputSchema,
+        },
+        async ({ query, limit }) => {
+            try {
+                const terms = getSearchTerms(query);
 
-        const results = tutorials
-          .filter((t) => {
-            const plainContent = stripHtmlAndTruncate(t.content, 20000).toLowerCase();
-            return (
-              plainContent.includes(needle) ||
-              t.title.toLowerCase().includes(needle) ||
-              (t.tutorialFields?.tutorialTeaser || "").toLowerCase().includes(needle)
-            );
-          })
-          .slice(0, limit)
-          .map((t) => {
-            const plainContent = stripHtmlAndTruncate(t.content, 20000);
-            const matchIndex = plainContent.toLowerCase().indexOf(needle);
-            const excerpt =
-              matchIndex >= 0
-                ? plainContent.slice(Math.max(0, matchIndex - 80), matchIndex + 200).trim()
-                : stripHtmlAndTruncate(t.tutorialFields?.tutorialTeaser, 200);
+                if (terms.length === 0) {
+                    return errorResult(
+                        "Search query must contain at least one non-whitespace character.",
+                    );
+                }
 
-            return {
-              title: t.title,
-              slug: t.slug,
-              level: levelOf(t.tutorialFields?.tutorialLevel),
-              tags: (t.tutorialTags?.nodes || []).map((tg) => tg.name),
-              excerpt: excerpt || null,
-            };
-          });
+                const tutorials = await fetchAllTutorials();
 
-        return jsonResult({
-          query,
-          total: results.length,
-          results,
-        });
-      } catch (error) {
-        return errorResult(
-          `Full-text search error for articles: ${(error as Error).message}`,
-        );
-      }
-    },
-  );
+                const matches = tutorials
+                    .map((tutorial) => {
+                        const match = findTutorialTextMatch(
+                            {
+                                title: tutorial.title,
+                                teaser: tutorial.tutorialFields?.tutorialTeaser,
+                                content: tutorial.content,
+                            },
+                            terms,
+                        );
+
+                        return match ? { tutorial, match } : null;
+                    })
+                    .filter(
+                        (
+                            item,
+                        ): item is {
+                            tutorial: (typeof tutorials)[number];
+                            match: NonNullable<
+                                ReturnType<typeof findTutorialTextMatch>
+                            >;
+                        } => item !== null,
+                    );
+
+                const total = matches.length;
+                const results = matches.slice(0, limit).map(({ tutorial, match }) => ({
+                    title: tutorial.title,
+                    slug: tutorial.slug,
+                    level: levelOf(tutorial.tutorialFields?.tutorialLevel),
+                    tags: (tutorial.tutorialTags?.nodes || []).map((tag) => tag.name),
+                    matchedFields: match.matchedFields,
+                    excerpt: createExcerpt(
+                        match.plainContent,
+                        terms[0],
+                        tutorial.tutorialFields?.tutorialTeaser,
+                    ),
+                }));
+
+                return jsonResult({
+                    query,
+                    total,
+                    returned: results.length,
+                    results,
+                });
+            } catch (error) {
+                return errorResult(
+                    `Full-text search error for tutorials: ${(error as Error).message}`,
+                );
+            }
+        },
+    );
 }

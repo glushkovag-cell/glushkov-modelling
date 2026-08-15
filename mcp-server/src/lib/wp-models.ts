@@ -6,6 +6,8 @@
  */
 import { requestWithTimeout } from "./graphql-client.js";
 
+export { stripHtmlAndTruncate } from "./text.js";
+
 export interface ModelInfo {
   manufacturer?: string | null;
   modelscale?: string | null;
@@ -149,17 +151,6 @@ export async function fetchBuildPartsForSlug(slug: string): Promise<BuildPostNod
   return data.posts.nodes
     .filter((post) => post.buildlog?.modelslug === slug)
     .sort((a, b) => Number(a.buildlog?.partnumber || 0) - Number(b.buildlog?.partnumber || 0));
-}
-
-/** Убирает HTML-теги и обрезает текст до заданной длины — для компактных ответов инструментов. */
-export function stripHtmlAndTruncate(html: string | null | undefined, maxLength = 300): string {
-  if (!html) return "";
-  const text = html
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  return text.length > maxLength ? `${text.slice(0, maxLength).trim()}…` : text;
 }
 
 /**
