@@ -22,6 +22,14 @@ export const config = {
 
   mcpApiKey: requireEnv("MCP_API_KEY"),
 
+  // OAuth 2.1 для параллельного /mcp-oauth.
+  // Пустые значения разрешены до включения OAuth в production.
+  oauthIssuer: optionalEnv("OAUTH_ISSUER", "").replace(/\/$/, ""),
+  oauthJwksUri: optionalEnv("OAUTH_JWKS_URI", ""),
+  oauthAudience: optionalEnv("OAUTH_AUDIENCE", ""),
+  oauthRequiredScope: optionalEnv("OAUTH_REQUIRED_SCOPE", "content:read"),
+  oauthResourceMetadataUri: optionalEnv("OAUTH_RESOURCE_METADATA_URI", ""),
+
   allowedOrigins: optionalEnv("MCP_ALLOWED_ORIGINS", "")
     .split(",")
     .map((origin) => origin.trim())
