@@ -24,15 +24,24 @@ jobs:
       NODE_VERSION: "22"
       DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
       DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}          # deploy
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
       MCP_DEPLOY_PATH: /var/www/mcp-glushkov
+
       MCP_API_KEY: ${{ secrets.MCP_API_KEY }}
       WP_GRAPHQL_URL: ${{ secrets.WP_GRAPHQL_URL }}
       WP_GRAPHQL_SECRET: ${{ secrets.WP_GRAPHQL_SECRET }}
       WP_READONLY_USERNAME: ${{ secrets.WP_READONLY_USERNAME }}
       WP_READONLY_APP_PASSWORD: ${{ secrets.WP_READONLY_APP_PASSWORD }}
-      GALLERY_MANIFEST_PATH: /var/www/cms/gallery
       CMS_GALLERY_URL: ${{ secrets.CMS_GALLERY_URL }}
+
+      OAUTH_ISSUER: ${{ secrets.OAUTH_ISSUER }}
+      OAUTH_JWKS_URI: ${{ secrets.OAUTH_JWKS_URI }}
+      OAUTH_AUDIENCE: ${{ secrets.OAUTH_AUDIENCE }}
+      OAUTH_REQUIRED_SCOPE: content:read
+      OAUTH_RESOURCE_METADATA_URI: https://mcp.glushkov-modelling.com/.well-known/oauth-protected-resource/mcp-oauth
+
+      GALLERY_MANIFEST_PATH: /var/www/cms/gallery
+      MCP_ALLOWED_ORIGINS: ""
 
     steps:
       - name: Checkout repository
@@ -51,6 +60,9 @@ jobs:
       - name: Build project
         run: npm run build
 
+      - name: Run tests
+        run: npm test
+
       - name: Prepare SSH
         shell: bash
         run: |
@@ -64,6 +76,9 @@ jobs:
           test -n "${DEPLOY_HOST}"
           test -n "${DEPLOY_PORT}"
           test -n "${DEPLOY_USER}"
+          test -n "${OAUTH_ISSUER}"
+          test -n "${OAUTH_JWKS_URI}"
+          test -n "${OAUTH_AUDIENCE}"
 
           ssh-keyscan -p "${DEPLOY_PORT}" -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
@@ -83,7 +98,7 @@ jobs:
             build/ \
             "${DEPLOY_USER}@${DEPLOY_HOST}:${MCP_DEPLOY_PATH}/build/"
 
-      - name: Deploy package.json and package-lock.json
+      - name: Deploy package files
         run: |
           rsync -az \
             -e "ssh -p ${DEPLOY_PORT} -i ~/.ssh/github_actions_deploy -o StrictHostKeyChecking=yes" \
@@ -91,12 +106,19 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}:${MCP_DEPLOY_PATH}/"
 
       - name: Update .env on VPS
+        shell: bash
         run: |
           ssh -p "${DEPLOY_PORT}" \
             -i ~/.ssh/github_actions_deploy \
             -o StrictHostKeyChecking=yes \
-            "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
-          cat > "${MCP_DEPLOY_PATH}/.env" <<EOT
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "mkdir -p '${MCP_DEPLOY_PATH}' && chmod 700 '${MCP_DEPLOY_PATH}'"
+
+          cat <<EOF | ssh -p "${DEPLOY_PORT}" \
+            -i ~/.ssh/github_actions_deploy \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "umask 077 && cat > '${MCP_DEPLOY_PATH}/.env'"
           MCP_API_KEY=${MCP_API_KEY}
           WP_GRAPHQL_URL=${WP_GRAPHQL_URL}
           WP_GRAPHQL_SECRET=${WP_GRAPHQL_SECRET}
@@ -106,8 +128,12 @@ jobs:
           CMS_GALLERY_URL=${CMS_GALLERY_URL}
           HOST=127.0.0.1
           PORT=4322
-          EOT
-          chmod 600 "${MCP_DEPLOY_PATH}/.env"
+          MCP_ALLOWED_ORIGINS=${MCP_ALLOWED_ORIGINS}
+          OAUTH_ISSUER=${OAUTH_ISSUER}
+          OAUTH_JWKS_URI=${OAUTH_JWKS_URI}
+          OAUTH_AUDIENCE=${OAUTH_AUDIENCE}
+          OAUTH_REQUIRED_SCOPE=${OAUTH_REQUIRED_SCOPE}
+          OAUTH_RESOURCE_METADATA_URI=${OAUTH_RESOURCE_METADATA_URI}
           EOF
 
       - name: Install production dependencies on VPS
@@ -124,9 +150,18 @@ jobs:
             -i ~/.ssh/github_actions_deploy \
             -o StrictHostKeyChecking=yes \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "cd '${MCP_DEPLOY_PATH}' && pm2 restart mcp-server || pm2 start build/index.js --name mcp-server --node-args='--env-file=.env'"
+            "cd '${MCP_DEPLOY_PATH}' && pm2 restart mcp-server --update-env || pm2 start build/index.js --name mcp-server --node-args='--env-file=.env'"
+
+      - name: Verify MCP health check
+        run: |
+          ssh -p "${DEPLOY_PORT}" \
+            -i ~/.ssh/github_actions_deploy \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "curl --fail --silent --show-error http://127.0.0.1:4322/health"
 
       - name: Save PM2 process list
+        if: success()
         run: |
           ssh -p "${DEPLOY_PORT}" \
             -i ~/.ssh/github_actions_deploy \
