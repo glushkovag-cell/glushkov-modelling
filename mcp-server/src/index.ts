@@ -32,6 +32,38 @@ app.get("/health", (_req, res) => {
 });
 
 /**
+ * OAuth 2.0 Protected Resource Metadata (RFC 9728) для MCP OAuth.
+ * Маршрут совпадает с URL из OAUTH_RESOURCE_METADATA_URI, который
+ * oauthAuth публикует в WWW-Authenticate при 401.
+ */
+const OAUTH_RESOURCE_URL = "https://mcp.glushkov-modelling.com/mcp-oauth";
+
+const protectedResourceMetadata = {
+  resource: OAUTH_RESOURCE_URL,
+  authorization_servers: [config.oauthIssuer],
+  scopes_supported: [config.oauthRequiredScope],
+  bearer_methods_supported: ["header"],
+  resource_documentation: "https://www.glushkov-modelling.com",
+};
+
+app.get(
+    "/.well-known/oauth-protected-resource/mcp-oauth",
+    (_req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      res.status(200).json(protectedResourceMetadata);
+    },
+);
+
+/**
+ * Compatibility fallback for clients that probe the origin-level
+ * protected-resource metadata URL before the path-aware RFC 9728 URI.
+ */
+app.get("/.well-known/oauth-protected-resource", (_req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.status(200).json(protectedResourceMetadata);
+});
+
+/**
  * Единый обработчик stateless Streamable HTTP MCP.
  * Аутентификация выполняется middleware конкретного маршрута до вызова handler.
  */
