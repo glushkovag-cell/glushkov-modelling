@@ -4,6 +4,7 @@ import { isIP } from 'node:net';
 import { Pool } from 'pg';
 
 const MAX_BODY_BYTES = 32 * 1024;
+
 const PERPLEXITY_REDIRECT_URIS = new Set([
     'https://www.perplexity.ai/rest/connections/oauth_callback',
     'https://www.perplexity.com/rest/connections/oauth_callback',
@@ -70,13 +71,39 @@ function isPerplexity(payload) {
     return payload.redirect_uris.every((uri) => PERPLEXITY_REDIRECT_URIS.has(uri));
 }
 
+function isTrustedHostsRejection(status, text) {
+    if (status < 400 || status >= 500) {
+        return false;
+    }
+
+    try {
+        const body = JSON.parse(text);
+        const message = [
+            body.error,
+            body.error_description,
+            body.errorMessage,
+            body.message,
+        ]
+            .filter((value) => typeof value === 'string')
+            .join(' ')
+            .toLowerCase();
+
+        return message.includes('trusted host')
+            || message.includes('host is not trusted')
+            || message.includes('policy_host_not_trusted')
+            || message.includes('trusted_hosts');
+    } catch {
+        return false;
+    }
+}
+
 async function audit(event) {
     try {
         await pool.query(
             `INSERT INTO audit.dcr_attempts
-       (request_id, realm, source_ip, client_name, redirect_hosts, result,
-        http_status, rejection_category, upstream_request_id)
-       VALUES ($1, $2, $3::inet, $4, $5::jsonb, $6, $7, $8, $9)`,
+             (request_id, realm, source_ip, client_name, redirect_hosts, result,
+              http_status, rejection_category, upstream_request_id)
+             VALUES ($1, $2, $3::inet, $4, $5::jsonb, $6, $7, $8, $9)`,
             [
                 event.requestId,
                 config.realm,
@@ -105,13 +132,16 @@ function readBody(req) {
 
         req.on('data', (chunk) => {
             total += chunk.length;
+
             if (total > MAX_BODY_BYTES) {
                 req.destroy();
                 reject(new Error('body_too_large'));
                 return;
             }
+
             chunks.push(chunk);
         });
+
         req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
         req.on('error', reject);
     });
@@ -131,8 +161,21 @@ function forward(res, upstream, text, requestId) {
         'cache-control': 'no-store',
         'x-request-id': requestId,
     };
-    const location = upstream.headers.get('location');
-    if (location) headers.location = location;
+
+    for (const name of [
+        'location',
+        'www-authenticate',
+        'access-control-allow-origin',
+        'access-control-allow-headers',
+        'access-control-allow-methods',
+        'vary',
+    ]) {
+        const value = upstream.headers.get(name);
+        if (value) {
+            headers[name] = value;
+        }
+    }
+
     res.writeHead(upstream.status, headers);
     res.end(text);
 }
@@ -160,7 +203,11 @@ const server = http.createServer(async (req, res) => {
         if (req.method === 'GET' && path === discoveryPath) {
             const upstream = await keycloak(discoveryPath);
             const text = await upstream.text();
-            if (!upstream.ok) return forward(res, upstream, text, requestId);
+
+            if (!upstream.ok) {
+                forward(res, upstream, text, requestId);
+                return;
+            }
 
             const discovery = JSON.parse(text);
             discovery.registration_endpoint = `${config.publicOrigin}${registrationPath}`;
@@ -175,81 +222,165 @@ const server = http.createServer(async (req, res) => {
 
         const ip = sourceIp(req.headers);
         let raw;
+
         try {
             raw = await readBody(req);
         } catch {
             await audit({
-                requestId, sourceIp: ip, redirectHosts: [], result: 'invalid_request',
-                status: 413, category: 'body_too_large',
+                requestId,
+                sourceIp: ip,
+                redirectHosts: [],
+                result: 'invalid_request',
+                status: 413,
+                category: 'body_too_large',
             });
+
             reply(res, 413, { error: 'invalid_client_metadata' }, requestId);
             return;
         }
 
         let payload;
+
         try {
             payload = JSON.parse(raw);
         } catch {
             await audit({
-                requestId, sourceIp: ip, redirectHosts: [], result: 'invalid_request',
-                status: 400, category: 'invalid_json',
+                requestId,
+                sourceIp: ip,
+                redirectHosts: [],
+                result: 'invalid_request',
+                status: 400,
+                category: 'invalid_json',
             });
+
             reply(res, 400, { error: 'invalid_client_metadata' }, requestId);
             return;
         }
 
         if (!isDcrPayload(payload)) {
             await audit({
-                requestId, sourceIp: ip, clientName: payload?.client_name,
-                redirectHosts: [], result: 'invalid_request', status: 400,
+                requestId,
+                sourceIp: ip,
+                clientName: payload?.client_name,
+                redirectHosts: [],
+                result: 'invalid_request',
+                status: 400,
                 category: 'invalid_metadata',
             });
+
             reply(res, 400, { error: 'invalid_client_metadata' }, requestId);
             return;
         }
 
         const hosts = redirectHosts(payload.redirect_uris);
+
         if (hosts.includes('invalid-uri')) {
             await audit({
-                requestId, sourceIp: ip, clientName: payload.client_name,
-                redirectHosts: hosts, result: 'invalid_request', status: 400,
+                requestId,
+                sourceIp: ip,
+                clientName: payload.client_name,
+                redirectHosts: hosts,
+                result: 'invalid_request',
+                status: 400,
                 category: 'invalid_uri',
             });
+
             reply(res, 400, { error: 'invalid_client_metadata' }, requestId);
             return;
         }
 
-        const upstream = await keycloak(registrationPath, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json', accept: 'application/json' },
-            body: raw,
-        });
-        const text = await upstream.text();
-        const status = upstream.status;
-        const category = status >= 500
-            ? 'keycloak_error'
-            : status >= 400
-                ? 'policy_rejected'
-                : null;
+        let upstream;
 
-        await audit({
-            requestId,
-            sourceIp: ip,
-            clientName: payload.client_name,
-            redirectHosts: hosts,
-            result: status >= 200 && status < 300 ? 'accepted' : 'rejected',
-            status,
-            category,
-            upstreamRequestId: upstream.headers.get('x-request-id'),
-        });
+        try {
+            upstream = await keycloak(registrationPath, {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                    accept: 'application/json',
+                },
+                body: raw,
+            });
+        } catch (error) {
+            await audit({
+                requestId,
+                sourceIp: ip,
+                clientName: payload.client_name,
+                redirectHosts: hosts,
+                result: 'failed',
+                status: 502,
+                category: 'proxy_error',
+            });
+
+            throw error;
+        }
+
+        const status = upstream.status;
+        const upstreamRequestId = upstream.headers.get('x-request-id');
+
+        let text;
+        try {
+            text = await upstream.text();
+        } catch (error) {
+            await audit({
+                requestId,
+                sourceIp: ip,
+                clientName: payload.client_name,
+                redirectHosts: hosts,
+                result: 'failed',
+                status: 502,
+                category: 'proxy_error',
+                upstreamRequestId,
+            });
+
+            throw error;
+        }
+
+        if (status >= 500) {
+            await audit({
+                requestId,
+                sourceIp: ip,
+                clientName: payload.client_name,
+                redirectHosts: hosts,
+                result: 'failed',
+                status,
+                category: 'keycloak_error',
+                upstreamRequestId,
+            });
+        } else if (isTrustedHostsRejection(status, text)) {
+            await audit({
+                requestId,
+                sourceIp: ip,
+                clientName: payload.client_name,
+                redirectHosts: hosts,
+                result: 'rejected',
+                status,
+                category: 'trusted_hosts',
+                upstreamRequestId,
+            });
+        }
 
         if (!upstream.ok || !isPerplexity(payload)) {
             forward(res, upstream, text, requestId);
             return;
         }
 
-        const registration = JSON.parse(text);
+        let registration;
+
+        try {
+            registration = JSON.parse(text);
+        } catch (error) {
+            console.error(JSON.stringify({
+                event: 'keycloak_invalid_success_response',
+                request_id: requestId,
+                code: error.name,
+            }));
+
+            reply(res, 502, { error: 'server_error' }, requestId);
+            return;
+        }
+
         registration.response_types = ['code'];
+
         reply(res, status, registration, requestId, {
             ...(upstream.headers.get('location')
                 ? { location: upstream.headers.get('location') }
@@ -261,7 +392,10 @@ const server = http.createServer(async (req, res) => {
             request_id: requestId,
             code: error.code ?? error.name,
         }));
-        reply(res, 502, { error: 'server_error' }, requestId);
+
+        if (!res.headersSent) {
+            reply(res, 502, { error: 'server_error' }, requestId);
+        }
     }
 });
 
