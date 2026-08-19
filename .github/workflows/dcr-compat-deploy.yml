@@ -1,0 +1,82 @@
+name: Deploy DCR compatibility proxy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/dcr-compat/**"
+      - ".github/workflows/dcr-compat-deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: dcr-compat-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test DCR proxy
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: infra/dcr-compat
+
+    steps:
+      - name: Check out revision
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: infra/dcr-compat/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Check JavaScript syntax
+        run: node --check server.mjs
+
+  deploy:
+    name: Deploy to VPS
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy exact commit over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -eu
+
+            cd /opt/glushkov-auth/repo
+            git fetch --prune origin
+            git checkout --detach "${{ github.sha }}"
+
+            docker compose -f /opt/glushkov-auth/compose.yaml build dcr-compat
+            docker compose -f /opt/glushkov-auth/compose.yaml up -d --no-deps dcr-compat
+
+            for attempt in $(seq 1 15); do
+              if docker compose -f /opt/glushkov-auth/compose.yaml exec -T dcr-compat \
+                node -e "fetch('http://127.0.0.1:8082/readyz').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+              then
+                exit 0
+              fi
+              sleep 2
+            done
+
+            docker compose -f /opt/glushkov-auth/compose.yaml logs --tail=100 dcr-compat
+            exit 1
