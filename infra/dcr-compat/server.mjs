@@ -5,11 +5,9 @@ import { Pool } from 'pg';
 
 const MAX_BODY_BYTES = 32 * 1024;
 
-const PERPLEXITY_REDIRECT_URIS = new Set([
-    'https://www.perplexity.ai/rest/connections/oauth_callback',
-    'https://www.perplexity.com/rest/connections/oauth_callback',
-    'https://enterprise.perplexity.ai/rest/connections/oauth_callback',
-    'https://enterprise.perplexity.com/rest/connections/oauth_callback',
+const PERPLEXITY_DOMAINS = new Set([
+    'perplexity.ai',
+    'perplexity.com',
 ]);
 
 const config = {
@@ -68,7 +66,23 @@ function isDcrPayload(payload) {
 }
 
 function isPerplexity(payload) {
-    return payload.redirect_uris.every((uri) => PERPLEXITY_REDIRECT_URIS.has(uri));
+    if (!Array.isArray(payload?.redirect_uris) || payload.redirect_uris.length === 0) {
+        return false;
+    }
+
+    return payload.redirect_uris.every((uri) => {
+        try {
+            const host = new URL(uri).hostname
+                .toLowerCase()
+                .replace(/\.$/, '');
+
+            return [...PERPLEXITY_DOMAINS].some(
+                (domain) => host === domain || host.endsWith(`.${domain}`),
+            );
+        } catch {
+            return false;
+        }
+    });
 }
 
 function isTrustedHostsRejection(status, text) {
