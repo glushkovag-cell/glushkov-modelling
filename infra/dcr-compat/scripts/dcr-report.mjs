@@ -7,7 +7,6 @@ import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 
 const { Pool } = pg;
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const mode = process.argv[2];
 const ENV_FILE = process.env.DCR_REPORT_ENV_FILE || '/opt/glushkov-auth/.env';
 const MOSCOW_TZ = 'Europe/Moscow';
@@ -156,7 +155,7 @@ function makeMailer(smtp) {
 async function createRun(client, jobName) {
     const runId = crypto.randomUUID();
     await client.query(
-        `INSERT INTO audit.job_runs (jobname, runid, startedat, status, recordsprocessed, emailsent)
+        `INSERT INTO audit.job_runs (job_name, run_id, started_at, status, records_processed, email_sent)
      VALUES ($1, $2, now(), 'running', 0, false)`,
         [jobName, runId],
     );
@@ -166,37 +165,36 @@ async function createRun(client, jobName) {
 async function finishRun(client, jobName, runId, status, recordsProcessed, emailSent, errorMessage = null) {
     await client.query(
         `UPDATE audit.job_runs
-        SET finishedat = now(), status = $3, recordsprocessed = $4, emailsent = $5, errormessage = $6
-      WHERE jobname = $1 AND runid = $2`,
+        SET finished_at = now(), status = $3, records_processed = $4, email_sent = $5, error_message = $6
+      WHERE job_name = $1 AND run_id = $2`,
         [jobName, runId, status, recordsProcessed, emailSent, errorMessage?.slice(0, 1000) ?? null],
     );
 }
 
 async function setCheckpoint(client, name, value) {
     await client.query(
-        `INSERT INTO audit.report_checkpoints (checkpointname, checkpointvalue, updatedat)
+        `INSERT INTO audit.report_checkpoints (checkpoint_name, checkpoint_value, updated_at)
      VALUES ($1, $2, now())
-     ON CONFLICT (checkpointname)
-     DO UPDATE SET checkpointvalue = EXCLUDED.checkpointvalue, updatedat = now()`,
+     ON CONFLICT (checkpoint_name)
+     DO UPDATE SET checkpoint_value = EXCLUDED.checkpoint_value, updated_at = now()`,
         [name, value],
     );
 }
 
-async function summary(client, start, end) {
+async function auditSummary(client, start, end) {
     const { rows: [row] } = await client.query(
         `SELECT
-       count(*)::int AS attempts,
-       count(*) FILTER (WHERE result = 'accepted')::int AS accepted,
-       count(*) FILTER (WHERE result = 'rejected')::int AS rejected,
-       count(*) FILTER (WHERE result = 'failed')::int AS failed,
-       count(*) FILTER (WHERE result = 'invalidrequest')::int AS invalid_request,
-       count(*) FILTER (WHERE rejectioncategory = 'trustedhosts')::int AS trusted_hosts_rejections,
-       count(*) FILTER (WHERE result = 'unknown' OR rejectioncategory = 'unknown')::int AS unknown_count,
-       count(*) FILTER (WHERE rejectioncategory IN ('keycloakerror', 'proxyerror'))::int AS system_errors,
-       count(*) FILTER (WHERE rejectioncategory = 'keycloakerror')::int AS keycloak_errors,
-       count(*) FILTER (WHERE rejectioncategory = 'proxyerror')::int AS proxy_errors
-     FROM audit.dcr_attempts
-     WHERE occurredat >= $1 AND occurredat < $2`,
+             count(*)::int AS audited_events,
+             count(*) FILTER (WHERE result = 'rejected')::int AS rejected,
+             count(*) FILTER (WHERE result = 'failed')::int AS failed,
+             count(*) FILTER (WHERE result = 'invalid_request')::int AS invalid_request,
+             count(*) FILTER (WHERE rejection_category = 'trusted_hosts')::int AS trusted_hosts_rejections,
+             count(*) FILTER (WHERE rejection_category = 'unknown')::int AS unknown_count,
+             count(*) FILTER (WHERE rejection_category IN ('keycloak_error', 'proxy_error'))::int AS system_errors,
+             count(*) FILTER (WHERE rejection_category = 'keycloak_error')::int AS keycloak_errors,
+             count(*) FILTER (WHERE rejection_category = 'proxy_error')::int AS proxy_errors
+         FROM audit.dcr_attempts
+         WHERE occurred_at >= $1 AND occurred_at < $2`,
         [sqlDate(start), sqlDate(end)],
     );
     return row;
@@ -205,11 +203,11 @@ async function summary(client, start, end) {
 async function rejectedHosts(client, start, end) {
     const { rows } = await client.query(
         `SELECT host AS hostname, count(*)::int AS rejections,
-            min(a.occurredat) AS first_seen, max(a.occurredat) AS last_seen
+            min(a.occurred_at) AS first_seen, max(a.occurred_at) AS last_seen
        FROM audit.dcr_attempts a
-       CROSS JOIN LATERAL jsonb_array_elements_text(a.redirecthosts) AS host
-      WHERE a.occurredat >= $1 AND a.occurredat < $2
-        AND a.rejectioncategory = 'trustedhosts'
+       CROSS JOIN LATERAL jsonb_array_elements_text(a.redirect_hosts) AS host
+      WHERE a.occurred_at >= $1 AND a.occurred_at < $2
+        AND a.rejection_category = 'trusted_hosts'
       GROUP BY host
       ORDER BY rejections DESC, host ASC`,
         [sqlDate(start), sqlDate(end)],
@@ -219,10 +217,10 @@ async function rejectedHosts(client, start, end) {
 
 async function sourceIps(client, start, end) {
     const { rows } = await client.query(
-        `SELECT coalesce(sourceip::text, 'unknown') AS source_ip, count(*)::int AS attempts
+        `SELECT coalesce(source_ip::text, 'unknown') AS source_ip, count(*)::int AS attempts
        FROM audit.dcr_attempts
-      WHERE occurredat >= $1 AND occurredat < $2
-      GROUP BY sourceip
+      WHERE occurred_at >= $1 AND occurred_at < $2
+      GROUP BY source_ip
       ORDER BY attempts DESC, source_ip ASC
       LIMIT 100`,
         [sqlDate(start), sqlDate(end)],
@@ -246,8 +244,8 @@ async function daily(client, cfg) {
     let processed = 0;
     try {
         const period = dailyPeriod();
-        const totals = await summary(client, period.start, period.end);
-        processed = totals.attempts;
+        const totals = await auditSummary(client, period.start, period.end);
+        processed = totals.audited_events;
         const hosts = await rejectedHosts(client, period.start, period.end);
 
         if (Number(totals.trusted_hosts_rejections) === 0) {
@@ -260,15 +258,15 @@ async function daily(client, cfg) {
             'Glushkov Modelling MCP — DCR trusted-hosts daily report',
             '',
             `Period: ${period.label}`,
-            `DCR attempts: ${totals.attempts}`,
-            `Results: accepted=${totals.accepted}, rejected=${totals.rejected}, failed=${totals.failed}, invalid_request=${totals.invalid_request}`,
+            `Audited rejection/error events: ${totals.audited_events}`,
+            `Results: rejected=${totals.rejected}, failed=${totals.failed}, invalid_request=${totals.invalid_request}`,
             `Trusted-hosts rejections: ${totals.trusted_hosts_rejections}`,
             `Unknown: ${totals.unknown_count}; Keycloak errors: ${totals.keycloak_errors}; proxy errors: ${totals.proxy_errors}`,
             '',
             'Rejected hostnames:',
             ...hosts.map((h) => `- ${h.hostname}: ${h.rejections}; first=${formatMoscow(h.first_seen)}; last=${formatMoscow(h.last_seen)}`),
             '',
-            'Source IPs:',
+            'Source IPs for audited rejection/error events:',
             ...ips.map((ip) => `- ${ip.source_ip}: ${ip.attempts}`),
             '',
             'Recommendation: review only. Do not add hostnames to the allow-list automatically.',
@@ -284,9 +282,11 @@ async function daily(client, cfg) {
     }
 }
 
-function heartbeatStatus(totals, lastMonthly) {
-    if (!lastMonthly || Number(totals.system_errors) > 0) return 'ERROR';
-    if (Number(totals.trusted_hosts_rejections) > 0 || Number(totals.unknown_count) > 0) return 'WARNING';
+function heartbeatStatus(totals) {
+    if (Number(totals.system_errors) > 0) return 'ERROR';
+    if (Number(totals.trusted_hosts_rejections) > 0 || Number(totals.unknown_count) > 0) {
+        return 'WARNING';
+    }
     return 'OK';
 }
 
@@ -296,27 +296,27 @@ async function monthly(client, cfg) {
     let processed = 0;
     try {
         const period = previousMonthPeriod();
-        const totals = await summary(client, period.start, period.end);
-        processed = totals.attempts;
+        const totals = await auditSummary(client, period.start, period.end);
+        processed = totals.audited_events;
         const hosts = await rejectedHosts(client, period.start, period.end);
         const previousMonthly = await latest(client,
-            `SELECT finishedat AS value FROM audit.job_runs
-        WHERE jobname = 'monthly-heartbeat' AND status = 'success'
-        ORDER BY finishedat DESC NULLS LAST LIMIT 1`);
-        const lastAuditEvent = await latest(client, `SELECT max(occurredat) AS value FROM audit.dcr_attempts`);
+            `SELECT finished_at AS value FROM audit.job_runs
+        WHERE job_name = 'monthly-heartbeat' AND status = 'success'
+        ORDER BY finished_at DESC NULLS LAST LIMIT 1`);
+        const lastAuditEvent = await latest(client, `SELECT max(occurred_at) AS value FROM audit.dcr_attempts`);
         const lastDaily = await latest(client,
-            `SELECT finishedat AS value FROM audit.job_runs
-        WHERE jobname = 'daily-report' AND status = 'success' AND emailsent = true
-        ORDER BY finishedat DESC NULLS LAST LIMIT 1`);
-        const status = heartbeatStatus(totals, previousMonthly);
+            `SELECT finished_at AS value FROM audit.job_runs
+        WHERE job_name = 'daily-report' AND status = 'success' AND email_sent = true
+        ORDER BY finished_at DESC NULLS LAST LIMIT 1`);
+        const status = heartbeatStatus(totals);
         const allowHash = cfg.allowList ? crypto.createHash('sha256').update(cfg.allowList).digest('hex').slice(0, 16) : 'not exported';
         const lines = [
             'Glushkov Modelling MCP — DCR audit heartbeat',
             '',
             `Status: ${status}`,
             `Reporting month: ${period.label}`,
-            `DCR attempts: ${totals.attempts}`,
-            `Results: accepted=${totals.accepted}, rejected=${totals.rejected}, failed=${totals.failed}, invalid_request=${totals.invalid_request}`,
+            `Audited rejection/error events: ${totals.audited_events}`,
+            `Results: rejected=${totals.rejected}, failed=${totals.failed}, invalid_request=${totals.invalid_request}`,
             `Trusted-hosts rejections: ${totals.trusted_hosts_rejections}`,
             `Unknown: ${totals.unknown_count}; system errors: ${totals.system_errors}`,
             `Rejected hostnames: ${hosts.length ? hosts.map((h) => h.hostname).join(', ') : 'none'}`,
@@ -324,7 +324,7 @@ async function monthly(client, cfg) {
             `Last successful daily report: ${formatMoscow(lastDaily)}`,
             `Last successful monthly heartbeat: ${formatMoscow(previousMonthly)}`,
             `Proxy version: ${cfg.proxyVersion}`,
-            'SMTP status: accepted by SMTP server for this heartbeat',
+            'SMTP status: sending via configured Brevo SMTP relay',,
             `Allow-list hash: ${allowHash}`,
         ];
 
@@ -344,10 +344,10 @@ async function watchdog(client, cfg) {
     try {
         const period = previousMonthPeriod();
         const lastMonthly = await latest(client,
-            `SELECT finishedat AS value FROM audit.job_runs
-        WHERE jobname = 'monthly-heartbeat' AND status = 'success'
-          AND finishedat >= $1 AND finishedat < $2
-        ORDER BY finishedat DESC NULLS LAST LIMIT 1`,
+            `SELECT finished_at AS value FROM audit.job_runs
+        WHERE job_name = 'monthly-heartbeat' AND status = 'success'
+          AND finished_at >= $1 AND finished_at < $2
+        ORDER BY finished_at DESC NULLS LAST LIMIT 1`,
             [sqlDate(period.end), sqlDate(new Date(period.end.getTime() + 32 * 24 * 60 * 60 * 1000))]);
 
         if (lastMonthly) {
