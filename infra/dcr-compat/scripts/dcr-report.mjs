@@ -156,7 +156,7 @@ function makeMailer(smtp) {
 async function createRun(client, jobName) {
     const runId = crypto.randomUUID();
     await client.query(
-        `INSERT INTO audit.jobruns (jobname, runid, startedat, status, recordsprocessed, emailsent)
+        `INSERT INTO audit.job_runs (jobname, runid, startedat, status, recordsprocessed, emailsent)
      VALUES ($1, $2, now(), 'running', 0, false)`,
         [jobName, runId],
     );
@@ -165,7 +165,7 @@ async function createRun(client, jobName) {
 
 async function finishRun(client, jobName, runId, status, recordsProcessed, emailSent, errorMessage = null) {
     await client.query(
-        `UPDATE audit.jobruns
+        `UPDATE audit.job_runs
         SET finishedat = now(), status = $3, recordsprocessed = $4, emailsent = $5, errormessage = $6
       WHERE jobname = $1 AND runid = $2`,
         [jobName, runId, status, recordsProcessed, emailSent, errorMessage?.slice(0, 1000) ?? null],
@@ -174,7 +174,7 @@ async function finishRun(client, jobName, runId, status, recordsProcessed, email
 
 async function setCheckpoint(client, name, value) {
     await client.query(
-        `INSERT INTO audit.reportcheckpoints (checkpointname, checkpointvalue, updatedat)
+        `INSERT INTO audit.report_checkpoints (checkpointname, checkpointvalue, updatedat)
      VALUES ($1, $2, now())
      ON CONFLICT (checkpointname)
      DO UPDATE SET checkpointvalue = EXCLUDED.checkpointvalue, updatedat = now()`,
@@ -195,7 +195,7 @@ async function summary(client, start, end) {
        count(*) FILTER (WHERE rejectioncategory IN ('keycloakerror', 'proxyerror'))::int AS system_errors,
        count(*) FILTER (WHERE rejectioncategory = 'keycloakerror')::int AS keycloak_errors,
        count(*) FILTER (WHERE rejectioncategory = 'proxyerror')::int AS proxy_errors
-     FROM audit.dcrattempts
+     FROM audit.dcr_attempts
      WHERE occurredat >= $1 AND occurredat < $2`,
         [sqlDate(start), sqlDate(end)],
     );
@@ -206,7 +206,7 @@ async function rejectedHosts(client, start, end) {
     const { rows } = await client.query(
         `SELECT host AS hostname, count(*)::int AS rejections,
             min(a.occurredat) AS first_seen, max(a.occurredat) AS last_seen
-       FROM audit.dcrattempts a
+       FROM audit.dcr_attempts a
        CROSS JOIN LATERAL jsonb_array_elements_text(a.redirecthosts) AS host
       WHERE a.occurredat >= $1 AND a.occurredat < $2
         AND a.rejectioncategory = 'trustedhosts'
@@ -220,7 +220,7 @@ async function rejectedHosts(client, start, end) {
 async function sourceIps(client, start, end) {
     const { rows } = await client.query(
         `SELECT coalesce(sourceip::text, 'unknown') AS source_ip, count(*)::int AS attempts
-       FROM audit.dcrattempts
+       FROM audit.dcr_attempts
       WHERE occurredat >= $1 AND occurredat < $2
       GROUP BY sourceip
       ORDER BY attempts DESC, source_ip ASC
@@ -300,12 +300,12 @@ async function monthly(client, cfg) {
         processed = totals.attempts;
         const hosts = await rejectedHosts(client, period.start, period.end);
         const previousMonthly = await latest(client,
-            `SELECT finishedat AS value FROM audit.jobruns
+            `SELECT finishedat AS value FROM audit.job_runs
         WHERE jobname = 'monthly-heartbeat' AND status = 'success'
         ORDER BY finishedat DESC NULLS LAST LIMIT 1`);
-        const lastAuditEvent = await latest(client, `SELECT max(occurredat) AS value FROM audit.dcrattempts`);
+        const lastAuditEvent = await latest(client, `SELECT max(occurredat) AS value FROM audit.dcr_attempts`);
         const lastDaily = await latest(client,
-            `SELECT finishedat AS value FROM audit.jobruns
+            `SELECT finishedat AS value FROM audit.job_runs
         WHERE jobname = 'daily-report' AND status = 'success' AND emailsent = true
         ORDER BY finishedat DESC NULLS LAST LIMIT 1`);
         const status = heartbeatStatus(totals, previousMonthly);
@@ -344,7 +344,7 @@ async function watchdog(client, cfg) {
     try {
         const period = previousMonthPeriod();
         const lastMonthly = await latest(client,
-            `SELECT finishedat AS value FROM audit.jobruns
+            `SELECT finishedat AS value FROM audit.job_runs
         WHERE jobname = 'monthly-heartbeat' AND status = 'success'
           AND finishedat >= $1 AND finishedat < $2
         ORDER BY finishedat DESC NULLS LAST LIMIT 1`,
@@ -359,7 +359,7 @@ async function watchdog(client, cfg) {
             'Glushkov Modelling MCP — ALERT',
             '',
             `No successful monthly heartbeat is recorded for ${period.label}.`,
-            'Action required: inspect audit.jobruns, cron logs, PostgreSQL connectivity and Brevo SMTP configuration.',
+            'Action required: inspect audit.job_runs, cron logs, PostgreSQL connectivity and Brevo SMTP configuration.',
         ].join('\n');
         const mail = makeMailer(cfg.smtp);
         await send(mail, cfg.recipient, cfg.smtp.from, `[GM MCP] ALERT — missing DCR audit heartbeat for ${period.label}`, message);
