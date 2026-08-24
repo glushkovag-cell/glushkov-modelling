@@ -42,7 +42,9 @@ jobs:
         run: npm test
 
       - name: Check JavaScript syntax
-        run: node --check server.mjs
+        run: |
+          node --check server.mjs
+          node --check scripts/dcr-report.mjs
 
   deploy:
     name: Deploy to VPS
@@ -66,6 +68,11 @@ jobs:
             git fetch --prune origin
             git checkout --detach "${{ github.sha }}"
 
+            # The report CLI runs from host cron, so install production modules on the VPS too.
+            cd /opt/glushkov-auth/repo/infra/dcr-compat
+            npm ci --omit=dev
+
+            cd /opt/glushkov-auth/repo
             docker compose -f /opt/glushkov-auth/compose.yaml build dcr-compat
             docker compose -f /opt/glushkov-auth/compose.yaml up -d --no-deps dcr-compat
 
