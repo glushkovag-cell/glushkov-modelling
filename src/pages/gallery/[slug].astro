@@ -1,11 +1,11 @@
 ---
 /**
- * /gallery/[slug] — Model Gallery Page
- *
- * Dedicated visual page for a single model.
- * Loads images from the CMS manifest, renders the editorial grid,
- * and mounts the hi-res viewer overlay.
- */
+    * /gallery/[slug] — Model Gallery Page
+    *
+    * Dedicated visual page for a single model.
+    * Loads images from the CMS manifest, renders the editorial grid,
+    * and mounts the hi-res viewer overlay.
+    */
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SeoHead from '../../components/seo/SeoHead.astro';
@@ -30,34 +30,43 @@ if (!manifest) {
 }
 
 const sortedImages = [...manifest.images].sort((a, b) => a.order - b.order);
+
+const galleryBreadcrumbs = [
+  { label: 'Gallery', href: '/gallery' },
+  { label: manifest.title, href: `/gallery/${slug}` },
+];
 ---
 
 <BaseLayout
-  title={`${manifest.galleryTitle} | Glushkov Modelling`}
-  description={`Hi-res gallery for ${manifest.title} scale model — ${manifest.meta.focus}`}
-  hasFreshNews={newsFlag}
->
-  <SeoHead
-    slot="head"
-    pageType="gallery"
     title={`${manifest.galleryTitle} | Glushkov Modelling`}
     description={`Hi-res gallery for ${manifest.title} scale model — ${manifest.meta.focus}`}
-    canonicalPath={`/gallery/${slug}`}
-    breadcrumbs={manifest.breadcrumbs.map((crumb) => ({ name: crumb.label, url: crumb.href }))}
+    hasFreshNews={newsFlag}
+>
+  <SeoHead
+      slot="head"
+      pageType="gallery"
+      title={`${manifest.galleryTitle} | Glushkov Modelling`}
+      description={`Hi-res gallery for ${manifest.title} scale model — ${manifest.meta.focus}`}
+      canonicalPath={`/gallery/${slug}`}
+      breadcrumbs={galleryBreadcrumbs.map((crumb) => ({
+        name: crumb.label,
+        url: crumb.href,
+      }))}
   />
+
   <div class="page-section">
     <div class="container">
 
       <!-- Breadcrumb -->
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        {manifest.breadcrumbs.map((crumb, i) => (
-          <>
-            {i > 0 && <span class="breadcrumb-sep" aria-hidden="true">/</span>}
-            {i < manifest.breadcrumbs.length - 1
-              ? <a href={crumb.href} class="breadcrumb-link">{crumb.label}</a>
-              : <span class="breadcrumb-current" aria-current="page">{crumb.label}</span>
-            }
-          </>
+        {galleryBreadcrumbs.map((crumb, i) => (
+            <>
+              {i > 0 && <span class="breadcrumb-sep" aria-hidden="true">/</span>}
+              {i < galleryBreadcrumbs.length - 1
+                  ? <a href={crumb.href} class="breadcrumb-link">{crumb.label}</a>
+                  : <span class="breadcrumb-current" aria-current="page">{crumb.label}</span>
+              }
+            </>
         ))}
       </nav>
 
