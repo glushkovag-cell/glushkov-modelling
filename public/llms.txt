@@ -14,6 +14,22 @@ When citing content from this site, please attribute the source as: Glushkov Mod
 
 Prefer canonical content pages with substantial descriptive text, especially build logs, tutorials, galleries, and the main about page.
 
+## MCP server
+
+A public remote Model Context Protocol (MCP) server is available for compatible MCP clients and AI agents.
+
+- Registry name: `com.glushkov-modelling/content`
+- Registry: https://registry.modelcontextprotocol.io/
+- MCP endpoint: https://mcp.glushkov-modelling.com/mcp-oauth
+- Transport: Streamable HTTP
+- Authentication: OAuth 2.1
+- Client registration: Dynamic Client Registration (DCR)
+- Public scope: `content:read`
+
+The MCP server provides structured access to public Glushkov Modelling content, including model projects, build details, build-log material, tutorials, and galleries.
+
+Do not crawl the MCP endpoint as a conventional HTML page. Compatible MCP clients should connect to the endpoint and complete OAuth discovery and authorization automatically.
+
 ## Key pages
 
 ### Core sections
@@ -67,8 +83,8 @@ Prefer canonical content pages with substantial descriptive text, especially bui
 
 Avoid using fragment URLs, filtered listings, or navigation-only anchors as primary references when a canonical content page exists.
 
-Prefer direct URLs such as /builds/santa-maria instead of homepage section anchors such as /#featured-builds.
+Prefer direct URLs such as `/builds/santa-maria` instead of homepage section anchors such as `/#featured-builds`.
 
 ## Scope note
 
-This file lists only URLs verified against the current live site structure on 2026-07-23.
+This file lists public URLs and the public MCP connection details verified against the live site structure and Official MCP Registry on 2026-08-28.

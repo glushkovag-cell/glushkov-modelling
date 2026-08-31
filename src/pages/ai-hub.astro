@@ -1,0 +1,1224 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SeoHead from '../components/seo/SeoHead.astro';
+
+import {
+    getAiHubCapabilities,
+    getAiHubOverviewFaqs,
+    getAiHubOverviewTroubleshooting,
+    getAiHubPage,
+    getAiHubPlatforms,
+    getAiHubWorkflowSteps,
+} from '../lib/wordpress';
+
+const [
+    aiHub,
+    capabilities,
+    steps,
+    platforms,
+    troubleshooting,
+    faqs,
+] = await Promise.all([
+    getAiHubPage(),
+    getAiHubCapabilities(),
+    getAiHubWorkflowSteps(),
+    getAiHubPlatforms(),
+    getAiHubOverviewTroubleshooting(),
+    getAiHubOverviewFaqs(),
+]);
+
+const SEO_TITLE = 'AI Hub — Glushkov Modelling';
+const SEO_DESCRIPTION =
+    'Connect an AI assistant to Glushkov Modelling and explore build logs, model information, gallery images, and tutorials through natural-language questions.';
+
+const mcpEndpoint =
+    aiHub?.publicMcpEndpoint ||
+    'https://mcp.glushkov-modelling.com/mcp-oauth';
+---
+
+<BaseLayout title={SEO_TITLE} description={SEO_DESCRIPTION}>
+    <SeoHead
+            slot="head"
+            pageType="website"
+            title={SEO_TITLE}
+            description={SEO_DESCRIPTION}
+    />
+
+    <section class="hero ai-hub-hero" id="top">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-card hero-copy">
+                    <span class="eyebrow">AI Hub</span>
+
+                    <h1>Ask the shipyard</h1>
+
+                    <p>
+                        Connect a supported AI assistant to Glushkov Modelling and
+                        search the archive in natural language: build logs, model
+                        details, gallery photographs, and tutorials.
+                    </p>
+
+                    <div class="hero-meta">
+                        <a href="#how-it-works" class="meta-pill">
+                            How it works
+                        </a>
+
+                        <a href="#connect" class="meta-pill">
+                            Connection details
+                        </a>
+                    </div>
+                </div>
+
+                <aside class="hero-card ai-hub-intro" aria-label="AI Hub capabilities">
+                    {
+                        aiHub?.heroImageUrl ? (
+                                <div class="ai-hub-intro__media">
+                                    <img
+                                            src={aiHub.heroImageUrl}
+                                            alt=""
+                                            loading="eager"
+                                            decoding="async"
+                                            fetchpriority="high"
+                                    />
+                                </div>
+                        ) : (
+                                <div
+                                        class="ai-hub-intro__media ai-hub-intro__media--empty"
+                                        aria-hidden="true"
+                                />
+                        )
+                    }
+
+                    <div class="ai-hub-intro__content">
+                        <span class="eyebrow">Connected knowledge</span>
+
+                        <ul class="capability-list">
+                            <li>Build logs and workshop notes</li>
+                            <li>Model specifications and research context</li>
+                            <li>Gallery photographs and visual references</li>
+                            <li>Tutorials and practical guidance</li>
+                        </ul>
+
+                        <p class="ai-hub-intro__note">
+                            The assistant retrieves context from the connected
+                            Glushkov Modelling knowledge base.
+                        </p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-section page-section--capabilities" id="capabilities">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">What you can explore</span>
+
+                    <h2 class="section-title">
+                        Search the workshop archive in natural language
+                    </h2>
+
+                    <p>
+                        Ask a connected assistant to find published material across
+                        build logs, model research, gallery photographs, and
+                        practical tutorials.
+                    </p>
+                </div>
+
+                <a href="#top" class="nav-link-light">↑ Top</a>
+            </div>
+
+            {
+                capabilities.length > 0 ? (
+                        <div class="capability-grid">
+                            {
+                                capabilities.map((capability) => (
+                                        <article class="capability-card">
+                                            <div class="capability-card__icon">
+                                                {
+                                                    capability.iconUrl ? (
+                                                            <img
+                                                                    src={capability.iconUrl}
+                                                                    alt={capability.iconAlt}
+                                                                    loading="lazy"
+                                                            />
+                                                    ) : (
+                                                            <span aria-hidden="true">
+                                                {capability.title.slice(0, 1)}
+                                            </span>
+                                                    )
+                                                }
+                                            </div>
+
+                                            <h3>{capability.title}</h3>
+
+                                            {
+                                                capability.description && (
+                                                            <p>{capability.description}</p>
+                                                )
+                                            }
+                                        </article>
+                                ))
+                            }
+                        </div>
+                ) : (
+                        <div class="content-card empty-state">
+                            <span class="eyebrow">Coming soon</span>
+
+                            <h2 class="card-title">
+                                Archive capabilities are being prepared
+                            </h2>
+
+                            <p>
+                                The available archive sections will be listed here shortly.
+                            </p>
+                        </div>
+                )
+            }
+        </div>
+    </section>
+
+    <section class="page-section page-section--workflow" id="how-it-works">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">How it works</span>
+
+                    <h2 class="section-title">
+                        Three steps to a connected assistant
+                    </h2>
+
+                    <p>
+                        Choose your assistant, authorize the connection, then ask
+                        questions in the same way you would ask a knowledgeable
+                        workshop companion.
+                    </p>
+                </div>
+
+                <a href="#top" class="nav-link-light">↑ Top</a>
+            </div>
+
+            {
+                steps.length > 0 ? (
+                        <ol class="workflow-grid">
+                            {
+                                steps.map((step) => (
+                                        <li class="workflow-card">
+                                    <span class="workflow-card__number">
+                                        {step.displayNumber}
+                                    </span>
+
+                                            <h3>{step.title}</h3>
+
+                                            {step.description && (
+                                                    <p>{step.description}</p>
+                                            )}
+                                        </li>
+                                ))
+                            }
+                        </ol>
+                ) : (
+                        <div class="content-card empty-state">
+                            <span class="eyebrow">Coming soon</span>
+
+                            <h2 class="card-title">
+                                Connection instructions are being prepared
+                            </h2>
+
+                            <p>
+                                The AI Hub workflow has not yet been published. Please
+                                check back shortly.
+                            </p>
+                        </div>
+                )
+            }
+        </div>
+    </section>
+
+    <section class="page-section page-section--platforms" id="platforms">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Supported platforms</span>
+
+                    <h2 class="section-title">Choose your AI assistant</h2>
+
+                    <p>
+                        Select a compatible client, then follow its connection guide
+                        to add Glushkov Modelling through the public OAuth MCP
+                        endpoint.
+                    </p>
+                </div>
+
+                <a href="#top" class="nav-link-light">↑ Top</a>
+            </div>
+
+            {
+                platforms.length > 0 ? (
+                        <div class="platform-grid">
+                            {
+                                platforms.map((platform) => (
+                                        <article class="platform-card">
+                                            <div class="platform-card__header">
+                                                <div class="platform-card__logo">
+                                                    {
+                                                        platform.logoUrl ? (
+                                                                <img
+                                                                        src={platform.logoUrl}
+                                                                        alt={platform.logoAlt}
+                                                                        loading="lazy"
+                                                                />
+                                                        ) : (
+                                                                <span aria-hidden="true">
+                                                        {platform.title.slice(0, 1)}
+                                                    </span>
+                                                        )
+                                                    }
+                                                </div>
+
+                                                {
+                                                    platform.compatibilityStatusValue && (
+                                                                <span
+                                                                        class:list={[
+                                                                            'platform-status',
+                                                                            `platform-status--${platform.compatibilityStatusValue}`,
+                                                                        ]}
+                                                                >
+                                                    {platform.compatibilityStatusLabel}
+                                                </span>
+                                                    )
+                                                }
+                                            </div>
+
+                                            <h3>{platform.title}</h3>
+
+                                            {
+                                                platform.shortDescription && (
+                                                            <p>{platform.shortDescription}</p>
+                                                )
+                                            }
+
+                                            <div class="platform-card__actions">
+                                                <a
+                                                        href={`/ai-hub/${platform.slug}`}
+                                                        class="build-link"
+                                                >
+                                                    View guide →
+                                                </a>
+
+                                                {
+                                                    platform.officialPlatformUrl && (
+                                                                <a
+                                                                        href={platform.officialPlatformUrl}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        class="platform-external-link"
+                                                                >
+                                                                    Official site ↗
+                                                                </a>
+                                                    )
+                                                }
+                                            </div>
+                                        </article>
+                                ))
+                            }
+                        </div>
+                ) : (
+                        <div class="content-card empty-state">
+                            <span class="eyebrow">Coming soon</span>
+
+                            <h2 class="card-title">
+                                Supported platforms are being prepared
+                            </h2>
+
+                            <p>
+                                Connection guides will appear here as each client is
+                                verified.
+                            </p>
+                        </div>
+                )
+            }
+        </div>
+    </section>
+
+    <section class="page-section page-section--connect" id="connect">
+        <div class="container">
+            <div class="section-grid section-grid--equal">
+                <div class="content-card">
+                    <span class="eyebrow">MCP endpoint</span>
+
+                    <h2 class="card-title">Connect Glushkov Modelling</h2>
+
+                    <p>
+                        Add the public endpoint in the MCP or integrations section
+                        of your selected AI assistant, then complete OAuth
+                        authorization when prompted.
+                    </p>
+
+                    <code class="endpoint">{mcpEndpoint}</code>
+
+                    <p class="connection-note">
+                        Use an assistant that supports MCP connections and OAuth
+                        authorization.
+                    </p>
+                </div>
+
+                <div class="content-card">
+                    <span class="eyebrow">Example questions</span>
+
+                    <h2 class="card-title">
+                        Start with the work you are exploring
+                    </h2>
+
+                    <ul class="question-list">
+                        <li>Which build logs describe hull planking techniques?</li>
+                        <li>What materials were used for a particular model?</li>
+                        <li>Show tutorials relevant to fine wooden details.</li>
+                        <li>
+                            What photographs document a selected stage of a build?
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section
+            class="page-section page-section--troubleshooting"
+            id="troubleshooting"
+    >
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Troubleshooting</span>
+
+                    <h2 class="section-title">
+                        Resolve common connection issues
+                    </h2>
+
+                    <p>
+                        Quick guidance for the most common OAuth, endpoint, and tool
+                        discovery issues.
+                    </p>
+                </div>
+
+                <a href="/ai-hub/troubleshooting" class="nav-link-light">
+                    View all →
+                </a>
+            </div>
+
+            {
+                troubleshooting.length > 0 ? (
+                        <div class="help-list">
+                            {
+                                troubleshooting.map((item) => (
+                                        <details class="help-item">
+                                            <summary>{item.title}</summary>
+
+                                            <div class="help-item__content">
+                                                <p>{item.answer}</p>
+
+                                                {
+                                                    item.platformNames.length > 0 && (
+                                                                <p class="help-item__platforms">
+                                                                    Applies to: {item.platformNames.join(', ')}
+                                                                </p>
+                                                    )
+                                                }
+                                            </div>
+                                        </details>
+                                ))
+                            }
+                        </div>
+                ) : (
+                        <div class="content-card empty-state">
+                            <span class="eyebrow">Coming soon</span>
+                            <h2 class="card-title">Troubleshooting is being prepared</h2>
+                            <p>
+                                Common connection solutions will appear here shortly.
+                            </p>
+                        </div>
+                )
+            }
+        </div>
+    </section>
+
+    <section class="page-section page-section--faq" id="faq">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">FAQ</span>
+
+                    <h2 class="section-title">
+                        Frequently asked questions
+                    </h2>
+
+                    <p>
+                        Short answers about the public MCP server, access, privacy,
+                        and supported archive material.
+                    </p>
+                </div>
+
+                <a href="/ai-hub/faq" class="nav-link-light">
+                    View all →
+                </a>
+            </div>
+
+            {
+                faqs.length > 0 ? (
+                        <div class="help-list">
+                            {
+                                faqs.map((faq) => (
+                                        <details class="help-item">
+                                            <summary>{faq.title}</summary>
+
+                                            <div class="help-item__content">
+                                                <p>{faq.answer}</p>
+
+                                                {
+                                                    faq.categoryLabel && (
+                                                                <span class="help-item__category">
+                                                {faq.categoryLabel}
+                                            </span>
+                                                    )
+                                                }
+                                            </div>
+                                        </details>
+                                ))
+                            }
+                        </div>
+                ) : (
+                        <div class="content-card empty-state">
+                            <span class="eyebrow">Coming soon</span>
+                            <h2 class="card-title">FAQ is being prepared</h2>
+                            <p>
+                                Frequently asked questions will appear here shortly.
+                            </p>
+                        </div>
+                )
+            }
+        </div>
+    </section>
+
+    <section class="page-section page-section--feedback" id="feedback">
+        <div class="container">
+            <div class="feedback-card">
+                <div class="feedback-card__copy">
+                    <span class="eyebrow">Feedback</span>
+
+                    <h2 class="section-title">
+                        {aiHub?.feedbackTitle ||
+                            'Need help connecting or found an issue?'}
+                    </h2>
+
+                    <p>
+                        {aiHub?.feedbackText ||
+                            'Please get in touch if you need help connecting your AI assistant or would like to report an issue.'}
+                    </p>
+                </div>
+
+                <div class="feedback-card__actions">
+                    <a
+                            href={`mailto:${
+                                aiHub?.feedbackEmail || 'glushkov.ag@gmail.com'
+                            }?subject=${encodeURIComponent(
+                                aiHub?.feedbackEmailSubject || 'MCP server',
+                            )}`}
+                            class="button button--primary"
+                    >
+                        Contact by email
+                    </a>
+
+                    {
+                        aiHub?.socialHubUrl && (
+                                    <a
+                                            href={aiHub.socialHubUrl}
+                                            class="button button--secondary"
+                                    >
+                                        Visit Social Hub
+                                    </a>
+                        )
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+</BaseLayout>
+
+<style>
+    .ai-hub-hero {
+        padding-bottom: 0.75rem;
+    }
+
+    .ai-hub-hero .hero-grid {
+        align-items: stretch;
+    }
+
+    .ai-hub-hero h1 {
+        max-width: 11ch;
+    }
+
+    .ai-hub-intro {
+        display: flex;
+        flex-direction: column;
+        align-self: stretch;
+        min-height: 0;
+        padding: 0;
+        overflow: hidden;
+        background: var(--color-surface);
+    }
+
+    /*
+     * Высоту Hero Image не меняем.
+     * Изображение остаётся широким и без внутренних полей.
+     */
+    .ai-hub-intro__media {
+        flex: 0 0 clamp(8.5rem, 14vw, 11rem);
+        width: 100%;
+        overflow: hidden;
+        background: var(--color-surface-2);
+    }
+
+    .ai-hub-intro__media img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .ai-hub-intro__media--empty {
+        background:
+                linear-gradient(
+                        135deg,
+                        color-mix(
+                                in srgb,
+                                var(--color-primary) 15%,
+                                var(--color-surface-2)
+                        ),
+                        var(--color-surface-2)
+                );
+    }
+
+    /*
+     * Уплотнённая контентная часть:
+     * меняем только текст и отступы, не фотографию.
+     */
+    .ai-hub-intro__content {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        justify-content: center;
+        padding: clamp(1rem, 1.8vw, 1.4rem);
+    }
+
+    .ai-hub-intro .capability-list {
+        gap: 0.5rem;
+        margin-top: 0.85rem;
+    }
+
+    .ai-hub-intro .capability-list li {
+        padding-left: 1.05rem;
+        font-size: 0.92rem;
+        line-height: 1.45;
+    }
+
+    .ai-hub-intro .capability-list li::before {
+        top: 0.56rem;
+        width: 0.38rem;
+        height: 0.38rem;
+        box-shadow: 0 0 0 3px
+        color-mix(in srgb, var(--color-primary) 15%, transparent);
+    }
+
+    .ai-hub-intro__note {
+        margin-top: 0.85rem;
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .page-section--workflow {
+        padding-top: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .page-section--platforms {
+        padding-top: 1.25rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .page-section--connect {
+        padding-top: 0.5rem;
+        padding-bottom: 2rem;
+    }
+
+    .capability-list,
+    .question-list {
+        display: grid;
+        gap: 0.75rem;
+        padding: 0;
+        margin: 1.15rem 0 0;
+        list-style: none;
+    }
+
+    .capability-list li,
+    .question-list li {
+        position: relative;
+        padding-left: 1.25rem;
+        color: var(--color-text-muted);
+        line-height: 1.55;
+    }
+
+    .capability-list li::before,
+    .question-list li::before {
+        content: '';
+        position: absolute;
+        top: 0.62rem;
+        left: 0;
+        width: 0.45rem;
+        height: 0.45rem;
+        border-radius: 999px;
+        background: var(--color-primary);
+        box-shadow: 0 0 0 4px
+        color-mix(in srgb, var(--color-primary) 15%, transparent);
+    }
+
+    .connection-note {
+        margin-top: 1.25rem;
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .section-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .section-heading p {
+        max-width: 48rem;
+        margin: 0.65rem 0 0;
+        color: var(--color-text-muted);
+    }
+
+    .nav-link-light {
+        flex: 0 0 auto;
+        color: var(--color-text-muted);
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.78rem;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: color var(--transition), border-color var(--transition);
+    }
+
+    .nav-link-light:hover,
+    .nav-link-light:focus-visible {
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+    }
+
+    .workflow-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+    }
+
+    .workflow-card {
+        position: relative;
+        min-height: 15rem;
+        padding: 1.5rem;
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 18px;
+        background:
+                linear-gradient(
+                        145deg,
+                        color-mix(in srgb, var(--color-primary) 8%, var(--color-surface)) 0%,
+                        var(--color-surface) 58%
+                );
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.035);
+    }
+
+    .workflow-card::after {
+        content: '';
+        position: absolute;
+        top: -5rem;
+        right: -4rem;
+        width: 12rem;
+        height: 12rem;
+        border: 1px solid
+        color-mix(in srgb, var(--color-primary) 32%, transparent);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .workflow-card__number {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 3.25rem;
+        height: 2rem;
+        padding-inline: 0.7rem;
+        border-radius: 999px;
+        background: var(--color-primary);
+        color: var(--color-surface);
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+    }
+
+    .workflow-card h3 {
+        position: relative;
+        z-index: 1;
+        margin: 1.35rem 0 0.65rem;
+        font-size: 1.2rem;
+        line-height: 1.25;
+    }
+
+    .workflow-card p {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        color: var(--color-text-muted);
+        line-height: 1.6;
+    }
+
+    .platform-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .platform-card {
+        display: flex;
+        flex-direction: column;
+        min-height: 15.5rem;
+        padding: 1.35rem;
+        border: 1px solid var(--color-border);
+        border-radius: 18px;
+        background: var(--color-surface);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.035);
+    }
+
+    .platform-card__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .platform-card__logo {
+        display: grid;
+        place-items: center;
+        width: 3rem;
+        height: 3rem;
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        background: var(--color-surface-2);
+        color: var(--color-primary);
+        font-family: var(--font-display, serif);
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .platform-card__logo img {
+        width: 100%;
+        height: 100%;
+        padding: 0.55rem;
+        object-fit: contain;
+    }
+
+    .platform-status {
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        padding: 0.25rem 0.55rem;
+        color: var(--color-text-muted);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .platform-status--available {
+        border-color: color-mix(
+                in srgb,
+                var(--color-primary) 48%,
+                var(--color-border)
+        );
+        background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+        color: var(--color-primary);
+    }
+
+    .platform-card h3 {
+        margin: 1.15rem 0 0.55rem;
+        font-size: 1.2rem;
+        line-height: 1.25;
+    }
+
+    .platform-card p {
+        margin: 0;
+        color: var(--color-text-muted);
+        line-height: 1.55;
+    }
+
+    .platform-card__actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.65rem 1rem;
+        margin-top: auto;
+        padding-top: 1.25rem;
+    }
+
+    .platform-external-link {
+        color: var(--color-text-muted);
+        font-size: 0.82rem;
+        text-decoration: none;
+    }
+
+    .platform-external-link:hover,
+    .platform-external-link:focus-visible {
+        color: var(--color-primary);
+    }
+
+    .empty-state {
+        max-width: 42rem;
+    }
+
+    .endpoint {
+        display: block;
+        margin-top: 1.25rem;
+        padding: 0.9rem 1rem;
+        overflow-x: auto;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        background: var(--color-surface-2);
+        color: var(--color-primary);
+        font-family:
+                ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.9rem;
+        line-height: 1.45;
+    }
+
+    @media (max-width: 1000px) {
+        .platform-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 860px) {
+        .workflow-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .workflow-card,
+        .platform-card {
+            min-height: 0;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .ai-hub-intro {
+            min-height: 0;
+        }
+
+        /*
+         * На mobile оставляем высоту фото прежней:
+         * 12rem, как в предыдущем варианте.
+         */
+        .ai-hub-intro__media {
+            flex-basis: 12rem;
+        }
+
+        .ai-hub-intro__content {
+            padding: 1rem;
+        }
+
+        .section-heading {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 0.9rem;
+        }
+
+        .workflow-card {
+            padding: 1.25rem;
+        }
+
+        .platform-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-section--workflow {
+            padding-top: 1.25rem;
+            padding-bottom: 1.25rem;
+        }
+
+        .page-section--platforms {
+            padding-top: 1rem;
+            padding-bottom: 1.25rem;
+        }
+
+        .page-section--connect {
+            padding-top: 0.25rem;
+            padding-bottom: 1.5rem;
+        }
+    }
+
+    .page-section--capabilities {
+        padding-top: 1.25rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .capability-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .capability-card {
+        display: flex;
+        flex-direction: column;
+        min-height: 14rem;
+        padding: 1.35rem;
+        border: 1px solid var(--color-border);
+        border-radius: 18px;
+        background: var(--color-surface);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.035);
+    }
+
+    .capability-card__icon {
+        display: grid;
+        place-items: center;
+        width: 3rem;
+        height: 3rem;
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        background: var(--color-surface-2);
+        color: var(--color-primary);
+        font-family: var(--font-display, serif);
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .capability-card__icon img {
+        width: 100%;
+        height: 100%;
+        padding: 0.55rem;
+        object-fit: contain;
+    }
+
+    .capability-card h3 {
+        margin: 1.15rem 0 0.55rem;
+        font-size: 1.2rem;
+        line-height: 1.25;
+    }
+
+    .capability-card p {
+        margin: 0;
+        color: var(--color-text-muted);
+        line-height: 1.55;
+    }
+
+    @media (max-width: 1000px) {
+        .capability-grid,
+        .platform-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 640px) {
+        .capability-grid,
+        .platform-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-section--capabilities {
+            padding-top: 1rem;
+            padding-bottom: 1.25rem;
+        }
+    }
+
+    .page-section--troubleshooting,
+    .page-section--faq {
+        padding-top: 1.25rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .help-list {
+        display: grid;
+        gap: 0.75rem;
+        max-width: 56rem;
+    }
+
+    .help-item {
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        background: var(--color-surface);
+        overflow: hidden;
+    }
+
+    .help-item summary {
+        position: relative;
+        cursor: pointer;
+        padding: 1rem 3.25rem 1rem 1.15rem;
+        color: var(--color-text);
+        font-weight: 700;
+        line-height: 1.45;
+        list-style: none;
+    }
+
+    .help-item summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .help-item summary::after {
+        content: '+';
+        position: absolute;
+        top: 50%;
+        right: 1.15rem;
+        color: var(--color-primary);
+        font-size: 1.35rem;
+        font-weight: 400;
+        line-height: 1;
+        transform: translateY(-50%);
+        transition: transform var(--transition);
+    }
+
+    .help-item[open] summary {
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .help-item[open] summary::after {
+        transform: translateY(-50%) rotate(45deg);
+    }
+
+    .help-item__content {
+        padding: 1rem 1.15rem 1.15rem;
+    }
+
+    .help-item__content p {
+        margin: 0;
+        color: var(--color-text-muted);
+        line-height: 1.65;
+    }
+
+    .help-item__platforms {
+        margin-top: 0.85rem !important;
+        color: var(--color-text-muted);
+        font-size: 0.82rem;
+    }
+
+    .help-item__category {
+        display: inline-flex;
+        margin-top: 0.85rem;
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        padding: 0.22rem 0.55rem;
+        color: var(--color-text-muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    @media (max-width: 640px) {
+        .page-section--troubleshooting,
+        .page-section--faq {
+            padding-top: 1rem;
+            padding-bottom: 1.25rem;
+        }
+
+        .help-item summary {
+            padding: 0.9rem 2.85rem 0.9rem 1rem;
+        }
+
+        .help-item summary::after {
+            right: 1rem;
+        }
+
+        .help-item__content {
+            padding: 0.9rem 1rem 1rem;
+        }
+    }
+
+    .page-section--feedback {
+        padding-top: 1.25rem;
+        padding-bottom: 3rem;
+    }
+
+    .feedback-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+        padding: clamp(1.5rem, 4vw, 2.75rem);
+        overflow: hidden;
+        border: 1px solid
+        color-mix(in srgb, var(--color-primary) 34%, var(--color-border));
+        border-radius: 20px;
+        background:
+                linear-gradient(
+                        135deg,
+                        color-mix(in srgb, var(--color-primary) 12%, var(--color-surface)),
+                        var(--color-surface) 56%
+                );
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.045);
+    }
+
+    .feedback-card__copy {
+        max-width: 48rem;
+    }
+
+    .feedback-card__copy .section-title {
+        margin: 0.45rem 0 0;
+    }
+
+    .feedback-card__copy p {
+        margin: 0.75rem 0 0;
+        color: var(--color-text-muted);
+        line-height: 1.65;
+    }
+
+    .feedback-card__actions {
+        display: flex;
+        flex: 0 0 auto;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    @media (max-width: 760px) {
+        .page-section--feedback {
+            padding-top: 1rem;
+            padding-bottom: 2rem;
+        }
+
+        .feedback-card {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 1.25rem;
+            padding: 1.35rem;
+            border-radius: 16px;
+        }
+
+        .feedback-card__actions {
+            width: 100%;
+        }
+
+        .feedback-card__actions :global(.button) {
+            flex: 1 1 auto;
+            justify-content: center;
+        }
+    }
+</style>
