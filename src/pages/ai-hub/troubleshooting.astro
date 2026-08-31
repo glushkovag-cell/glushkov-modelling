@@ -1,0 +1,341 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeoHead from '../../components/seo/SeoHead.astro';
+import {
+    getAiHubPlatforms,
+    getAiHubTroubleshooting,
+} from '../../lib/wordpress';
+
+const [platforms, troubleshooting] = await Promise.all([
+    getAiHubPlatforms(),
+    getAiHubTroubleshooting(),
+]);
+
+const SEO_TITLE = 'Troubleshooting — AI Hub — Glushkov Modelling';
+const SEO_DESCRIPTION =
+    'Troubleshooting guidance for public Glushkov Modelling MCP connections, OAuth authorization, endpoint setup, and tool discovery.';
+
+const visiblePlatformIds = new Set(platforms.map((platform) => platform.id));
+
+const isCommonIssue = (platformIds: string[]) => {
+    if (platformIds.length === 0) {
+        return true;
+    }
+
+    return (
+        platformIds.length === visiblePlatformIds.size &&
+        platformIds.every((id) => visiblePlatformIds.has(id))
+    );
+};
+
+const commonIssues = troubleshooting.filter((item) =>
+    isCommonIssue(item.platformIds),
+);
+
+const platformGroups = platforms
+    .map((platform) => ({
+        id: platform.id,
+        slug: platform.slug,
+        title: platform.title,
+        items: troubleshooting.filter(
+            (item) =>
+                item.platformIds.includes(platform.id) &&
+                !isCommonIssue(item.platformIds),
+        ),
+    }))
+    .filter((group) => group.items.length > 0);
+---
+
+<BaseLayout title={SEO_TITLE} description={SEO_DESCRIPTION}>
+    <SeoHead
+            slot="head"
+            pageType="website"
+            title={SEO_TITLE}
+            description={SEO_DESCRIPTION}
+    />
+
+    <section class="hero troubleshooting-hero" id="top">
+        <div class="container">
+            <div class="hero-card hero-copy">
+                <a href="/ai-hub" class="back-link">← Back to AI Hub</a>
+
+                <span class="eyebrow">AI Hub help</span>
+
+                <h1>Troubleshooting</h1>
+
+                <p>
+                    Resolve common endpoint, OAuth authorization, email
+                    verification, and MCP tool discovery issues.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-section troubleshooting-content">
+        <div class="container">
+            {
+                troubleshooting.length > 0 ? (
+                        <div class="troubleshooting-groups">
+                            {
+                                commonIssues.length > 0 && (
+                                            <section
+                                                    class="troubleshooting-group"
+                                                    aria-labelledby="common-issues"
+                                            >
+                                                <div class="troubleshooting-group__heading">
+                                                    <span class="eyebrow">All platforms</span>
+                                                    <h2 id="common-issues">Common issues</h2>
+                                                    <p>
+                                                        These solutions apply across supported
+                                                        AI assistants.
+                                                    </p>
+                                                </div>
+
+                                                <div class="help-list">
+                                                    {
+                                                        commonIssues.map((item) => (
+                                                                <details class="help-item">
+                                                                    <summary>{item.title}</summary>
+
+                                                                    <div class="help-item__content">
+                                                                        <p>{item.answer}</p>
+                                                                    </div>
+                                                                </details>
+                                                        ))
+                                                    }
+                                                </div>
+                                            </section>
+                                )
+                            }
+
+                            {
+                                platformGroups.map((group) => (
+                                        <section
+                                                class="troubleshooting-group"
+                                                id={group.slug}
+                                                aria-labelledby={`troubleshooting-${group.slug}`}
+                                        >
+                                            <div class="troubleshooting-group__heading">
+                                                <span class="eyebrow">Platform guide</span>
+
+                                                <h2 id={`troubleshooting-${group.slug}`}>
+                                                    {group.title}
+                                                </h2>
+
+                                                <p>
+                                                    Connection issues that may apply when using
+                                                    Glushkov Modelling MCP with {group.title}.
+                                                </p>
+                                            </div>
+
+                                            <div class="help-list">
+                                                {
+                                                    group.items.map((item) => (
+                                                            <details class="help-item">
+                                                                <summary>{item.title}</summary>
+
+                                                                <div class="help-item__content">
+                                                                    <p>{item.answer}</p>
+
+                                                                    {
+                                                                        item.platformNames.length > 1 && (
+                                                                                    <p class="help-item__platforms">
+                                                                                        Also applies to:{' '}
+                                                                                        {item.platformNames
+                                                                                            .filter(
+                                                                                                (name) =>
+                                                                                                    name !== group.title,
+                                                                                            )
+                                                                                            .join(', ')}
+                                                                                    </p>
+                                                                        )
+                                                                    }
+                                                                </div>
+                                                            </details>
+                                                    ))
+                                                }
+                                            </div>
+                                        </section>
+                                ))
+                            }
+                        </div>
+                ) : (
+                        <div class="content-card empty-state">
+                            <span class="eyebrow">Coming soon</span>
+
+                            <h1 class="card-title">
+                                Troubleshooting guidance is being prepared
+                            </h1>
+
+                            <p>
+                                Please return to AI Hub for the public endpoint and
+                                platform connection guides.
+                            </p>
+
+                            <a href="/ai-hub" class="build-link">
+                                Back to AI Hub →
+                            </a>
+                        </div>
+                )
+            }
+        </div>
+    </section>
+</BaseLayout>
+
+<style>
+    .troubleshooting-hero {
+        padding-bottom: 0.75rem;
+    }
+
+    .hero-copy {
+        max-width: 50rem;
+    }
+
+    .troubleshooting-hero h1 {
+        max-width: 15ch;
+    }
+
+    .back-link {
+        display: flex;
+        margin-bottom: 1.5rem;
+        color: var(--color-primary);
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+        line-height: 1.25;
+        width: fit-content;
+    }
+
+    .back-link:hover,
+    .back-link:focus-visible {
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+    }
+
+    .troubleshooting-content {
+        padding-top: 1.25rem;
+        padding-bottom: 3rem;
+    }
+
+    .troubleshooting-groups {
+        display: grid;
+        gap: 2.75rem;
+        max-width: 58rem;
+    }
+
+    .troubleshooting-group__heading {
+        margin-bottom: 1rem;
+    }
+
+    .troubleshooting-group__heading h2 {
+        margin: 0.35rem 0 0;
+        font-size: clamp(1.65rem, 3vw, 2.2rem);
+        line-height: 1.1;
+    }
+
+    .troubleshooting-group__heading p {
+        max-width: 44rem;
+        margin: 0.65rem 0 0;
+        color: var(--color-text-muted);
+        line-height: 1.6;
+    }
+
+    .help-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .help-item {
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        background: var(--color-surface);
+    }
+
+    .help-item summary {
+        position: relative;
+        cursor: pointer;
+        padding: 1rem 3.25rem 1rem 1.15rem;
+        color: var(--color-text);
+        font-weight: 700;
+        line-height: 1.45;
+        list-style: none;
+    }
+
+    .help-item summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .help-item summary::after {
+        content: '+';
+        position: absolute;
+        top: 50%;
+        right: 1.15rem;
+        color: var(--color-primary);
+        font-size: 1.35rem;
+        font-weight: 400;
+        line-height: 1;
+        transform: translateY(-50%);
+        transition: transform var(--transition);
+    }
+
+    .help-item[open] summary {
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .help-item[open] summary::after {
+        transform: translateY(-50%) rotate(45deg);
+    }
+
+    .help-item__content {
+        padding: 1rem 1.15rem 1.15rem;
+    }
+
+    .help-item__content p {
+        margin: 0;
+        color: var(--color-text-muted);
+        line-height: 1.65;
+    }
+
+    .help-item__platforms {
+        margin-top: 0.85rem !important;
+        font-size: 0.82rem;
+    }
+
+    .empty-state {
+        max-width: 42rem;
+    }
+
+    .empty-state .build-link {
+        display: inline-flex;
+        margin-top: 1rem;
+    }
+
+    @media (max-width: 640px) {
+        .troubleshooting-content {
+            padding-top: 1rem;
+            padding-bottom: 2rem;
+        }
+
+        .troubleshooting-groups {
+            gap: 2rem;
+        }
+
+        .back-link {
+            margin-bottom: 1.25rem;
+        }
+
+        .help-item summary {
+            padding: 0.9rem 2.85rem 0.9rem 1rem;
+        }
+
+        .help-item summary::after {
+            right: 1rem;
+        }
+
+        .help-item__content {
+            padding: 0.9rem 1rem 1rem;
+        }
+    }
+</style>

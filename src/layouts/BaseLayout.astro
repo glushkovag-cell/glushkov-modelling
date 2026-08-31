@@ -1,7 +1,7 @@
 ---
 /**
     * BaseLayout.astro
-    * Updated to support News nav item + fresh news badge + responsive burger menu.
+    * Shared page shell: header, responsive navigation, theme toggle, footer.
     */
 import '../styles/global.css';
 
@@ -41,6 +41,7 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
   <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
 
   <slot name="head" />
+
   <script is:inline>
     (function () {
       const stored = localStorage.getItem('theme');
@@ -74,12 +75,18 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
       <a href="/about" class:list={['nav-link', { 'nav-link--active': isActive('/about') }]}>About</a>
       <a href="/builds" class:list={['nav-link', { 'nav-link--active': isActive('/builds') }]}>Builds</a>
       <a href="/gallery" class:list={['nav-link', { 'nav-link--active': isActive('/gallery') }]}>Gallery</a>
+
       <a href="/news" class:list={['nav-link', { 'nav-link--active': isActive('/news') }]}>
         <span>News</span>
         {hasFreshNews && <span class="nav-badge" aria-label="Fresh news available"></span>}
       </a>
+
       <a href="/tutorials" class:list={['nav-link', { 'nav-link--active': isActive('/tutorials') }]}>
         <span>Tutorials</span>
+      </a>
+
+      <a href="/ai-hub" class:list={['nav-link', { 'nav-link--active': isActive('/ai-hub') }]}>
+        <span>AI Hub</span>
       </a>
     </nav>
 
@@ -104,6 +111,7 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
           <circle cx="12" cy="12" r="5" />
           <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
         </svg>
+
         <svg
             class="icon-moon"
             width="20"
@@ -138,12 +146,18 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
     <a href="/about" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/about') }]}>About</a>
     <a href="/builds" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/builds') }]}>Builds</a>
     <a href="/gallery" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/gallery') }]}>Gallery</a>
+
     <a href="/news" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/news') }]}>
       <span>News</span>
       {hasFreshNews && <span class="nav-badge" aria-label="Fresh news available"></span>}
     </a>
+
     <a href="/tutorials" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/tutorials') }]}>
       <span>Tutorials</span>
+    </a>
+
+    <a href="/ai-hub" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/ai-hub') }]}>
+      <span>AI Hub</span>
     </a>
   </nav>
 </header>
@@ -151,6 +165,22 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
 <main>
   <slot />
 </main>
+
+<footer class="site-footer">
+  <div class="container site-footer__inner">
+    <p class="site-footer__copyright">
+      © {new Date().getFullYear()} Glushkov Modelling
+    </p>
+
+    <nav class="site-footer__nav" aria-label="Footer navigation">
+      <a href="/about">About</a>
+      <a href="/builds">Builds</a>
+      <a href="/gallery">Gallery</a>
+      <a href="/tutorials">Tutorials</a>
+      <a href="/ai-hub">AI Hub</a>
+    </nav>
+  </div>
+</footer>
 
 <script is:inline>
   (function () {
@@ -164,6 +194,7 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
     function applyTheme(theme) {
       root.setAttribute('data-theme', theme);
       localStorage.setItem('theme', theme);
+
       if (btn) {
         btn.setAttribute(
             'aria-label',
@@ -183,6 +214,7 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
 
     function closeMobileMenu() {
       if (!burgerBtn || !mobileNav) return;
+
       burgerBtn.setAttribute('aria-expanded', 'false');
       burgerBtn.setAttribute('aria-label', 'Open navigation menu');
       burgerBtn.classList.remove('burger--open');
@@ -191,6 +223,7 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
 
     function openMobileMenu() {
       if (!burgerBtn || !mobileNav) return;
+
       burgerBtn.setAttribute('aria-expanded', 'true');
       burgerBtn.setAttribute('aria-label', 'Close navigation menu');
       burgerBtn.classList.add('burger--open');
@@ -199,7 +232,9 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
 
     function toggleMobileMenu() {
       if (!burgerBtn || !mobileNav) return;
+
       const isOpen = burgerBtn.classList.contains('burger--open');
+
       if (isOpen) {
         closeMobileMenu();
       } else {
@@ -379,6 +414,45 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
     color: var(--color-primary) !important;
   }
 
+  .site-footer {
+    margin-top: 4rem;
+    border-top: 1px solid var(--color-divider);
+    background: var(--color-surface);
+  }
+
+  .site-footer__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-block: 1.5rem;
+  }
+
+  .site-footer__copyright {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+  }
+
+  .site-footer__nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem 1rem;
+  }
+
+  .site-footer__nav a {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+
+  .site-footer__nav a:hover,
+  .site-footer__nav a:focus-visible {
+    color: var(--color-primary);
+  }
+
   @media (max-width: 920px) {
     .nav {
       display: none;
@@ -454,6 +528,16 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
     .burger {
       width: 34px;
       height: 34px;
+    }
+
+    .site-footer__inner {
+      align-items: flex-start;
+      flex-direction: column;
+      padding-block: 1.25rem;
+    }
+
+    .site-footer__nav {
+      justify-content: flex-start;
     }
   }
 

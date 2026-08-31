@@ -1,0 +1,940 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeoHead from '../../components/seo/SeoHead.astro';
+import {
+    getAiHubConnectionSteps,
+    getAiHubPage,
+    getAiHubPlatformBySlug,
+    getAiHubPlatforms,
+    getAiHubTroubleshooting,
+} from '../../lib/wordpress';
+
+export async function getStaticPaths() {
+    const platforms = await getAiHubPlatforms();
+
+    return platforms.map((platform) => ({
+        params: {
+            slug: platform.slug,
+        },
+    }));
+}
+
+const { slug } = Astro.params;
+
+if (!slug) {
+    return Astro.redirect('/ai-hub');
+}
+
+const [aiHub, platform, troubleshooting] = await Promise.all([
+    getAiHubPage(),
+    getAiHubPlatformBySlug(slug),
+    getAiHubTroubleshooting(),
+]);
+
+if (!platform) {
+    return Astro.redirect('/ai-hub');
+}
+
+const connectionSteps = await getAiHubConnectionSteps(platform.id);
+
+const endpoint =
+    platform.endpointOverride ||
+    aiHub?.publicMcpEndpoint ||
+    'https://mcp.glushkov-modelling.com/mcp-oauth';
+
+const platformTroubleshooting = troubleshooting.filter((item) =>
+    item.platformIds.includes(platform.id),
+);
+
+const SEO_TITLE = `${platform.title} MCP Connection Guide — Glushkov Modelling`;
+const SEO_DESCRIPTION =
+    platform.shortDescription ||
+    `Connect ${platform.title} to the Glushkov Modelling archive through the public OAuth MCP server.`;
+
+const formatStepNumber = (stepNumber: number, index: number) => {
+    const value = Number.isFinite(stepNumber) && stepNumber > 0
+        ? stepNumber
+        : index + 1;
+
+    return String(value).padStart(2, '0');
+};
+
+const isUrl = (value: string) => /^https?:\/\/\S+$/i.test(value.trim());
+
+const normalizeCodeValue = (value: string) =>
+    value
+        .trim()
+        .replace(/^json\\n/i, '')
+        .replace(/\\n/g, '\n')
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, '\\')
+        .trim();
+
+const formatDate = (value: string | null) => {
+    if (!value) return '';
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return '';
+
+    return new Intl.DateTimeFormat('en', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    }).format(date);
+};
+
+const testedAt = formatDate(platform.lastTestedAt);
+---
+
+<BaseLayout title={SEO_TITLE} description={SEO_DESCRIPTION}>
+    <SeoHead
+            slot="head"
+            pageType="website"
+            title={SEO_TITLE}
+            description={SEO_DESCRIPTION}
+    />
+
+    <section class="hero guide-hero" id="top">
+        <div class="container">
+            <div class="guide-hero__grid">
+                <div class="hero-card hero-copy">
+                    <a href="/ai-hub" class="back-link">← Back to AI Hub</a>
+
+                    <div class="guide-platform-heading">
+                        <div class="guide-platform-heading__logo">
+                            {
+                                platform.logoUrl ? (
+                                        <img
+                                                src={platform.logoUrl}
+                                                alt={platform.logoAlt}
+                                                loading="eager"
+                                                decoding="async"
+                                        />
+                                ) : (
+                                        <span aria-hidden="true">
+                                        {platform.title.slice(0, 1)}
+                                    </span>
+                                )
+                            }
+                        </div>
+
+                        <div>
+                            <span class="eyebrow">Connection guide</span>
+
+                            <h1>{platform.title}</h1>
+                        </div>
+                    </div>
+
+                    {
+                        platform.compatibilityStatusValue && (
+                                    <div class="guide-status-row">
+                                <span
+                                        class:list={[
+                                            'platform-status',
+                                            `platform-status--${platform.compatibilityStatusValue}`,
+                                        ]}
+                                >
+                                    {platform.compatibilityStatusLabel}
+                                </span>
+
+                                        {
+                                            testedAt && (
+                                                        <span class="tested-at">
+                                            Last tested: {testedAt}
+                                        </span>
+                                            )
+                                        }
+                                    </div>
+                        )
+                    }
+
+                    {
+                        platform.shortDescription && (
+                                    <p class="guide-hero__lead">
+                                        {platform.shortDescription}
+                                    </p>
+                        )
+                    }
+
+                    {
+                        platform.officialPlatformUrl && (
+                                    <a
+                                            href={platform.officialPlatformUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="build-link"
+                                    >
+                                        Visit {platform.title} ↗
+                                    </a>
+                        )
+                    }
+                </div>
+
+                <aside class="hero-card guide-summary" aria-label="Guide overview">
+                    <span class="eyebrow">Before you start</span>
+
+                    {
+                        platform.accountRequirements ? (
+                                <p>{platform.accountRequirements}</p>
+                        ) : (
+                                <p>
+                                    Use a {platform.title} account that supports MCP
+                                    connections and browser-based OAuth authorization.
+                                </p>
+                        )
+                    }
+
+                    <div class="guide-summary__meta">
+                        <span>Public OAuth endpoint</span>
+
+                        <code>{endpoint}</code>
+                    </div>
+
+                    <p class="guide-summary__note">
+                        No API key is required. Complete authorization in the
+                        browser window opened by {platform.title}.
+                    </p>
+                </aside>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-section guide-section" id="endpoint">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Public OAuth endpoint</span>
+
+                    <h2 class="section-title">Connect Glushkov Modelling MCP</h2>
+
+                    <p>
+                        Add this public endpoint in the MCP, connectors, apps, or
+                        integrations section of {platform.title}, then complete
+                        OAuth authorization when prompted.
+                    </p>
+                </div>
+
+                <a href="#top" class="nav-link-light">↑ Top</a>
+            </div>
+
+            <div class="endpoint-card">
+                <code class="endpoint">{endpoint}</code>
+
+                <p class="endpoint-card__warning">
+                    Do not use
+                    <code>https://mcp.glushkov-modelling.com/mcp</code>.
+                    It is a legacy endpoint and is not intended for public OAuth
+                    connections.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-section guide-section" id="steps">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Step by step</span>
+
+                    <h2 class="section-title">
+                        Connect {platform.title} to the archive
+                    </h2>
+
+                    <p>
+                        Follow the steps in order. Interface labels can change over
+                        time, but the public OAuth endpoint remains the same.
+                    </p>
+                </div>
+
+                <a href="#top" class="nav-link-light">↑ Top</a>
+            </div>
+
+            {
+                connectionSteps.length > 0 ? (
+                        <ol class="guide-steps">
+                            {
+                                connectionSteps.map((step, index) => (
+                                        <li class="guide-step">
+                                    <span class="guide-step__number">
+                                        {formatStepNumber(step.stepNumber, index)}
+                                    </span>
+
+                                            <div class="guide-step__content">
+                                                <h3>{step.title}</h3>
+
+                                                {
+                                                    step.instruction && (
+                                                                <p>{step.instruction}</p>
+                                                    )
+                                                }
+
+                                                {
+                                                    step.urlOrCode && (
+                                                        isUrl(step.urlOrCode) ? (
+                                                                <a
+                                                                        class="guide-step__url"
+                                                                        href={step.urlOrCode.trim()}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                >
+                                                                    {step.urlOrCode.trim()} ↗
+                                                                </a>
+                                                        ) : (
+                                                                <pre class="guide-step__code">
+                                                                    <code>{normalizeCodeValue(step.urlOrCode)}</code>
+                                                                </pre>
+                                                        )
+                                                    )
+                                                }
+
+                                                {
+                                                    step.note && (
+                                                                <p class="guide-step__note">
+                                                                    <strong>Note:</strong> {step.note}
+                                                                </p>
+                                                    )
+                                                }
+                                            </div>
+                                        </li>
+                                ))
+                            }
+                        </ol>
+                ) : (
+                        <div class="content-card empty-state">
+                            <span class="eyebrow">Coming soon</span>
+
+                            <h2 class="card-title">
+                                This connection guide is being prepared
+                            </h2>
+
+                            <p>
+                                The platform is listed, but its detailed connection
+                                steps are not yet published.
+                            </p>
+                        </div>
+                )
+            }
+        </div>
+    </section>
+
+    {
+        platform.testPrompt && (
+                    <section class="page-section guide-section" id="test">
+                        <div class="container">
+                            <div class="section-heading">
+                                <div>
+                                    <span class="eyebrow">Test the connection</span>
+
+                                    <h2 class="section-title">
+                                        Ask your first archive question
+                                    </h2>
+
+                                    <p>
+                                        Once the MCP tools are connected, send this prompt
+                                        in a new {platform.title} conversation.
+                                    </p>
+                                </div>
+
+                                <a href="#top" class="nav-link-light">↑ Top</a>
+                            </div>
+
+                            <div class="test-prompt-card">
+                                <p>{platform.testPrompt}</p>
+                            </div>
+                        </div>
+                    </section>
+        )
+    }
+
+    {
+        platformTroubleshooting.length > 0 && (
+                    <section class="page-section guide-section" id="help">
+                        <div class="container">
+                            <div class="section-heading">
+                                <div>
+                                    <span class="eyebrow">Need help?</span>
+
+                                    <h2 class="section-title">
+                                        Troubleshooting for {platform.title}
+                                    </h2>
+
+                                    <p>
+                                        These common issues may affect your connection.
+                                    </p>
+                                </div>
+
+                                <a
+                                        href="/ai-hub/troubleshooting"
+                                        class="nav-link-light"
+                                >
+                                    View all →
+                                </a>
+                            </div>
+
+                            <div class="help-list">
+                                {
+                                    platformTroubleshooting.map((item) => (
+                                            <details class="help-item">
+                                                <summary>{item.title}</summary>
+
+                                                <div class="help-item__content">
+                                                    <p>{item.answer}</p>
+
+                                                    {
+                                                        item.platformNames.length > 1 && (
+                                                                    <p class="help-item__platforms">
+                                                                        Also applies to:{' '}
+                                                                        {item.platformNames
+                                                                            .filter(
+                                                                                (name) =>
+                                                                                    name !== platform.title,
+                                                                            )
+                                                                            .join(', ')}
+                                                                    </p>
+                                                        )
+                                                    }
+                                                </div>
+                                            </details>
+                                    ))
+                                }
+                            </div>
+                        </div>
+                    </section>
+        )
+    }
+
+    <section class="page-section guide-section guide-section--finish">
+        <div class="container">
+            <div class="content-card guide-finish">
+                <span class="eyebrow">More help</span>
+
+                <h2 class="card-title">
+                    Continue exploring the AI Hub
+                </h2>
+
+                <p>
+                    Find common solutions, answers about access and privacy, or
+                    return to the overview to choose another AI assistant.
+                </p>
+
+                <div class="guide-finish__actions">
+                    <a href="/ai-hub/troubleshooting" class="build-link">
+                        Troubleshooting →
+                    </a>
+
+                    <a href="/ai-hub/faq" class="build-link">
+                        FAQ →
+                    </a>
+
+                    <a href="/ai-hub" class="build-link">
+                        AI Hub overview →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</BaseLayout>
+
+<style>
+    .guide-hero {
+        padding-bottom: 0.75rem;
+    }
+
+    .guide-hero__grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(18rem, 0.7fr);
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .hero-copy,
+    .guide-summary {
+        min-height: 100%;
+    }
+
+    .back-link {
+        display: flex;
+        margin-bottom: 1.5rem;
+        color: var(--color-primary);
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-decoration: none;
+        white-space: nowrap;
+        line-height: 1.25;
+        width: fit-content;
+    }
+
+    .back-link:hover,
+    .back-link:focus-visible {
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+    }
+
+    .guide-platform-heading {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .guide-platform-heading__logo {
+        display: grid;
+        flex: 0 0 auto;
+        place-items: center;
+        width: 4rem;
+        height: 4rem;
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        background: var(--color-surface-2);
+        color: var(--color-primary);
+        font-family: var(--font-display, serif);
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .guide-platform-heading__logo img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 0.65rem;
+        object-fit: contain;
+    }
+
+    .guide-platform-heading .eyebrow {
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+
+    .guide-platform-heading h1 {
+        margin: 0;
+        max-width: none;
+    }
+
+    .guide-status-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.65rem;
+        margin-top: 1.35rem;
+    }
+
+    .platform-status {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        padding: 0.25rem 0.55rem;
+        color: var(--color-text-muted);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .platform-status--available {
+        border-color: color-mix(
+                in srgb,
+                var(--color-primary) 48%,
+                var(--color-border)
+        );
+        background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+        color: var(--color-primary);
+    }
+
+    .tested-at {
+        color: var(--color-text-muted);
+        font-size: 0.82rem;
+    }
+
+    .guide-hero__lead {
+        max-width: 48rem;
+        margin: 1.25rem 0 0;
+        color: var(--color-text-muted);
+        line-height: 1.65;
+    }
+
+    .guide-hero .build-link {
+        display: inline-flex;
+        margin-top: 1.25rem;
+    }
+
+    .guide-summary {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: clamp(1.35rem, 2.5vw, 2rem);
+    }
+
+    .guide-summary > p {
+        margin: 0.85rem 0 0;
+        color: var(--color-text-muted);
+        line-height: 1.6;
+    }
+
+    .guide-summary__meta {
+        display: grid;
+        gap: 0.5rem;
+        margin-top: 1.25rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .guide-summary__meta > span {
+        color: var(--color-text-muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .guide-summary__meta code {
+        overflow-wrap: anywhere;
+        color: var(--color-primary);
+        font-family:
+                ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.8rem;
+        line-height: 1.5;
+    }
+
+    .guide-summary__note {
+        font-size: 0.86rem;
+    }
+
+    .guide-section {
+        padding-top: 1.25rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .guide-section--finish {
+        padding-bottom: 3rem;
+    }
+
+    .section-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .section-heading p {
+        max-width: 48rem;
+        margin: 0.65rem 0 0;
+        color: var(--color-text-muted);
+        line-height: 1.6;
+    }
+
+    .nav-link-light {
+        flex: 0 0 auto;
+        color: var(--color-text-muted);
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.78rem;
+        text-decoration: none;
+        white-space: nowrap;
+        transition: color var(--transition), border-color var(--transition);
+    }
+
+    .nav-link-light:hover,
+    .nav-link-light:focus-visible {
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+    }
+
+    .endpoint-card,
+    .test-prompt-card {
+        max-width: 58rem;
+        padding: clamp(1.2rem, 2.5vw, 1.75rem);
+        border: 1px solid var(--color-border);
+        border-radius: 18px;
+        background: var(--color-surface);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.035);
+    }
+
+    .endpoint {
+        display: block;
+        padding: 0.9rem 1rem;
+        overflow-x: auto;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        background: var(--color-surface-2);
+        color: var(--color-primary);
+        font-family:
+                ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.95rem;
+        line-height: 1.45;
+    }
+
+    .endpoint-card__warning {
+        margin: 1rem 0 0;
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .endpoint-card__warning code {
+        overflow-wrap: anywhere;
+        color: var(--color-text);
+        font-family:
+                ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.85em;
+    }
+
+    .guide-steps {
+        display: grid;
+        gap: 1rem;
+        max-width: 58rem;
+        padding: 0;
+        margin: 0;
+        list-style: none;
+        counter-reset: guide-step;
+    }
+
+    .guide-step {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        gap: 1rem;
+        padding: clamp(1.2rem, 2.5vw, 1.6rem);
+        border: 1px solid var(--color-border);
+        border-radius: 18px;
+        background: var(--color-surface);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.035);
+    }
+
+    .guide-step__number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.8rem;
+        height: 2rem;
+        border-radius: 999px;
+        background: var(--color-primary);
+        color: var(--color-surface);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+    }
+
+    .guide-step__content h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        line-height: 1.3;
+    }
+
+    .guide-step__content > p {
+        margin: 0.6rem 0 0;
+        color: var(--color-text-muted);
+        line-height: 1.65;
+    }
+
+    .guide-step__url {
+        display: inline-flex;
+        max-width: 100%;
+        margin-top: 0.9rem;
+        overflow-wrap: anywhere;
+        color: var(--color-primary);
+        font-family:
+                ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.88rem;
+        line-height: 1.5;
+    }
+
+    .guide-step__code {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        margin: 0.9rem 0 0;
+        padding: 0.85rem 1rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        background: var(--color-surface-2);
+    }
+
+    .guide-step__code code {
+        display: block;
+        min-width: max-content;
+        color: var(--color-text);
+        font-family:
+                ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.8rem;
+        line-height: 1.55;
+        white-space: pre;
+    }
+
+    .guide-step__note {
+        margin-top: 0.9rem !important;
+        padding-left: 0.85rem;
+        border-left: 2px solid var(--color-primary);
+        font-size: 0.9rem;
+    }
+
+    .test-prompt-card p {
+        margin: 0;
+        color: var(--color-text);
+        font-size: 1.05rem;
+        line-height: 1.7;
+    }
+
+    .help-list {
+        display: grid;
+        gap: 0.75rem;
+        max-width: 58rem;
+    }
+
+    .help-item {
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        background: var(--color-surface);
+    }
+
+    .help-item summary {
+        position: relative;
+        cursor: pointer;
+        padding: 1rem 3.25rem 1rem 1.15rem;
+        color: var(--color-text);
+        font-weight: 700;
+        line-height: 1.45;
+        list-style: none;
+    }
+
+    .help-item summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .help-item summary::after {
+        content: '+';
+        position: absolute;
+        top: 50%;
+        right: 1.15rem;
+        color: var(--color-primary);
+        font-size: 1.35rem;
+        font-weight: 400;
+        line-height: 1;
+        transform: translateY(-50%);
+        transition: transform var(--transition);
+    }
+
+    .help-item[open] summary {
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .help-item[open] summary::after {
+        transform: translateY(-50%) rotate(45deg);
+    }
+
+    .help-item__content {
+        padding: 1rem 1.15rem 1.15rem;
+    }
+
+    .help-item__content p {
+        margin: 0;
+        color: var(--color-text-muted);
+        line-height: 1.65;
+    }
+
+    .help-item__platforms {
+        margin-top: 0.85rem !important;
+        font-size: 0.82rem;
+    }
+
+    .guide-finish {
+        max-width: 58rem;
+    }
+
+    .guide-finish p {
+        max-width: 48rem;
+        margin-bottom: 0;
+        color: var(--color-text-muted);
+        line-height: 1.65;
+    }
+
+    .guide-finish__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.25rem;
+        margin-top: 1.25rem;
+    }
+
+    .empty-state {
+        max-width: 42rem;
+    }
+
+    @media (max-width: 860px) {
+        .guide-hero__grid {
+            grid-template-columns: 1fr;
+        }
+
+        .guide-summary {
+            min-height: 0;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .back-link {
+            margin-bottom: 1.25rem;
+        }
+
+        .guide-platform-heading {
+            align-items: flex-start;
+        }
+
+        .guide-platform-heading__logo {
+            width: 3.5rem;
+            height: 3.5rem;
+        }
+
+        .section-heading {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 0.9rem;
+        }
+
+        .guide-section {
+            padding-top: 1rem;
+            padding-bottom: 1.25rem;
+        }
+
+        .guide-section--finish {
+            padding-bottom: 2rem;
+        }
+
+        .endpoint-card,
+        .test-prompt-card,
+        .guide-step {
+            border-radius: 14px;
+        }
+
+        .guide-step {
+            grid-template-columns: 1fr;
+            gap: 0.85rem;
+            padding: 1.15rem;
+        }
+
+        .guide-step__number {
+            width: 2.65rem;
+        }
+
+        .help-item summary {
+            padding: 0.9rem 2.85rem 0.9rem 1rem;
+        }
+
+        .help-item summary::after {
+            right: 1rem;
+        }
+
+        .help-item__content {
+            padding: 0.9rem 1rem 1rem;
+        }
+
+        .guide-step__code {
+            margin-top: 0.8rem;
+            padding: 0.75rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>

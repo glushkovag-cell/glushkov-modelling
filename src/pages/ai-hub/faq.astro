@@ -1,0 +1,279 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeoHead from '../../components/seo/SeoHead.astro';
+import { getAiHubFaqs } from '../../lib/wordpress';
+
+const faqs = await getAiHubFaqs();
+
+const SEO_TITLE = 'FAQ — AI Hub — Glushkov Modelling';
+const SEO_DESCRIPTION =
+    'Answers to common questions about connecting AI assistants to the Glushkov Modelling archive through the public MCP server.';
+
+const categoryOrder = [
+    'connection',
+    'access',
+    'archive',
+    'privacy',
+    'troubleshooting',
+];
+
+const categoryLabels: Record<string, string> = {
+    connection: 'Connection',
+    access: 'Access',
+    archive: 'Archive',
+    privacy: 'Privacy',
+    troubleshooting: 'Troubleshooting',
+};
+
+const groupedFaqs = categoryOrder
+    .map((category) => ({
+        key: category,
+        label: categoryLabels[category],
+        items: faqs.filter((faq) => faq.categoryValue === category),
+    }))
+    .filter((group) => group.items.length > 0);
+
+const uncategorizedFaqs = faqs.filter(
+    (faq) =>
+        !faq.categoryValue ||
+        !categoryOrder.includes(faq.categoryValue),
+);
+
+if (uncategorizedFaqs.length > 0) {
+    groupedFaqs.push({
+        key: 'other',
+        label: 'Other questions',
+        items: uncategorizedFaqs,
+    });
+}
+---
+
+<BaseLayout title={SEO_TITLE} description={SEO_DESCRIPTION}>
+    <SeoHead
+            slot="head"
+            pageType="website"
+            title={SEO_TITLE}
+            description={SEO_DESCRIPTION}
+    />
+
+    <section class="hero faq-hero" id="top">
+        <div class="container">
+            <div class="hero-card hero-copy">
+                <a href="/ai-hub" class="back-link">← Back to AI Hub</a>
+
+                <span class="eyebrow">AI Hub help</span>
+
+                <h1>Frequently asked questions</h1>
+
+                <p>
+                    Find answers about the public Glushkov Modelling MCP server,
+                    OAuth access, archive content, and privacy.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-section faq-content">
+        <div class="container">
+            {
+                groupedFaqs.length > 0 ? (
+                        <div class="faq-groups">
+                            {
+                                groupedFaqs.map((group) => (
+                                        <section
+                                                class="faq-group"
+                                                aria-labelledby={`faq-${group.key}`}
+                                        >
+                                            <div class="faq-group__heading">
+                                                <span class="eyebrow">AI Hub FAQ</span>
+                                                <h2 id={`faq-${group.key}`}>
+                                                    {group.label}
+                                                </h2>
+                                            </div>
+
+                                            <div class="help-list">
+                                                {
+                                                    group.items.map((faq) => (
+                                                            <details class="help-item">
+                                                                <summary>{faq.title}</summary>
+
+                                                                <div class="help-item__content">
+                                                                    <p>{faq.answer}</p>
+                                                                </div>
+                                                            </details>
+                                                    ))
+                                                }
+                                            </div>
+                                        </section>
+                                ))
+                            }
+                        </div>
+                ) : (
+                        <div class="content-card empty-state">
+                            <span class="eyebrow">Coming soon</span>
+
+                            <h1 class="card-title">
+                                Frequently asked questions are being prepared
+                            </h1>
+
+                            <p>
+                                Please return to the AI Hub for connection details and
+                                platform guides.
+                            </p>
+
+                            <a href="/ai-hub" class="build-link">
+                                Back to AI Hub →
+                            </a>
+                        </div>
+                )
+            }
+        </div>
+    </section>
+</BaseLayout>
+
+<style>
+    .faq-hero {
+        padding-bottom: 0.75rem;
+    }
+
+    .hero-copy {
+        max-width: 50rem;
+    }
+
+    .faq-hero h1 {
+        max-width: 15ch;
+    }
+
+    .back-link {
+        display: flex;
+        align-items: center;
+        width: fit-content;
+        margin-bottom: 1.5rem;
+        color: var(--color-primary);
+        font-size: 0.9rem;
+        font-weight: 700;
+        line-height: 1.25;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .back-link:hover,
+    .back-link:focus-visible {
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+    }
+
+    .faq-content {
+        padding-top: 1.25rem;
+        padding-bottom: 3rem;
+    }
+
+    .faq-groups {
+        display: grid;
+        gap: 2.75rem;
+        max-width: 58rem;
+    }
+
+    .faq-group__heading {
+        margin-bottom: 1rem;
+    }
+
+    .faq-group__heading h2 {
+        margin: 0.35rem 0 0;
+        font-size: clamp(1.65rem, 3vw, 2.2rem);
+        line-height: 1.1;
+    }
+
+    .help-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .help-item {
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: 14px;
+        background: var(--color-surface);
+    }
+
+    .help-item summary {
+        position: relative;
+        cursor: pointer;
+        padding: 1rem 3.25rem 1rem 1.15rem;
+        color: var(--color-text);
+        font-weight: 700;
+        line-height: 1.45;
+        list-style: none;
+    }
+
+    .help-item summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .help-item summary::after {
+        content: '+';
+        position: absolute;
+        top: 50%;
+        right: 1.15rem;
+        color: var(--color-primary);
+        font-size: 1.35rem;
+        font-weight: 400;
+        line-height: 1;
+        transform: translateY(-50%);
+        transition: transform var(--transition);
+    }
+
+    .help-item[open] summary {
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .help-item[open] summary::after {
+        transform: translateY(-50%) rotate(45deg);
+    }
+
+    .help-item__content {
+        padding: 1rem 1.15rem 1.15rem;
+    }
+
+    .help-item__content p {
+        margin: 0;
+        color: var(--color-text-muted);
+        line-height: 1.65;
+    }
+
+    .empty-state {
+        max-width: 42rem;
+    }
+
+    .empty-state .build-link {
+        display: inline-flex;
+        margin-top: 1rem;
+    }
+
+    @media (max-width: 640px) {
+        .faq-content {
+            padding-top: 1rem;
+            padding-bottom: 2rem;
+        }
+
+        .faq-groups {
+            gap: 2rem;
+        }
+
+        .back-link {
+            margin-bottom: 1.25rem;
+        }
+
+        .help-item summary {
+            padding: 0.9rem 2.85rem 0.9rem 1rem;
+        }
+
+        .help-item summary::after {
+            right: 1rem;
+        }
+
+        .help-item__content {
+            padding: 0.9rem 1rem 1rem;
+        }
+    }
+</style>

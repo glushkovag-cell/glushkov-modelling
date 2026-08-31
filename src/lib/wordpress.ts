@@ -887,3 +887,969 @@ export async function getTutorialTags(): Promise<TutorialTag[]> {
   const data = await fetchAPI<GetTutorialTagsResponse>(TUTORIAL_TAGS_QUERY);
   return data.tutorialTags.nodes;
 }
+
+// --- AI HUB WORKFLOW STEPS ---
+
+const AI_HUB_ID = 'cG9zdDo2OTY=';
+
+interface AiHubPageNode {
+  id: string;
+  uri?: string | null;
+  title?: string | null;
+}
+
+interface AiWorkflowStepFields {
+  description?: string | null;
+  displayNumber?: string | null;
+  showOnAiHub?: boolean | null;
+  aiHubPage?: {
+    nodes?: AiHubPageNode[] | null;
+  } | null;
+}
+
+interface AiWorkflowStepNode {
+  id: string;
+  title: string;
+  slug: string;
+  uri?: string | null;
+  aiWorkflowStepFields?: AiWorkflowStepFields | null;
+}
+
+interface GetAiWorkflowStepsResponse {
+  aiWorkflowSteps: {
+    nodes: AiWorkflowStepNode[];
+  };
+}
+
+export interface AiHubWorkflowStep {
+  id: string;
+  title: string;
+  slug: string;
+  uri: string;
+  description: string;
+  displayNumber: string;
+}
+
+const GET_AI_WORKFLOW_STEPS = `
+  query GetAiWorkflowSteps {
+    aiWorkflowSteps(first: 100) {
+      nodes {
+        id
+        title
+        slug
+        uri
+        aiWorkflowStepFields {
+          description
+          displayNumber
+          showOnAiHub
+          aiHubPage {
+            nodes {
+              id
+              uri
+              ... on NodeWithTitle {
+                title
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export async function getAiHubWorkflowSteps(): Promise<AiHubWorkflowStep[]> {
+  const data = await fetchAPI<GetAiWorkflowStepsResponse>(GET_AI_WORKFLOW_STEPS);
+
+  return data.aiWorkflowSteps.nodes
+      .filter((step) => {
+        const fields = step.aiWorkflowStepFields;
+
+        return (
+            fields?.showOnAiHub === true &&
+            fields.aiHubPage?.nodes?.some((page) => page.id === AI_HUB_ID)
+        );
+      })
+      .map((step) => ({
+        id: step.id,
+        title: step.title,
+        slug: step.slug,
+        uri: step.uri || '',
+        description: step.aiWorkflowStepFields?.description || '',
+        displayNumber: step.aiWorkflowStepFields?.displayNumber || '',
+      }))
+      .sort((a, b) => {
+        const numberA = Number(a.displayNumber) || 0;
+        const numberB = Number(b.displayNumber) || 0;
+
+        return numberA - numberB;
+      });
+}
+
+/// --- AI HUB PLATFORMS ---
+
+interface AiPlatformLogo {
+  node?: {
+    sourceUrl?: string | null;
+    altText?: string | null;
+  } | null;
+}
+
+interface AiPlatformFields {
+  accountRequirements?: string | null;
+  compatibilityStatus?: [string, string] | string[] | null;
+  endpointOverride?: string | null;
+  lastTestedAt?: string | null;
+  officialPlatformUrl?: string | null;
+  platformLogo?: AiPlatformLogo | null;
+  shortDescription?: string | null;
+  showOnAiHub?: boolean | null;
+  testPrompt?: string | null;
+}
+
+interface AiPlatformNode {
+  id: string;
+  title: string;
+  slug: string;
+  uri?: string | null;
+  menuOrder?: number | null;
+  aiPlatformFields?: AiPlatformFields | null;
+}
+
+interface GetAiPlatformsResponse {
+  aiPlatforms: {
+    nodes: AiPlatformNode[];
+  };
+}
+
+export interface AiHubPlatform {
+  id: string;
+  title: string;
+  slug: string;
+  uri: string;
+  menuOrder: number;
+
+  shortDescription: string;
+
+  compatibilityStatusValue: string;
+  compatibilityStatusLabel: string;
+
+  endpointOverride: string;
+  lastTestedAt: string | null;
+  officialPlatformUrl: string;
+
+  logoUrl: string | null;
+  logoAlt: string;
+
+  accountRequirements: string;
+  testPrompt: string;
+}
+
+const GET_AI_PLATFORMS = `
+  query GetAiPlatforms {
+    aiPlatforms(first: 100) {
+      nodes {
+        id
+        title
+        slug
+        uri
+        menuOrder
+        aiPlatformFields {
+          accountRequirements
+          compatibilityStatus
+          endpointOverride
+          lastTestedAt
+          officialPlatformUrl
+          platformLogo {
+            node {
+              sourceUrl
+              altText
+            }
+          }
+          shortDescription
+          showOnAiHub
+          testPrompt
+        }
+      }
+    }
+  }
+`;
+
+function normalizeAcfSelect(
+    value: string[] | null | undefined,
+): { value: string; label: string } {
+  if (!value?.length) {
+    return {
+      value: '',
+      label: '',
+    };
+  }
+
+  return {
+    value: value[0] || '',
+    label: value[1] || value[0] || '',
+  };
+}
+
+export async function getAiHubPlatforms(): Promise<AiHubPlatform[]> {
+  const data = await fetchAPI<GetAiPlatformsResponse>(GET_AI_PLATFORMS);
+
+  return data.aiPlatforms.nodes
+      .filter((platform) => platform.aiPlatformFields?.showOnAiHub === true)
+      .map((platform) => {
+        const fields = platform.aiPlatformFields;
+        const compatibilityStatus = normalizeAcfSelect(
+            fields?.compatibilityStatus,
+        );
+
+        return {
+          id: platform.id,
+          title: platform.title,
+          slug: platform.slug,
+          uri: platform.uri || '',
+          menuOrder: platform.menuOrder ?? 0,
+
+          shortDescription: fields?.shortDescription || '',
+
+          compatibilityStatusValue: compatibilityStatus.value,
+          compatibilityStatusLabel: compatibilityStatus.label,
+
+          endpointOverride: fields?.endpointOverride || '',
+          lastTestedAt: fields?.lastTestedAt || null,
+          officialPlatformUrl: fields?.officialPlatformUrl || '',
+
+          logoUrl: fields?.platformLogo?.node?.sourceUrl || null,
+          logoAlt:
+              fields?.platformLogo?.node?.altText ||
+              `${platform.title} logo`,
+
+          accountRequirements: fields?.accountRequirements || '',
+          testPrompt: fields?.testPrompt || '',
+        };
+      })
+      .sort((a, b) => a.menuOrder - b.menuOrder);
+}
+
+// --- AI HUB PAGE / HERO ---
+
+interface AiHubHeroImage {
+  node?: {
+    sourceUrl?: string | null;
+    altText?: string | null;
+  } | null;
+}
+
+interface AiHubPageFields {
+  eyebrow?: string | null;
+  heroTitle?: string | null;
+  heroLead?: string | null;
+  heroImage?: AiHubHeroImage | null;
+
+  primaryCtaLabel?: string | null;
+  primaryCtaAnchor?: string | null;
+  secondaryCtaLabel?: string | null;
+  secondaryCtaAnchor?: string | null;
+
+  publicMcpEndpoint?: string | null;
+  statusLabel?: string | null;
+  statusText?: string | null;
+
+  feedbackTitle?: string | null;
+  feedbackText?: string | null;
+  feedbackEmail?: string | null;
+  feedbackEmailSubject?: string | null;
+  socialHubUrl?: string | null;
+}
+
+interface AiHubPageNode {
+  id: string;
+  title: string;
+  slug: string;
+  uri?: string | null;
+  menuOrder?: number | null;
+  status?: string | null;
+  aihubpage?: AiHubPageFields | null;
+}
+
+interface GetAiHubPageResponse {
+  aiHubs: {
+    nodes: AiHubPageNode[];
+  };
+}
+
+export interface AiHubPage {
+  id: string;
+  title: string;
+  slug: string;
+  uri: string;
+  menuOrder: number;
+  status: string;
+
+  eyebrow: string;
+  heroTitle: string;
+  heroLead: string;
+
+  heroImageUrl: string | null;
+  heroImageAlt: string;
+
+  primaryCtaLabel: string;
+  primaryCtaAnchor: string;
+  secondaryCtaLabel: string;
+  secondaryCtaAnchor: string;
+
+  publicMcpEndpoint: string;
+  statusLabel: string;
+  statusText: string;
+
+  feedbackTitle: string;
+  feedbackText: string;
+  feedbackEmail: string;
+  feedbackEmailSubject: string;
+  socialHubUrl: string;
+}
+
+const GET_AI_HUB_PAGE = `
+  query GetAiHubPage {
+    aiHubs(first: 100) {
+      nodes {
+        id
+        title
+        slug
+        uri
+        menuOrder
+        status
+
+        aihubpage {
+          eyebrow
+          heroTitle
+          heroLead
+
+          heroImage {
+            node {
+              sourceUrl
+              altText
+            }
+          }
+
+          primaryCtaLabel
+          primaryCtaAnchor
+          secondaryCtaLabel
+          secondaryCtaAnchor
+
+          publicMcpEndpoint
+          statusLabel
+          statusText
+
+          feedbackTitle
+          feedbackText
+          feedbackEmail
+          feedbackEmailSubject
+          socialHubUrl
+        }
+      }
+    }
+  }
+`;
+
+function normalizeAiHubPage(node: AiHubPageNode): AiHubPage {
+  const fields = node.aihubpage;
+
+  return {
+    id: node.id,
+    title: node.title,
+    slug: node.slug,
+    uri: node.uri || '',
+    menuOrder: node.menuOrder ?? 0,
+    status: node.status || '',
+
+    eyebrow: fields?.eyebrow || 'AI-ready archive',
+
+    heroTitle:
+        fields?.heroTitle ||
+        'Explore the workshop archive with your AI assistant.',
+
+    heroLead:
+        fields?.heroLead ||
+        'Connect Glushkov Modelling to a compatible AI assistant and search build logs, historical notes, workshop decisions, gallery photographs, and tutorials in natural language.',
+
+    heroImageUrl: fields?.heroImage?.node?.sourceUrl || null,
+
+    heroImageAlt:
+        fields?.heroImage?.node?.altText ||
+        'Wooden ship model detail from the Glushkov Modelling archive',
+
+    primaryCtaLabel:
+        fields?.primaryCtaLabel || 'Connect an assistant',
+
+    primaryCtaAnchor:
+        fields?.primaryCtaAnchor || '#platforms',
+
+    secondaryCtaLabel:
+        fields?.secondaryCtaLabel || 'Browse example prompts',
+
+    secondaryCtaAnchor:
+        fields?.secondaryCtaAnchor || '#prompts',
+
+    publicMcpEndpoint:
+        fields?.publicMcpEndpoint ||
+        'https://mcp.glushkov-modelling.com/mcp-oauth',
+
+    statusLabel:
+        fields?.statusLabel || 'Public MCP server',
+
+    statusText:
+        fields?.statusText || 'OAuth-secured · Read-only access',
+
+    feedbackTitle:
+        fields?.feedbackTitle ||
+        'Need help connecting or found an issue?',
+
+    feedbackText:
+        fields?.feedbackText ||
+        'Please contact us if you need help connecting your AI assistant.',
+
+    feedbackEmail:
+        fields?.feedbackEmail || 'glushkov.ag@gmail.com',
+
+    feedbackEmailSubject:
+        fields?.feedbackEmailSubject || 'MCP server',
+
+    socialHubUrl:
+        fields?.socialHubUrl || '',
+  };
+}
+
+export async function getAiHubPage(): Promise<AiHubPage | null> {
+  const data = await fetchAPI<GetAiHubPageResponse>(GET_AI_HUB_PAGE);
+
+  const page = data.aiHubs.nodes.find(
+      (node) =>
+          node.id === AI_HUB_ID &&
+          node.status === 'publish',
+  );
+
+  return page ? normalizeAiHubPage(page) : null;
+}
+
+// --- AI HUB CAPABILITIES ---
+
+interface AiCapabilityIcon {
+  node?: {
+    sourceUrl?: string | null;
+    altText?: string | null;
+  } | null;
+}
+
+interface AiCapabilityHub {
+  nodes?: {
+    id: string;
+  }[] | null;
+}
+
+interface AiCapabilityFields {
+  description?: string | null;
+  showOnAiHub?: boolean | null;
+  icon?: AiCapabilityIcon | null;
+  hub?: AiCapabilityHub | null;
+}
+
+interface AiCapabilityNode {
+  id: string;
+  title: string;
+  slug: string;
+  uri?: string | null;
+  menuOrder?: number | null;
+  status?: string | null;
+  aiCapabilityFields?: AiCapabilityFields | null;
+}
+
+interface GetAiCapabilitiesResponse {
+  aiCapabilities: {
+    nodes: AiCapabilityNode[];
+  };
+}
+
+export interface AiHubCapability {
+  id: string;
+  title: string;
+  slug: string;
+  uri: string;
+  menuOrder: number;
+  description: string;
+  iconUrl: string | null;
+  iconAlt: string;
+}
+
+const GET_AI_HUB_CAPABILITIES = `
+  query GetAiHubCapabilities {
+    aiCapabilities(first: 100) {
+      nodes {
+        id
+        title
+        slug
+        uri
+        menuOrder
+        status
+        aiCapabilityFields {
+          description
+          showOnAiHub
+          icon {
+            node {
+              sourceUrl
+              altText
+            }
+          }
+          hub {
+            nodes {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export async function getAiHubCapabilities(): Promise<AiHubCapability[]> {
+  const data = await fetchAPI<GetAiCapabilitiesResponse>(
+      GET_AI_HUB_CAPABILITIES,
+  );
+
+  return data.aiCapabilities.nodes
+      .filter((capability) => {
+        const fields = capability.aiCapabilityFields;
+
+        return (
+            capability.status === 'publish' &&
+            fields?.showOnAiHub === true &&
+            fields.hub?.nodes?.some((hub) => hub.id === AI_HUB_ID)
+        );
+      })
+      .map((capability) => {
+        const fields = capability.aiCapabilityFields;
+
+        return {
+          id: capability.id,
+          title: capability.title,
+          slug: capability.slug,
+          uri: capability.uri || '',
+          menuOrder: capability.menuOrder ?? 0,
+          description: fields?.description || '',
+          iconUrl: fields?.icon?.node?.sourceUrl || null,
+          iconAlt: fields?.icon?.node?.altText || '',
+        };
+      })
+      .sort((a, b) => a.menuOrder - b.menuOrder);
+}
+
+// --- AI HUB FAQ ---
+
+interface AiFaqFields {
+  answer?: string | null;
+  faqCategory?: string[] | null;
+  featuredonoverview?: boolean | null;
+  showOnAiHub?: boolean | null;
+}
+
+interface AiFaqNode {
+  id: string;
+  title: string;
+  slug: string;
+  uri?: string | null;
+  menuOrder?: number | null;
+  status?: string | null;
+  aiFaqFields?: AiFaqFields | null;
+}
+
+interface GetAiFaqsResponse {
+  aiFaqs: {
+    nodes: AiFaqNode[];
+  };
+}
+
+export interface AiHubFaq {
+  id: string;
+  title: string;
+  slug: string;
+  uri: string;
+  menuOrder: number;
+  answer: string;
+  categoryValue: string;
+  categoryLabel: string;
+  featuredOnOverview: boolean;
+}
+
+const GET_AI_HUB_FAQS = `
+  query GetAiHubFaqs {
+    aiFaqs(first: 100) {
+      nodes {
+        id
+        title
+        slug
+        uri
+        menuOrder
+        status
+        aiFaqFields {
+          answer
+          faqCategory
+          featuredonoverview
+          showOnAiHub
+        }
+      }
+    }
+  }
+`;
+
+export async function getAiHubFaqs(): Promise<AiHubFaq[]> {
+  const data = await fetchAPI<GetAiFaqsResponse>(GET_AI_HUB_FAQS);
+
+  return data.aiFaqs.nodes
+      .filter((faq) => {
+        const fields = faq.aiFaqFields;
+
+        return (
+            faq.status === 'publish' &&
+            fields?.showOnAiHub === true
+        );
+      })
+      .map((faq) => {
+        const fields = faq.aiFaqFields;
+        const category = normalizeAcfSelect(fields?.faqCategory);
+
+        return {
+          id: faq.id,
+          title: faq.title,
+          slug: faq.slug,
+          uri: faq.uri || '',
+          menuOrder: faq.menuOrder ?? 0,
+          answer: fields?.answer || '',
+          categoryValue: category.value,
+          categoryLabel: category.label,
+          featuredOnOverview: fields?.featuredonoverview === true,
+        };
+      })
+      .sort((a, b) => a.menuOrder - b.menuOrder);
+}
+
+export async function getAiHubOverviewFaqs(): Promise<AiHubFaq[]> {
+  const faqs = await getAiHubFaqs();
+
+  return faqs.filter((faq) => faq.featuredOnOverview);
+}
+
+// --- AI HUB TROUBLESHOOTING ---
+
+interface AiTroubleshootingPlatform {
+  nodes?: {
+    id: string;
+    title?: string | null;
+  }[] | null;
+}
+
+interface AiTroubleshootingFields {
+  answer?: string | null;
+  featuredonoverview?: boolean | null;
+  showOnAiHub?: boolean | null;
+  aiPlatform?: AiTroubleshootingPlatform | null;
+}
+
+interface AiTroubleshootingNode {
+  id: string;
+  title: string;
+  slug: string;
+  uri?: string | null;
+  menuOrder?: number | null;
+  status?: string | null;
+  aiTroubleshootingFields?: AiTroubleshootingFields | null;
+}
+
+interface GetAiTroubleshootingResponse {
+  aiTroubleshootings: {
+    nodes: AiTroubleshootingNode[];
+  };
+}
+
+export interface AiHubTroubleshooting {
+  id: string;
+  title: string;
+  slug: string;
+  uri: string;
+  menuOrder: number;
+  answer: string;
+  featuredOnOverview: boolean;
+  platformNames: string[];
+  platformIds: string[];
+}
+
+const GET_AI_HUB_TROUBLESHOOTING = `
+  query GetAiHubTroubleshooting {
+    aiTroubleshootings(first: 100) {
+      nodes {
+        id
+        title
+        slug
+        uri
+        menuOrder
+        status
+        aiTroubleshootingFields {
+          answer
+          featuredonoverview
+          showOnAiHub
+          aiPlatform {
+            nodes {
+              id
+              ... on NodeWithTitle {
+                title
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export async function getAiHubTroubleshooting(): Promise<AiHubTroubleshooting[]> {
+  const data = await fetchAPI<GetAiTroubleshootingResponse>(
+      GET_AI_HUB_TROUBLESHOOTING,
+  );
+
+  return data.aiTroubleshootings.nodes
+      .filter((item) => {
+        const fields = item.aiTroubleshootingFields;
+
+        return (
+            item.status === 'publish' &&
+            fields?.showOnAiHub === true
+        );
+      })
+      .map((item) => {
+        const fields = item.aiTroubleshootingFields;
+        const platforms = fields?.aiPlatform?.nodes || [];
+
+        return {
+          id: item.id,
+          title: item.title,
+          slug: item.slug,
+          uri: item.uri || '',
+          menuOrder: item.menuOrder ?? 0,
+          answer: fields?.answer || '',
+          featuredOnOverview: fields?.featuredonoverview === true,
+          platformIds: platforms.map((platform) => platform.id),
+          platformNames: platforms
+              .map((platform) => platform.title || '')
+              .filter(Boolean),
+        };
+      })
+      .sort((a, b) => a.menuOrder - b.menuOrder);
+}
+
+export async function getAiHubOverviewTroubleshooting(): Promise<
+    AiHubTroubleshooting[]
+> {
+  const items = await getAiHubTroubleshooting();
+
+  return items.filter((item) => item.featuredOnOverview);
+}
+
+// --- AI HUB PLATFORM GUIDE DATA ---
+
+interface GetAiPlatformBySlugResponse {
+  aiPlatform: AiPlatformNode | null;
+}
+
+export async function getAiHubPlatformBySlug(
+    slug: string,
+): Promise<AiHubPlatform | null> {
+  const data = await fetchAPI<GetAiPlatformBySlugResponse>(
+      `
+      query GetAiPlatformBySlug($slug: ID!) {
+        aiPlatform(id: $slug, idType: SLUG) {
+          id
+          title
+          slug
+          uri
+          menuOrder
+          status
+          aiPlatformFields {
+            accountRequirements
+            compatibilityStatus
+            endpointOverride
+            lastTestedAt
+            officialPlatformUrl
+            platformLogo {
+              node {
+                sourceUrl
+                altText
+              }
+            }
+            shortDescription
+            showOnAiHub
+            testPrompt
+          }
+        }
+      }
+    `,
+      { slug },
+  );
+
+  const platform = data.aiPlatform;
+
+  if (
+      !platform ||
+      platform.status !== 'publish' ||
+      platform.aiPlatformFields?.showOnAiHub !== true
+  ) {
+    return null;
+  }
+
+  const fields = platform.aiPlatformFields;
+  const compatibilityStatus = normalizeAcfSelect(fields?.compatibilityStatus);
+
+  return {
+    id: platform.id,
+    title: platform.title,
+    slug: platform.slug,
+    uri: platform.uri || '',
+    menuOrder: platform.menuOrder ?? 0,
+
+    shortDescription: fields?.shortDescription || '',
+
+    compatibilityStatusValue: compatibilityStatus.value,
+    compatibilityStatusLabel: compatibilityStatus.label,
+
+    endpointOverride: fields?.endpointOverride || '',
+    lastTestedAt: fields?.lastTestedAt || null,
+    officialPlatformUrl: fields?.officialPlatformUrl || '',
+
+    logoUrl: fields?.platformLogo?.node?.sourceUrl || null,
+    logoAlt:
+        fields?.platformLogo?.node?.altText ||
+        `${platform.title} logo`,
+
+    accountRequirements: fields?.accountRequirements || '',
+    testPrompt: fields?.testPrompt || '',
+  };
+}
+
+// --- AI HUB CONNECTION STEPS ---
+
+interface AiConnectionStepPlatform {
+  nodes?: {
+    id: string;
+  }[] | null;
+}
+
+interface AiConnectionStepFields {
+  stepNumber?: number | null;
+  instruction?: string | null;
+  urlOrCode?: string | null;
+  note?: string | null;
+  showOnAiHub?: boolean | null;
+  aiPlatform?: AiConnectionStepPlatform | null;
+}
+
+interface AiConnectionStepNode {
+  id: string;
+  title: string;
+  slug: string;
+  uri?: string | null;
+  menuOrder?: number | null;
+  status?: string | null;
+  aiConnectionStepFields?: AiConnectionStepFields | null;
+}
+
+interface GetAiConnectionStepsResponse {
+  aiConnectionSteps: {
+    nodes: AiConnectionStepNode[];
+  };
+}
+
+export interface AiHubConnectionStep {
+  id: string;
+  title: string;
+  slug: string;
+  uri: string;
+  menuOrder: number;
+  stepNumber: number;
+  instruction: string;
+  urlOrCode: string;
+  note: string;
+}
+
+const GET_AI_HUB_CONNECTION_STEPS = `
+  query GetAiHubConnectionSteps {
+    aiConnectionSteps(first: 100) {
+      nodes {
+        id
+        title
+        slug
+        uri
+        menuOrder
+        status
+        aiConnectionStepFields {
+          stepNumber
+          instruction
+          urlOrCode
+          note
+          showOnAiHub
+          aiPlatform {
+            nodes {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+function normalizeConnectionStepTitle(title: string): string {
+  return title
+      .replace(/^\s*[^–—-]+?\s*[–—-]\s*/, '')
+      .trim();
+}
+
+export async function getAiHubConnectionSteps(
+    platformId: string,
+): Promise<AiHubConnectionStep[]> {
+  const data = await fetchAPI<GetAiConnectionStepsResponse>(
+      GET_AI_HUB_CONNECTION_STEPS,
+  );
+
+  return data.aiConnectionSteps.nodes
+      .filter((step) => {
+        const fields = step.aiConnectionStepFields;
+
+        return (
+            step.status === 'publish' &&
+            fields?.showOnAiHub === true &&
+            fields.aiPlatform?.nodes?.some(
+                (platform) => platform.id === platformId,
+            )
+        );
+      })
+      .map((step) => {
+        const fields = step.aiConnectionStepFields;
+
+        return {
+          id: step.id,
+          title: normalizeConnectionStepTitle(step.title),
+          slug: step.slug,
+          uri: step.uri || '',
+          menuOrder: step.menuOrder ?? 0,
+          stepNumber: Number(fields?.stepNumber ?? 0),
+          instruction: fields?.instruction || '',
+          urlOrCode: fields?.urlOrCode || '',
+          note: fields?.note || '',
+        };
+      })
+      .sort((a, b) => {
+        const menuOrderDifference = a.menuOrder - b.menuOrder;
+
+        if (menuOrderDifference !== 0) {
+          return menuOrderDifference;
+        }
+
+        return a.stepNumber - b.stepNumber;
+      });
+}
