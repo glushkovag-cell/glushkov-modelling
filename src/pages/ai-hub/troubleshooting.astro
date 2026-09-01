@@ -4,13 +4,17 @@ import SeoHead from '../../components/seo/SeoHead.astro';
 import {
     getAiHubPlatforms,
     getAiHubTroubleshooting,
+    getAllNews,
+    hasFreshNews,
 } from '../../lib/wordpress';
 
-const [platforms, troubleshooting] = await Promise.all([
+const [platforms, troubleshooting, allNews] = await Promise.all([
     getAiHubPlatforms(),
     getAiHubTroubleshooting(),
+    getAllNews()
 ]);
 
+const newsFlag = hasFreshNews(allNews);
 const SEO_TITLE = 'Troubleshooting — AI Hub — Glushkov Modelling';
 const SEO_DESCRIPTION =
     'Troubleshooting guidance for public Glushkov Modelling MCP connections, OAuth authorization, endpoint setup, and tool discovery.';
@@ -46,7 +50,11 @@ const platformGroups = platforms
     .filter((group) => group.items.length > 0);
 ---
 
-<BaseLayout title={SEO_TITLE} description={SEO_DESCRIPTION}>
+<BaseLayout
+        title={SEO_TITLE}
+        description={SEO_DESCRIPTION}
+        hasFreshNews={newsFlag}
+>
     <SeoHead
             slot="head"
             pageType="website"

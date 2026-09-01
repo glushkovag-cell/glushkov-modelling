@@ -9,6 +9,8 @@ import {
     getAiHubPage,
     getAiHubPlatforms,
     getAiHubWorkflowSteps,
+    getAllNews,
+    hasFreshNews,
 } from '../lib/wordpress';
 
 const [
@@ -18,6 +20,7 @@ const [
     platforms,
     troubleshooting,
     faqs,
+    allNews,
 ] = await Promise.all([
     getAiHubPage(),
     getAiHubCapabilities(),
@@ -25,8 +28,10 @@ const [
     getAiHubPlatforms(),
     getAiHubOverviewTroubleshooting(),
     getAiHubOverviewFaqs(),
+    getAllNews(),
 ]);
 
+const newsFlag = hasFreshNews(allNews);
 const SEO_TITLE = 'AI Hub — Glushkov Modelling';
 const SEO_DESCRIPTION =
     'Connect an AI assistant to Glushkov Modelling and explore build logs, model information, gallery images, and tutorials through natural-language questions.';
@@ -36,7 +41,11 @@ const mcpEndpoint =
     'https://mcp.glushkov-modelling.com/mcp-oauth';
 ---
 
-<BaseLayout title={SEO_TITLE} description={SEO_DESCRIPTION}>
+<BaseLayout
+        title={SEO_TITLE}
+        description={SEO_DESCRIPTION}
+        hasFreshNews={newsFlag}
+>
     <SeoHead
             slot="head"
             pageType="website"

@@ -1,10 +1,11 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SeoHead from '../../components/seo/SeoHead.astro';
-import { getAiHubFaqs } from '../../lib/wordpress';
+import { getAiHubFaqs, getAllNews, hasFreshNews } from '../../lib/wordpress';
 
-const faqs = await getAiHubFaqs();
+const [faqs, allNews] = await Promise.all([getAiHubFaqs(), getAllNews()]);
 
+const newsFlag = hasFreshNews(allNews);
 const SEO_TITLE = 'FAQ — AI Hub — Glushkov Modelling';
 const SEO_DESCRIPTION =
     'Answers to common questions about connecting AI assistants to the Glushkov Modelling archive through the public MCP server.';
@@ -48,7 +49,11 @@ if (uncategorizedFaqs.length > 0) {
 }
 ---
 
-<BaseLayout title={SEO_TITLE} description={SEO_DESCRIPTION}>
+<BaseLayout
+        title={SEO_TITLE}
+        description={SEO_DESCRIPTION}
+        hasFreshNews={newsFlag}
+>
     <SeoHead
             slot="head"
             pageType="website"

@@ -7,6 +7,8 @@ import {
     getAiHubPlatformBySlug,
     getAiHubPlatforms,
     getAiHubTroubleshooting,
+    getAllNews,
+    hasFreshNews,
 } from '../../lib/wordpress';
 
 export async function getStaticPaths() {
@@ -25,10 +27,11 @@ if (!slug) {
     return Astro.redirect('/ai-hub');
 }
 
-const [aiHub, platform, troubleshooting] = await Promise.all([
+const [aiHub, platform, troubleshooting, allNews] = await Promise.all([
     getAiHubPage(),
     getAiHubPlatformBySlug(slug),
     getAiHubTroubleshooting(),
+    getAllNews(),
 ]);
 
 if (!platform) {
@@ -46,6 +49,7 @@ const platformTroubleshooting = troubleshooting.filter((item) =>
     item.platformIds.includes(platform.id),
 );
 
+const newsFlag = hasFreshNews(allNews);
 const SEO_TITLE = `${platform.title} MCP Connection Guide — Glushkov Modelling`;
 const SEO_DESCRIPTION =
     platform.shortDescription ||
@@ -87,7 +91,11 @@ const formatDate = (value: string | null) => {
 const testedAt = formatDate(platform.lastTestedAt);
 ---
 
-<BaseLayout title={SEO_TITLE} description={SEO_DESCRIPTION}>
+<BaseLayout
+        title={SEO_TITLE}
+        description={SEO_DESCRIPTION}
+        hasFreshNews={newsFlag}
+>
     <SeoHead
             slot="head"
             pageType="website"
@@ -488,7 +496,7 @@ const testedAt = formatDate(platform.lastTestedAt);
         border-radius: 14px;
         background: var(--color-surface-2);
         color: var(--color-primary);
-        font-family: var(--font-display, serif);
+        font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
         font-size: 1.5rem;
         font-weight: 700;
     }
