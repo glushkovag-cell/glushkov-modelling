@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
+import { tutorialUrl } from "../lib/public-urls.js";
 import { fetchAllTutorials, levelOf } from "../lib/tutorials.js";
 import {
     createExcerpt,
@@ -82,6 +83,7 @@ export function registerSearchTutorialContent(server: McpServer): void {
                 const results = matches.slice(0, limit).map(({ tutorial, match }) => ({
                     title: tutorial.title,
                     slug: tutorial.slug,
+                    url: tutorialUrl(tutorial.slug),
                     level: levelOf(tutorial.tutorialFields?.tutorialLevel),
                     tags: (tutorial.tutorialTags?.nodes || []).map((tag) => tag.name),
                     matchedFields: match.matchedFields,

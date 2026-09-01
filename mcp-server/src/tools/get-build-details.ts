@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
+import { buildLogPartUrl, buildUrl } from "../lib/public-urls.js";
 import {
   fetchAllModels,
   fetchBuildPartsForSlug,
@@ -73,11 +74,13 @@ export function registerGetBuildDetails(server: McpServer): void {
           return jsonResult({
             title: model.title,
             slug: model.slug,
+            url: buildUrl(model.slug),
             part: {
               partNumber: targetPart.buildlog?.partnumber ?? null,
               recordDay: targetPart.buildlog?.recordday ?? null,
               title: targetPart.title,
               slug: targetPart.slug,
+              url: buildLogPartUrl(model.slug, targetPart.buildlog?.partnumber),
               content: stripHtmlAndTruncate(
                 targetPart.buildlog?.partcontent || targetPart.content,
                 4000,
@@ -89,6 +92,7 @@ export function registerGetBuildDetails(server: McpServer): void {
         return jsonResult({
           title: model.title,
           slug: model.slug,
+          url: buildUrl(model.slug),
           manufacturer: model.modelinfo?.manufacturer ?? null,
           scale: model.modelinfo?.modelscale ?? null,
           status: statusTextOf(model) || null,
@@ -104,6 +108,7 @@ export function registerGetBuildDetails(server: McpServer): void {
             recordDay: post.buildlog?.recordday ?? null,
             title: post.title,
             slug: post.slug,
+            url: buildLogPartUrl(model.slug, post.buildlog?.partnumber),
             excerpt: stripHtmlAndTruncate(post.buildlog?.partcontent || post.content, 300),
           })),
           totalBuildLogParts: parts.length,
