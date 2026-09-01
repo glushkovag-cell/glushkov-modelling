@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
 import { requestWithTimeout } from "../lib/graphql-client.js";
+import { buildLogPartUrl, tutorialUrl } from "../lib/public-urls.js";
 import { stripHtmlAndTruncate } from "../lib/wp-models.js";
 
 interface BuildLogSearchNode {
@@ -107,6 +108,7 @@ export function registerSearchContent(server: McpServer): void {
           slug: post.slug,
           modelSlug: post.buildlog?.modelslug ?? null,
           partNumber: post.buildlog?.partnumber ?? null,
+          url: buildLogPartUrl(post.buildlog?.modelslug, post.buildlog?.partnumber),
           recordDay: post.buildlog?.recordday ?? null,
           excerpt: stripHtmlAndTruncate(post.excerpt, 200),
         }));
@@ -123,6 +125,7 @@ export function registerSearchContent(server: McpServer): void {
             type: "tutorial" as const,
             title: t.title,
             slug: t.slug,
+            url: tutorialUrl(t.slug),
             excerpt: stripHtmlAndTruncate(t.tutorialFields?.tutorialTeaser, 200),
           }));
 

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
+import { buildUrl } from "../lib/public-urls.js";
 import { fetchAllModels, findModelByName, statusSlugOf, statusTextOf } from "../lib/wp-models.js";
 
 const inputSchema = {
@@ -36,6 +37,7 @@ export function registerGetProjectStatus(server: McpServer): void {
         return jsonResult({
           title: model.title,
           slug: model.slug,
+          url: buildUrl(model.slug),
           status: statusTextOf(model) || null,
           statusSlug: statusSlugOf(model) || null,
           doneDate: model.modelinfo?.donedate ?? null,

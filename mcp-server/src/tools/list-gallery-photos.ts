@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
 import { config } from "../lib/config.js";
+import { buildUrl, galleryUrl as galleryPageUrl } from "../lib/public-urls.js";
 import { paginate } from "../lib/pagination.js";
 
 interface GalleryImagePaths {
@@ -34,6 +35,8 @@ interface GalleryManifest {
 interface PhotoResult {
   project: string;
   title: string;
+  projectUrl: string | null;
+  galleryUrl: string | null;
   scale: string;
   section: string;
   caption: string;
@@ -174,6 +177,8 @@ export function registerListGalleryPhotos(server: McpServer): void {
               matchingPhotos.push({
                 project: manifest.slug,
                 title: manifest.title,
+                projectUrl: buildUrl(manifest.slug),
+                galleryUrl: galleryPageUrl(manifest.slug),
                 scale: manifest.scale,
                 section: image.section,
                 caption: image.caption,

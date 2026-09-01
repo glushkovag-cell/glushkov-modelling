@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
+import { buildUrl } from "../lib/public-urls.js";
 import {
   fetchAllModels,
   filterModelsByStatus,
@@ -76,6 +77,7 @@ export function registerListModelSlugs(server: McpServer): void {
         const results = filtered.map((m) => ({
           title: m.title,
           slug: m.slug,
+          url: buildUrl(m.slug),
           manufacturer: m.modelinfo?.manufacturer ?? null,
           scale: m.modelinfo?.modelscale ?? null,
           status: statusTextOf(m) || null,
