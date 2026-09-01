@@ -115,7 +115,10 @@ export function statusTextOf(model: ModelNode): string {
  * же slug-формату, что и statusSlugOf, перед сравнением — устраняет несовпадение
  * "in-progress" (ACF slug) vs "in progress" (enum), из-за которого list_builds
  * и list_model_slugs не находили постройки со статусом "in progress". */
-export function filterModelsByStatus(models: ModelNode[], status: string): ModelNode[] {
+export function filterModelsByStatus(
+    models: ModelNode[],
+    status: string,
+): ModelNode[] {
   const target = slugifyStatus(status);
   return models.filter((model) => statusSlugOf(model) === target);
 }
@@ -127,45 +130,103 @@ export async function fetchAllModels(): Promise<ModelNode[]> {
   if (modelsCache && Date.now() - modelsCache.fetchedAt < CACHE_TTL_MS) {
     return modelsCache.data;
   }
+
   const data = await requestWithTimeout<GetAllModelsResponse>(GET_ALL_MODELS);
-  modelsCache = { data: data.models.nodes, fetchedAt: Date.now() };
+
+  modelsCache = {
+    data: data.models.nodes,
+    fetchedAt: Date.now(),
+  };
+
   return modelsCache.data;
 }
 
 /** Ищет постройку по человекочитаемому названию (buildName): точное совпадение title,
  * затем совпадение по slug (buildName приводится к виду slug), без учёта регистра. */
-export function findModelByName(models: ModelNode[], buildName: string): ModelNode | null {
+export function findModelByName(
+    models: ModelNode[],
+    buildName: string,
+): ModelNode | null {
   const normalized = buildName.trim().toLowerCase();
   const bySlug = slugifyStatus(buildName);
 
   return (
-    models.find((m) => m.title.trim().toLowerCase() === normalized) ??
-    models.find((m) => m.slug.toLowerCase() === normalized) ??
-    models.find((m) => m.slug.toLowerCase() === bySlug) ??
-    null
+      models.find((model) => model.title.trim().toLowerCase() === normalized) ??
+      models.find((model) => model.slug.toLowerCase() === normalized) ??
+      models.find((model) => model.slug.toLowerCase() === bySlug) ??
+      null
   );
 }
 
-export async function fetchBuildPartsForSlug(slug: string): Promise<BuildPostNode[]> {
+export async function fetchBuildPartsForSlug(
+    slug: string,
+): Promise<BuildPostNode[]> {
   const data = await requestWithTimeout<GetBuildPartsResponse>(GET_BUILD_PARTS);
+
   return data.posts.nodes
-    .filter((post) => post.buildlog?.modelslug === slug)
-    .sort((a, b) => Number(a.buildlog?.partnumber || 0) - Number(b.buildlog?.partnumber || 0));
+      .filter((post) => post.buildlog?.modelslug === slug)
+      .sort(
+          (a, b) =>
+              Number(a.buildlog?.partnumber || 0) -
+              Number(b.buildlog?.partnumber || 0),
+      );
 }
 
 /**
- * Ищет все постройки, чьё название или slug частично совпадает с запросом
- * (без учёта регистра). В отличие от findModelByName (первое строгое совпадение),
- * возвращает все совпадения — используется резолвером slug (list_model_slugs),
- * чтобы явно показать клиенту неоднозначность, если она есть.
+ * Нормализует title, slug и исторический год для token-based поиска.
+ *
+ * Примеры:
+ * - "Le Requin"  -> "le requin"
+ * - "le-requin"  -> "le requin"
+ * - "1750"       -> "1750"
+ *
+ * Благодаря этому запрос "Le Requin 1750" сопоставляется с моделью,
+ * у которой title = "Le Requin", slug = "le-requin" и
+ * modelinfo.historicalyear = "1750".
  */
-export function findModelsByNamePartial(models: ModelNode[], query: string): ModelNode[] {
-  const needle = query.trim().toLowerCase();
-  if (!needle) return models;
+function normalizeModelSearchText(value: string | null | undefined): string {
+  return (value ?? "")
+      .replace(/[-_/]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLocaleLowerCase();
+}
 
-  return models.filter(
-    (m) =>
-      m.title.trim().toLowerCase().includes(needle) ||
-      m.slug.toLowerCase().includes(needle),
-  );
+/**
+ * Ищет все постройки, у которых все слова запроса встречаются в объединённом
+ * контексте title, slug и historicalyear.
+ *
+ * В отличие от findModelByName (первое строгое совпадение), возвращает все
+ * совпадения и используется list_model_slugs, чтобы явно показать клиенту
+ * неоднозначность, если она есть.
+ *
+ * Примеры:
+ * - "Le Requin"       -> Le Requin
+ * - "le-requin"       -> Le Requin
+ * - "Le Requin 1750"  -> Le Requin
+ * - "1750"            -> все модели с historicalyear, содержащим 1750
+ */
+export function findModelsByNamePartial(
+    models: ModelNode[],
+    query: string,
+): ModelNode[] {
+  const terms = normalizeModelSearchText(query)
+      .split(" ")
+      .filter(Boolean);
+
+  if (terms.length === 0) {
+    return models;
+  }
+
+  return models.filter((model) => {
+    const searchableText = normalizeModelSearchText(
+        [
+          model.title,
+          model.slug,
+          model.modelinfo?.historicalyear ?? "",
+        ].join(" "),
+    );
+
+    return terms.every((term) => searchableText.includes(term));
+  });
 }
