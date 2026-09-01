@@ -77,37 +77,42 @@ if (uncategorizedFaqs.length > 0) {
         <div class="container">
             {
                 groupedFaqs.length > 0 ? (
-                        <div class="faq-groups">
-                            {
-                                groupedFaqs.map((group) => (
-                                        <section
-                                                class="faq-group"
-                                                aria-labelledby={`faq-${group.key}`}
-                                        >
-                                            <div class="faq-group__heading">
-                                                <span class="eyebrow">AI Hub FAQ</span>
-                                                <h2 id={`faq-${group.key}`}>
-                                                    {group.label}
-                                                </h2>
-                                            </div>
+                        <>
+                            <div class="faq-content__heading">
+                                <span class="eyebrow">AI Hub FAQ</span>
+                            </div>
 
-                                            <div class="help-list">
-                                                {
-                                                    group.items.map((faq) => (
-                                                            <details class="help-item">
-                                                                <summary>{faq.title}</summary>
+                            <div class="faq-groups">
+                                {
+                                    groupedFaqs.map((group) => (
+                                            <section
+                                                    class="faq-group"
+                                                    aria-labelledby={`faq-${group.key}`}
+                                            >
+                                                <div class="faq-group__heading">
+                                                    <h2 id={`faq-${group.key}`}>
+                                                        {group.label}
+                                                    </h2>
+                                                </div>
 
-                                                                <div class="help-item__content">
-                                                                    <p>{faq.answer}</p>
-                                                                </div>
-                                                            </details>
-                                                    ))
-                                                }
-                                            </div>
-                                        </section>
-                                ))
-                            }
-                        </div>
+                                                <div class="help-list">
+                                                    {
+                                                        group.items.map((faq) => (
+                                                                <details class="help-item">
+                                                                    <summary>{faq.title}</summary>
+
+                                                                    <div class="help-item__content">
+                                                                        <p>{faq.answer}</p>
+                                                                    </div>
+                                                                </details>
+                                                        ))
+                                                    }
+                                                </div>
+                                            </section>
+                                    ))
+                                }
+                            </div>
+                        </>
                 ) : (
                         <div class="content-card empty-state">
                             <span class="eyebrow">Coming soon</span>
@@ -168,6 +173,11 @@ if (uncategorizedFaqs.length > 0) {
         padding-bottom: 3rem;
     }
 
+    .faq-content__heading {
+        max-width: 58rem;
+        margin-bottom: 0.75rem;
+    }
+
     .faq-groups {
         display: grid;
         gap: 2.75rem;
@@ -179,7 +189,7 @@ if (uncategorizedFaqs.length > 0) {
     }
 
     .faq-group__heading h2 {
-        margin: 0.35rem 0 0;
+        margin: 0;
         font-size: clamp(1.65rem, 3vw, 2.2rem);
         line-height: 1.1;
     }

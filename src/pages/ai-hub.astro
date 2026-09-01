@@ -363,23 +363,6 @@ const mcpEndpoint =
                         authorization.
                     </p>
                 </div>
-
-                <div class="content-card">
-                    <span class="eyebrow">Example questions</span>
-
-                    <h2 class="card-title">
-                        Start with the work you are exploring
-                    </h2>
-
-                    <ul class="question-list">
-                        <li>Which build logs describe hull planking techniques?</li>
-                        <li>What materials were used for a particular model?</li>
-                        <li>Show tutorials relevant to fine wooden details.</li>
-                        <li>
-                            What photographs document a selected stage of a build?
-                        </li>
-                    </ul>
-                </div>
             </div>
         </div>
     </section>
@@ -652,8 +635,11 @@ const mcpEndpoint =
         padding-bottom: 2rem;
     }
 
-    .capability-list,
-    .question-list {
+    .page-section--connect .section-grid--equal {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .capability-list {
         display: grid;
         gap: 0.75rem;
         padding: 0;
@@ -661,16 +647,14 @@ const mcpEndpoint =
         list-style: none;
     }
 
-    .capability-list li,
-    .question-list li {
+    .capability-list li {
         position: relative;
         padding-left: 1.25rem;
         color: var(--color-text-muted);
         line-height: 1.55;
     }
 
-    .capability-list li::before,
-    .question-list li::before {
+    .capability-list li::before {
         content: '';
         position: absolute;
         top: 0.62rem;
@@ -827,7 +811,7 @@ const mcpEndpoint =
         border-radius: 12px;
         background: var(--color-surface-2);
         color: var(--color-primary);
-        font-family: var(--font-display, serif);
+        font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
         font-size: 1.25rem;
         font-weight: 700;
     }
@@ -1007,7 +991,7 @@ const mcpEndpoint =
         border-radius: 12px;
         background: var(--color-surface-2);
         color: var(--color-primary);
-        font-family: var(--font-display, serif);
+        font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
         font-size: 1.25rem;
         font-weight: 700;
     }
