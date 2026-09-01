@@ -3,7 +3,10 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
 import { requestWithTimeout } from "../lib/graphql-client.js";
 import { buildLogPartUrl, tutorialUrl } from "../lib/public-urls.js";
-import { stripHtmlAndTruncate } from "../lib/wp-models.js";
+import {
+  fetchAllModels,
+  stripHtmlAndTruncate,
+} from "../lib/wp-models.js";
 
 interface BuildLogSearchNode {
   id: string;
@@ -32,12 +35,22 @@ interface GetTutorialsForSearchResponse {
   tutorialsFiltered: TutorialSearchNode[];
 }
 
-// Поиск использует стандартный аргумент `search` WPGraphQL (WP_Query search),
-// применённый к постам категории "Builds" (build-логи) — та же категория,
-// что используется в src/lib/wordpress.ts::getBuildPartsByModel.
-const SEARCH_BUILD_LOGS_QUERY = `
-  query SearchBuildLogs($search: String!, $limit: Int!) {
-    posts(where: { search: $search, categoryName: "Builds" }, first: $limit) {
+/**
+ * Загружаем все опубликованные build-log записи категории Builds, затем
+ * фильтруем их локально. Это сознательное решение:
+ *
+ * - WPGraphQL `where.search` не ищет по ACF buildlog.modelslug;
+ * - modelslug содержит техническую связь с моделью;
+ * - название модели берётся через fetchAllModels() из models GraphQL type;
+ * - поэтому запрос "Le Requin hull" может совпасть одновременно с
+ *   modelTitle = "Le Requin" и title = "The hull".
+ *
+ * Объём контента сайта сейчас мал, а верхняя граница в 100 записей уже
+ * используется в wp-models.ts::GET_BUILD_PARTS.
+ */
+const BUILD_LOGS_FOR_SEARCH_QUERY = `
+  query GetBuildLogsForSearch {
+    posts(where: { categoryName: "Builds" }, first: 100) {
       nodes {
         id
         slug
@@ -70,79 +83,184 @@ const TUTORIALS_FOR_SEARCH_QUERY = `
 
 const inputSchema = {
   query: z
-    .string()
-    .min(2)
-    .describe("Search query for full-text search across build logs and articles."),
+      .string()
+      .min(2)
+      .describe("Search query for full-text search across build logs and articles."),
   limit: z
-    .number()
-    .int()
-    .min(1)
-    .max(50)
-    .default(20)
-    .describe("Максимальное количество результатов (на каждую категорию)."),
+      .number()
+      .int()
+      .min(1)
+      .max(50)
+      .default(20)
+      .describe("Максимальное количество результатов (на каждую категорию)."),
 };
+
+/**
+ * Приводит human-readable title, slug и HTML excerpt к единому виду:
+ *
+ * "Le Requin"  -> "le requin"
+ * "le-requin"  -> "le requin"
+ * "<p>The hull</p>" -> "the hull"
+ *
+ * Это позволяет сопоставлять запросы с пробелами со значением modelslug,
+ * в котором слова разделены дефисом.
+ */
+function normalizeSearchText(value: string | null | undefined): string {
+  return (value ?? "")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/[-_/]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLocaleLowerCase();
+}
+
+function tokenizeQuery(query: string): string[] {
+  return normalizeSearchText(query)
+      .split(" ")
+      .filter(Boolean);
+}
+
+type MatchedField = "modelTitle" | "modelSlug" | "title" | "excerpt" | "teaser";
+
+function getMatchedFields(
+    fields: Array<[MatchedField, string | null | undefined]>,
+    searchTerms: string[],
+): MatchedField[] {
+  const normalizedFields = fields.map(([field, value]) => [
+    field,
+    normalizeSearchText(value),
+  ] as const);
+
+  const searchableText = normalizedFields
+      .map(([, value]) => value)
+      .filter(Boolean)
+      .join(" ");
+
+  const matchesAllTerms = searchTerms.every((term) =>
+      searchableText.includes(term),
+  );
+
+  if (!matchesAllTerms) {
+    return [];
+  }
+
+  return normalizedFields
+      .filter(([, value]) => searchTerms.some((term) => value.includes(term)))
+      .map(([field]) => field);
+}
 
 export function registerSearchContent(server: McpServer): void {
   server.registerTool(
-    "search_content",
-    {
-      title: "Поиск по контенту",
-      description:
-        "Searches through build logs (full-text, via WPGraphQL) and " +
-        "the site's tutorials (by title and short description).",
-      inputSchema,
-    },
-    async ({ query, limit }) => {
-      try {
-        const [buildLogsData, tutorialsData] = await Promise.all([
-          requestWithTimeout<SearchBuildLogsResponse>(SEARCH_BUILD_LOGS_QUERY, {
-            search: query,
-            limit,
-          }),
-          requestWithTimeout<GetTutorialsForSearchResponse>(TUTORIALS_FOR_SEARCH_QUERY),
-        ]);
+      "search_content",
+      {
+        title: "Поиск по контенту",
+        description:
+            "Searches build logs by model title, model slug, part title and excerpt, " +
+            "and searches tutorials by title and short description.",
+        inputSchema,
+      },
+      async ({ query, limit }) => {
+        try {
+          const searchTerms = tokenizeQuery(query);
 
-        const buildLogResults = buildLogsData.posts.nodes.map((post) => ({
-          type: "build-log-part" as const,
-          title: post.title,
-          slug: post.slug,
-          modelSlug: post.buildlog?.modelslug ?? null,
-          partNumber: post.buildlog?.partnumber ?? null,
-          url: buildLogPartUrl(post.buildlog?.modelslug, post.buildlog?.partnumber),
-          recordDay: post.buildlog?.recordday ?? null,
-          excerpt: stripHtmlAndTruncate(post.excerpt, 200),
-        }));
+          const [buildLogsData, models, tutorialsData] = await Promise.all([
+            requestWithTimeout<SearchBuildLogsResponse>(
+                BUILD_LOGS_FOR_SEARCH_QUERY,
+            ),
+            fetchAllModels(),
+            requestWithTimeout<GetTutorialsForSearchResponse>(
+                TUTORIALS_FOR_SEARCH_QUERY,
+            ),
+          ]);
 
-        const needle = query.trim().toLowerCase();
-        const tutorialResults = tutorialsData.tutorialsFiltered
-          .filter(
-            (t) =>
-              t.title.toLowerCase().includes(needle) ||
-              (t.tutorialFields?.tutorialTeaser || "").toLowerCase().includes(needle),
-          )
-          .slice(0, limit)
-          .map((t) => ({
-            type: "tutorial" as const,
-            title: t.title,
-            slug: t.slug,
-            url: tutorialUrl(t.slug),
-            excerpt: stripHtmlAndTruncate(t.tutorialFields?.tutorialTeaser, 200),
-          }));
+          const modelTitleBySlug = new Map(
+              models.map((model) => [model.slug.toLowerCase(), model.title]),
+          );
 
-        return jsonResult({
-          query,
-          totalBuildLogResults: buildLogResults.length,
-          totalTutorialResults: tutorialResults.length,
-          buildLogResults,
-          tutorialResults,
-          note:
-            "Article searches are performed based on the title and short description (teaser), " +
-            "not the full text—the WPGraphQL resolver for educational articles does not support " +
-            "full-text search.",
-        });
-      } catch (error) {
-        return errorResult(`Error searching content: ${(error as Error).message}`);
-      }
-    },
+          const buildLogResults = buildLogsData.posts.nodes
+              .map((post) => {
+                const modelSlug = post.buildlog?.modelslug ?? null;
+
+                const modelTitle = modelSlug
+                    ? modelTitleBySlug.get(modelSlug.toLowerCase()) ?? null
+                    : null;
+
+                const matchedFields = getMatchedFields(
+                    [
+                      ["modelTitle", modelTitle],
+                      ["modelSlug", modelSlug],
+                      ["title", post.title],
+                      ["excerpt", post.excerpt],
+                    ],
+                    searchTerms,
+                );
+
+                return {
+                  post,
+                  modelSlug,
+                  modelTitle,
+                  matchedFields,
+                };
+              })
+              .filter(({ matchedFields }) => matchedFields.length > 0)
+              .slice(0, limit)
+              .map(({ post, modelSlug, modelTitle, matchedFields }) => ({
+                type: "build-log-part" as const,
+                title: post.title,
+                slug: post.slug,
+                modelSlug,
+                modelTitle,
+                partNumber: post.buildlog?.partnumber ?? null,
+                url: buildLogPartUrl(modelSlug, post.buildlog?.partnumber),
+                recordDay: post.buildlog?.recordday ?? null,
+                excerpt: stripHtmlAndTruncate(post.excerpt, 200),
+                matchedFields,
+              }));
+
+          const tutorialResults = tutorialsData.tutorialsFiltered
+              .map((tutorial) => {
+                const matchedFields = getMatchedFields(
+                    [
+                      ["title", tutorial.title],
+                      ["teaser", tutorial.tutorialFields?.tutorialTeaser],
+                    ],
+                    searchTerms,
+                );
+
+                return {
+                  tutorial,
+                  matchedFields,
+                };
+              })
+              .filter(({ matchedFields }) => matchedFields.length > 0)
+              .slice(0, limit)
+              .map(({ tutorial, matchedFields }) => ({
+                type: "tutorial" as const,
+                title: tutorial.title,
+                slug: tutorial.slug,
+                url: tutorialUrl(tutorial.slug),
+                excerpt: stripHtmlAndTruncate(
+                    tutorial.tutorialFields?.tutorialTeaser,
+                    200,
+                ),
+                matchedFields,
+              }));
+
+          return jsonResult({
+            query,
+            searchTerms,
+            totalBuildLogResults: buildLogResults.length,
+            totalTutorialResults: tutorialResults.length,
+            buildLogResults,
+            tutorialResults,
+            note:
+                "Build-log searches match every query term against the model title, " +
+                "model slug, part title and excerpt. Tutorial searches match every " +
+                "term against the title and short description (teaser), not the full article text.",
+          });
+        } catch (error) {
+          return errorResult(`Error searching content: ${(error as Error).message}`);
+        }
+      },
   );
 }
