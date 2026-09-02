@@ -10,6 +10,18 @@ const PERPLEXITY_DOMAINS = new Set([
     'perplexity.com',
 ]);
 
+const URI_METADATA_FIELDS = Object.freeze([
+    'redirect_uris',
+    'client_uri',
+    'logo_uri',
+    'tos_uri',
+    'policy_uri',
+    'jwks_uri',
+    'sector_identifier_uri',
+    'request_uris',
+    'initiate_login_uri',
+]);
+
 const config = {
     port: Number(process.env.PORT ?? 8082),
     realm: process.env.REALM ?? 'public-mcp',
@@ -39,15 +51,80 @@ function reply(res, status, body, requestId, headers = {}) {
     res.end(JSON.stringify(body));
 }
 
-function redirectHosts(uris) {
-    return [...new Set(uris.map((uri) => {
-        try {
-            const host = new URL(uri).hostname.toLowerCase().replace(/\.$/, '');
-            return ['localhost', '127.0.0.1', '::1'].includes(host) ? 'localhost' : host;
-        } catch {
-            return 'invalid-uri';
+function canonicalHost(hostname) {
+    const host = hostname.toLowerCase().replace(/\.$/, '');
+    return ['localhost', '127.0.0.1', '::1'].includes(host) ? 'localhost' : host;
+}
+
+function valuesForUriMetadataField(value) {
+    if (typeof value === 'string') {
+        return [value];
+    }
+
+    if (Array.isArray(value)) {
+        return value.filter((item) => typeof item === 'string');
+    }
+
+    return [];
+}
+
+function uriMetadata(payload) {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+        return [];
+    }
+
+    const seen = new Set();
+    const values = [];
+
+    for (const field of URI_METADATA_FIELDS) {
+        for (const uri of valuesForUriMetadataField(payload[field])) {
+            try {
+                const parsed = new URL(uri);
+                const scheme = parsed.protocol.slice(0, -1).toLowerCase();
+                const hostname = canonicalHost(parsed.hostname);
+                const port = parsed.port;
+                const key = `${field}\u0000${scheme}\u0000${hostname}\u0000${port}`;
+
+                if (seen.has(key)) {
+                    continue;
+                }
+
+                seen.add(key);
+                values.push({
+                    field,
+                    scheme,
+                    hostname,
+                    ...(port ? { port: Number(port) } : {}),
+                });
+            } catch {
+                const value = uri.slice(0, 256);
+                const key = `${field}\u0000invalid\u0000${value}`;
+
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    values.push({
+                        field,
+                        invalid: true,
+                        value,
+                    });
+                }
+            }
         }
-    }))].sort();
+    }
+
+    return values;
+}
+
+function observedHosts(metadata) {
+    return [...new Set(metadata.map((item) => (
+        item.invalid ? 'invalid-uri' : item.hostname
+    )))].sort();
+}
+
+function redirectHosts(metadata) {
+    return [...new Set(metadata
+        .filter((item) => item.field === 'redirect_uris')
+        .map((item) => (item.invalid ? 'invalid-uri' : item.hostname)))].sort();
 }
 
 function sourceIp(headers) {
@@ -72,9 +149,7 @@ function isPerplexity(payload) {
 
     return payload.redirect_uris.every((uri) => {
         try {
-            const host = new URL(uri).hostname
-                .toLowerCase()
-                .replace(/\.$/, '');
+            const host = canonicalHost(new URL(uri).hostname);
 
             return [...PERPLEXITY_DOMAINS].some(
                 (domain) => host === domain || host.endsWith(`.${domain}`),
@@ -123,7 +198,7 @@ async function audit(event) {
                 config.realm,
                 event.sourceIp,
                 typeof event.clientName === 'string' ? event.clientName.slice(0, 200) : null,
-                JSON.stringify(event.redirectHosts),
+                JSON.stringify(event.uriMetadata ?? []),
                 event.result,
                 event.status,
                 event.category,
@@ -243,7 +318,7 @@ const server = http.createServer(async (req, res) => {
             await audit({
                 requestId,
                 sourceIp: ip,
-                redirectHosts: [],
+                uriMetadata: [],
                 result: 'invalid_request',
                 status: 413,
                 category: 'body_too_large',
@@ -261,7 +336,7 @@ const server = http.createServer(async (req, res) => {
             await audit({
                 requestId,
                 sourceIp: ip,
-                redirectHosts: [],
+                uriMetadata: [],
                 result: 'invalid_request',
                 status: 400,
                 category: 'invalid_json',
@@ -276,7 +351,7 @@ const server = http.createServer(async (req, res) => {
                 requestId,
                 sourceIp: ip,
                 clientName: payload?.client_name,
-                redirectHosts: [],
+                uriMetadata: uriMetadata(payload),
                 result: 'invalid_request',
                 status: 400,
                 category: 'invalid_metadata',
@@ -286,14 +361,15 @@ const server = http.createServer(async (req, res) => {
             return;
         }
 
-        const hosts = redirectHosts(payload.redirect_uris);
+        const metadata = uriMetadata(payload);
+        const hosts = observedHosts(metadata);
 
-        if (hosts.includes('invalid-uri')) {
+        if (metadata.some((item) => item.invalid)) {
             await audit({
                 requestId,
                 sourceIp: ip,
                 clientName: payload.client_name,
-                redirectHosts: hosts,
+                uriMetadata: metadata,
                 result: 'invalid_request',
                 status: 400,
                 category: 'invalid_uri',
@@ -319,7 +395,7 @@ const server = http.createServer(async (req, res) => {
                 requestId,
                 sourceIp: ip,
                 clientName: payload.client_name,
-                redirectHosts: hosts,
+                uriMetadata: metadata,
                 result: 'failed',
                 status: 502,
                 category: 'proxy_error',
@@ -339,7 +415,7 @@ const server = http.createServer(async (req, res) => {
                 requestId,
                 sourceIp: ip,
                 clientName: payload.client_name,
-                redirectHosts: hosts,
+                uriMetadata: metadata,
                 result: 'failed',
                 status: 502,
                 category: 'proxy_error',
@@ -354,7 +430,7 @@ const server = http.createServer(async (req, res) => {
                 requestId,
                 sourceIp: ip,
                 clientName: payload.client_name,
-                redirectHosts: hosts,
+                uriMetadata: metadata,
                 result: 'failed',
                 status,
                 category: 'keycloak_error',
@@ -365,7 +441,7 @@ const server = http.createServer(async (req, res) => {
                 requestId,
                 sourceIp: ip,
                 clientName: payload.client_name,
-                redirectHosts: hosts,
+                uriMetadata: metadata,
                 result: 'rejected',
                 status,
                 category: 'trusted_hosts',

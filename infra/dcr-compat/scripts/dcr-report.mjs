@@ -86,7 +86,7 @@ function sqlDate(value) {
 }
 
 function partsInMoscow(date) {
-    const dateParts = new Intl.DateTimeFormat('en-CA', {
+    return new Intl.DateTimeFormat('en-CA', {
         timeZone: MOSCOW_TZ,
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
@@ -94,7 +94,6 @@ function partsInMoscow(date) {
         if (part.type !== 'literal') acc[part.type] = part.value;
         return acc;
     }, {});
-    return dateParts;
 }
 
 function moscowMidnightUtc(year, month, day) {
@@ -120,10 +119,17 @@ function previousMonthPeriod(now = new Date()) {
     const p = partsInMoscow(now);
     let year = Number(p.year);
     let month = Number(p.month) - 1;
-    if (month === 0) { month = 12; year -= 1; }
+    if (month === 0) {
+        month = 12;
+        year -= 1;
+    }
     const start = moscowMidnightUtc(year, month, 1);
     const end = moscowMidnightUtc(Number(p.year), Number(p.month), 1);
-    const monthName = new Intl.DateTimeFormat('en-US', { timeZone: MOSCOW_TZ, month: 'long', year: 'numeric' }).format(start);
+    const monthName = new Intl.DateTimeFormat('en-US', {
+        timeZone: MOSCOW_TZ,
+        month: 'long',
+        year: 'numeric',
+    }).format(start);
     return { start, end, label: monthName };
 }
 
@@ -138,7 +144,13 @@ function formatMoscow(value) {
 }
 
 function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    return String(value).replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+    }[char]));
 }
 
 function lineHtml(lines) {
@@ -152,11 +164,20 @@ function makeMailer(smtp) {
     });
 }
 
+function describeUriMetadata(item) {
+    if (item.invalid) {
+        return item.field ? `${item.field}: invalid-uri` : 'invalid-uri';
+    }
+
+    const authority = item.port ? `${item.hostname}:${item.port}` : item.hostname;
+    return item.field ? `${authority} [${item.field}]` : authority;
+}
+
 async function createRun(client, jobName) {
     const runId = crypto.randomUUID();
     await client.query(
         `INSERT INTO audit.job_runs (job_name, run_id, started_at, status, records_processed, email_sent)
-     VALUES ($1, $2, now(), 'running', 0, false)`,
+         VALUES ($1, $2, now(), 'running', 0, false)`,
         [jobName, runId],
     );
     return runId;
@@ -165,8 +186,8 @@ async function createRun(client, jobName) {
 async function finishRun(client, jobName, runId, status, recordsProcessed, emailSent, errorMessage = null) {
     await client.query(
         `UPDATE audit.job_runs
-        SET finished_at = now(), status = $3, records_processed = $4, email_sent = $5, error_message = $6
-      WHERE job_name = $1 AND run_id = $2`,
+         SET finished_at = now(), status = $3, records_processed = $4, email_sent = $5, error_message = $6
+         WHERE job_name = $1 AND run_id = $2`,
         [jobName, runId, status, recordsProcessed, emailSent, errorMessage?.slice(0, 1000) ?? null],
     );
 }
@@ -174,9 +195,9 @@ async function finishRun(client, jobName, runId, status, recordsProcessed, email
 async function setCheckpoint(client, name, value) {
     await client.query(
         `INSERT INTO audit.report_checkpoints (checkpoint_name, checkpoint_value, updated_at)
-     VALUES ($1, $2, now())
-     ON CONFLICT (checkpoint_name)
-     DO UPDATE SET checkpoint_value = EXCLUDED.checkpoint_value, updated_at = now()`,
+         VALUES ($1, $2, now())
+         ON CONFLICT (checkpoint_name)
+         DO UPDATE SET checkpoint_value = EXCLUDED.checkpoint_value, updated_at = now()`,
         [name, value],
     );
 }
@@ -200,16 +221,58 @@ async function auditSummary(client, start, end) {
     return row;
 }
 
-async function rejectedHosts(client, start, end) {
+async function rejectedUriMetadata(client, start, end) {
     const { rows } = await client.query(
-        `SELECT host AS hostname, count(*)::int AS rejections,
-            min(a.occurred_at) AS first_seen, max(a.occurred_at) AS last_seen
-       FROM audit.dcr_attempts a
-       CROSS JOIN LATERAL jsonb_array_elements_text(a.redirect_hosts) AS host
-      WHERE a.occurred_at >= $1 AND a.occurred_at < $2
-        AND a.rejection_category = 'trusted_hosts'
-      GROUP BY host
-      ORDER BY rejections DESC, host ASC`,
+        `WITH rejected AS (
+            SELECT a.occurred_at, a.redirect_hosts
+            FROM audit.dcr_attempts a
+            WHERE a.occurred_at >= $1 AND a.occurred_at < $2
+              AND a.rejection_category = 'trusted_hosts'
+        ),
+              normalized AS (
+                  SELECT
+                      r.occurred_at,
+                      CASE
+                          WHEN jsonb_typeof(item.value) = 'string' THEN 'redirect_uris'
+                          WHEN jsonb_typeof(item.value) = 'object' THEN coalesce(item.value->>'field', 'unknown')
+                          ELSE 'unknown'
+                          END AS field,
+                      CASE
+                          WHEN jsonb_typeof(item.value) = 'string' THEN item.value #>> '{}'
+                          WHEN jsonb_typeof(item.value) = 'object' AND coalesce((item.value->>'invalid')::boolean, false) THEN 'invalid-uri'
+                          WHEN jsonb_typeof(item.value) = 'object' THEN nullif(item.value->>'hostname', '')
+                          ELSE null
+                          END AS hostname,
+                      CASE
+                          WHEN jsonb_typeof(item.value) = 'object' AND coalesce((item.value->>'invalid')::boolean, false) THEN true
+                          ELSE false
+                          END AS invalid,
+                      CASE
+                          WHEN jsonb_typeof(item.value) = 'object'
+                              AND (item.value->>'port') ~ '^[0-9]+$'
+                     THEN (item.value->>'port')::int
+             ELSE null
+        END AS port
+               FROM rejected r
+               CROSS JOIN LATERAL jsonb_array_elements(
+                   CASE
+                       WHEN jsonb_typeof(r.redirect_hosts) = 'array' THEN r.redirect_hosts
+                       ELSE '[]'::jsonb
+                   END
+               ) AS item(value)
+         )
+        SELECT
+            field,
+            hostname,
+            invalid,
+            port,
+            count(*)::int AS rejections,
+            min(occurred_at) AS first_seen,
+            max(occurred_at) AS last_seen
+        FROM normalized
+        WHERE hostname IS NOT NULL
+        GROUP BY field, hostname, invalid, port
+        ORDER BY rejections DESC, hostname ASC, field ASC, port ASC NULLS FIRST`,
         [sqlDate(start), sqlDate(end)],
     );
     return rows;
@@ -218,11 +281,11 @@ async function rejectedHosts(client, start, end) {
 async function sourceIps(client, start, end) {
     const { rows } = await client.query(
         `SELECT coalesce(source_ip::text, 'unknown') AS source_ip, count(*)::int AS attempts
-       FROM audit.dcr_attempts
-      WHERE occurred_at >= $1 AND occurred_at < $2
-      GROUP BY source_ip
-      ORDER BY attempts DESC, source_ip ASC
-      LIMIT 100`,
+           FROM audit.dcr_attempts
+          WHERE occurred_at >= $1 AND occurred_at < $2
+          GROUP BY source_ip
+          ORDER BY attempts DESC, source_ip ASC
+          LIMIT 100`,
         [sqlDate(start), sqlDate(end)],
     );
     return rows;
@@ -234,7 +297,13 @@ async function latest(client, sql, values = []) {
 }
 
 async function send(mail, recipient, from, subject, text) {
-    const result = await mail.sendMail({ from, to: recipient, subject, text, html: lineHtml(text.split('\n')) });
+    const result = await mail.sendMail({
+        from,
+        to: recipient,
+        subject,
+        text,
+        html: lineHtml(text.split('\n')),
+    });
     if (!result.accepted?.length) throw new Error('SMTP server did not accept the report recipient');
 }
 
@@ -242,11 +311,12 @@ async function daily(client, cfg) {
     const job = 'daily-report';
     const runId = await createRun(client, job);
     let processed = 0;
+
     try {
         const period = dailyPeriod();
         const totals = await auditSummary(client, period.start, period.end);
         processed = totals.audited_events;
-        const hosts = await rejectedHosts(client, period.start, period.end);
+        const metadata = await rejectedUriMetadata(client, period.start, period.end);
 
         if (Number(totals.trusted_hosts_rejections) === 0) {
             await finishRun(client, job, runId, 'success', processed, false);
@@ -263,17 +333,25 @@ async function daily(client, cfg) {
             `Trusted-hosts rejections: ${totals.trusted_hosts_rejections}`,
             `Unknown: ${totals.unknown_count}; Keycloak errors: ${totals.keycloak_errors}; proxy errors: ${totals.proxy_errors}`,
             '',
-            'Rejected hostnames:',
-            ...hosts.map((h) => `- ${h.hostname}: ${h.rejections}; first=${formatMoscow(h.first_seen)}; last=${formatMoscow(h.last_seen)}`),
+            'URI metadata observed in trusted-hosts rejections:',
+            ...(metadata.length
+                ? metadata.map((item) => `- ${describeUriMetadata(item)}: ${item.rejections}; first=${formatMoscow(item.first_seen)}; last=${formatMoscow(item.last_seen)}`)
+                : ['- none recorded']),
             '',
             'Source IPs for audited rejection/error events:',
             ...ips.map((ip) => `- ${ip.source_ip}: ${ip.attempts}`),
             '',
-            'Recommendation: review only. Do not add hostnames to the allow-list automatically.',
+            'Recommendation: review URI metadata and Keycloak logs. Do not add hostnames to the allow-list automatically.',
         ];
 
         const mail = makeMailer(cfg.smtp);
-        await send(mail, cfg.recipient, cfg.smtp.from, `[GM MCP] DCR trusted-hosts report — ${formatMoscow(period.start).slice(0, 10)}`, lines.join('\n'));
+        await send(
+            mail,
+            cfg.recipient,
+            cfg.smtp.from,
+            `[GM MCP] DCR trusted-hosts report — ${formatMoscow(period.start).slice(0, 10)}`,
+            lines.join('\n'),
+        );
         await finishRun(client, job, runId, 'success', processed, true);
         await setCheckpoint(client, 'last_successful_daily_report_at', new Date().toISOString());
     } catch (error) {
@@ -294,22 +372,28 @@ async function monthly(client, cfg) {
     const job = 'monthly-heartbeat';
     const runId = await createRun(client, job);
     let processed = 0;
+
     try {
         const period = previousMonthPeriod();
         const totals = await auditSummary(client, period.start, period.end);
         processed = totals.audited_events;
-        const hosts = await rejectedHosts(client, period.start, period.end);
+        const metadata = await rejectedUriMetadata(client, period.start, period.end);
         const previousMonthly = await latest(client,
             `SELECT finished_at AS value FROM audit.job_runs
-        WHERE job_name = 'monthly-heartbeat' AND status = 'success'
-        ORDER BY finished_at DESC NULLS LAST LIMIT 1`);
+              WHERE job_name = 'monthly-heartbeat' AND status = 'success'
+              ORDER BY finished_at DESC NULLS LAST LIMIT 1`);
         const lastAuditEvent = await latest(client, `SELECT max(occurred_at) AS value FROM audit.dcr_attempts`);
         const lastDaily = await latest(client,
             `SELECT finished_at AS value FROM audit.job_runs
-        WHERE job_name = 'daily-report' AND status = 'success' AND email_sent = true
-        ORDER BY finished_at DESC NULLS LAST LIMIT 1`);
+              WHERE job_name = 'daily-report' AND status = 'success' AND email_sent = true
+              ORDER BY finished_at DESC NULLS LAST LIMIT 1`);
         const status = heartbeatStatus(totals);
-        const allowHash = cfg.allowList ? crypto.createHash('sha256').update(cfg.allowList).digest('hex').slice(0, 16) : 'not exported';
+        const allowHash = cfg.allowList
+            ? crypto.createHash('sha256').update(cfg.allowList).digest('hex').slice(0, 16)
+            : 'not exported';
+        const observed = metadata.length
+            ? metadata.map(describeUriMetadata).join(', ')
+            : 'none';
         const lines = [
             'Glushkov Modelling MCP — DCR audit heartbeat',
             '',
@@ -319,12 +403,12 @@ async function monthly(client, cfg) {
             `Results: rejected=${totals.rejected}, failed=${totals.failed}, invalid_request=${totals.invalid_request}`,
             `Trusted-hosts rejections: ${totals.trusted_hosts_rejections}`,
             `Unknown: ${totals.unknown_count}; system errors: ${totals.system_errors}`,
-            `Rejected hostnames: ${hosts.length ? hosts.map((h) => h.hostname).join(', ') : 'none'}`,
+            `URI metadata in trusted-hosts rejections: ${observed}`,
             `Last audit event: ${formatMoscow(lastAuditEvent)}`,
             `Last successful daily report: ${formatMoscow(lastDaily)}`,
             `Last successful monthly heartbeat: ${formatMoscow(previousMonthly)}`,
             `Proxy version: ${cfg.proxyVersion}`,
-            'SMTP status: sending via configured Brevo SMTP relay',,
+            'SMTP status: sending via configured Brevo SMTP relay',
             `Allow-list hash: ${allowHash}`,
         ];
 
@@ -341,13 +425,14 @@ async function monthly(client, cfg) {
 async function watchdog(client, cfg) {
     const job = 'heartbeat-watchdog';
     const runId = await createRun(client, job);
+
     try {
         const period = previousMonthPeriod();
         const lastMonthly = await latest(client,
             `SELECT finished_at AS value FROM audit.job_runs
-        WHERE job_name = 'monthly-heartbeat' AND status = 'success'
-          AND finished_at >= $1 AND finished_at < $2
-        ORDER BY finished_at DESC NULLS LAST LIMIT 1`,
+              WHERE job_name = 'monthly-heartbeat' AND status = 'success'
+                AND finished_at >= $1 AND finished_at < $2
+              ORDER BY finished_at DESC NULLS LAST LIMIT 1`,
             [sqlDate(period.end), sqlDate(new Date(period.end.getTime() + 32 * 24 * 60 * 60 * 1000))]);
 
         if (lastMonthly) {
@@ -382,6 +467,7 @@ async function main() {
     const cfg = config();
     const pool = new Pool(cfg.db);
     const client = await pool.connect();
+
     try {
         if (mode === 'daily') await daily(client, cfg);
         if (mode === 'monthly') await monthly(client, cfg);
