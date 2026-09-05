@@ -129,7 +129,6 @@ const testedAt = formatDate(platform.lastTestedAt);
 
                         <div>
                             <span class="eyebrow">Connection guide</span>
-
                             <h1>{platform.title}</h1>
                         </div>
                     </div>
@@ -195,7 +194,6 @@ const testedAt = formatDate(platform.lastTestedAt);
 
                     <div class="guide-summary__meta">
                         <span>Public OAuth endpoint</span>
-
                         <code>{endpoint}</code>
                     </div>
 
@@ -290,8 +288,8 @@ const testedAt = formatDate(platform.lastTestedAt);
                                                                 </a>
                                                         ) : (
                                                                 <pre class="guide-step__code">
-                                                                    <code>{normalizeCodeValue(step.urlOrCode)}</code>
-                                                                </pre>
+                                                        <code>{normalizeCodeValue(step.urlOrCode)}</code>
+                                                    </pre>
                                                         )
                                                     )
                                                 }
@@ -463,14 +461,14 @@ const testedAt = formatDate(platform.lastTestedAt);
 
     .back-link {
         display: flex;
+        width: fit-content;
         margin-bottom: 1.5rem;
         color: var(--color-primary);
         font-size: 0.9rem;
         font-weight: 700;
+        line-height: 1.25;
         text-decoration: none;
         white-space: nowrap;
-        line-height: 1.25;
-        width: fit-content;
     }
 
     .back-link:hover,
@@ -515,8 +513,8 @@ const testedAt = formatDate(platform.lastTestedAt);
     }
 
     .guide-platform-heading h1 {
-        margin: 0;
         max-width: none;
+        margin: 0;
     }
 
     .guide-status-row {
@@ -530,9 +528,9 @@ const testedAt = formatDate(platform.lastTestedAt);
     .platform-status {
         display: inline-flex;
         align-items: center;
+        padding: 0.25rem 0.55rem;
         border: 1px solid var(--color-border);
         border-radius: 999px;
-        padding: 0.25rem 0.55rem;
         color: var(--color-text-muted);
         font-size: 0.68rem;
         font-weight: 700;
@@ -599,8 +597,7 @@ const testedAt = formatDate(platform.lastTestedAt);
     .guide-summary__meta code {
         overflow-wrap: anywhere;
         color: var(--color-primary);
-        font-family:
-                ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.8rem;
         line-height: 1.5;
     }
@@ -620,8 +617,8 @@ const testedAt = formatDate(platform.lastTestedAt);
 
     .section-heading {
         display: flex;
-        justify-content: space-between;
         align-items: end;
+        justify-content: space-between;
         gap: 1.5rem;
         margin-bottom: 1.25rem;
     }
@@ -635,10 +632,10 @@ const testedAt = formatDate(platform.lastTestedAt);
 
     .nav-link-light {
         flex: 0 0 auto;
-        color: var(--color-text-muted);
+        padding: 0.35rem 0.75rem;
         border: 1px solid var(--color-border);
         border-radius: 999px;
-        padding: 0.35rem 0.75rem;
+        color: var(--color-text-muted);
         font-size: 0.78rem;
         text-decoration: none;
         white-space: nowrap;
@@ -647,8 +644,8 @@ const testedAt = formatDate(platform.lastTestedAt);
 
     .nav-link-light:hover,
     .nav-link-light:focus-visible {
-        color: var(--color-primary);
         border-color: var(--color-primary);
+        color: var(--color-primary);
     }
 
     .endpoint-card,
@@ -669,8 +666,7 @@ const testedAt = formatDate(platform.lastTestedAt);
         border-radius: 10px;
         background: var(--color-surface-2);
         color: var(--color-primary);
-        font-family:
-                ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.95rem;
         line-height: 1.45;
     }
@@ -685,17 +681,16 @@ const testedAt = formatDate(platform.lastTestedAt);
     .endpoint-card__warning code {
         overflow-wrap: anywhere;
         color: var(--color-text);
-        font-family:
-                ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.85em;
     }
 
     .guide-steps {
         display: grid;
-        gap: 1rem;
         max-width: 58rem;
-        padding: 0;
+        gap: 1rem;
         margin: 0;
+        padding: 0;
         list-style: none;
         counter-reset: guide-step;
     }
@@ -743,8 +738,7 @@ const testedAt = formatDate(platform.lastTestedAt);
         margin-top: 0.9rem;
         overflow-wrap: anywhere;
         color: var(--color-primary);
-        font-family:
-                ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.88rem;
         line-height: 1.5;
     }
@@ -766,8 +760,7 @@ const testedAt = formatDate(platform.lastTestedAt);
         display: block;
         min-width: max-content;
         color: var(--color-text);
-        font-family:
-                ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.8rem;
         line-height: 1.55;
         white-space: pre;
@@ -789,8 +782,8 @@ const testedAt = formatDate(platform.lastTestedAt);
 
     .help-list {
         display: grid;
-        gap: 0.75rem;
         max-width: 58rem;
+        gap: 0.75rem;
     }
 
     .help-item {
@@ -802,8 +795,8 @@ const testedAt = formatDate(platform.lastTestedAt);
 
     .help-item summary {
         position: relative;
-        cursor: pointer;
         padding: 1rem 3.25rem 1rem 1.15rem;
+        cursor: pointer;
         color: var(--color-text);
         font-weight: 700;
         line-height: 1.45;
@@ -897,8 +890,8 @@ const testedAt = formatDate(platform.lastTestedAt);
         }
 
         .section-heading {
-            align-items: flex-start;
             flex-direction: column;
+            align-items: flex-start;
             gap: 0.9rem;
         }
 
@@ -920,11 +913,30 @@ const testedAt = formatDate(platform.lastTestedAt);
         .guide-step {
             grid-template-columns: 1fr;
             gap: 0.85rem;
-            padding: 1.15rem;
+            padding: 1.2rem;
         }
 
         .guide-step__number {
             width: 2.65rem;
+        }
+
+        .guide-step__content h3 {
+            font-size: 1.1rem;
+            line-height: 1.35;
+        }
+
+        .guide-step__content > p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .guide-step__note {
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        .guide-step__url {
+            font-size: 0.82rem;
         }
 
         .help-item summary {
