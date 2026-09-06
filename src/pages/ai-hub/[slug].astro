@@ -71,7 +71,11 @@ const isUrl = (value: string) => /^https?:\/\/\S+$/i.test(value.trim());
 const normalizeCodeValue = (value: string) => {
     let normalized = value.trim();
 
-    normalized = normalized.replace(/^```(?:json|jsonc|text|bash|shell|sh)?\s*\n?/i, '');
+    normalized = normalized.replace(
+        /^```(?:json|jsonc|text|bash|shell|sh)?\s*\n?/i,
+        '',
+    );
+
     normalized = normalized.replace(/\n?```\s*$/i, '');
 
     for (let index = 0; index < 2; index += 1) {
@@ -148,7 +152,7 @@ const testedAt = formatDate(platform.lastTestedAt);
                             }
                         </div>
 
-                        <div>
+                        <div class="guide-platform-heading__copy">
                             <span class="eyebrow">Connection guide</span>
                             <h1>{platform.title}</h1>
                         </div>
@@ -282,7 +286,9 @@ const testedAt = formatDate(platform.lastTestedAt);
                             {
                                 connectionSteps.map((step, index) => {
                                     const codeOrUrl = step.urlOrCode?.trim() || '';
-                                    const isExternalUrl = codeOrUrl && isUrl(codeOrUrl);
+                                    const isExternalUrl =
+                                        codeOrUrl && isUrl(codeOrUrl);
+
                                     const codeValue = codeOrUrl
                                         ? normalizeCodeValue(codeOrUrl)
                                         : '';
@@ -290,7 +296,10 @@ const testedAt = formatDate(platform.lastTestedAt);
                                     return (
                                             <li class="guide-step">
                                         <span class="guide-step__number">
-                                            {formatStepNumber(step.stepNumber, index)}
+                                            {formatStepNumber(
+                                                step.stepNumber,
+                                                index,
+                                            )}
                                         </span>
 
                                                 <div class="guide-step__content">
@@ -324,7 +333,8 @@ const testedAt = formatDate(platform.lastTestedAt);
                                                     {
                                                         step.note && (
                                                                     <p class="guide-step__note">
-                                                                        <strong>Note:</strong> {step.note}
+                                                                        <strong>Note:</strong>{' '}
+                                                                        {step.note}
                                                                     </p>
                                                         )
                                                     }
@@ -483,6 +493,7 @@ const testedAt = formatDate(platform.lastTestedAt);
 
     .hero-copy,
     .guide-summary {
+        min-width: 0;
         min-height: 100%;
     }
 
@@ -508,6 +519,11 @@ const testedAt = formatDate(platform.lastTestedAt);
         display: flex;
         align-items: center;
         gap: 1rem;
+        min-width: 0;
+    }
+
+    .guide-platform-heading__copy {
+        min-width: 0;
     }
 
     .guide-platform-heading__logo {
@@ -542,6 +558,7 @@ const testedAt = formatDate(platform.lastTestedAt);
     .guide-platform-heading h1 {
         max-width: none;
         margin: 0;
+        overflow-wrap: anywhere;
     }
 
     .guide-status-row {
@@ -607,6 +624,7 @@ const testedAt = formatDate(platform.lastTestedAt);
 
     .guide-summary__meta {
         display: grid;
+        min-width: 0;
         gap: 0.5rem;
         margin-top: 1.25rem;
         padding-top: 1.25rem;
@@ -622,7 +640,10 @@ const testedAt = formatDate(platform.lastTestedAt);
     }
 
     .guide-summary__meta code {
+        display: block;
+        max-width: 100%;
         overflow-wrap: anywhere;
+        word-break: break-word;
         color: var(--color-primary);
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.8rem;
@@ -687,6 +708,7 @@ const testedAt = formatDate(platform.lastTestedAt);
 
     .endpoint {
         display: block;
+        max-width: 100%;
         padding: 0.9rem 1rem;
         overflow-x: auto;
         border: 1px solid var(--color-border);
@@ -781,7 +803,7 @@ const testedAt = formatDate(platform.lastTestedAt);
         max-width: 100%;
         min-width: 0;
         margin: 1rem 0 0;
-        padding: 1rem 1.125rem;
+        padding: 0.9rem 1rem;
         overflow-x: auto;
         overflow-y: hidden;
         isolation: isolate;
@@ -790,9 +812,9 @@ const testedAt = formatDate(platform.lastTestedAt);
         background: var(--color-surface-2);
         color: var(--color-text);
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        font-size: 0.84rem;
+        font-size: 0.75rem;
         font-variant-ligatures: none;
-        line-height: 1.6;
+        line-height: 1.5;
         text-align: left;
         tab-size: 2;
         white-space: pre;
@@ -803,7 +825,7 @@ const testedAt = formatDate(platform.lastTestedAt);
 
     .guide-step__code code {
         display: block;
-        min-width: max-content;
+        min-width: 0;
         margin: 0;
         padding: 0;
         border: 0;
@@ -926,17 +948,42 @@ const testedAt = formatDate(platform.lastTestedAt);
     }
 
     @media (max-width: 640px) {
+        .guide-hero__grid,
+        .hero-card,
+        .hero-copy,
+        .guide-summary,
+        .guide-platform-heading,
+        .guide-platform-heading__copy,
+        .guide-summary__meta {
+            min-width: 0;
+        }
+
         .back-link {
             margin-bottom: 1.25rem;
         }
 
         .guide-platform-heading {
             align-items: flex-start;
+            gap: 0.75rem;
         }
 
         .guide-platform-heading__logo {
-            width: 3.5rem;
-            height: 3.5rem;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 12px;
+        }
+
+        .guide-platform-heading h1 {
+            font-size: clamp(1.8rem, 9vw, 2.45rem);
+            line-height: 1.05;
+            overflow-wrap: anywhere;
+        }
+
+        .guide-summary__meta code {
+            display: block;
+            max-width: 100%;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         .section-heading {
@@ -958,6 +1005,13 @@ const testedAt = formatDate(platform.lastTestedAt);
         .test-prompt-card,
         .guide-step {
             border-radius: 14px;
+        }
+
+        .endpoint {
+            max-width: 100%;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         .guide-step {
@@ -990,11 +1044,19 @@ const testedAt = formatDate(platform.lastTestedAt);
         }
 
         .guide-step__code {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
             margin-top: 0.8rem;
-            padding: 0.8rem;
+            margin-inline: 0;
+            padding: 0.7rem;
             border-radius: 10px;
-            font-size: 0.76rem;
-            line-height: 1.55;
+            font-size: 0.66rem;
+            line-height: 1.45;
+        }
+
+        .guide-step__code code {
+            min-width: 0;
         }
 
         .help-item summary {
