@@ -50,36 +50,57 @@ const platformTroubleshooting = troubleshooting.filter((item) =>
 );
 
 const newsFlag = hasFreshNews(allNews);
+
 const SEO_TITLE = `${platform.title} MCP Connection Guide — Glushkov Modelling`;
+
 const SEO_DESCRIPTION =
     platform.shortDescription ||
     `Connect ${platform.title} to the Glushkov Modelling archive through the public OAuth MCP server.`;
 
 const formatStepNumber = (stepNumber: number, index: number) => {
-    const value = Number.isFinite(stepNumber) && stepNumber > 0
-        ? stepNumber
-        : index + 1;
+    const value =
+        Number.isFinite(stepNumber) && stepNumber > 0
+            ? stepNumber
+            : index + 1;
 
     return String(value).padStart(2, '0');
 };
 
 const isUrl = (value: string) => /^https?:\/\/\S+$/i.test(value.trim());
 
-const normalizeCodeValue = (value: string) =>
-    value
-        .trim()
-        .replace(/^json\\n/i, '')
-        .replace(/\\n/g, '\n')
-        .replace(/\\"/g, '"')
-        .replace(/\\\\/g, '\\')
-        .trim();
+const normalizeCodeValue = (value: string) => {
+    let normalized = value.trim();
+
+    normalized = normalized.replace(/^```(?:json|jsonc|text|bash|shell|sh)?\s*\n?/i, '');
+    normalized = normalized.replace(/\n?```\s*$/i, '');
+
+    for (let index = 0; index < 2; index += 1) {
+        const previous = normalized;
+
+        normalized = normalized
+            .replace(/\\r\\n/g, '\n')
+            .replace(/\\n/g, '\n')
+            .replace(/\\t/g, '\t')
+            .replace(/\\"/g, '"');
+
+        if (normalized === previous) {
+            break;
+        }
+    }
+
+    return normalized.trim();
+};
 
 const formatDate = (value: string | null) => {
-    if (!value) return '';
+    if (!value) {
+        return '';
+    }
 
     const date = new Date(value);
 
-    if (Number.isNaN(date.getTime())) return '';
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
 
     return new Intl.DateTimeFormat('en', {
         year: 'numeric',
@@ -198,8 +219,8 @@ const testedAt = formatDate(platform.lastTestedAt);
                     </div>
 
                     <p class="guide-summary__note">
-                        No API key is required. Complete authorization in the
-                        browser window opened by {platform.title}.
+                        No API key is required. Complete authorization in the browser
+                        window opened by {platform.title}.
                     </p>
                 </aside>
             </div>
@@ -216,8 +237,8 @@ const testedAt = formatDate(platform.lastTestedAt);
 
                     <p>
                         Add this public endpoint in the MCP, connectors, apps, or
-                        integrations section of {platform.title}, then complete
-                        OAuth authorization when prompted.
+                        integrations section of {platform.title}, then complete OAuth
+                        authorization when prompted.
                     </p>
                 </div>
 
@@ -228,10 +249,9 @@ const testedAt = formatDate(platform.lastTestedAt);
                 <code class="endpoint">{endpoint}</code>
 
                 <p class="endpoint-card__warning">
-                    Do not use
-                    <code>https://mcp.glushkov-modelling.com/mcp</code>.
-                    It is a legacy endpoint and is not intended for public OAuth
-                    connections.
+                    Do not use{' '}
+                    <code>https://mcp.glushkov-modelling.com/mcp</code>. It is a
+                    legacy endpoint and is not intended for public OAuth connections.
                 </p>
             </div>
         </div>
@@ -260,50 +280,58 @@ const testedAt = formatDate(platform.lastTestedAt);
                 connectionSteps.length > 0 ? (
                         <ol class="guide-steps">
                             {
-                                connectionSteps.map((step, index) => (
-                                        <li class="guide-step">
-                                    <span class="guide-step__number">
-                                        {formatStepNumber(step.stepNumber, index)}
-                                    </span>
+                                connectionSteps.map((step, index) => {
+                                    const codeOrUrl = step.urlOrCode?.trim() || '';
+                                    const isExternalUrl = codeOrUrl && isUrl(codeOrUrl);
+                                    const codeValue = codeOrUrl
+                                        ? normalizeCodeValue(codeOrUrl)
+                                        : '';
 
-                                            <div class="guide-step__content">
-                                                <h3>{step.title}</h3>
+                                    return (
+                                            <li class="guide-step">
+                                        <span class="guide-step__number">
+                                            {formatStepNumber(step.stepNumber, index)}
+                                        </span>
 
-                                                {
-                                                    step.instruction && (
-                                                                <p>{step.instruction}</p>
-                                                    )
-                                                }
+                                                <div class="guide-step__content">
+                                                    <h3>{step.title}</h3>
 
-                                                {
-                                                    step.urlOrCode && (
-                                                        isUrl(step.urlOrCode) ? (
+                                                    {
+                                                        step.instruction && (
+                                                                    <p>{step.instruction}</p>
+                                                        )
+                                                    }
+
+                                                    {
+                                                        isExternalUrl ? (
                                                                 <a
                                                                         class="guide-step__url"
-                                                                        href={step.urlOrCode.trim()}
+                                                                        href={codeOrUrl}
                                                                         target="_blank"
                                                                         rel="noopener noreferrer"
                                                                 >
-                                                                    {step.urlOrCode.trim()} ↗
+                                                                    {codeOrUrl} ↗
                                                                 </a>
                                                         ) : (
-                                                                <pre class="guide-step__code">
-                                                        <code>{normalizeCodeValue(step.urlOrCode)}</code>
-                                                    </pre>
+                                                            codeValue && (
+                                                                    <pre class="guide-step__code">
+                                                            <code>{codeValue}</code>
+                                                        </pre>
+                                                            )
                                                         )
-                                                    )
-                                                }
+                                                    }
 
-                                                {
-                                                    step.note && (
-                                                                <p class="guide-step__note">
-                                                                    <strong>Note:</strong> {step.note}
-                                                                </p>
-                                                    )
-                                                }
-                                            </div>
-                                        </li>
-                                ))
+                                                    {
+                                                        step.note && (
+                                                                    <p class="guide-step__note">
+                                                                        <strong>Note:</strong> {step.note}
+                                                                    </p>
+                                                        )
+                                                    }
+                                                </div>
+                                            </li>
+                                    );
+                                })
                             }
                         </ol>
                 ) : (
@@ -315,8 +343,8 @@ const testedAt = formatDate(platform.lastTestedAt);
                             </h2>
 
                             <p>
-                                The platform is listed, but its detailed connection
-                                steps are not yet published.
+                                The platform is listed, but its detailed connection steps
+                                are not yet published.
                             </p>
                         </div>
                 )
@@ -337,8 +365,8 @@ const testedAt = formatDate(platform.lastTestedAt);
                                     </h2>
 
                                     <p>
-                                        Once the MCP tools are connected, send this prompt
-                                        in a new {platform.title} conversation.
+                                        Once the MCP tools are connected, send this prompt in a
+                                        new {platform.title} conversation.
                                     </p>
                                 </div>
 
@@ -380,29 +408,30 @@ const testedAt = formatDate(platform.lastTestedAt);
 
                             <div class="help-list">
                                 {
-                                    platformTroubleshooting.map((item) => (
-                                            <details class="help-item">
-                                                <summary>{item.title}</summary>
+                                    platformTroubleshooting.map((item) => {
+                                        const otherPlatforms = item.platformNames.filter(
+                                            (name) => name !== platform.title,
+                                        );
 
-                                                <div class="help-item__content">
-                                                    <p>{item.answer}</p>
+                                        return (
+                                                <details class="help-item">
+                                                    <summary>{item.title}</summary>
 
-                                                    {
-                                                        item.platformNames.length > 1 && (
-                                                                    <p class="help-item__platforms">
-                                                                        Also applies to:{' '}
-                                                                        {item.platformNames
-                                                                            .filter(
-                                                                                (name) =>
-                                                                                    name !== platform.title,
-                                                                            )
-                                                                            .join(', ')}
-                                                                    </p>
-                                                        )
-                                                    }
-                                                </div>
-                                            </details>
-                                    ))
+                                                    <div class="help-item__content">
+                                                        <p>{item.answer}</p>
+
+                                                        {
+                                                            otherPlatforms.length > 0 && (
+                                                                        <p class="help-item__platforms">
+                                                                            Also applies to:{' '}
+                                                                            {otherPlatforms.join(', ')}
+                                                                        </p>
+                                                            )
+                                                        }
+                                                    </div>
+                                                </details>
+                                        );
+                                    })
                                 }
                             </div>
                         </div>
@@ -415,13 +444,11 @@ const testedAt = formatDate(platform.lastTestedAt);
             <div class="content-card guide-finish">
                 <span class="eyebrow">More help</span>
 
-                <h2 class="card-title">
-                    Continue exploring the AI Hub
-                </h2>
+                <h2 class="card-title">Continue exploring the AI Hub</h2>
 
                 <p>
-                    Find common solutions, answers about access and privacy, or
-                    return to the overview to choose another AI assistant.
+                    Find common solutions, answers about access and privacy, or return
+                    to the overview to choose another AI assistant.
                 </p>
 
                 <div class="guide-finish__actions">
@@ -669,6 +696,7 @@ const testedAt = formatDate(platform.lastTestedAt);
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
         font-size: 0.95rem;
         line-height: 1.45;
+        white-space: nowrap;
     }
 
     .endpoint-card__warning {
@@ -692,7 +720,6 @@ const testedAt = formatDate(platform.lastTestedAt);
         margin: 0;
         padding: 0;
         list-style: none;
-        counter-reset: guide-step;
     }
 
     .guide-step {
@@ -720,6 +747,10 @@ const testedAt = formatDate(platform.lastTestedAt);
         letter-spacing: 0.08em;
     }
 
+    .guide-step__content {
+        min-width: 0;
+    }
+
     .guide-step__content h3 {
         margin: 0;
         font-size: 1.2rem;
@@ -744,26 +775,45 @@ const testedAt = formatDate(platform.lastTestedAt);
     }
 
     .guide-step__code {
+        box-sizing: border-box;
+        display: block;
         width: 100%;
         max-width: 100%;
-        box-sizing: border-box;
-        margin: 0.9rem 0 0;
-        padding: 0.85rem 1rem;
+        min-width: 0;
+        margin: 1rem 0 0;
+        padding: 1rem 1.125rem;
         overflow-x: auto;
         overflow-y: hidden;
+        isolation: isolate;
         border: 1px solid var(--color-border);
-        border-radius: 10px;
+        border-radius: 12px;
         background: var(--color-surface-2);
+        color: var(--color-text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.84rem;
+        font-variant-ligatures: none;
+        line-height: 1.6;
+        text-align: left;
+        tab-size: 2;
+        white-space: pre;
+        word-break: normal;
+        overflow-wrap: normal;
+        -webkit-overflow-scrolling: touch;
     }
 
     .guide-step__code code {
         display: block;
         min-width: max-content;
-        color: var(--color-text);
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        font-size: 0.8rem;
-        line-height: 1.55;
-        white-space: pre;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        text-align: inherit;
+        white-space: inherit;
+        word-break: inherit;
+        overflow-wrap: inherit;
     }
 
     .guide-step__note {
@@ -939,6 +989,14 @@ const testedAt = formatDate(platform.lastTestedAt);
             font-size: 0.82rem;
         }
 
+        .guide-step__code {
+            margin-top: 0.8rem;
+            padding: 0.8rem;
+            border-radius: 10px;
+            font-size: 0.76rem;
+            line-height: 1.55;
+        }
+
         .help-item summary {
             padding: 0.9rem 2.85rem 0.9rem 1rem;
         }
@@ -950,11 +1008,12 @@ const testedAt = formatDate(platform.lastTestedAt);
         .help-item__content {
             padding: 0.9rem 1rem 1rem;
         }
+    }
 
-        .guide-step__code {
-            margin-top: 0.8rem;
-            padding: 0.75rem;
-            font-size: 0.75rem;
+    @media (prefers-reduced-motion: reduce) {
+        .nav-link-light,
+        .help-item summary::after {
+            transition: none;
         }
     }
 </style>
