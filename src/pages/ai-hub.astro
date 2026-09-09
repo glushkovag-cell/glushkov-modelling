@@ -8,6 +8,7 @@ import {
     getAiHubOverviewTroubleshooting,
     getAiHubPage,
     getAiHubPlatforms,
+    getAiHubPrompts,
     getAiHubWorkflowSteps,
     getAllNews,
     hasFreshNews,
@@ -18,6 +19,7 @@ const [
     capabilities,
     steps,
     platforms,
+    prompts,
     troubleshooting,
     faqs,
     allNews,
@@ -26,6 +28,7 @@ const [
     getAiHubCapabilities(),
     getAiHubWorkflowSteps(),
     getAiHubPlatforms(),
+    getAiHubPrompts(),
     getAiHubOverviewTroubleshooting(),
     getAiHubOverviewFaqs(),
     getAllNews(),
@@ -39,6 +42,28 @@ const SEO_DESCRIPTION =
 const mcpEndpoint =
     aiHub?.publicMcpEndpoint ||
     'https://mcp.glushkov-modelling.com/mcp-oauth';
+
+const mcpDirectories = [
+    {
+        name: 'MCP Registry',
+        description:
+            'Official registry record for Glushkov Modelling MCP.',
+        url: 'https://registry.modelcontextprotocol.io/v0.1/servers/com.glushkov-modelling%2Fcontent/versions/latest'
+    },
+    {
+        name: 'Glama',
+        description:
+            'Inspect the connector, explore its tools, and connect through OAuth.',
+        url: 'https://glama.ai/mcp/connectors/com.glushkov-modelling/content'
+    },
+    {
+        name: 'Smithery',
+        description:
+            'Install and connect Glushkov Modelling MCP through Smithery.',
+        url: 'https://smithery.ai/servers/glushkov-ag/glushkov-modelling'
+    }
+];
+
 ---
 
 <BaseLayout
@@ -57,23 +82,19 @@ const mcpEndpoint =
         <div class="container">
             <div class="hero-grid">
                 <div class="hero-card hero-copy">
-                    <span class="eyebrow">AI Hub</span>
+                    <span class="eyebrow">{aiHub?.eyebrow}</span>
 
-                    <h1>Ask the shipyard</h1>
+                    <h1>{aiHub?.heroTitle}</h1>
 
-                    <p>
-                        Connect a supported AI assistant to Glushkov Modelling and
-                        search the archive in natural language: build logs, model
-                        details, gallery photographs, and tutorials.
-                    </p>
+                    <p>{aiHub?.heroLead}</p>
 
                     <div class="hero-meta">
-                        <a href="#how-it-works" class="meta-pill">
-                            How it works
+                        <a href={aiHub?.primaryCtaAnchor} class="meta-pill">
+                            {aiHub?.primaryCtaLabel}
                         </a>
 
-                        <a href="#connect" class="meta-pill">
-                            Connection details
+                        <a href={aiHub?.secondaryCtaAnchor} class="meta-pill">
+                            {aiHub?.secondaryCtaLabel}
                         </a>
                     </div>
                 </div>
@@ -344,6 +365,141 @@ const mcpEndpoint =
                             <p>
                                 Connection guides will appear here as each client is
                                 verified.
+                            </p>
+                        </div>
+                )
+            }
+        </div>
+    </section>
+
+    <section class="page-section page-section--directories" id="directories">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">MCP directories</span>
+                    <h2 class="section-title">Find Glushkov Modelling on MCP platforms</h2>
+                    <p>
+                        The official server is published in selected public MCP directories.
+                        Choose a directory to inspect the listing or install the connection.
+                    </p>
+                </div>
+
+                <a href="#top" class="nav-link-light">Top</a>
+            </div>
+
+            <div class="directory-grid">
+                {mcpDirectories.map((directory) => (
+                        <article class="directory-card">
+                            <h3>{directory.name}</h3>
+                            <p>{directory.description}</p>
+
+                            <a
+                                    href={directory.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="build-link"
+                            >
+                                Open listing
+                            </a>
+                        </article>
+                ))}
+            </div>
+        </div>
+    </section>
+
+    <section class="page-section page-section--prompts" id="prompts">
+        <div class="container">
+            <div class="section-heading">
+                <div>
+                    <span class="eyebrow">Example prompts</span>
+
+                    <h2 class="section-title">
+                        Start with a question from the workshop
+                    </h2>
+
+                    <p>
+                        Use these examples after connecting Glushkov Modelling to a
+                        compatible AI assistant. You can copy a prompt as written or
+                        adapt it to your own project.
+                    </p>
+                </div>
+
+                <a href="#top" class="nav-link-light">↑ Top</a>
+            </div>
+
+            {
+                prompts.length > 0 ? (
+                        <div class="prompt-grid">
+                            {
+                                prompts.map((prompt) => {
+                                    const relatedBuildHref = prompt.relatedBuild?.slug
+                                        ? `/builds/${prompt.relatedBuild.slug}`
+                                        : null;
+
+                                    return (
+                                            <article class="prompt-card">
+                                                <h3>{prompt.title}</h3>
+
+                                                {
+                                                    prompt.promptText && (
+                                                                <blockquote class="prompt-card__text">
+                                                                    {prompt.promptText}
+                                                                </blockquote>
+                                                    )
+                                                }
+
+                                                {
+                                                    prompt.answerExample && (
+                                                                <details class="prompt-card__answer">
+                                                                    <summary>
+                                                                        View example answer
+                                                                    </summary>
+
+                                                                    <div
+                                                                            class="prompt-card__answer-content"
+                                                                            set:html={prompt.answerExample}
+                                                                    />
+                                                                </details>
+                                                    )
+                                                }
+
+                                                <div class="prompt-card__meta">
+                                                    {
+                                                        prompt.archiveCategoryLabel && (
+                                                                    <span class="prompt-card__category">
+                                                    {prompt.archiveCategoryLabel}
+                                                </span>
+                                                        )
+                                                    }
+
+                                                    {
+                                                        prompt.relatedBuild &&
+                                                        relatedBuildHref && (
+                                                                    <a
+                                                                            href={relatedBuildHref}
+                                                                            class="prompt-card__related-build"
+                                                                    >
+                                                                        {prompt.relatedBuild.title}
+                                                                    </a>
+                                                        )
+                                                    }
+                                                </div>
+                                            </article>
+                                    );
+                                })
+                            }
+                        </div>
+                ) : (
+                        <div class="content-card empty-state">
+                            <span class="eyebrow">Coming soon</span>
+
+                            <h2 class="card-title">
+                                Example prompts are being prepared
+                            </h2>
+
+                            <p>
+                                Practical questions for exploring the archive will appear
+                                here shortly.
                             </p>
                         </div>
                 )
@@ -1212,6 +1368,327 @@ const mcpEndpoint =
         .feedback-card__actions :global(.button) {
             flex: 1 1 auto;
             justify-content: center;
+        }
+    }
+    .page-section--prompts {
+        padding-top: 1.25rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .prompt-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .prompt-card {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        padding: 1.35rem;
+        border: 1px solid var(--color-border);
+        border-radius: 18px;
+        background: var(--color-surface);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.035);
+    }
+
+    .prompt-card h3 {
+        margin: 0;
+        color: var(--color-text);
+        font-size: 1.2rem;
+        line-height: 1.25;
+    }
+
+    .prompt-card__text {
+        margin: 1rem 0 0;
+        padding: 0.85rem 1rem;
+        border-left: 3px solid var(--color-primary);
+        border-radius: 0 10px 10px 0;
+        background: var(--color-surface-2);
+        color: var(--color-text);
+        font-style: normal;
+        line-height: 1.6;
+    }
+
+    .prompt-card__answer {
+        margin-top: 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        background: var(--color-surface-2);
+        overflow: hidden;
+    }
+
+    .prompt-card__answer summary {
+        position: relative;
+        cursor: pointer;
+        padding: 0.8rem 3rem 0.8rem 1rem;
+        color: var(--color-text);
+        font-size: 0.9rem;
+        font-weight: 700;
+        line-height: 1.45;
+        list-style: none;
+    }
+
+    .prompt-card__answer summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .prompt-card__answer summary::after {
+        content: '+';
+        position: absolute;
+        top: 50%;
+        right: 1rem;
+        color: var(--color-primary);
+        font-size: 1.3rem;
+        font-weight: 400;
+        line-height: 1;
+        transform: translateY(-50%);
+        transition: transform var(--transition);
+    }
+
+    .prompt-card__answer[open] summary {
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .prompt-card__answer[open] summary::after {
+        transform: translateY(-50%) rotate(45deg);
+    }
+
+    .prompt-card__answer-content {
+        min-width: 0;
+        padding: 1rem;
+        color: var(--color-text-muted);
+        font-size: 0.92rem;
+        line-height: 1.65;
+    }
+
+    .prompt-card__answer-content :global(p) {
+        margin: 0;
+    }
+
+    .prompt-card__answer-content :global(p + p) {
+        margin-top: 0.85rem;
+    }
+
+    .prompt-card__answer-content :global(h1),
+    .prompt-card__answer-content :global(h2),
+    .prompt-card__answer-content :global(h3),
+    .prompt-card__answer-content :global(h4) {
+        margin: 1.15rem 0 0;
+        color: var(--color-text);
+        font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
+        line-height: 1.25;
+    }
+
+    .prompt-card__answer-content :global(h1 + p),
+    .prompt-card__answer-content :global(h2 + p),
+    .prompt-card__answer-content :global(h3 + p),
+    .prompt-card__answer-content :global(h4 + p) {
+        margin-top: 0.6rem;
+    }
+
+    .prompt-card__answer-content :global(ul),
+    .prompt-card__answer-content :global(ol) {
+        margin: 0.85rem 0 0;
+        padding-left: 1.25rem;
+    }
+
+    .prompt-card__answer-content :global(li) {
+        margin: 0.35rem 0 0;
+        padding-left: 0.15rem;
+    }
+
+    .prompt-card__answer-content :global(li::marker) {
+        color: var(--color-primary);
+    }
+
+    .prompt-card__answer-content :global(a) {
+        color: var(--color-primary);
+        text-decoration-color: color-mix(
+                in srgb,
+                var(--color-primary) 55%,
+                transparent
+        );
+        text-underline-offset: 0.14em;
+    }
+
+    .prompt-card__answer-content :global(a:hover),
+    .prompt-card__answer-content :global(a:focus-visible) {
+        text-decoration-color: currentColor;
+    }
+
+    .prompt-card__answer-content :global(img) {
+        display: block;
+        width: auto;
+        max-width: 100%;
+        height: auto;
+        margin: 1rem auto 0;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+    }
+
+    .prompt-card__answer-content :global(table) {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        margin-top: 1rem;
+        overflow-x: auto;
+        border: 1px solid var(--color-border);
+        border-collapse: collapse;
+        border-radius: 10px;
+        background: var(--color-surface);
+        font-size: 0.86rem;
+        line-height: 1.5;
+    }
+
+    .prompt-card__answer-content :global(th),
+    .prompt-card__answer-content :global(td) {
+        min-width: 8rem;
+        border: 1px solid var(--color-border);
+        padding: 0.65rem 0.75rem;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    .prompt-card__answer-content :global(th) {
+        background: color-mix(
+                in srgb,
+                var(--color-primary) 10%,
+                var(--color-surface-2)
+        );
+        color: var(--color-text);
+        font-weight: 700;
+    }
+
+    .prompt-card__answer-content :global(tr:nth-child(even) td) {
+        background: color-mix(
+                in srgb,
+                var(--color-surface-2) 72%,
+                transparent
+        );
+    }
+
+    .prompt-card__meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.55rem 0.75rem;
+        margin-top: 1rem;
+        padding-top: 0.9rem;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .prompt-card__category {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        padding: 0.22rem 0.55rem;
+        color: var(--color-text-muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .prompt-card__related-build {
+        color: var(--color-primary);
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .prompt-card__related-build:hover,
+    .prompt-card__related-build:focus-visible {
+        text-decoration: underline;
+        text-underline-offset: 0.14em;
+    }
+
+    @media (max-width: 860px) {
+        .prompt-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .page-section--prompts {
+            padding-top: 1rem;
+            padding-bottom: 1.25rem;
+        }
+
+        .prompt-card {
+            padding: 1.15rem;
+            border-radius: 16px;
+        }
+
+        .prompt-card__text {
+            padding: 0.8rem 0.9rem;
+        }
+
+        .prompt-card__answer-content {
+            padding: 0.9rem;
+        }
+
+        .prompt-card__answer-content :global(th),
+        .prompt-card__answer-content :global(td) {
+            min-width: 7rem;
+            padding: 0.55rem 0.65rem;
+        }
+    }
+    .page-section--directories {
+        padding-top: 1.25rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .directory-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .directory-card {
+        display: flex;
+        flex-direction: column;
+        padding: 1.35rem;
+        border: 1px solid var(--color-border);
+        border-radius: 18px;
+        background: var(--color-surface);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.035);
+    }
+
+    .directory-card .build-link {
+        align-self: flex-start;
+        margin-top: 1rem;
+    }
+
+    .directory-card h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        line-height: 1.25;
+    }
+
+    .directory-card p {
+        margin: 0.65rem 0 0;
+        color: var(--color-text-muted);
+        line-height: 1.55;
+    }
+
+    @media (max-width: 860px) {
+        .directory-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .page-section--directories {
+            padding-top: 1rem;
+            padding-bottom: 1.25rem;
+        }
+
+        .directory-card {
+            min-height: 0;
+            padding: 1.15rem;
+            border-radius: 16px;
         }
     }
 </style>

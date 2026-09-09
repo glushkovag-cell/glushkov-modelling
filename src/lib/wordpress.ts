@@ -1853,3 +1853,134 @@ export async function getAiHubConnectionSteps(
         return a.stepNumber - b.stepNumber;
       });
 }
+
+// --- AI HUB PROMPTS ---
+
+interface AiPromptRelatedBuild {
+  nodes?: Array<{
+    id: string;
+    slug?: string | null;
+    uri?: string | null;
+    title?: string | null;
+  }> | null;
+}
+
+
+interface AiPromptFields {
+  promptText?: string | null;
+  answerexample?: string | null;
+  archiveCategory?: string[] | null;
+  featuredPrompt?: boolean | null;
+  showOnAiHub?: boolean | null;
+  relatedBuild?: AiPromptRelatedBuild | null;
+}
+
+interface AiPromptNode {
+  id: string;
+  title: string;
+  slug: string;
+  uri?: string | null;
+  menuOrder?: number | null;
+  status?: string | null;
+  aiPromptFields?: AiPromptFields | null;
+}
+
+interface GetAiPromptsResponse {
+  aiPrompts: {
+    nodes: AiPromptNode[];
+  };
+}
+
+export interface AiHubPrompt {
+  id: string;
+  title: string;
+  slug: string;
+  uri: string;
+  menuOrder: number;
+  promptText: string;
+  answerExample: string;
+  archiveCategoryValue: string;
+  archiveCategoryLabel: string;
+  relatedBuild: {
+    id: string;
+    slug: string;
+    title: string;
+    uri: string;
+  } | null;
+}
+
+const GET_AI_HUB_PROMPTS = `
+  query GetAiHubPrompts {
+    aiPrompts(first: 100) {
+      nodes {
+        id
+        title
+        slug
+        uri
+        menuOrder
+        status
+
+        aiPromptFields {
+          promptText
+          answerexample
+          archiveCategory
+          featuredPrompt
+          showOnAiHub
+
+          relatedBuild {
+            nodes {
+              id
+              slug
+              uri
+
+              ... on NodeWithTitle {
+                title
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export async function getAiHubPrompts(): Promise<AiHubPrompt[]> {
+  const data = await fetchAPI<GetAiPromptsResponse>(GET_AI_HUB_PROMPTS);
+
+  return data.aiPrompts.nodes
+      .filter((item) => {
+        const fields = item.aiPromptFields;
+
+        return (
+            item.status === 'publish' &&
+            fields?.showOnAiHub === true &&
+            fields.featuredPrompt === true
+        );
+      })
+      .map((item) => {
+        const fields = item.aiPromptFields;
+        const category = normalizeAcfSelect(fields?.archiveCategory);
+        const relatedBuild = fields?.relatedBuild?.nodes?.[0];
+
+        return {
+          id: item.id,
+          title: item.title,
+          slug: item.slug,
+          uri: item.uri || '',
+          menuOrder: item.menuOrder ?? 0,
+          promptText: fields?.promptText || '',
+          answerExample: fields?.answerexample || '',
+          archiveCategoryValue: category.value,
+          archiveCategoryLabel: category.label,
+          relatedBuild: relatedBuild
+              ? {
+                id: relatedBuild.id,
+                slug: relatedBuild.slug || '',
+                title: relatedBuild.title || '',
+                uri: relatedBuild.uri || '',
+              }
+              : null,
+        };
+      })
+      .sort((a, b) => a.menuOrder - b.menuOrder);
+}
