@@ -55,40 +55,50 @@ const inputSchema = {
       .string()
       .optional()
       .describe(
-          "The building slug used for filtering, e.g., 'le-requin'. If not specified, photos for all buildings are shown.",
+          "Optional model project slug to filter photos, for example 'le-requin'. When omitted, returns photos from all gallery projects.",
       ),
+
   tag: z
       .string()
       .optional()
       .describe(
-          `Category for photos taken inside the structure (the "section" field in the gallery manifest). Known values: ${KNOWN_SECTIONS.join(", ")}.`,
+          `Optional gallery section filter. Matches the manifest section field exactly. Known values: ${KNOWN_SECTIONS.join(", ")}.`,
       ),
+
   limit: z
       .number()
       .int()
       .min(1)
       .max(100)
       .default(50)
-      .describe("Maximum number of photos in the response."),
+      .describe(
+          "Maximum number of photos to return. Default: 50. Maximum: 100.",
+      ),
+
   offset: z
       .number()
       .int()
       .min(0)
       .default(0)
       .describe(
-          "Number of matching photos to skip before returning the current page.",
+          "Number of matching photos to skip before returning the current page. Use nextOffset from a previous response to retrieve the next page.",
       ),
 };
 
-/** Собирает публичный URL из относительного пути манифеста, используя CMS_GALLERY_URL. */
 function buildCmsUrl(relativePath: string): string {
   const cleaned = relativePath.replace(/^\/+/, "").replace(/^gallery\/+/, "");
   return `${config.cmsGalleryUrl}/${cleaned}`;
 }
 
 function absolutizeAsset(assetPath: string | null | undefined): string | null {
-  if (!assetPath) return null;
-  if (/^https?:\/\//i.test(assetPath)) return assetPath;
+  if (!assetPath) {
+    return null;
+  }
+
+  if (/^https?:\/\//i.test(assetPath)) {
+    return assetPath;
+  }
+
   return buildCmsUrl(assetPath);
 }
 
@@ -97,7 +107,6 @@ async function readJsonFile<T>(filePath: string): Promise<T> {
   return JSON.parse(raw) as T;
 }
 
-/** Список slug-ов построек, у которых есть галерея (index/models.json). */
 async function getGallerySlugs(): Promise<string[]> {
   const filePath = path.join(config.galleryManifestPath, "index", "models.json");
   const list = await readJsonFile<unknown>(filePath);
@@ -119,20 +128,24 @@ export function registerListGalleryPhotos(server: McpServer): void {
   server.registerTool(
       "list_gallery_photos",
       {
-        title: "Photos from gallery",
+        title: "List gallery photos",
         description:
-            "Returns a paginated list of photos from the website gallery " +
-            "(glushkov-modelling.com), with filtering by building (project, for " +
-            "example 'le-requin') and/or photo category " +
-            `(tag: ${KNOWN_SECTIONS.join(", ")}). The response includes total matching ` +
-            "photos, returned count, pagination offset, nextOffset, and hasMore.",
+            "Read-only. Returns a paginated list of gallery photo summaries with captions, image URLs, model project references, section tags, and image metadata. " +
+            "Use this tool to browse gallery photos or filter them by model project and gallery section. " +
+            "Use get_build_details when the user needs vessel background, technical notes, or build-log content for the related model. " +
+            `Known section tags are: ${KNOWN_SECTIONS.join(", ")}. ` +
+            "Results are ordered by each project's gallery order. " +
+            "The response includes total matching photos, returned count, limit, offset, nextOffset, and hasMore. " +
+            "Use nextOffset from a response with hasMore=true to retrieve the next page. " +
+            "If no photos match a valid filter, returns an empty photos array. " +
+            "If project does not identify a gallery project, returns a not-found result.",
         inputSchema,
       },
       async ({ project, tag, limit, offset }) => {
         try {
           if (!config.galleryManifestPath) {
             return errorResult(
-                "GALLERY_MANIFEST_PATH not specified in server configuration.",
+                "GALLERY_MANIFEST_PATH is not configured for this server.",
             );
           }
 
@@ -140,7 +153,7 @@ export function registerListGalleryPhotos(server: McpServer): void {
 
           if (allSlugs.length === 0) {
             return errorResult(
-                "Failed to retrieve the list of buildings with a gallery (index/models.json is empty or inaccessible).",
+                "No gallery projects are available because index/models.json is empty or inaccessible.",
             );
           }
 
@@ -149,7 +162,7 @@ export function registerListGalleryPhotos(server: McpServer): void {
           if (project) {
             if (!allSlugs.includes(project)) {
               return errorResult(
-                  `Build with slug='${project}' not found in gallery. Available slugs: ${allSlugs.join(", ")}.`,
+                  `Gallery project with slug='${project}' not found. Available project slugs: ${allSlugs.join(", ")}.`,
               );
             }
 
@@ -165,14 +178,18 @@ export function registerListGalleryPhotos(server: McpServer): void {
           const matchingPhotos: PhotoResult[] = [];
 
           for (const manifest of manifests) {
-            if (!manifest) continue;
+            if (!manifest) {
+              continue;
+            }
 
             const sortedImages = [...manifest.images].sort(
-                (a, b) => a.order - b.order,
+                (left, right) => left.order - right.order,
             );
 
             for (const image of sortedImages) {
-              if (tag && image.section !== tag) continue;
+              if (tag && image.section !== tag) {
+                continue;
+              }
 
               matchingPhotos.push({
                 project: manifest.slug,
@@ -208,8 +225,8 @@ export function registerListGalleryPhotos(server: McpServer): void {
 
           if (tag && !KNOWN_SECTIONS.includes(tag)) {
             result.note =
-                `Tag '${tag}' not found in known category list ` +
-                `(${KNOWN_SECTIONS.join(", ")}) — possible typo`;
+                `Tag '${tag}' is not in the known gallery section list ` +
+                `(${KNOWN_SECTIONS.join(", ")}). The filter is applied exactly and may return no photos.`;
           }
 
           return jsonResult(result);

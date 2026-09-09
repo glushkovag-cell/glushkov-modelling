@@ -36,18 +36,17 @@ interface GetTutorialsForSearchResponse {
 }
 
 /**
- * Загружаем все опубликованные build-log записи категории Builds, затем
- * фильтруем их локально. Это сознательное решение:
+ * Fetch all published Build Log posts and filter them locally.
  *
- * - WPGraphQL `where.search` не ищет по ACF buildlog.modelslug;
- * - modelslug содержит техническую связь с моделью;
- * - title и historicalYear модели берутся через fetchAllModels();
- * - поэтому запрос "Le Requin 1750" может совпасть одновременно с
- *   modelTitle = "Le Requin" и historicalYear = "1750";
- * - запрос "Le Requin hull" может совпасть с modelTitle и title части.
+ * This is intentional because WPGraphQL where.search does not search the
+ * ACF buildlog.modelslug field. A model slug provides the technical link to
+ * its model, while model title and historical year are obtained from
+ * fetchAllModels(). This allows a query such as "Le Requin 1750" to match
+ * both the model title and historical year, and "Le Requin hull" to match a
+ * model title and a build-log part title.
  *
- * Объём контента сайта сейчас мал, а верхняя граница в 100 записей уже
- * используется в wp-models.ts::GET_BUILD_PARTS.
+ * The site currently has a small content volume. The 100-item upper bound
+ * matches the existing Build Log query limit in wp-models.ts.
  */
 const BUILD_LOGS_FOR_SEARCH_QUERY = `
   query GetBuildLogsForSearch {
@@ -67,8 +66,11 @@ const BUILD_LOGS_FOR_SEARCH_QUERY = `
   }
 `;
 
-// У кастомного резолвера tutorialsFiltered нет подтверждённого аргумента search,
-// поэтому статьи ищем клиентской фильтрацией по заголовку и тизеру.
+/**
+ * The custom tutorialsFiltered resolver does not have a confirmed search
+ * argument, so tutorial title and teaser matching is performed locally.
+ * Full tutorial body text is intentionally not fetched or searched here.
+ */
 const TUTORIALS_FOR_SEARCH_QUERY = `
   query GetTutorialsForSearch {
     tutorialsFiltered(where: {}) {
@@ -86,26 +88,30 @@ const inputSchema = {
     query: z
         .string()
         .min(2)
-        .describe("Search query for full-text search across build logs and articles."),
+        .describe(
+            "Search terms for broad discovery across build-log metadata and tutorial metadata. Every term must match across the searchable fields of one result.",
+        ),
+
     limit: z
         .number()
         .int()
         .min(1)
         .max(50)
         .default(20)
-        .describe("Максимальное количество результатов (на каждую категорию)."),
+        .describe(
+            "Maximum number of results to return for each result type. Default: 20. Maximum: 50.",
+        ),
 };
 
 /**
- * Приводит human-readable title, slug, год и HTML excerpt к единому виду:
+ * Normalizes titles, slugs, years, and HTML excerpts for matching:
  *
  * "Le Requin"       -> "le requin"
  * "le-requin"       -> "le requin"
  * "1750"            -> "1750"
  * "<p>The hull</p>" -> "the hull"
  *
- * Это позволяет сопоставлять запросы с пробелами со значением modelslug,
- * где слова разделены дефисом.
+ * This allows space-separated query terms to match slugs that use hyphens.
  */
 function normalizeSearchText(value: string | null | undefined): string {
     return (value ?? "")
@@ -134,10 +140,9 @@ function getMatchedFields(
     fields: Array<[MatchedField, string | null | undefined]>,
     searchTerms: string[],
 ): MatchedField[] {
-    const normalizedFields = fields.map(([field, value]) => [
-        field,
-        normalizeSearchText(value),
-    ] as const);
+    const normalizedFields = fields.map(
+        ([field, value]) => [field, normalizeSearchText(value)] as const,
+    );
 
     const searchableText = normalizedFields
         .map(([, value]) => value)
@@ -161,10 +166,17 @@ export function registerSearchContent(server: McpServer): void {
     server.registerTool(
         "search_content",
         {
-            title: "Поиск по контенту",
+            title: "Search site content",
             description:
-                "Searches build logs by model title, model slug, historical year, " +
-                "part title and excerpt, and searches tutorials by title and short description.",
+                "Read-only. Searches build-log metadata and tutorial metadata by keyword. " +
+                "Build-log matches use model title, model slug, historical year, part title, and excerpt. " +
+                "Tutorial matches use tutorial title and short description only. " +
+                "Use this tool for broad content discovery when the relevant model or tutorial is not yet known. " +
+                "Use search_tutorial_content when the requested term, technique, material, tool, or instruction may occur inside the complete body text of a tutorial. " +
+                "Use get_build_details or get_tutorials to retrieve details after identifying a relevant result. " +
+                "Every query term must match across the searchable fields of a result. " +
+                "Returns separate buildLogResults and tutorialResults arrays, each limited to the requested limit. " +
+                "If no content matches, both result arrays are empty.",
             inputSchema,
         },
         async ({ query, limit }) => {
@@ -238,10 +250,7 @@ export function registerSearchContent(server: McpServer): void {
                             modelTitle,
                             historicalYear,
                             partNumber: post.buildlog?.partnumber ?? null,
-                            url: buildLogPartUrl(
-                                modelSlug,
-                                post.buildlog?.partnumber,
-                            ),
+                            url: buildLogPartUrl(modelSlug, post.buildlog?.partnumber),
                             recordDay: post.buildlog?.recordday ?? null,
                             excerpt: stripHtmlAndTruncate(post.excerpt, 200),
                             matchedFields,
@@ -285,13 +294,13 @@ export function registerSearchContent(server: McpServer): void {
                     buildLogResults,
                     tutorialResults,
                     note:
-                        "Build-log searches match every query term against the model title, " +
-                        "model slug, historical year, part title and excerpt. Tutorial searches " +
-                        "match every term against the title and short description (teaser), not " +
-                        "the full article text.",
+                        "Build-log searches match every query term across model title, model slug, historical year, part title, and excerpt. " +
+                        "Tutorial searches match every query term across tutorial title and short description only; full tutorial body text is not searched.",
                 });
             } catch (error) {
-                return errorResult(`Error searching content: ${(error as Error).message}`);
+                return errorResult(
+                    `Error searching content: ${(error as Error).message}`,
+                );
             }
         },
     );

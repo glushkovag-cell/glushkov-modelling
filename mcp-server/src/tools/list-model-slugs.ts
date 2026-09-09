@@ -10,90 +10,98 @@ import {
   statusTextOf,
 } from "../lib/wp-models.js";
 
-/**
- * Резолвер slug для моделей (построек). Большинство других инструментов
- * (get_build_details и т. д.) принимает slug модели как параметр, но ни один
- * инструмент явно не публикует список валидных slug — их приходилось угадывать
- * из побочных полей ответа list_builds. Этот инструмент делает slug частью
- * публичного контракта: по названию (полному или частичному) или по критериям
- * фильтрации возвращает список пар {title, slug}.
- */
-
 const inputSchema = {
   name: z
-    .string()
-    .optional()
-    .describe(
-        "Full or partial name of the building to search for slug. Search is case insensitive " +
-        "and looks for an occurrence both in the name and in the slug itself. If not specified, all models are returned.",
-    ),
+      .string()
+      .optional()
+      .describe(
+          "Full or partial model name to search for. Matching is case-insensitive and checks both the model title and slug. If omitted, all models are considered.",
+      ),
+
   status: z
-    .enum(["in progress", "completed", "planned"])
-    .optional()
-    .describe("Filter by build status."),
+      .enum(["in progress", "completed", "planned"])
+      .optional()
+      .describe(
+          "Filter by build status. If omitted, models with all statuses are considered.",
+      ),
+
   manufacturer: z
-    .string()
-    .optional()
-    .describe("Filter by kit manufacturer (partial match, case-insensitive)."),
+      .string()
+      .optional()
+      .describe(
+          "Filter by kit manufacturer using a case-insensitive partial match.",
+      ),
+
   scale: z
-    .string()
-    .optional()
-    .describe("Filter by model scale (exact match, e.g., '1:64')."),
+      .string()
+      .optional()
+      .describe(
+          "Filter by exact model scale, for example '1:64'.",
+      ),
 };
 
 export function registerListModelSlugs(server: McpServer): void {
   server.registerTool(
-    "list_model_slugs",
-    {
-      title: "Build slug",
-      description:
-          "Returns the slug for builds (models) based on the name (full or partial match) " +
-          "or filtering criteria (status, manufacturer, scale). Use this tool " +
-          "to obtain the correct slug before calling tools that accept a slug as a parameter " +
-          "(e.g., get_build_details).",
-      inputSchema,
-    },
-    async ({ name, status, manufacturer, scale }) => {
-      try {
-        const models = await fetchAllModels();
+      "list_model_slugs",
+      {
+        title: "List model slugs",
+        description:
+            "Read-only. Finds valid sailing-ship model slugs by full or partial model name, build status, manufacturer, or scale. " +
+            "Use this tool when another tool requires a model slug and the user provides only a human-readable model name or identifying metadata. " +
+            "Use list_builds when the user wants to browse or compare the model catalog. " +
+            "Returns matching model titles, slugs, URLs, and minimal identification metadata. " +
+            "When name matches more than one model, ambiguous is true and results contains all matching candidates. " +
+            "If no models match the criteria, returns an empty results array.",
+        inputSchema,
+      },
+      async ({ name, status, manufacturer, scale }) => {
+        try {
+          const models = await fetchAllModels();
 
-        let filtered = name ? findModelsByNamePartial(models, name) : models;
+          let filtered = name
+              ? findModelsByNamePartial(models, name)
+              : models;
 
-        if (status) {
-          filtered = filterModelsByStatus(filtered, status);
-        }
+          if (status) {
+            filtered = filterModelsByStatus(filtered, status);
+          }
 
-        if (manufacturer) {
-          const needle = manufacturer.trim().toLowerCase();
-          filtered = filtered.filter((m) =>
-            (m.modelinfo?.manufacturer ?? "").toLowerCase().includes(needle),
+          if (manufacturer) {
+            const needle = manufacturer.trim().toLowerCase();
+
+            filtered = filtered.filter((model) =>
+                (model.modelinfo?.manufacturer ?? "")
+                    .toLowerCase()
+                    .includes(needle),
+            );
+          }
+
+          if (scale) {
+            filtered = filtered.filter(
+                (model) => model.modelinfo?.modelscale === scale,
+            );
+          }
+
+          const results = filtered.map((model) => ({
+            title: model.title,
+            slug: model.slug,
+            url: buildUrl(model.slug),
+            manufacturer: model.modelinfo?.manufacturer ?? null,
+            scale: model.modelinfo?.modelscale ?? null,
+            status: statusTextOf(model) || null,
+            statusSlug: statusSlugOf(model) || null,
+          }));
+
+          return jsonResult({
+            total: results.length,
+            ambiguous: results.length > 1 && Boolean(name),
+            results,
+          });
+        } catch (error) {
+          return errorResult(
+              `Error retrieving build slug list: ${(error as Error).message}`,
           );
         }
-
-        if (scale) {
-          filtered = filtered.filter((m) => m.modelinfo?.modelscale === scale);
-        }
-
-        const results = filtered.map((m) => ({
-          title: m.title,
-          slug: m.slug,
-          url: buildUrl(m.slug),
-          manufacturer: m.modelinfo?.manufacturer ?? null,
-          scale: m.modelinfo?.modelscale ?? null,
-          status: statusTextOf(m) || null,
-          statusSlug: statusSlugOf(m) || null,
-        }));
-
-        return jsonResult({
-          total: results.length,
-          ambiguous: results.length > 1 && Boolean(name),
-          results,
-        });
-      } catch (error) {
-        return errorResult(
-          `Error retrieving buils slug list: ${(error as Error).message}`,
-        );
-      }
-    },
+      },
   );
 }

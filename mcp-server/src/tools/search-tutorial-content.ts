@@ -10,37 +10,41 @@ import {
 } from "../lib/tutorial-search.js";
 
 /**
- * Полнотекстовый поиск по содержимому статей (не только по title/teaser, как в search_content).
- * Фильтрация выполняется на стороне MCP-сервера, поскольку custom resolver
- * tutorialsFiltered не подтверждён на поддержку search в WPGraphQL.
+ * Full-text search across tutorial content, not only title and teaser fields
+ * as in search_content. Matching is performed in the MCP server because the
+ * custom tutorialsFiltered resolver has no confirmed WPGraphQL search support.
  */
-
 const inputSchema = {
     query: z
         .string()
         .min(2)
         .describe(
-            "Search query for full-text search within educational article content.",
+            "Search terms for educational tutorial title, summary, and full article content. Every query term is evaluated by the tutorial text-matching logic.",
         ),
+
     limit: z
         .number()
         .int()
         .min(1)
         .max(50)
         .default(20)
-        .describe("Maximum number of results."),
+        .describe(
+            "Maximum number of matching tutorials to return. Default: 20. Maximum: 50.",
+        ),
 };
 
 export function registerSearchTutorialContent(server: McpServer): void {
     server.registerTool(
         "search_tutorial_content",
         {
-            title: "Search within tutorial content",
+            title: "Search tutorial content",
             description:
-                "Searches educational articles by full body content, title, and summary. " +
-                "Unlike search_content, this tool searches within the complete article text. " +
-                "Use it when the requested term, technique, material, or instruction may occur " +
-                "inside an article rather than in its title or teaser.",
+                "Read-only. Searches educational tutorials by full article body text, title, and summary. " +
+                "Use this tool when the user asks about a term, technique, material, tool, or instruction that may occur inside a tutorial. " +
+                "Use search_content for broad discovery across build-log metadata and tutorial metadata when full tutorial body text is not required. " +
+                "Use get_tutorials to browse tutorials or retrieve the content and metadata for a tutorial after identifying a relevant result. " +
+                "Returns matching tutorial summaries with matchedFields and a relevant excerpt. " +
+                "Results are limited to the requested limit. If no tutorial content matches, returns an empty results array.",
             inputSchema,
         },
         async ({ query, limit }) => {
@@ -73,13 +77,12 @@ export function registerSearchTutorialContent(server: McpServer): void {
                             item,
                         ): item is {
                             tutorial: (typeof tutorials)[number];
-                            match: NonNullable<
-                                ReturnType<typeof findTutorialTextMatch>
-                            >;
+                            match: NonNullable<ReturnType<typeof findTutorialTextMatch>>;
                         } => item !== null,
                     );
 
                 const total = matches.length;
+
                 const results = matches.slice(0, limit).map(({ tutorial, match }) => ({
                     title: tutorial.title,
                     slug: tutorial.slug,
