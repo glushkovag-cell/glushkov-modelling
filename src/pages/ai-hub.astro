@@ -54,16 +54,19 @@ const mcpDirectories = [
         name: 'Glama',
         description:
             'Inspect the connector, explore its tools, and connect through OAuth.',
-        url: 'https://glama.ai/mcp/connectors/com.glushkov-modelling/content'
+        url: 'https://glama.ai/mcp/connectors/com.glushkov-modelling/content',
+        badgeUrl: 'https://glama.ai/mcp/connectors/com.glushkov-modelling/content/badges/score.svg',
+        badgeAlt: 'Glushkov Modelling MCP badge on Glama'
     },
     {
         name: 'Smithery',
         description:
             'Install and connect Glushkov Modelling MCP through Smithery.',
-        url: 'https://smithery.ai/servers/glushkov-ag/glushkov-modelling'
+        url: 'https://smithery.ai/servers/glushkov-ag/glushkov-modelling',
+        badgeUrl: 'https://img.shields.io/badge/listed-4FC3F7?style=flat&logo=sailsdotjs&logoColor=white&label=Smithery&labelColor=orange',
+        badgeAlt: 'Glushkov Modelling MCP badge on Smithery'
     }
 ];
-
 ---
 
 <BaseLayout
@@ -392,6 +395,23 @@ const mcpDirectories = [
                         <article class="directory-card">
                             <h3>{directory.name}</h3>
                             <p>{directory.description}</p>
+
+                            {directory.badgeUrl && (
+                                    <a
+                                            href={directory.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="directory-badge-link"
+                                            aria-label={`Open ${directory.name} listing`}
+                                    >
+                                        <img
+                                                src={directory.badgeUrl}
+                                                alt={directory.badgeAlt}
+                                                class="directory-badge"
+                                                loading="lazy"
+                                        />
+                                    </a>
+                            )}
 
                             <a
                                     href={directory.url}
@@ -1677,6 +1697,19 @@ const mcpDirectories = [
         .directory-grid {
             grid-template-columns: 1fr;
         }
+    }
+
+    .directory-badge-link {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+    }
+
+    .directory-badge {
+        display: block;
+        height: 20px;
+        width: auto;
+        max-width: 100%;
     }
 
     @media (max-width: 640px) {
