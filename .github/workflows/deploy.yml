@@ -7,6 +7,8 @@ on:
     paths-ignore:
       - 'mcp-server/**'
       - 'infra/**'
+      - 'mcp-registry-badge/**'
+
   workflow_dispatch:
 
 jobs:
