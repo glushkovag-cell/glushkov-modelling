@@ -3,6 +3,10 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2026-09-14",
 	"observability": {
-		"enabled": true,
+		"enabled": true
 	},
+	"vars": {
+		"MCP_SERVER_NAME": "com.glushkov-modelling/content",
+		"CACHE_TTL_SECONDS": "3600"
+	}
 }
