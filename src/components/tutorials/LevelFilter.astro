@@ -3,33 +3,75 @@ interface Props {
     selectedLevel: string;
 }
 
-const { selectedLevel } = Astro.props;
-const levels = ['Beginner', 'Intermediate', 'Advanced'];
+const { selectedLevel = '' } = Astro.props;
+
+const levels = [
+    {
+        value: 'beginner',
+        label: 'Beginner',
+    },
+    {
+        value: 'intermediate',
+        label: 'Intermediate',
+    },
+    {
+        value: 'advanced',
+        label: 'Advanced',
+    },
+];
+
+function getLevelHref(level: string): string {
+    const params = new URLSearchParams(Astro.url.searchParams);
+
+    if (level) {
+        params.set('level', level);
+    } else {
+        params.delete('level');
+    }
+
+    const query = params.toString();
+
+    return query
+        ? `${Astro.url.pathname}?${query}`
+        : Astro.url.pathname;
+}
 ---
 
-<div class="level-filter" data-filter-type="level">
-    <div class="filter-label">Level:</div>
+<nav
+        class="level-filter"
+        data-filter-type="level"
+        aria-labelledby="level-filter-label"
+>
+    <div id="level-filter-label" class="filter-label">
+        Level:
+    </div>
+
     <div class="chip-group">
-        <button
+        <a
                 class="chip chip-all"
-                data-level="all"
+                href={getLevelHref('')}
                 data-selected={!selectedLevel}
-                type="button"
+                aria-current={!selectedLevel ? 'page' : undefined}
         >
             All
-        </button>
-        {levels.map((level) => (
-                <button
-                        class="chip"
-                        data-level={level.toLowerCase()}
-                        data-selected={selectedLevel === level.toLowerCase()}
-                        type="button"
-                >
-                    {level}
-                </button>
-        ))}
+        </a>
+
+        {levels.map((level) => {
+            const selected = selectedLevel === level.value;
+
+            return (
+                    <a
+                            class="chip"
+                            href={getLevelHref(level.value)}
+                            data-selected={selected}
+                            aria-current={selected ? 'page' : undefined}
+                    >
+                        {level.label}
+                    </a>
+            );
+        })}
     </div>
-</div>
+</nav>
 
 <style>
     .level-filter {
@@ -37,13 +79,13 @@ const levels = ['Beginner', 'Intermediate', 'Advanced'];
     }
 
     .filter-label {
-        font-family: 'General Sans', sans-serif;
-        font-weight: 600;
-        font-size: 0.875rem;
         margin-bottom: 0.75rem;
         color: var(--color-text);
-        text-transform: uppercase;
+        font-family: 'General Sans', sans-serif;
+        font-size: 0.875rem;
+        font-weight: 600;
         letter-spacing: 0.05em;
+        text-transform: uppercase;
     }
 
     .chip-group {
@@ -53,32 +95,45 @@ const levels = ['Beginner', 'Intermediate', 'Advanced'];
     }
 
     .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.75rem;
         padding: 0.5rem 1rem;
-        border-radius: 1.25rem;
         border: 1px solid var(--color-text-muted);
+        border-radius: 1.25rem;
         background: transparent;
         color: var(--color-text);
         font-family: 'General Sans', sans-serif;
         font-size: 0.875rem;
+        line-height: 1;
+        text-decoration: none;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition:
+                color 0.2s ease,
+                border-color 0.2s ease,
+                background-color 0.2s ease;
     }
 
     .chip:hover {
         border-color: var(--color-primary);
     }
 
-    .chip[data-selected="true"] {
+    .chip:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+
+    .chip[data-selected='true'] {
+        border-color: var(--color-primary);
         background: var(--color-primary);
         color: white;
-        border-color: var(--color-primary);
     }
 
     @media (max-width: 768px) {
         .chip {
-            font-size: 0.8rem;
             padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
         }
     }
 </style>
-

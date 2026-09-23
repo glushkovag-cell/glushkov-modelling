@@ -171,17 +171,31 @@ function normalizeBuildPart(post: BuildPostNode): NormalizedBuildPart {
 // --- TUTORIAL TYPES
 
 export interface TutorialCategory {
-  id: string;          // глобальный ID
-  databaseId?: number; // term_id из WP
+  id: string;
+  databaseId?: number;
   name: string;
   slug: string;
 }
+
+export type TutorialTagFacet = 'component' | 'technique' | 'material' | 'context' | '';
+export type TutorialTagStatus = 'active' | 'deprecated' | 'hidden' | '';
 
 export interface TutorialTag {
   id: string;
   databaseId?: number;
   name: string;
   slug: string;
+  count?: number;
+  facet?: TutorialTagFacet;
+  status?: TutorialTagStatus;
+  publicFilter?: boolean;
+  editorialNote?: string;
+}
+
+export interface TutorialTagGroup {
+  facet: Exclude<TutorialTagFacet, ''> | 'other';
+  label: string;
+  tags: TutorialTag[];
 }
 
 export interface NormalizedTutorial {
@@ -215,7 +229,7 @@ export interface NormalizedTutorial {
   views?: number;
 }
 
-// --- NEWS TYPES & NORMALIZATION ---
+// --- NEWS TYPES & NORMALIZATION
 
 export type NewsType =
     | 'announcement'
@@ -242,7 +256,6 @@ interface RelatedModelConnection {
   nodes?: RelatedModelNode[] | null;
 }
 
-// "сырые" поля как в GraphQL-ответе (newsfields)
 interface RawNewsfields {
   newsType?: string[] | null;
   shortText?: string | null;
@@ -254,7 +267,6 @@ interface RawNewsfields {
   relatedModel?: RelatedModelConnection | null;
 }
 
-// Нормализованные поля для фронтенда
 export interface NewsFields {
   newsType: NewsType;
   shortText: string;
@@ -368,7 +380,6 @@ const GET_NEWS_BY_SLUG = `
   }
 `;
 
-// Нормализация одного newsfields
 function normalizeNewsfields(raw?: RawNewsfields | null): NewsFields {
   const newsTypeRaw = raw?.newsType && raw.newsType.length > 0
       ? raw.newsType[0]
@@ -395,7 +406,6 @@ function normalizeNewsfields(raw?: RawNewsfields | null): NewsFields {
   };
 }
 
-// Нормализация NewsItem
 function normalizeNewsItem(node: GetAllNewsResponse['newsitems']['nodes'][number]): NewsItem {
   return {
     id: node.id,
@@ -407,8 +417,6 @@ function normalizeNewsItem(node: GetAllNewsResponse['newsitems']['nodes'][number
     news: normalizeNewsfields(node.newsfields),
   };
 }
-
-// Утилиты сортировки и свежести
 
 export function isFreshNews(date: string, now = new Date(), days = 7): boolean {
   const published = new Date(date).getTime();
@@ -433,8 +441,6 @@ export function getFreshNews(items: NewsItem[], days = 7): NewsItem[] {
 export function hasFreshNews(items: NewsItem[], days = 7): boolean {
   return getFreshNews(items, days).length > 0;
 }
-
-// Публичное API для News
 
 export async function getAllNews(): Promise<NewsItem[]> {
   const data = await fetchAPI<GetAllNewsResponse>(GET_ALL_NEWS);
@@ -591,6 +597,22 @@ interface TutorialFieldsNode {
   views?: number | null;
 }
 
+interface TutorialTagSettingsNode {
+  facet?: string[] | string | null;
+  status?: string[] | string | null;
+  public?: boolean | null;
+  editorialNote?: string | null;
+}
+
+interface TutorialTagNode {
+  id: string;
+  databaseId?: number;
+  name: string;
+  slug: string;
+  count?: number | null;
+  tagSettings?: TutorialTagSettingsNode | null;
+}
+
 interface TutorialNode {
   id: string;
   title: string;
@@ -607,7 +629,7 @@ interface TutorialNode {
     nodes: TutorialCategory[];
   } | null;
   tutorialTags?: {
-    nodes: TutorialTag[];
+    nodes: TutorialTagNode[];
   } | null;
   databaseId?: number;
 }
@@ -628,8 +650,123 @@ interface GetTutorialCategoriesResponse {
 
 interface GetTutorialTagsResponse {
   tutorialTags: {
-    nodes: (TutorialTag & { count?: number })[];
+    nodes: TutorialTagNode[];
   };
+}
+
+function readAcfSelectValue(
+    value?: string[] | string | null,
+): string {
+  if (Array.isArray(value)) return value[0] || '';
+  return value || '';
+}
+
+function normalizeTutorialFacet(value: string): TutorialTagFacet {
+  if (
+      value === 'component' ||
+      value === 'technique' ||
+      value === 'material' ||
+      value === 'context'
+  ) {
+    return value;
+  }
+
+  return '';
+}
+
+function normalizeTutorialStatus(value: string): TutorialTagStatus {
+  if (
+      value === 'active' ||
+      value === 'deprecated' ||
+      value === 'hidden'
+  ) {
+    return value;
+  }
+
+  return '';
+}
+
+function normalizeTutorialTag(tag: TutorialTagNode): TutorialTag {
+  const facet = normalizeTutorialFacet(readAcfSelectValue(tag.tagSettings?.facet));
+  const status = normalizeTutorialStatus(readAcfSelectValue(tag.tagSettings?.status));
+
+  return {
+    id: tag.id,
+    databaseId: tag.databaseId,
+    name: tag.name,
+    slug: tag.slug,
+    count: typeof tag.count === 'number' ? tag.count : 0,
+    facet,
+    status,
+    publicFilter: Boolean(tag.tagSettings?.public),
+    editorialNote: tag.tagSettings?.editorialNote || '',
+  };
+}
+
+export function isTutorialTagActive(tag: TutorialTag): boolean {
+  return tag.status === 'active';
+}
+
+export function isTutorialTagPublic(tag: TutorialTag): boolean {
+  return tag.publicFilter === true;
+}
+
+export function isTutorialTagVisibleInFilter(tag: TutorialTag): boolean {
+  return isTutorialTagActive(tag) && isTutorialTagPublic(tag);
+}
+
+export function sortTutorialTagsByFrequency(tags: TutorialTag[]): TutorialTag[] {
+  return [...tags].sort((a, b) => {
+    const countDiff = (b.count || 0) - (a.count || 0);
+    if (countDiff !== 0) return countDiff;
+    return a.name.localeCompare(b.name, 'en', { sensitivity: 'base' });
+  });
+}
+
+export function getTopTutorialFilterTags(tags: TutorialTag[], limit = 10): TutorialTag[] {
+  return sortTutorialTagsByFrequency(tags.filter(isTutorialTagVisibleInFilter)).slice(0, limit);
+}
+
+function getTutorialFacetLabel(facet: TutorialTagGroup['facet']): string {
+  switch (facet) {
+    case 'component':
+      return 'Components';
+    case 'technique':
+      return 'Techniques';
+    case 'material':
+      return 'Materials';
+    case 'context':
+      return 'Context';
+    default:
+      return 'Other';
+  }
+}
+
+export function groupTutorialTagsByFacet(tags: TutorialTag[]): TutorialTagGroup[] {
+  const buckets = new Map<TutorialTagGroup['facet'], TutorialTag[]>();
+
+  for (const tag of tags.filter(isTutorialTagVisibleInFilter)) {
+    const facet: TutorialTagGroup['facet'] = tag.facet || 'other';
+    const current = buckets.get(facet) || [];
+    current.push(tag);
+    buckets.set(facet, current);
+  }
+
+  const facetOrder: TutorialTagGroup['facet'][] = [
+    'component',
+    'technique',
+    'material',
+    'context',
+    'other',
+  ];
+
+  return facetOrder
+      .filter((facet) => buckets.has(facet))
+      .map((facet) => ({
+        facet,
+        label: getTutorialFacetLabel(facet),
+        tags: sortTutorialTagsByFrequency(buckets.get(facet) || []),
+      }));
 }
 
 const TUTORIALS_QUERY = `
@@ -668,8 +805,16 @@ const TUTORIALS_QUERY = `
       tutorialTags {
         nodes {
           id
+          databaseId
           name
           slug
+          count
+          tagSettings {
+            facet
+            status
+            public
+            editorialNote
+          }
         }
       }
     }
@@ -739,8 +884,16 @@ const TUTORIAL_BY_SLUG_QUERY = `
       tutorialTags {
         nodes {
           id
+          databaseId
           name
           slug
+          count
+          tagSettings {
+            facet
+            status
+            public
+            editorialNote
+          }
         }
       }
     }
@@ -749,7 +902,12 @@ const TUTORIAL_BY_SLUG_QUERY = `
 
 const TUTORIAL_CATEGORIES_QUERY = `
   query GetTutorialCategories {
-    tutorialCategories(first: 100) {
+    tutorialCategories(
+      first: 100
+      where: {
+        hideEmpty: false
+      }
+    ) {
       nodes {
         id
         databaseId
@@ -760,6 +918,7 @@ const TUTORIAL_CATEGORIES_QUERY = `
     }
   }
 `;
+
 
 const TUTORIAL_TAGS_QUERY = `
   query GetTutorialTags {
@@ -770,12 +929,16 @@ const TUTORIAL_TAGS_QUERY = `
         name
         slug
         count
+        tagSettings {
+          facet
+          status
+          public
+          editorialNote
+        }
       }
     }
   }
 `;
-
-// --- TUTORIAL FUNCTIONS ---
 
 export async function getAllTutorials(params?: {
   categoryIn?: string[];
@@ -805,13 +968,12 @@ export async function getAllTutorials(params?: {
         }
         : undefined,
     categories: tutorial.tutorialCategories?.nodes || [],
-    tags: tutorial.tutorialTags?.nodes || [],
+    tags: (tutorial.tutorialTags?.nodes || []).map(normalizeTutorialTag),
     relatedBuilds: [],
     relatedTutorials: [],
     views: Number(tutorial.tutorialFields?.views ?? 0),
   }));
 }
-
 
 export async function getTutorialBySlug(slug: string): Promise<NormalizedTutorial | null> {
   const data = await fetchAPI<GetTutorialBySlugResponse>(TUTORIAL_BY_SLUG_QUERY, { slug });
@@ -871,7 +1033,7 @@ export async function getTutorialBySlug(slug: string): Promise<NormalizedTutoria
         }
         : undefined,
     categories: t.tutorialCategories?.nodes || [],
-    tags: t.tutorialTags?.nodes || [],
+    tags: (t.tutorialTags?.nodes || []).map(normalizeTutorialTag),
     relatedBuilds,
     relatedTutorials,
     views: Number(t.tutorialFields?.views ?? 0),
@@ -879,13 +1041,16 @@ export async function getTutorialBySlug(slug: string): Promise<NormalizedTutoria
 }
 
 export async function getTutorialCategories(): Promise<TutorialCategory[]> {
-  const data = await fetchAPI<GetTutorialCategoriesResponse>(TUTORIAL_CATEGORIES_QUERY);
-  return data.tutorialCategories.nodes.filter((cat) => (cat as any).count > 0);
+  const data = await fetchAPI<GetTutorialCategoriesResponse>(
+      TUTORIAL_CATEGORIES_QUERY,
+  );
+
+  return data.tutorialCategories.nodes;
 }
 
 export async function getTutorialTags(): Promise<TutorialTag[]> {
   const data = await fetchAPI<GetTutorialTagsResponse>(TUTORIAL_TAGS_QUERY);
-  return data.tutorialTags.nodes;
+  return data.tutorialTags.nodes.map(normalizeTutorialTag);
 }
 
 // --- AI HUB WORKFLOW STEPS ---
@@ -985,7 +1150,7 @@ export async function getAiHubWorkflowSteps(): Promise<AiHubWorkflowStep[]> {
       });
 }
 
-/// --- AI HUB PLATFORMS ---
+// --- AI HUB PLATFORMS ---
 
 interface AiPlatformLogo {
   node?: {
@@ -1012,6 +1177,7 @@ interface AiPlatformNode {
   slug: string;
   uri?: string | null;
   menuOrder?: number | null;
+  status?: string | null;
   aiPlatformFields?: AiPlatformFields | null;
 }
 
@@ -1027,19 +1193,14 @@ export interface AiHubPlatform {
   slug: string;
   uri: string;
   menuOrder: number;
-
   shortDescription: string;
-
   compatibilityStatusValue: string;
   compatibilityStatusLabel: string;
-
   endpointOverride: string;
   lastTestedAt: string | null;
   officialPlatformUrl: string;
-
   logoUrl: string | null;
   logoAlt: string;
-
   accountRequirements: string;
   testPrompt: string;
 }
@@ -1053,6 +1214,7 @@ const GET_AI_PLATFORMS = `
         slug
         uri
         menuOrder
+        status
         aiPlatformFields {
           accountRequirements
           compatibilityStatus
@@ -1094,11 +1256,11 @@ export async function getAiHubPlatforms(): Promise<AiHubPlatform[]> {
   const data = await fetchAPI<GetAiPlatformsResponse>(GET_AI_PLATFORMS);
 
   return data.aiPlatforms.nodes
-      .filter((platform) => platform.aiPlatformFields?.showOnAiHub === true)
+      .filter((platform) => platform.status === 'publish' && platform.aiPlatformFields?.showOnAiHub === true)
       .map((platform) => {
         const fields = platform.aiPlatformFields;
         const compatibilityStatus = normalizeAcfSelect(
-            fields?.compatibilityStatus,
+            fields?.compatibilityStatus as string[] | null | undefined,
         );
 
         return {
@@ -1107,21 +1269,16 @@ export async function getAiHubPlatforms(): Promise<AiHubPlatform[]> {
           slug: platform.slug,
           uri: platform.uri || '',
           menuOrder: platform.menuOrder ?? 0,
-
           shortDescription: fields?.shortDescription || '',
-
           compatibilityStatusValue: compatibilityStatus.value,
           compatibilityStatusLabel: compatibilityStatus.label,
-
           endpointOverride: fields?.endpointOverride || '',
           lastTestedAt: fields?.lastTestedAt || null,
           officialPlatformUrl: fields?.officialPlatformUrl || '',
-
           logoUrl: fields?.platformLogo?.node?.sourceUrl || null,
           logoAlt:
               fields?.platformLogo?.node?.altText ||
               `${platform.title} logo`,
-
           accountRequirements: fields?.accountRequirements || '',
           testPrompt: fields?.testPrompt || '',
         };
@@ -1143,16 +1300,13 @@ interface AiHubPageFields {
   heroTitle?: string | null;
   heroLead?: string | null;
   heroImage?: AiHubHeroImage | null;
-
   primaryCtaLabel?: string | null;
   primaryCtaAnchor?: string | null;
   secondaryCtaLabel?: string | null;
   secondaryCtaAnchor?: string | null;
-
   publicMcpEndpoint?: string | null;
   statusLabel?: string | null;
   statusText?: string | null;
-
   feedbackTitle?: string | null;
   feedbackText?: string | null;
   feedbackEmail?: string | null;
@@ -1160,7 +1314,7 @@ interface AiHubPageFields {
   socialHubUrl?: string | null;
 }
 
-interface AiHubPageNode {
+interface AiHubPageNodeFull {
   id: string;
   title: string;
   slug: string;
@@ -1172,7 +1326,7 @@ interface AiHubPageNode {
 
 interface GetAiHubPageResponse {
   aiHubs: {
-    nodes: AiHubPageNode[];
+    nodes: AiHubPageNodeFull[];
   };
 }
 
@@ -1183,23 +1337,18 @@ export interface AiHubPage {
   uri: string;
   menuOrder: number;
   status: string;
-
   eyebrow: string;
   heroTitle: string;
   heroLead: string;
-
   heroImageUrl: string | null;
   heroImageAlt: string;
-
   primaryCtaLabel: string;
   primaryCtaAnchor: string;
   secondaryCtaLabel: string;
   secondaryCtaAnchor: string;
-
   publicMcpEndpoint: string;
   statusLabel: string;
   statusText: string;
-
   feedbackTitle: string;
   feedbackText: string;
   feedbackEmail: string;
@@ -1217,28 +1366,23 @@ const GET_AI_HUB_PAGE = `
         uri
         menuOrder
         status
-
         aihubpage {
           eyebrow
           heroTitle
           heroLead
-
           heroImage {
             node {
               sourceUrl
               altText
             }
           }
-
           primaryCtaLabel
           primaryCtaAnchor
           secondaryCtaLabel
           secondaryCtaAnchor
-
           publicMcpEndpoint
           statusLabel
           statusText
-
           feedbackTitle
           feedbackText
           feedbackEmail
@@ -1250,7 +1394,7 @@ const GET_AI_HUB_PAGE = `
   }
 `;
 
-function normalizeAiHubPage(node: AiHubPageNode): AiHubPage {
+function normalizeAiHubPage(node: AiHubPageNodeFull): AiHubPage {
   const fields = node.aihubpage;
 
   return {
@@ -1260,59 +1404,42 @@ function normalizeAiHubPage(node: AiHubPageNode): AiHubPage {
     uri: node.uri || '',
     menuOrder: node.menuOrder ?? 0,
     status: node.status || '',
-
     eyebrow: fields?.eyebrow || 'AI-ready archive',
-
     heroTitle:
         fields?.heroTitle ||
         'Explore the workshop archive with your AI assistant.',
-
     heroLead:
         fields?.heroLead ||
         'Connect Glushkov Modelling to a compatible AI assistant and search build logs, historical notes, workshop decisions, gallery photographs, and tutorials in natural language.',
-
     heroImageUrl: fields?.heroImage?.node?.sourceUrl || null,
-
     heroImageAlt:
         fields?.heroImage?.node?.altText ||
         'Wooden ship model detail from the Glushkov Modelling archive',
-
     primaryCtaLabel:
         fields?.primaryCtaLabel || 'Connect an assistant',
-
     primaryCtaAnchor:
         fields?.primaryCtaAnchor || '#platforms',
-
     secondaryCtaLabel:
         fields?.secondaryCtaLabel || 'Browse example prompts',
-
     secondaryCtaAnchor:
         fields?.secondaryCtaAnchor || '#prompts',
-
     publicMcpEndpoint:
         fields?.publicMcpEndpoint ||
         'https://mcp.glushkov-modelling.com/mcp-oauth',
-
     statusLabel:
         fields?.statusLabel || 'Public MCP server',
-
     statusText:
         fields?.statusText || 'OAuth-secured · Read-only access',
-
     feedbackTitle:
         fields?.feedbackTitle ||
         'Need help connecting or found an issue?',
-
     feedbackText:
         fields?.feedbackText ||
         'Please contact us if you need help connecting your AI assistant.',
-
     feedbackEmail:
         fields?.feedbackEmail || 'glushkov.ag@gmail.com',
-
     feedbackEmailSubject:
         fields?.feedbackEmailSubject || 'MCP server',
-
     socialHubUrl:
         fields?.socialHubUrl || '',
   };
@@ -1532,7 +1659,6 @@ export async function getAiHubFaqs(): Promise<AiHubFaq[]> {
 
 export async function getAiHubOverviewFaqs(): Promise<AiHubFaq[]> {
   const faqs = await getAiHubFaqs();
-
   return faqs.filter((faq) => faq.featuredOnOverview);
 }
 
@@ -1647,7 +1773,6 @@ export async function getAiHubOverviewTroubleshooting(): Promise<
     AiHubTroubleshooting[]
 > {
   const items = await getAiHubTroubleshooting();
-
   return items.filter((item) => item.featuredOnOverview);
 }
 
@@ -1703,7 +1828,9 @@ export async function getAiHubPlatformBySlug(
   }
 
   const fields = platform.aiPlatformFields;
-  const compatibilityStatus = normalizeAcfSelect(fields?.compatibilityStatus);
+  const compatibilityStatus = normalizeAcfSelect(
+      fields?.compatibilityStatus as string[] | null | undefined
+  );
 
   return {
     id: platform.id,
@@ -1711,21 +1838,16 @@ export async function getAiHubPlatformBySlug(
     slug: platform.slug,
     uri: platform.uri || '',
     menuOrder: platform.menuOrder ?? 0,
-
     shortDescription: fields?.shortDescription || '',
-
     compatibilityStatusValue: compatibilityStatus.value,
     compatibilityStatusLabel: compatibilityStatus.label,
-
     endpointOverride: fields?.endpointOverride || '',
     lastTestedAt: fields?.lastTestedAt || null,
     officialPlatformUrl: fields?.officialPlatformUrl || '',
-
     logoUrl: fields?.platformLogo?.node?.sourceUrl || null,
     logoAlt:
         fields?.platformLogo?.node?.altText ||
         `${platform.title} logo`,
-
     accountRequirements: fields?.accountRequirements || '',
     testPrompt: fields?.testPrompt || '',
   };
@@ -1865,7 +1987,6 @@ interface AiPromptRelatedBuild {
   }> | null;
 }
 
-
 interface AiPromptFields {
   promptText?: string | null;
   answerexample?: string | null;
@@ -1919,20 +2040,17 @@ const GET_AI_HUB_PROMPTS = `
         uri
         menuOrder
         status
-
         aiPromptFields {
           promptText
           answerexample
           archiveCategory
           featuredPrompt
           showOnAiHub
-
           relatedBuild {
             nodes {
               id
               slug
               uri
-
               ... on NodeWithTitle {
                 title
               }

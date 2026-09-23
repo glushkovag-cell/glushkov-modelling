@@ -12,7 +12,13 @@ interface Props {
     selectedLevel: string;
 }
 
-const { categories, tags, selectedCategories, selectedTags, selectedLevel } = Astro.props;
+const {
+    categories,
+    tags,
+    selectedCategories,
+    selectedTags,
+    selectedLevel
+} = Astro.props;
 ---
 
 <div class="mobile-filter-overlay" id="mobileFilterOverlay" aria-hidden="true"></div>
@@ -22,10 +28,19 @@ const { categories, tags, selectedCategories, selectedTags, selectedLevel } = As
         id="mobileFilterPanel"
         aria-hidden="true"
         aria-label="Mobile filters"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mobileFiltersTitle"
 >
     <div class="panel-header">
-        <h3>Filters</h3>
-        <button class="close-btn" id="closeFilters" type="button" aria-label="Close filters">
+        <h3 id="mobileFiltersTitle">Filters</h3>
+
+        <button
+                class="close-btn"
+                id="closeFilters"
+                type="button"
+                aria-label="Close filters"
+        >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" />
             </svg>
@@ -33,13 +48,23 @@ const { categories, tags, selectedCategories, selectedTags, selectedLevel } = As
     </div>
 
     <div class="panel-content">
-        <CategoryFilter categories={categories} selectedSlugs={selectedCategories} />
-        <TagFilter tags={tags} selectedSlugs={selectedTags} />
+        <CategoryFilter
+                categories={categories}
+                selectedSlugs={selectedCategories}
+        />
+
+        <TagFilter
+                tags={tags}
+                selectedSlugs={selectedTags}
+        />
+
         <LevelFilter selectedLevel={selectedLevel} />
     </div>
 
     <div class="panel-footer">
-        <button class="btn-secondary" id="clearAllFilters" type="button">Clear All</button>
+        <button class="btn-secondary" id="clearAllFilters" type="button">
+            Clear all
+        </button>
     </div>
 </div>
 
@@ -108,6 +133,11 @@ const { categories, tags, selectedCategories, selectedTags, selectedLevel } = As
             cursor: pointer;
             padding: 0.5rem;
             color: var(--color-text);
+            min-width: 44px;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .panel-content {
@@ -124,6 +154,7 @@ const { categories, tags, selectedCategories, selectedTags, selectedLevel } = As
 
         .btn-secondary {
             width: 100%;
+            min-height: 44px;
             padding: 0.75rem;
             border: 1px solid var(--color-primary);
             background: transparent;
@@ -142,4 +173,3 @@ const { categories, tags, selectedCategories, selectedTags, selectedLevel } = As
         }
     }
 </style>
-

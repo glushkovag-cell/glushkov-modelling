@@ -3,194 +3,368 @@ export const prerender = false;
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SeoHead from '../../components/seo/SeoHead.astro';
-import TutorialCard from '../../components/tutorials/TutorialCard.astro';
-import CategoryFilter from '../../components/tutorials/CategoryFilter.astro';
 import TagFilter from '../../components/tutorials/TagFilter.astro';
-import LevelFilter from '../../components/tutorials/LevelFilter.astro';
-import MobileFilterPanel from '../../components/tutorials/MobileFilterPanel.astro';
 import {
     getAllTutorials,
     getTutorialCategories,
     getTutorialTags,
+    getTopTutorialFilterTags,
+    groupTutorialTagsByFacet,
     getAllNews,
-    hasFreshNews
+    hasFreshNews,
+    type TutorialCategory,
+    type TutorialTag,
+    type NormalizedTutorial,
 } from '../../lib/wordpress';
 
-const requestUrl = new URL(Astro.request.url);
+const pageTitle = 'Tutorials';
+const tutorialsPath = '/tutorials';
 
-function normalizeListParam(raw: string | null) {
-    if (!raw) return [];
-    return [...new Set(
-        raw
-            .split(',')
-            .map((s) => s.trim())
-            .filter(Boolean)
-    )].sort();
+const url = Astro.url;
+
+function unique(values: string[]): string[] {
+    return [...new Set(values.filter(Boolean))];
 }
 
-const selectedCategories = normalizeListParam(requestUrl.searchParams.get('categories'));
-const selectedTags = normalizeListParam(requestUrl.searchParams.get('tags'));
-const levelParam = (requestUrl.searchParams.get('level') || '').trim();
-
-const canonicalUrl = new URL(requestUrl);
-const canonicalCategoryParam = selectedCategories.join(',');
-const canonicalTagParam = selectedTags.join(',');
-
-if (canonicalCategoryParam) {
-    canonicalUrl.searchParams.set('categories', canonicalCategoryParam);
-} else {
-    canonicalUrl.searchParams.delete('categories');
+function isVisibleTag(tag: TutorialTag): boolean {
+    return tag.status === 'active' && tag.publicFilter === true;
 }
 
-if (canonicalTagParam) {
-    canonicalUrl.searchParams.set('tags', canonicalTagParam);
-} else {
-    canonicalUrl.searchParams.delete('tags');
-}
+const selectedCategorySlugs = unique(url.searchParams.getAll('category'));
+const selectedTagSlugs = unique(url.searchParams.getAll('tags'));
 
-const currentCategoryParam = requestUrl.searchParams.get('categories') || '';
-const currentTagParam = requestUrl.searchParams.get('tags') || '';
+const allowedLevels = new Set([
+    'beginner',
+    'intermediate',
+    'advanced',
+]);
 
-if (
-    currentCategoryParam !== canonicalCategoryParam ||
-    currentTagParam !== canonicalTagParam
-) {
-    return Astro.redirect(canonicalUrl.toString(), 302);
-}
+const requestedLevel = (url.searchParams.get('level') ?? '')
+    .trim()
+    .toLowerCase();
 
-const [categories, tags, allNews] = await Promise.all([
+const selectedLevel = allowedLevels.has(requestedLevel)
+    ? requestedLevel
+    : '';
+
+const [allCategories, allTags, allNews] = await Promise.all([
     getTutorialCategories(),
     getTutorialTags(),
     getAllNews(),
 ]);
 
 const newsFlag = hasFreshNews(allNews);
+const tutorialsRaw = await getAllTutorials();
 
-const selectedCategoryIds = categories
-    .filter((category) => selectedCategories.includes(category.slug))
-    .map((category) => String(category.databaseId));
+const usedCategorySlugs = new Set(
+    tutorialsRaw.flatMap((tutorial: NormalizedTutorial) =>
+        tutorial.categories.map((category: TutorialCategory) => category.slug),
+    ),
+);
 
-const selectedTagIds = tags
-    .filter((tag) => selectedTags.includes(tag.slug))
-    .map((tag) => String(tag.databaseId));
+const usedVisibleTagSlugs = new Set(
+    tutorialsRaw.flatMap((tutorial: NormalizedTutorial) =>
+        tutorial.tags
+            .filter(isVisibleTag)
+            .map((tag: TutorialTag) => tag.slug),
+    ),
+);
 
-let allTutorials = [];
+const visibleCategories = allCategories.filter((category) =>
+    usedCategorySlugs.has(category.slug),
+);
 
-try {
-    allTutorials = await getAllTutorials({
-        categoryIn: selectedCategoryIds.length > 0 ? selectedCategoryIds : undefined,
-        tagIn: selectedTagIds.length > 0 ? selectedTagIds : undefined,
-    });
-} catch (error) {
-    console.error('Tutorials filter error', {
-        categoryParam: currentCategoryParam,
-        canonicalCategoryParam,
-        selectedCategories,
-        selectedCategoryIds,
-        tagParam: currentTagParam,
-        canonicalTagParam,
-        selectedTags,
-        selectedTagIds,
-        error,
-    });
-    allTutorials = [];
+const visibleTags = allTags.filter(
+    (tag) => isVisibleTag(tag) && usedVisibleTagSlugs.has(tag.slug),
+);
+
+const selectedCategorySlugSet = new Set(selectedCategorySlugs);
+const selectedTagSlugSet = new Set(selectedTagSlugs);
+
+const tutorials = tutorialsRaw.filter((tutorial: NormalizedTutorial) => {
+    const tutorialCategorySlugs = tutorial.categories.map(
+        (c: TutorialCategory) => c.slug,
+    );
+
+    const tutorialVisibleTagSlugs = tutorial.tags
+        .filter(isVisibleTag)
+        .map((t: TutorialTag) => t.slug);
+
+    const tutorialLevel = String(tutorial.level ?? '')
+        .trim()
+        .toLowerCase();
+
+    const matchesCategories =
+        selectedCategorySlugSet.size === 0 ||
+        tutorialCategorySlugs.some((s) => selectedCategorySlugSet.has(s));
+
+    const matchesTags =
+        selectedTagSlugSet.size === 0 ||
+        tutorialVisibleTagSlugs.some((s) => selectedTagSlugSet.has(s));
+
+    const matchesLevel = !selectedLevel || tutorialLevel === selectedLevel;
+
+    return matchesCategories && matchesTags && matchesLevel;
+});
+
+const topTags = getTopTutorialFilterTags(visibleTags, 10);
+const groupedTags = groupTutorialTagsByFacet(visibleTags);
+
+function visibleTutorialTags(tags: TutorialTag[]): TutorialTag[] {
+    return tags.filter(isVisibleTag);
 }
 
-allTutorials.sort((a, b) => (b.views || 0) - (a.views || 0));
-
-const filteredTutorials = levelParam
-    ? allTutorials.filter((t) =>
-        String(t.level || '').toLowerCase() === levelParam.toLowerCase()
-    )
-    : allTutorials;
-
 const hasActiveFilters =
-    selectedCategories.length > 0 ||
-    selectedTags.length > 0 ||
-    Boolean(levelParam);
+    selectedCategorySlugs.length > 0 ||
+    selectedTagSlugs.length > 0 ||
+    !!selectedLevel;
+
+const mobileFilterSummaryParts: string[] = [];
+
+if (selectedTagSlugs.length > 0) {
+    mobileFilterSummaryParts.push(
+        `${selectedTagSlugs.length} ${selectedTagSlugs.length === 1 ? 'tag' : 'tags'}`,
+    );
+}
+
+if (selectedCategorySlugs.length > 0) {
+    mobileFilterSummaryParts.push(
+        `${selectedCategorySlugs.length} ${selectedCategorySlugs.length === 1 ? 'category' : 'categories'}`,
+    );
+}
+
+if (selectedLevel) {
+    mobileFilterSummaryParts.push(selectedLevel);
+}
+
+const mobileFilterSummary =
+    mobileFilterSummaryParts.length > 0
+        ? mobileFilterSummaryParts.join(' · ')
+        : 'Browse by category, level, and tags';
+
+const currentTutorialsUrl = `${tutorialsPath}${url.search}`;
 ---
 
-<BaseLayout title="Tutorials - Ship Model Building Guides" hasFreshNews={newsFlag}>
-  <SeoHead
-    slot="head"
-    pageType="default"
-    title="Tutorials — Ship Model Building Guides"
-    description="Learn ship model building techniques, from basic to advanced skills."
-    canonicalPath={`${canonicalUrl.pathname}${canonicalUrl.search}`}
-    breadcrumbs={[{ name: 'Tutorials', url: '/tutorials' }]}
-  />
+<BaseLayout title={pageTitle} hasFreshNews={newsFlag}>
+    <SeoHead
+            slot="head"
+            pageType="default"
+            title="Tutorials — Ship Model Building Guides"
+            description="Learn ship model building techniques, from basic to advanced skills."
+            canonicalPath={`${url.pathname}${url.search}`}
+            breadcrumbs={[{ name: 'Tutorials', url: '/tutorials' }]}
+    />
+
     <div class="tutorials-page">
         <div class="container">
             <header class="page-header">
+                <p class="page-eyebrow">Workshop archive</p>
                 <h1>Tutorials</h1>
                 <p class="page-intro">
-                    Learn ship model building techniques, from basic to advanced skills.
+                    Practical ship modelling guides by category, technique,
+                    material, and component.
                 </p>
             </header>
 
-            <button class="mobile-filter-btn" type="button" data-mobile-filter-open>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                    <path d="M2 4h16M2 10h10M2 16h6" stroke="currentColor" stroke-width="2" />
-                </svg>
-                Filters
-                {hasActiveFilters && <span class="filter-badge"></span>}
-            </button>
-
             <div class="content-layout">
                 <aside class="filters-sidebar">
-                    <div class="filters-section card">
-                        <CategoryFilter
-                                categories={categories}
-                                selectedSlugs={selectedCategories}
-                        />
-                        <TagFilter
-                                tags={tags}
-                                selectedSlugs={selectedTags}
-                        />
-                        <LevelFilter selectedLevel={levelParam} />
+                    <button
+                            type="button"
+                            class="mobile-filter-toggle"
+                            data-mobile-filter-toggle
+                            aria-expanded={hasActiveFilters ? 'true' : 'false'}
+                            aria-controls="tutorial-filters-panel"
+                    >
+                        <span class="mobile-filter-toggle__row">
+                            <span class="mobile-filter-toggle__text">
+                                {hasActiveFilters ? 'Hide filters' : 'Show filters'}
+                            </span>
+                        </span>
 
-                        {hasActiveFilters && (
-                                <a href="/tutorials" class="clear-all-link">
-                                    Clear all filters
-                                </a>
-                        )}
+                        <span class="mobile-filter-toggle__summary">
+                            {mobileFilterSummary}
+                        </span>
+                    </button>
+
+                    <div
+                            id="tutorial-filters-panel"
+                            class="filters-section card"
+                            data-mobile-filter-panel
+                            data-open={hasActiveFilters ? 'true' : 'false'}
+                    >
+                        <TagFilter
+                                categories={visibleCategories}
+                                selectedCategorySlugs={selectedCategorySlugs}
+                                topTags={topTags}
+                                groupedTags={groupedTags}
+                                selectedTagSlugs={selectedTagSlugs}
+                                selectedLevel={selectedLevel}
+                                action={tutorialsPath}
+                        />
                     </div>
                 </aside>
 
                 <main class="tutorials-main">
-                    {hasActiveFilters && (
-                            <div class="active-filters">
-              <span class="filter-count">
-                {filteredTutorials.length} tutorial{filteredTutorials.length !== 1 ? 's' : ''} found
-              </span>
-                            </div>
-                    )}
+                    <div class="active-filters">
+                        <span class="filter-count">
+                            {tutorials.length}
+                            {tutorials.length === 1 ? ' tutorial' : ' tutorials'} found
+                        </span>
+                    </div>
 
-                    {filteredTutorials.length > 0 ? (
+                    {tutorials.length > 0 ? (
                             <div class="tutorials-grid">
-                                {filteredTutorials.map((tutorial) => (
-                                        <TutorialCard tutorial={tutorial} />
-                                ))}
+                                {tutorials.map((tutorial: NormalizedTutorial) => {
+                                    const tags = visibleTutorialTags(tutorial.tags);
+                                    const tutorialHref =
+                                        `${tutorialsPath}/${tutorial.slug}` +
+                                        `?returnTo=${encodeURIComponent(currentTutorialsUrl)}`;
+
+                                    return (
+                                            <article class="tutorial-card card">
+                                                <a
+                                                        class="tutorial-card__link"
+                                                        href={tutorialHref}
+                                                >
+                                                    {tutorial.featuredImage?.sourceUrl && (
+                                                            <div class="tutorial-card__media">
+                                                                <img
+                                                                        src={tutorial.featuredImage.sourceUrl}
+                                                                        alt={
+                                                                            tutorial.featuredImage.altText ||
+                                                                            tutorial.title
+                                                                        }
+                                                                        loading="lazy"
+                                                                        width="640"
+                                                                        height="400"
+                                                                />
+                                                            </div>
+                                                    )}
+
+                                                    <div class="tutorial-card__body">
+                                                        <div class="tutorial-card__meta">
+                                                            {tutorial.level && (
+                                                                    <span class="tutorial-card__level">
+                                                            {tutorial.level}
+                                                        </span>
+                                                            )}
+
+                                                            {tutorial.categories.length > 0 && (
+                                                                    <span class="tutorial-card__categories">
+                                                            {tutorial.categories
+                                                                .map((c: TutorialCategory) => c.name)
+                                                                .join(', ')}
+                                                        </span>
+                                                            )}
+                                                        </div>
+
+                                                        <h2 class="tutorial-card__title">
+                                                            {tutorial.title}
+                                                        </h2>
+
+                                                        {tutorial.teaser && (
+                                                                <p class="tutorial-card__teaser">
+                                                                    {tutorial.teaser}
+                                                                </p>
+                                                        )}
+
+                                                        {tags.length > 0 && (
+                                                                <ul
+                                                                        class="tutorial-card__tags"
+                                                                        aria-label="Tags"
+                                                                >
+                                                                    {tags.slice(0, 6).map((tag: TutorialTag) => (
+                                                                            <li>{tag.name}</li>
+                                                                    ))}
+                                                                </ul>
+                                                        )}
+                                                    </div>
+                                                </a>
+                                            </article>
+                                    );
+                                })}
                             </div>
                     ) : (
                             <div class="no-results card">
-                                <p>No tutorials found matching your filters.</p>
-                                <a href="/tutorials" class="btn-primary">Clear filters</a>
+                                <h2>No tutorials found</h2>
+                                <p>
+                                    Try clearing one or more filters to broaden results.
+                                </p>
+                                <a class="btn-primary" href={tutorialsPath}>
+                                    Reset filters
+                                </a>
                             </div>
                     )}
                 </main>
             </div>
         </div>
-
-        <MobileFilterPanel
-                categories={categories}
-                tags={tags}
-                selectedCategories={selectedCategories}
-                selectedTags={selectedTags}
-                selectedLevel={levelParam}
-        />
     </div>
 </BaseLayout>
+
+<script>
+    function initTutorialsMobileFilters(): void {
+        const mq = window.matchMedia('(max-width: 767px)');
+
+        document
+            .querySelectorAll<HTMLElement>('.filters-sidebar')
+            .forEach((sidebar) => {
+                if (sidebar.dataset.mobileFilterReady === 'true') return;
+                sidebar.dataset.mobileFilterReady = 'true';
+
+                const toggle = sidebar.querySelector<HTMLButtonElement>(
+                    '[data-mobile-filter-toggle]',
+                );
+                const panel = sidebar.querySelector<HTMLElement>(
+                    '[data-mobile-filter-panel]',
+                );
+                const text = toggle?.querySelector<HTMLElement>(
+                    '.mobile-filter-toggle__text',
+                );
+
+                if (!toggle || !panel || !text) return;
+
+                function isOpen(): boolean {
+                    return panel.dataset.open === 'true';
+                }
+
+                function applyState(open: boolean): void {
+                    panel.dataset.open = String(open);
+                    toggle.setAttribute('aria-expanded', String(open));
+                    text.textContent = open ? 'Hide filters' : 'Show filters';
+                }
+
+                function syncForViewport(): void {
+                    if (mq.matches) {
+                        if (!panel.dataset.open) {
+                            applyState(false);
+                        } else {
+                            applyState(panel.dataset.open === 'true');
+                        }
+                    } else {
+                        panel.dataset.open = 'true';
+                        toggle.setAttribute('aria-expanded', 'true');
+                        text.textContent = 'Hide filters';
+                    }
+                }
+
+                toggle.addEventListener('click', () => {
+                    if (!mq.matches) return;
+                    applyState(!isOpen());
+                });
+
+                if (typeof mq.addEventListener === 'function') {
+                    mq.addEventListener('change', syncForViewport);
+                } else if (typeof mq.addListener === 'function') {
+                    mq.addListener(syncForViewport);
+                }
+
+                syncForViewport();
+            });
+    }
+
+    initTutorialsMobileFilters();
+    document.addEventListener('astro:page-load', initTutorialsMobileFilters);
+</script>
 
 <style is:global>
     .tutorials-page {
@@ -202,9 +376,20 @@ const hasActiveFilters =
         margin-bottom: 3rem;
     }
 
+    .page-eyebrow {
+        margin: 0 0 0.75rem;
+        font-family: 'General Sans', sans-serif;
+        font-size: 0.875rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-primary);
+    }
+
     .page-header h1 {
+        margin: 0 0 1rem;
         font-size: 3.5rem;
-        margin-bottom: 1rem;
+        line-height: 1.05;
     }
 
     .page-intro {
@@ -214,38 +399,11 @@ const hasActiveFilters =
         margin: 0 auto;
     }
 
-    .mobile-filter-btn {
-        display: none;
-        width: 100%;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius);
-        background: var(--color-surface);
-        font-family: 'General Sans', sans-serif;
-        font-size: 0.875rem;
-        font-weight: 600;
-        cursor: pointer;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        position: relative;
-    }
-
-    .filter-badge {
-        position: absolute;
-        top: 0.5rem;
-        right: 0.5rem;
-        width: 8px;
-        height: 8px;
-        background: var(--color-primary);
-        border-radius: 50%;
-    }
-
     .content-layout {
         display: grid;
         grid-template-columns: 280px 1fr;
         gap: 3rem;
+        align-items: start;
     }
 
     .filters-sidebar {
@@ -254,27 +412,16 @@ const hasActiveFilters =
         height: fit-content;
     }
 
+    .mobile-filter-toggle {
+        display: none;
+    }
+
     .filters-section {
         padding: 1.5rem;
     }
 
-    .clear-all-link {
-        display: block;
-        margin-top: 1.5rem;
-        padding: 0.75rem;
-        text-align: center;
-        color: var(--color-primary);
-        text-decoration: none;
-        border: 1px solid var(--color-primary);
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
-        font-weight: 600;
-        transition: all 0.2s ease;
-    }
-
-    .clear-all-link:hover {
-        background: var(--color-primary);
-        color: white;
+    .tutorials-main {
+        min-width: 0;
     }
 
     .active-filters {
@@ -293,9 +440,84 @@ const hasActiveFilters =
         gap: 1.5rem;
     }
 
+    .tutorial-card {
+        overflow: hidden;
+    }
+
+    .tutorial-card__link {
+        display: grid;
+        height: 100%;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .tutorial-card__media img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+    }
+
+    .tutorial-card__body {
+        display: grid;
+        gap: 0.875rem;
+        padding: 1.25rem;
+        min-width: 0;
+    }
+
+    .tutorial-card__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        color: var(--color-text-muted);
+    }
+
+    .tutorial-card__level {
+        font-weight: 600;
+        color: var(--color-primary);
+        text-transform: capitalize;
+    }
+
+    .tutorial-card__title {
+        margin: 0;
+        font-size: 1.375rem;
+        line-height: 1.2;
+    }
+
+    .tutorial-card__teaser {
+        margin: 0;
+        color: var(--color-text-muted);
+        font-size: 0.98rem;
+        line-height: 1.6;
+    }
+
+    .tutorial-card__tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .tutorial-card__tags li {
+        padding: 0.35rem 0.7rem;
+        border: 1px solid var(--color-border);
+        border-radius: 999px;
+        background: var(--color-bg);
+        font-size: 0.85rem;
+        line-height: 1.1;
+    }
+
     .no-results {
         text-align: center;
         padding: 2.5rem 2rem;
+    }
+
+    .no-results h2 {
+        margin: 0 0 0.75rem;
+        font-size: 1.75rem;
     }
 
     .no-results p {
@@ -322,249 +544,172 @@ const hasActiveFilters =
     @media (max-width: 1024px) {
         .content-layout {
             grid-template-columns: 1fr;
+            gap: 1.5rem;
         }
 
         .filters-sidebar {
-            display: none;
-        }
-
-        .mobile-filter-btn {
-            display: flex;
+            position: static;
         }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 767px) {
+        .tutorials-page {
+            padding: 1.5rem 0 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .page-eyebrow {
+            margin-bottom: 0.5rem;
+            font-size: 0.75rem;
+        }
+
         .page-header h1 {
-            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 2.125rem;
+            line-height: 1.08;
+        }
+
+        .page-intro {
+            margin: 0;
+            max-width: none;
+            font-size: 1rem;
+        }
+
+        .content-layout {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .filters-sidebar {
+            position: static;
+            order: 1;
+        }
+
+        .mobile-filter-toggle {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.2rem;
+            width: 100%;
+            padding: 0;
+            border: none;
+            background: transparent;
+            text-align: left;
+            box-shadow: none;
+            color: var(--color-primary);
+            font-family: 'General Sans', sans-serif;
+        }
+
+        .mobile-filter-toggle__row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mobile-filter-toggle__text {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            transition: color 0.2s ease;
+        }
+
+        .mobile-filter-toggle__summary {
+            font-size: 0.78rem;
+            line-height: 1.3;
+            color: var(--color-text-muted);
+        }
+
+        .mobile-filter-toggle:hover .mobile-filter-toggle__text {
+            color: var(--color-primary-hover);
+        }
+
+        .filters-section {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .filters-section[data-mobile-filter-panel][data-open='false'] {
+            display: none;
+        }
+
+        .filters-section[data-mobile-filter-panel][data-open='true'] {
+            display: block;
+        }
+
+        .tutorials-main {
+            order: 2;
+        }
+
+        .active-filters {
+            margin-bottom: 1rem;
+        }
+
+        .filter-count {
+            display: block;
+            font-size: 0.8125rem;
         }
 
         .tutorials-grid {
             grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .tutorial-card {
+            border-radius: 0.75rem;
+        }
+
+        .tutorial-card__body {
+            gap: 0.75rem;
+            padding: 1rem;
+        }
+
+        .tutorial-card__title {
+            font-size: 1.125rem;
+            line-height: 1.25;
+        }
+
+        .tutorial-card__teaser {
+            font-size: 0.9375rem;
+            line-height: 1.5;
+        }
+
+        .tutorial-card__meta {
+            gap: 0.375rem 0.625rem;
+            font-size: 0.8125rem;
+        }
+
+        .tutorial-card__tags {
+            gap: 0.375rem;
+        }
+
+        .tutorial-card__tags li {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.78rem;
+        }
+
+        .no-results {
+            padding: 1.5rem 1rem;
+            border-radius: 0.75rem;
+        }
+
+        .no-results h2 {
+            font-size: 1.375rem;
+        }
+
+        .no-results p {
+            font-size: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .btn-primary {
+            width: 100%;
+            text-align: center;
+            padding: 0.875rem 1rem;
         }
     }
 </style>
-
-<script>
-    function updateURL(params) {
-        const url = new URL(window.location.href);
-
-        Object.entries(params).forEach(([key, value]) => {
-            if (value) {
-                url.searchParams.set(key, value);
-            } else {
-                url.searchParams.delete(key);
-            }
-        });
-
-        url.searchParams.delete('page');
-        window.location.href = url.toString();
-    }
-
-    function initTutorialLinks() {
-        const links = document.querySelectorAll('[data-tutorial-link="true"]');
-        links.forEach((link) => {
-            link.addEventListener('click', () => {
-                try {
-                    sessionStorage.setItem('tutorialsReturnUrl', window.location.href);
-                } catch {}
-            });
-        });
-    }
-
-    function normalizeListParam(raw) {
-        if (!raw) return [];
-        return [...new Set(
-            raw
-                .split(',')
-                .map((s) => s.trim())
-                .filter(Boolean)
-        )].sort();
-    }
-
-    function initCategoryFilters() {
-        document
-            .querySelectorAll('[data-filter-type="category"]')
-            .forEach((filter) => {
-                filter.querySelectorAll('.chip').forEach((chip) => {
-                    chip.addEventListener('click', () => {
-                        const slug = chip.getAttribute('data-slug');
-
-                        if (slug === 'all') {
-                            updateURL({ categories: '' });
-                            return;
-                        }
-
-                        const url = new URL(window.location.href);
-                        const currentCategories = normalizeListParam(
-                            url.searchParams.get('categories')
-                        );
-
-                        const index = currentCategories.indexOf(slug);
-                        if (index > -1) {
-                            currentCategories.splice(index, 1);
-                        } else if (slug) {
-                            currentCategories.push(slug);
-                        }
-
-                        const normalizedCategories = normalizeListParam(
-                            currentCategories.join(',')
-                        );
-
-                        updateURL({
-                            categories:
-                                normalizedCategories.length > 0
-                                    ? normalizedCategories.join(',')
-                                    : ''
-                        });
-                    });
-                });
-            });
-    }
-
-    function initLevelFilters() {
-        document
-            .querySelectorAll('[data-filter-type="level"]')
-            .forEach((filter) => {
-                filter.querySelectorAll('.chip').forEach((chip) => {
-                    chip.addEventListener('click', () => {
-                        const level = chip.getAttribute('data-level');
-                        const url = new URL(window.location.href);
-
-                        if (level === 'all') {
-                            url.searchParams.delete('level');
-                        } else if (level) {
-                            url.searchParams.set('level', level);
-                        }
-
-                        url.searchParams.delete('page');
-                        window.location.href = url.toString();
-                    });
-                });
-            });
-    }
-
-    function initTagFilters() {
-        document
-            .querySelectorAll('[data-filter-type="tag"]')
-            .forEach((filter) => {
-                const toggle = filter.querySelector('.tag-dropdown-toggle');
-                const menu = filter.querySelector('.tag-dropdown-menu');
-                const search = filter.querySelector('.tag-search');
-                const options = filter.querySelectorAll('.tag-option');
-                const clearBtn = filter.querySelector('.tag-clear');
-                const applyBtn = filter.querySelector('.tag-apply');
-
-                toggle?.addEventListener('click', () => {
-                    menu?.classList.toggle('active');
-                });
-
-                document.addEventListener('click', (e) => {
-                    if (!filter.contains(e.target)) {
-                        menu?.classList.remove('active');
-                    }
-                });
-
-                search?.addEventListener('input', (e) => {
-                    const query = e.target.value.toLowerCase();
-
-                    options.forEach((option) => {
-                        const text = option.textContent?.toLowerCase() || '';
-                        option.style.display = text.includes(query) ? 'flex' : 'none';
-                    });
-                });
-
-                clearBtn?.addEventListener('click', () => {
-                    filter.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
-                        cb.checked = false;
-                    });
-                });
-
-                applyBtn?.addEventListener('click', () => {
-                    const selected = [];
-
-                    filter.querySelectorAll('input[type="checkbox"]:checked').forEach((cb) => {
-                        selected.push(cb.value);
-                    });
-
-                    const normalizedTags = normalizeListParam(selected.join(','));
-
-                    const url = new URL(window.location.href);
-                    if (normalizedTags.length > 0) {
-                        url.searchParams.set('tags', normalizedTags.join(','));
-                    } else {
-                        url.searchParams.delete('tags');
-                    }
-                    url.searchParams.delete('page');
-                    window.location.href = url.toString();
-                });
-
-                filter.querySelectorAll('.remove-tag').forEach((btn) => {
-                    btn.addEventListener('click', () => {
-                        const tag = btn.closest('.selected-tag');
-                        const slug = tag?.getAttribute('data-slug');
-                        if (!slug) return;
-
-                        const url = new URL(window.location.href);
-                        const tags = normalizeListParam(url.searchParams.get('tags'));
-                        const newTags = tags.filter((t) => t !== slug);
-
-                        if (newTags.length > 0) {
-                            url.searchParams.set('tags', newTags.join(','));
-                        } else {
-                            url.searchParams.delete('tags');
-                        }
-                        url.searchParams.delete('page');
-                        window.location.href = url.toString();
-                    });
-                });
-            });
-    }
-
-    function initMobileFilterPanel() {
-        const overlay = document.getElementById('mobileFilterOverlay');
-        const panel = document.getElementById('mobileFilterPanel');
-        const closeBtn = document.getElementById('closeFilters');
-        const clearBtn = document.getElementById('clearAllFilters');
-        const openBtns = document.querySelectorAll('[data-mobile-filter-open]');
-
-        if (!overlay || !panel) return;
-
-        function openPanel() {
-            overlay.classList.add('active');
-            panel.classList.add('active');
-            overlay.setAttribute('aria-hidden', 'false');
-            panel.setAttribute('aria-hidden', 'false');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closePanel() {
-            overlay.classList.remove('active');
-            panel.classList.remove('active');
-            overlay.setAttribute('aria-hidden', 'true');
-            panel.setAttribute('aria-hidden', 'true');
-            document.body.style.overflow = '';
-        }
-
-        openBtns.forEach((btn) => btn.addEventListener('click', openPanel));
-        closeBtn?.addEventListener('click', closePanel);
-        overlay.addEventListener('click', closePanel);
-
-        clearBtn?.addEventListener('click', () => {
-            window.location.href = window.location.pathname;
-        });
-    }
-
-    function initTutorialFiltersPage() {
-        initCategoryFilters();
-        initLevelFilters();
-        initTagFilters();
-        initMobileFilterPanel();
-        initTutorialLinks();
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initTutorialFiltersPage, { once: true });
-    } else {
-        initTutorialFiltersPage();
-    }
-</script>

@@ -1,222 +1,517 @@
 ---
-import type { TutorialTag } from '../../lib/wordpress';
+import type {
+    TutorialCategory,
+    TutorialTag,
+    TutorialTagGroup,
+} from '../../lib/wordpress';
 
 interface Props {
-    tags: TutorialTag[];
-    selectedSlugs: string[];
+    categories: TutorialCategory[];
+    selectedCategorySlugs: string[];
+    topTags: TutorialTag[];
+    groupedTags: TutorialTagGroup[];
+    selectedTagSlugs: string[];
+    selectedLevel?: string;
+    action?: string;
 }
 
-const { tags, selectedSlugs } = Astro.props;
+const {
+    categories,
+    selectedCategorySlugs,
+    topTags,
+    groupedTags,
+    selectedTagSlugs,
+    selectedLevel = '',
+    action = '/tutorials',
+} = Astro.props;
+
+const levels = [
+    { value: 'beginner', label: 'Beginner' },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'advanced', label: 'Advanced' },
+];
+
+function isSelected(slug: string, selected: string[]): boolean {
+    return selected.includes(slug);
+}
+
+function uniqueBySlug<T extends { slug: string }>(items: T[]): T[] {
+    const seen = new Set<string>();
+    return items.filter((item) => {
+        if (seen.has(item.slug)) return false;
+        seen.add(item.slug);
+        return true;
+    });
+}
+
+const uniqueTopTags = uniqueBySlug(topTags);
+const topTagSlugs = new Set(uniqueTopTags.map((t) => t.slug));
+
+const visibleGroups = groupedTags
+    .map((group) => ({
+        ...group,
+        tags: uniqueBySlug(group.tags).filter(
+            (tag) => !topTagSlugs.has(tag.slug),
+        ),
+    }))
+    .filter((group) => group.tags.length > 0);
+
+const shouldShowAllToggle = visibleGroups.length > 0;
+
+const hasSelectedGroupedTag = visibleGroups.some((group) =>
+    group.tags.some((tag) => selectedTagSlugs.includes(tag.slug)),
+);
+
+const hasActiveFilters =
+    selectedCategorySlugs.length > 0 ||
+    selectedTagSlugs.length > 0 ||
+    !!selectedLevel;
 ---
 
-<div class="tag-filter" data-filter-type="tag">
-    <div class="filter-label">Tags:</div>
+<form class="tutorial-filter" method="GET" action={action}>
+    <div class="tutorial-filter__topbar">
+        <h2 class="tutorial-filter__heading-title">Filters</h2>
 
-    <div class="tag-filter-container">
-        <button class="tag-dropdown-toggle" type="button">
-      <span class="toggle-text">
-        {selectedSlugs.length > 0
-            ? `${selectedSlugs.length} selected`
-            : 'Select tags...'}
-      </span>
-            <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-                <path d="M1 1L6 6L11 1" stroke="currentColor" stroke-width="2" />
-            </svg>
-        </button>
+        {hasActiveFilters && (
+                <a class="tutorial-filter__reset-top" href={action}>
+                    Reset
+                </a>
+        )}
+    </div>
 
-        <div class="tag-dropdown-menu">
-            <input
-                    type="text"
-                    class="tag-search"
-                    placeholder="Search tags..."
-            />
+    <div class="tutorial-filter__section">
+        <h3 class="tutorial-filter__title">Categories</h3>
 
-            <div class="tag-list">
-                {tags.map((tag) => (
-                        <label class="tag-option">
+        <div class="tutorial-filter__chips">
+            {categories.map((category) => {
+                const selected = isSelected(category.slug, selectedCategorySlugs);
+                return (
+                        <label
+                                class:list={['filter-chip', selected && 'is-selected']}
+                                data-selected={selected}
+                        >
                             <input
+                                    class="filter-chip__input"
                                     type="checkbox"
-                                    value={tag.slug}
-                                    checked={selectedSlugs.includes(tag.slug)}
+                                    name="category"
+                                    value={category.slug}
+                                    checked={selected}
                             />
-                            <span>{tag.name}</span>
+                            <span class="filter-chip__label">{category.name}</span>
                         </label>
-                ))}
-            </div>
-
-            <div class="tag-actions">
-                <button type="button" class="tag-clear">Clear</button>
-                <button type="button" class="tag-apply">Apply</button>
-            </div>
+                );
+            })}
         </div>
     </div>
 
-    {selectedSlugs.length > 0 && (
-            <div class="selected-tags">
-                {selectedSlugs.map((slug) => {
-                    const tag = tags.find((t) => t.slug === slug);
-                    return (
-                        tag && (
-                                <span class="selected-tag" data-slug={slug}>
-              {tag.name}
-                                    <button type="button" class="remove-tag">×</button>
-            </span>
-                        )
-                    );
-                })}
+    <div class="tutorial-filter__section">
+        <h3 class="tutorial-filter__title">Level</h3>
+
+        <div class="tutorial-filter__chips">
+            {levels.map((level) => {
+                const selected = selectedLevel === level.value;
+                return (
+                        <label
+                                class:list={['filter-chip', selected && 'is-selected']}
+                                data-selected={selected}
+                        >
+                            <input
+                                    class="filter-chip__input"
+                                    type="checkbox"
+                                    name="level"
+                                    value={level.value}
+                                    checked={selected}
+                            />
+                            <span class="filter-chip__label">{level.label}</span>
+                        </label>
+                );
+            })}
+        </div>
+    </div>
+
+    <div class="tutorial-filter__section">
+        <div class="tutorial-filter__heading">
+            <h3 class="tutorial-filter__title">Popular tags</h3>
+
+            {shouldShowAllToggle && (
+                    <button
+                            type="button"
+                            class="tutorial-filter__toggle"
+                            data-tag-toggle
+                            aria-expanded={hasSelectedGroupedTag ? 'true' : 'false'}
+                            aria-controls="tutorial-tag-groups"
+                    >
+                        {hasSelectedGroupedTag ? 'Hide all tags' : 'Show all tags'}
+                    </button>
+            )}
+        </div>
+
+        <div class="tutorial-filter__chips">
+            {uniqueTopTags.map((tag) => {
+                const selected = isSelected(tag.slug, selectedTagSlugs);
+                return (
+                        <label
+                                class:list={['filter-chip', selected && 'is-selected']}
+                                data-selected={selected}
+                        >
+                            <input
+                                    class="filter-chip__input"
+                                    type="checkbox"
+                                    name="tags"
+                                    value={tag.slug}
+                                    checked={selected}
+                            />
+                            <span class="filter-chip__label">{tag.name}</span>
+                        </label>
+                );
+            })}
+        </div>
+    </div>
+
+    {visibleGroups.length > 0 && (
+            <div
+                    id="tutorial-tag-groups"
+                    class="tutorial-filter__groups"
+                    data-tag-groups
+                    hidden={!hasSelectedGroupedTag}
+            >
+                {visibleGroups.map((group) => (
+                        <section class="tutorial-filter__group">
+                            <h4 class="tutorial-filter__group-title">{group.label}</h4>
+
+                            <div class="tutorial-filter__chips">
+                                {group.tags.map((tag) => {
+                                    const selected = isSelected(tag.slug, selectedTagSlugs);
+                                    return (
+                                            <label
+                                                    class:list={['filter-chip', selected && 'is-selected']}
+                                                    data-selected={selected}
+                                            >
+                                                <input
+                                                        class="filter-chip__input"
+                                                        type="checkbox"
+                                                        name="tags"
+                                                        value={tag.slug}
+                                                        checked={selected}
+                                                />
+                                                <span class="filter-chip__label">{tag.name}</span>
+                                            </label>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                ))}
             </div>
     )}
-</div>
+</form>
 
-<style>
-    .tag-filter {
-        margin-bottom: 1.5rem;
+<script>
+    function setChipSelected(
+        input: HTMLInputElement,
+        selected: boolean,
+    ): void {
+        const chip = input.closest<HTMLElement>('.filter-chip');
+        input.checked = selected;
+        if (!chip) return;
+        chip.classList.toggle('is-selected', selected);
+        chip.dataset.selected = String(selected);
     }
 
-    .filter-label {
+    function initTutorialFilters(): void {
+        document
+            .querySelectorAll<HTMLFormElement>('.tutorial-filter')
+            .forEach((form) => {
+                if (form.dataset.initialized === 'true') return;
+                form.dataset.initialized = 'true';
+
+                const toggle = form.querySelector<HTMLButtonElement>('[data-tag-toggle]');
+                const groups = form.querySelector<HTMLElement>('[data-tag-groups]');
+
+                function setGroupsExpanded(expanded: boolean): void {
+                    if (!toggle || !groups) return;
+                    toggle.setAttribute('aria-expanded', String(expanded));
+                    toggle.textContent = expanded ? 'Hide all tags' : 'Show all tags';
+                    groups.hidden = !expanded;
+                }
+
+                toggle?.addEventListener('click', () => {
+                    setGroupsExpanded(
+                        toggle.getAttribute('aria-expanded') !== 'true',
+                    );
+                });
+
+                form.addEventListener('change', (event) => {
+                    const input = event.target;
+                    if (
+                        !(input instanceof HTMLInputElement) ||
+                        input.type !== 'checkbox'
+                    ) return;
+
+                    if (input.name === 'level' && input.checked) {
+                        form
+                            .querySelectorAll<HTMLInputElement>('input[name="level"]')
+                            .forEach((other) => {
+                                if (other !== input) {
+                                    setChipSelected(other, false);
+                                }
+                            });
+                    }
+
+                    setChipSelected(input, input.checked);
+
+                    form.setAttribute('aria-busy', 'true');
+                    form.requestSubmit();
+                });
+
+                form.addEventListener('submit', () => {
+                    form.setAttribute('aria-busy', 'true');
+                });
+            });
+    }
+
+    initTutorialFilters();
+    document.addEventListener('astro:page-load', initTutorialFilters);
+</script>
+
+<style>
+    .tutorial-filter {
+        margin-bottom: 1.5rem;
+        max-width: 300px;
+    }
+
+    .tutorial-filter[aria-busy='true'] {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .tutorial-filter__topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .tutorial-filter__heading-title {
+        margin: 0;
+        font-family: 'General Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--color-text);
+        line-height: 1.2;
+    }
+
+    .tutorial-filter__reset-top {
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: var(--color-primary);
+        font-family: 'General Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .tutorial-filter__reset-top:hover {
+        color: #016875;
+    }
+
+
+    .tutorial-filter__reset-top:hover {
+        color: var(--color-primary);
+    }
+
+    .tutorial-filter__section {
+        margin-bottom: 1rem;
+    }
+
+    .tutorial-filter__group {
+        margin-bottom: 0.85rem;
+    }
+
+    .tutorial-filter__section:last-of-type {
+        margin-bottom: 0;
+    }
+
+    .tutorial-filter__heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .tutorial-filter__title {
+        margin: 0 0 0.75rem;
         font-family: 'General Sans', sans-serif;
         font-weight: 600;
         font-size: 0.875rem;
-        margin-bottom: 0.75rem;
         color: var(--color-text);
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
 
-    .tag-filter-container {
-        position: relative;
+    .tutorial-filter__heading .tutorial-filter__title {
+        margin-bottom: 0;
     }
 
-    .tag-dropdown-toggle {
-        width: 100%;
-        max-width: 300px;
-        padding: 0.75rem 1rem;
-        border: 1px solid var(--color-text-muted);
-        border-radius: 0.5rem;
-        background: var(--color-surface);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        cursor: pointer;
+    .tutorial-filter__group-title {
+        margin: 0 0 0.45rem;
         font-family: 'General Sans', sans-serif;
-        font-size: 0.875rem;
-    }
-
-    .tag-dropdown-menu {
-        position: absolute;
-        top: calc(100% + 0.5rem);
-        left: 0;
-        width: 100%;
-        max-width: 300px;
-        background: var(--color-surface-2);
-        border: 1px solid var(--color-border);
-        border-radius: 0.75rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        display: none;
-        flex-direction: column;
-        z-index: 100;
-    }
-
-    .tag-dropdown-menu.active {
-        display: flex;
-    }
-
-    .tag-search {
-        padding: 0.6rem;
-        border: none;
-        border-bottom: 1px solid var(--color-border);
-        font-family: 'General Sans', sans-serif;
-        font-size: 0.85rem;
-        background: var(--color-surface);
-    }
-
-    /* Компактный список: 3 строки + скролл при большем количестве */
-    .tag-list {
-        max-height: 95px;        /* под 3 строки */
-        overflow-y: auto;
-        padding: 0.15rem 0;
-    }
-
-    .tag-option {
-        display: flex;
-        align-items: center;
-        padding: 0.25rem 0.6rem;
-        cursor: pointer;
-        transition: background 0.2s ease;
-    }
-
-    .tag-option:hover {
-        background: var(--color-surface-offset);
-    }
-
-    .tag-option input {
-        margin-right: 0.45rem;
-    }
-
-    .tag-actions {
-        display: flex;
-        gap: 0.4rem;
-        padding: 0.4rem 0.7rem;
-        border-top: 1px solid var(--color-border);
-        background: var(--color-surface-2);
-    }
-
-    .tag-clear,
-    .tag-apply {
-        flex: 1;
-        padding: 0.35rem 0.45rem;
-        border: none;
-        border-radius: 0.375rem;
-        font-family: 'General Sans', sans-serif;
-        font-size: 0.8rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .tag-clear {
-        background: transparent;
+        font-weight: 600;
+        font-size: 0.75rem;
         color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
-    .tag-clear:hover {
-        background: var(--color-surface-offset);
-    }
-
-    .tag-apply {
-        background: var(--color-primary);
-        color: white;
-    }
-
-    .tag-apply:hover {
-        background: #016875;
-    }
-
-    .selected-tags {
+    .tutorial-filter__chips {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
+        gap: 0.45rem;
     }
 
-    .selected-tag {
+    .tutorial-filter__groups {
+        margin-top: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .tutorial-filter__groups[hidden] {
+        display: none;
+    }
+
+    .filter-chip {
+        position: relative;
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.375rem 0.75rem;
-        background: var(--color-primary);
-        color: white;
-        border-radius: 1rem;
-        font-size: 0.75rem;
+        cursor: pointer;
     }
 
-    .remove-tag {
-        background: none;
-        border: none;
+    .filter-chip__input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+        width: 1px;
+        height: 1px;
+    }
+
+    .filter-chip__label {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid var(--color-text-muted);
+        border-radius: 1rem;
+        background: var(--color-surface);
+        color: var(--color-text);
+        font-family: 'General Sans', sans-serif;
+        font-size: 0.8rem;
+        line-height: 1.2;
+        transition:
+                background 0.2s ease,
+                color 0.2s ease,
+                border-color 0.2s ease;
+    }
+
+    .filter-chip:hover .filter-chip__label {
+        background: var(--color-surface-offset);
+    }
+
+    .filter-chip.is-selected .filter-chip__label,
+    .filter-chip[data-selected='true'] .filter-chip__label,
+    .filter-chip__input:checked + .filter-chip__label {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
         color: white;
-        font-size: 1.25rem;
-        cursor: pointer;
+    }
+
+    .filter-chip__input:focus-visible + .filter-chip__label {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+
+    .tutorial-filter__toggle {
         padding: 0;
-        line-height: 1;
+        border: none;
+        background: transparent;
+        color: var(--color-primary);
+        font-family: 'General Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .tutorial-filter__toggle:hover {
+        color: #016875;
+    }
+
+    @media (max-width: 767px) {
+        .tutorial-filter {
+            max-width: 100%;
+            margin-bottom: 0;
+        }
+
+        .tutorial-filter__topbar {
+            margin-bottom: 0.875rem;
+        }
+
+        .tutorial-filter__heading-title {
+            font-size: 0.88rem;
+        }
+
+        .tutorial-filter__reset-top {
+            font-size: 0.76rem;
+        }
+
+        .tutorial-filter__section {
+            margin-bottom: 0.875rem;
+        }
+
+        .tutorial-filter__heading {
+            margin-bottom: 0.625rem;
+            gap: 0.5rem;
+        }
+
+        .tutorial-filter__title {
+            margin-bottom: 0.625rem;
+            font-size: 0.75rem;
+        }
+
+        .tutorial-filter__heading .tutorial-filter__title {
+            margin-bottom: 0;
+        }
+
+        .tutorial-filter__group-title {
+            font-size: 0.7rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .tutorial-filter__chips {
+            gap: 0.375rem;
+        }
+
+        .filter-chip {
+            max-width: 100%;
+        }
+
+        .filter-chip__label {
+            min-height: 30px;
+            padding: 0.32rem 0.65rem;
+            font-size: 0.76rem;
+        }
+
+        .tutorial-filter__groups {
+            margin-top: 0.375rem;
+            padding-top: 0.625rem;
+        }
+
+        .tutorial-filter__toggle {
+            font-size: 0.76rem;
+        }
     }
 </style>
-

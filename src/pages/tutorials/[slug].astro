@@ -1,388 +1,137 @@
 ---
-import SeoHead from '../../components/seo/SeoHead.astro';
+export const prerender = false;
+
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import RelatedBuildsBlock from '../../components/tutorials/RelatedBuildsBlock.astro';
-import RelatedTutorialsBlock from '../../components/tutorials/RelatedTutorialsBlock.astro';
-import HiResViewer from '../../components/HiResViewer.astro';
-import ContentMediaViewerBridge from '../../components/ContentMediaViewerBridge.astro';
-import { getTutorialBySlug, getAllTutorials, getAllNews, hasFreshNews } from '../../lib/wordpress';
+import SeoHead from '../../components/seo/SeoHead.astro';
+import {
+    getTutorialBySlug,
+    getAllNews,
+    hasFreshNews,
+} from '../../lib/wordpress';
 
-export async function getStaticPaths() {
-    const tutorials = await getAllTutorials();
+const { slug } = Astro.params;
 
-    return tutorials.map((tutorial) => ({
-        params: { slug: tutorial.slug },
-        props: { tutorial },
-    }));
+if (!slug) {
+    return Astro.redirect('/tutorials');
 }
 
-const { tutorial } = Astro.props;
+const tutorial = await getTutorialBySlug(slug);
 
 if (!tutorial) {
-    return Astro.redirect('/404');
+    return Astro.redirect('/tutorials');
 }
 
-const fullTutorial = await getTutorialBySlug(tutorial.slug);
-
-if (!fullTutorial) {
-    return Astro.redirect('/404');
-}
-
-const tutorialId = fullTutorial.databaseId;
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
 
-const seoTitle = `${fullTutorial.title} | Tutorials — Glushkov Modelling`;
-const seoDescription =
-    fullTutorial.teaser ||
-    `Ship modelling tutorial: ${fullTutorial.title}. Technique guide for wooden scale model builders.`;
-const seoImage =
-    fullTutorial.featuredImage?.node?.sourceUrl ||
-    'https://www.glushkov-modelling.com/og-default.jpg';
-const seoDatePublished = fullTutorial.date ?? undefined;
+const returnToParam = Astro.url.searchParams.get('returnTo');
+const backToTutorialsHref =
+    returnToParam && returnToParam.startsWith('/tutorials')
+        ? returnToParam
+        : '/tutorials';
 ---
 
-<BaseLayout
-        title={seoTitle}
-        description={seoDescription}
-        hasFreshNews={newsFlag}
-        ogImage={seoImage}
->
+<BaseLayout title={tutorial.title} hasFreshNews={newsFlag}>
     <SeoHead
             slot="head"
-            pageType="tutorial"
-            title={seoTitle}
-            description={seoDescription}
-            ogImage={seoImage}
-            tutorialTitle={fullTutorial.title}
-            tutorialDescription={fullTutorial.teaser}
-            tutorialCategory={fullTutorial.categories?.[0]?.name}
-            tutorialLevel={fullTutorial.level}
-            datePublished={seoDatePublished}
+            pageType="article"
+            title={`${tutorial.title} — Tutorials`}
+            description={tutorial.teaser || tutorial.title}
+            canonicalPath={`/tutorials/${tutorial.slug}`}
             breadcrumbs={[
                 { name: 'Tutorials', url: '/tutorials' },
-                { name: fullTutorial.title, url: `/tutorials/${tutorial.slug}` },
+                { name: tutorial.title, url: `/tutorials/${tutorial.slug}` },
             ]}
     />
 
-    <article class="tutorial-detail" data-tutorial-id={tutorialId}>
+    <article class="tutorial-detail">
         <div class="container">
-            <div class="detail-back-row">
-                <button
-                        type="button"
-                        class="detail-back-btn"
-                        id="backToTutorialsBtn"
-                >
-                    <span class="detail-back-icon">←</span>
-                    <span>Back to tutorials</span>
-                </button>
-            </div>
+            <a
+                    class="detail-back-btn"
+                    id="backToTutorialsBtn"
+                    href={backToTutorialsHref}
+            >
+                <span class="detail-back-icon">←</span>
+                <span>Back to tutorials</span>
+            </a>
 
-            <header class="tutorial-header">
-                <h1>{fullTutorial.title}</h1>
+            <header class="tutorial-detail__header">
+                <h1>{tutorial.title}</h1>
 
-                <div class="tutorial-meta">
-                    {fullTutorial.level && (
-                            <span class={`level-badge level-${fullTutorial.level.toLowerCase()}`}>
-              {fullTutorial.level}
-            </span>
-                    )}
-
-                    {fullTutorial.categories.length > 0 && (
-                            <div class="categories">
-                                {fullTutorial.categories.map((cat) => (
-                                        <a
-                                                href={`/tutorials?categories=${cat.slug}`}
-                                                class="category-tag"
-                                        >
-                                            {cat.name}
-                                        </a>
-                                ))}
-                            </div>
-                    )}
-                </div>
-
-                {fullTutorial.teaser && (
-                        <p class="tutorial-teaser">{fullTutorial.teaser}</p>
+                {tutorial.teaser && (
+                        <p class="tutorial-detail__teaser">{tutorial.teaser}</p>
                 )}
             </header>
 
-            <div
-                    class="tutorial-content"
-                    data-tutorial-content
-                    data-tutorial-title={fullTutorial.title}
-                    set:html={fullTutorial.content}
-            />
-
-            {fullTutorial.relatedBuilds.length > 0 && (
-                    <RelatedBuildsBlock
-                            builds={fullTutorial.relatedBuilds}
-                            tutorialSlug={tutorial.slug}
-                            tutorialTitle={fullTutorial.title}
-                    />
+            {tutorial.featuredImage?.sourceUrl && (
+                    <div class="tutorial-detail__media">
+                        <img
+                                src={tutorial.featuredImage.sourceUrl}
+                                alt={tutorial.featuredImage.altText || tutorial.title}
+                                loading="eager"
+                                width="1200"
+                                height="700"
+                        />
+                    </div>
             )}
 
-            {fullTutorial.relatedTutorials.length > 0 && (
-                    <RelatedTutorialsBlock tutorials={fullTutorial.relatedTutorials} />
-            )}
+            <div class="tutorial-detail__content">
+                <Fragment set:html={tutorial.content} />
+            </div>
         </div>
     </article>
-
-    <HiResViewer backLabel="← Back to tutorial" />
-    <ContentMediaViewerBridge
-            rootSelector='[data-tutorial-content]'
-            titleAttr='data-tutorial-title'
-            itemTitleBuilder='single-title'
-            globalKey='__tutorialViewerBridgeInit'
-    />
 </BaseLayout>
 
-<style>
-    .tutorial-detail {
-        padding: 3rem 0;
-    }
-
-    .container {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 0 1.5rem;
-    }
-
-    .detail-back-row {
-        margin-bottom: 1.5rem;
-    }
-
+<style is:global>
     .detail-back-btn {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.5rem 0.9rem;
-        border-radius: 999px;
-        border: 1px solid var(--color-border);
-        background: var(--color-surface);
-        color: var(--color-text);
-        font-family: 'General Sans', sans-serif;
-        font-size: 0.875rem;
+        margin-bottom: 1.5rem;
+        color: var(--color-primary);
+        text-decoration: none;
         font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
     }
 
     .detail-back-btn:hover {
-        background: var(--color-surface-2);
-        border-color: var(--color-primary);
-        transform: translateY(-1px);
+        color: var(--color-primary-hover);
     }
 
     .detail-back-icon {
-        font-size: 0.9rem;
+        line-height: 1;
     }
 
-    .tutorial-header {
-        margin-bottom: 3rem;
+    .tutorial-detail {
+        padding: 3rem 0;
     }
 
-    h1 {
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 3rem;
-        margin-bottom: 1rem;
-        color: var(--color-text);
-    }
-
-    .tutorial-meta {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-        flex-wrap: wrap;
+    .tutorial-detail__header {
         margin-bottom: 1.5rem;
     }
 
-    .level-badge {
-        display: inline-block;
-        padding: 0.5rem 1rem;
-        border-radius: 1rem;
-        font-size: 0.875rem;
-        font-weight: 600;
+    .tutorial-detail__header h1 {
+        margin: 0 0 1rem;
     }
 
-    .level-beginner {
-        background-color: #d4e8e9;
-        color: var(--color-primary);
-    }
-
-    .level-intermediate {
-        background-color: var(--color-primary);
-        color: white;
-    }
-
-    .level-advanced {
-        background-color: #014952;
-        color: white;
-    }
-
-    .categories {
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-    }
-
-    .category-tag {
-        font-size: 0.875rem;
+    .tutorial-detail__teaser {
+        margin: 0;
         color: var(--color-text-muted);
-        padding: 0.25rem 0.75rem;
-        border: 1px solid var(--color-text-muted);
-        border-radius: 1rem;
-        text-decoration: none;
-        transition: all 0.2s ease;
-    }
-
-    .category-tag:hover {
-        border-color: var(--color-primary);
-        color: var(--color-primary);
-    }
-
-    .tutorial-teaser {
         font-size: 1.125rem;
-        color: var(--color-text-muted);
         line-height: 1.6;
     }
 
-    .tutorial-content {
-        margin-bottom: 4rem;
-        line-height: 1.8;
+    .tutorial-detail__media {
+        margin-bottom: 2rem;
     }
 
-    .tutorial-content :global(p) {
-        margin: 1rem 0;
-    }
-
-    .tutorial-content :global(figure) {
-        margin: 1.25rem 0;
-    }
-
-    .tutorial-content :global(figure.wp-block-image) {
-        width: fit-content;
-        max-width: 100%;
-        border: 1px solid var(--color-border);
-        border-radius: 0.75rem;
-        overflow: hidden;
-        background: var(--color-surface);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .tutorial-content :global(figure.wp-block-image > a) {
+    .tutorial-detail__media img {
         display: block;
-        line-height: 0;
-    }
-
-    .tutorial-content :global(figure img) {
-        display: block;
-        max-width: 100%;
-        width: auto;
-        height: auto;
-        margin: 0;
-        border-radius: 0;
-        vertical-align: top;
-    }
-
-    .tutorial-content :global(figure figcaption) {
-        padding: 0.75rem 1rem 0.9rem;
-        font-size: 0.92rem;
-        line-height: 1.45;
-        color: var(--color-text-muted);
-        background: var(--color-surface);
-        border-top: 1px solid var(--color-border);
-    }
-
-    .tutorial-content :global(a[href*="/wp-content/uploads/"]) {
-        display: inline-block;
-        max-width: 100%;
-        text-decoration: none;
-        line-height: 0;
-    }
-
-    .tutorial-content :global(a[href*="/wp-content/uploads/"] > img),
-    .tutorial-content :global(p > img),
-    .tutorial-content :global(.wp-block-image > img) {
-        display: block;
-        max-width: 100%;
-        width: auto;
-        height: auto;
-        margin: 1.25rem 0;
-        border: 0;
-        border-radius: 0.75rem;
-        background: transparent;
-        box-shadow: var(--shadow-sm);
-        vertical-align: top;
-    }
-
-    .tutorial-content :global(figure a[href*="/wp-content/uploads/"] > img),
-    .tutorial-content :global(figure > img) {
-        margin: 0;
-        border: 0;
-        border-radius: 0;
-        box-shadow: none;
-        background: transparent;
-    }
-
-    .tutorial-content :global(img) {
-        display: block;
-        max-width: 100%;
-        height: auto;
-    }
-
-    /* ▼▼▼ НОВОЕ: адаптивные WordPress YouTube embed (включая Shorts) ▼▼▼ */
-
-    /* Сам figure влезает в контент */
-    .tutorial-content :global(figure.wp-block-embed.wp-has-aspect-ratio) {
-        max-width: 100%;
-    }
-
-    /* Общий wrapper как позиционированный контейнер */
-    .tutorial-content :global(figure.wp-block-embed.wp-has-aspect-ratio .wp-block-embed__wrapper) {
-        position: relative;
         width: 100%;
-        height: 0;
-        overflow: hidden;
+        height: auto;
+        border-radius: 1rem;
     }
 
-    /* Горизонтальные видео 16:9 */
-    .tutorial-content :global(.wp-embed-aspect-16-9 .wp-block-embed__wrapper) {
-        padding-bottom: 56.25%; /* 9/16 */
-    }
-
-    /* Вертикальные видео 9:16 (Shorts) */
-    .tutorial-content :global(.wp-embed-aspect-9-16 .wp-block-embed__wrapper) {
-        padding-bottom: 177.78%; /* 16/9 */
-    }
-
-    /* iframe растягивается на всю обёртку */
-    .tutorial-content :global(figure.wp-block-embed.wp-has-aspect-ratio .wp-block-embed__wrapper iframe) {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border: 0;
-    }
-
-    @media (max-width: 768px) {
-        h1 {
-            font-size: 2rem;
-        }
+    .tutorial-detail__content {
+        min-width: 0;
     }
 </style>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const btn = document.getElementById('backToTutorialsBtn');
-        if (!btn) return;
-
-        btn.addEventListener('click', () => {
-            const returnUrl = sessionStorage.getItem('tutorialsReturnUrl');
-            window.location.href = returnUrl || '/tutorials';
-        });
-    });
-</script>
-
-<script src="/scripts/tutorialViews.js" defer></script>
