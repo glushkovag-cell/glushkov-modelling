@@ -5,7 +5,12 @@ import RelatedBuildsBlock from '../../components/tutorials/RelatedBuildsBlock.as
 import RelatedTutorialsBlock from '../../components/tutorials/RelatedTutorialsBlock.astro';
 import HiResViewer from '../../components/HiResViewer.astro';
 import ContentMediaViewerBridge from '../../components/ContentMediaViewerBridge.astro';
-import { getTutorialBySlug, getAllTutorials, getAllNews, hasFreshNews } from '../../lib/wordpress';
+import {
+    getTutorialBySlug,
+    getAllTutorials,
+    getAllNews,
+    hasFreshNews,
+} from '../../lib/wordpress';
 
 export async function getStaticPaths() {
     const tutorials = await getAllTutorials();
@@ -33,16 +38,17 @@ const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
 
 const seoTitle = `${fullTutorial.title} | Tutorials — Glushkov Modelling`;
+
 const seoDescription =
     fullTutorial.teaser ||
     `Ship modelling tutorial: ${fullTutorial.title}. Technique guide for wooden scale model builders.`;
+
 const seoImage =
     fullTutorial.featuredImage?.node?.sourceUrl ||
     'https://www.glushkov-modelling.com/og-default.jpg';
+
 const seoDatePublished = fullTutorial.date ?? undefined;
-
 const backToTutorialsHref = '/tutorials';
-
 ---
 
 <BaseLayout
@@ -132,6 +138,7 @@ const backToTutorialsHref = '/tutorials';
     </article>
 
     <HiResViewer backLabel="← Back to tutorial" />
+
     <ContentMediaViewerBridge
             rootSelector='[data-tutorial-content]'
             titleAttr='data-tutorial-title'
@@ -160,8 +167,8 @@ const backToTutorialsHref = '/tutorials';
         align-items: center;
         gap: 0.5rem;
         padding: 0.5rem 0.9rem;
-        border-radius: 999px;
         border: 1px solid var(--color-border);
+        border-radius: 999px;
         background: var(--color-surface);
         color: var(--color-text);
         font-family: 'General Sans', sans-serif;
@@ -169,12 +176,15 @@ const backToTutorialsHref = '/tutorials';
         font-weight: 600;
         cursor: pointer;
         text-decoration: none;
-        transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
+        transition:
+                background 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.1s ease;
     }
 
     .detail-back-btn:hover {
-        background: var(--color-surface-2);
         border-color: var(--color-primary);
+        background: var(--color-surface-2);
         transform: translateY(-1px);
     }
 
@@ -187,17 +197,17 @@ const backToTutorialsHref = '/tutorials';
     }
 
     h1 {
-        font-family: 'Cormorant Garamond', serif;
-        font-size: 3rem;
         margin-bottom: 1rem;
         color: var(--color-text);
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 3rem;
     }
 
     .tutorial-meta {
         display: flex;
+        flex-wrap: wrap;
         gap: 1rem;
         align-items: center;
-        flex-wrap: wrap;
         margin-bottom: 1.5rem;
     }
 
@@ -226,16 +236,16 @@ const backToTutorialsHref = '/tutorials';
 
     .categories {
         display: flex;
-        gap: 0.75rem;
         flex-wrap: wrap;
+        gap: 0.75rem;
     }
 
     .category-tag {
-        font-size: 0.875rem;
-        color: var(--color-text-muted);
         padding: 0.25rem 0.75rem;
         border: 1px solid var(--color-text-muted);
         border-radius: 1rem;
+        color: var(--color-text-muted);
+        font-size: 0.875rem;
         text-decoration: none;
         transition: all 0.2s ease;
     }
@@ -246,8 +256,8 @@ const backToTutorialsHref = '/tutorials';
     }
 
     .tutorial-teaser {
-        font-size: 1.125rem;
         color: var(--color-text-muted);
+        font-size: 1.125rem;
         line-height: 1.6;
     }
 
@@ -264,83 +274,32 @@ const backToTutorialsHref = '/tutorials';
         margin: 1.25rem 0;
     }
 
-    .tutorial-content :global(figure.wp-block-image) {
-        width: fit-content;
-        max-width: 100%;
-        border: 1px solid var(--color-border);
-        border-radius: 0.75rem;
-        overflow: hidden;
-        background: var(--color-surface);
-        box-shadow: var(--shadow-sm);
-    }
-
-    .tutorial-content :global(figure.wp-block-image > a) {
-        display: block;
-        line-height: 0;
-    }
-
-    .tutorial-content :global(figure img) {
-        display: block;
-        max-width: 100%;
-        width: auto;
-        height: auto;
-        margin: 0;
-        border-radius: 0;
-        vertical-align: top;
-    }
-
-    .tutorial-content :global(figure figcaption) {
-        padding: 0.75rem 1rem 0.9rem;
-        font-size: 0.92rem;
-        line-height: 1.45;
-        color: var(--color-text-muted);
-        background: var(--color-surface);
-        border-top: 1px solid var(--color-border);
-    }
-
-    .tutorial-content :global(a[href*="/wp-content/uploads/"]) {
-        display: inline-block;
-        max-width: 100%;
-        text-decoration: none;
-        line-height: 0;
-    }
-
-    .tutorial-content :global(a[href*="/wp-content/uploads/"] > img),
-    .tutorial-content :global(p > img),
-    .tutorial-content :global(.wp-block-image > img) {
-        display: block;
-        max-width: 100%;
-        width: auto;
-        height: auto;
-        margin: 1.25rem 0;
-        border: 0;
-        border-radius: 0.75rem;
-        background: transparent;
-        box-shadow: var(--shadow-sm);
-        vertical-align: top;
-    }
-
-    .tutorial-content :global(figure a[href*="/wp-content/uploads/"] > img),
-    .tutorial-content :global(figure > img) {
-        margin: 0;
-        border: 0;
-        border-radius: 0;
-        box-shadow: none;
-        background: transparent;
-    }
-
     .tutorial-content :global(img) {
         display: block;
         max-width: 100%;
         height: auto;
+        margin: 1.25rem 0;
+        border-radius: 0.75rem;
     }
 
-    /* WordPress YouTube embed, включая Shorts */
+    .tutorial-content :global(figure img) {
+        margin: 0;
+    }
+
+    .tutorial-content :global(figcaption) {
+        margin-top: 0.5rem;
+        color: var(--color-text-muted);
+        font-size: 0.92rem;
+        line-height: 1.45;
+    }
+
     .tutorial-content :global(figure.wp-block-embed.wp-has-aspect-ratio) {
         max-width: 100%;
     }
 
-    .tutorial-content :global(figure.wp-block-embed.wp-has-aspect-ratio .wp-block-embed__wrapper) {
+    .tutorial-content :global(
+        figure.wp-block-embed.wp-has-aspect-ratio .wp-block-embed__wrapper
+    ) {
         position: relative;
         width: 100%;
         height: 0;
@@ -355,7 +314,9 @@ const backToTutorialsHref = '/tutorials';
         padding-bottom: 177.78%;
     }
 
-    .tutorial-content :global(figure.wp-block-embed.wp-has-aspect-ratio .wp-block-embed__wrapper iframe) {
+    .tutorial-content :global(
+        figure.wp-block-embed.wp-has-aspect-ratio .wp-block-embed__wrapper iframe
+    ) {
         position: absolute;
         top: 0;
         left: 0;
@@ -374,7 +335,10 @@ const backToTutorialsHref = '/tutorials';
 <script>
     function initTutorialBackLink() {
         const backLink = document.getElementById('backToTutorialsBtn');
-        if (!(backLink instanceof HTMLAnchorElement)) return;
+
+        if (!(backLink instanceof HTMLAnchorElement)) {
+            return;
+        }
 
         const params = new URLSearchParams(window.location.search);
         const returnTo = params.get('returnTo');
@@ -390,5 +354,3 @@ const backToTutorialsHref = '/tutorials';
 </script>
 
 <script src="/scripts/tutorialViews.js" defer></script>
-
-
