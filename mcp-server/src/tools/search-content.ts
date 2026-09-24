@@ -29,6 +29,7 @@ interface TutorialSearchNode {
     title: string;
     slug: string;
     tutorialFields?: { tutorialTeaser?: string | null } | null;
+    tutorialTags?: { nodes: Array<{ name: string }> } | null;
 }
 
 interface GetTutorialsForSearchResponse {
@@ -67,9 +68,19 @@ const BUILD_LOGS_FOR_SEARCH_QUERY = `
 `;
 
 /**
+ * Fetch all published tutorials with their tags for local filtering.
+ *
+ * tutorialTags are included so that tag names (e.g. "Hull", "Coppering",
+ * "Wood Bending") become part of the searchable index alongside the title
+ * and teaser. Each tag name is treated as an independent searchable field
+ * (tutorialTag) in getMatchedFields, which means a query term that matches
+ * a tag name will cause that tutorial to surface even when the term does not
+ * appear in the title or teaser.
+ *
  * The custom tutorialsFiltered resolver does not have a confirmed search
- * argument, so tutorial title and teaser matching is performed locally.
- * Full tutorial body text is intentionally not fetched or searched here.
+ * argument, so all matching is performed locally.
+ * Full tutorial body text is intentionally not fetched or searched here;
+ * use search_tutorial_content for full-body search.
  */
 const TUTORIALS_FOR_SEARCH_QUERY = `
   query GetTutorialsForSearch {
@@ -79,6 +90,11 @@ const TUTORIALS_FOR_SEARCH_QUERY = `
       slug
       tutorialFields {
         tutorialTeaser
+      }
+      tutorialTags {
+        nodes {
+          name
+        }
       }
     }
   }
@@ -104,14 +120,16 @@ const inputSchema = {
 };
 
 /**
- * Normalizes titles, slugs, years, and HTML excerpts for matching:
+ * Normalizes titles, slugs, years, tag names, and HTML excerpts for matching:
  *
  * "Le Requin"       -> "le requin"
  * "le-requin"       -> "le requin"
  * "1750"            -> "1750"
  * "<p>The hull</p>" -> "the hull"
+ * "Wood Bending"    -> "wood bending"
  *
- * This allows space-separated query terms to match slugs that use hyphens.
+ * This allows space-separated query terms to match slugs that use hyphens
+ * and multi-word tag names such as "Wood Bending" or "Double Planking".
  */
 function normalizeSearchText(value: string | null | undefined): string {
     return (value ?? "")
@@ -134,7 +152,8 @@ type MatchedField =
     | "historicalYear"
     | "title"
     | "excerpt"
-    | "teaser";
+    | "teaser"
+    | "tutorialTag";
 
 function getMatchedFields(
     fields: Array<[MatchedField, string | null | undefined]>,
@@ -170,7 +189,9 @@ export function registerSearchContent(server: McpServer): void {
             description:
                 "Read-only. Searches build-log metadata and tutorial metadata by keyword. " +
                 "Build-log matches use model title, model slug, historical year, part title, and excerpt. " +
-                "Tutorial matches use tutorial title and short description only. " +
+                "Tutorial matches use tutorial title, short description, and tag names. " +
+                "Tag names (e.g. Hull, Coppering, Wood Bending, Double Planking) are part of the tutorial search index, " +
+                "so a query term matching a tag will surface the tutorial even when the term is absent from the title or description. " +
                 "Use this tool for broad content discovery when the relevant model or tutorial is not yet known. " +
                 "Use search_tutorial_content when the requested term, technique, material, tool, or instruction may occur inside the complete body text of a tutorial. " +
                 "Use get_build_details or get_tutorials to retrieve details after identifying a relevant result. " +
@@ -259,10 +280,19 @@ export function registerSearchContent(server: McpServer): void {
 
                 const tutorialResults = tutorialsData.tutorialsFiltered
                     .map((tutorial) => {
+                        // Build per-tag field pairs so each tag name is matched
+                        // individually and the matchedFields array identifies
+                        // "tutorialTag" as a distinct hit source.
+                        const tagFields: Array<["tutorialTag", string]> =
+                            (tutorial.tutorialTags?.nodes ?? []).map(
+                                (tag) => ["tutorialTag", tag.name],
+                            );
+
                         const matchedFields = getMatchedFields(
                             [
                                 ["title", tutorial.title],
                                 ["teaser", tutorial.tutorialFields?.tutorialTeaser],
+                                ...tagFields,
                             ],
                             searchTerms,
                         );
@@ -279,6 +309,7 @@ export function registerSearchContent(server: McpServer): void {
                         title: tutorial.title,
                         slug: tutorial.slug,
                         url: tutorialUrl(tutorial.slug),
+                        tags: (tutorial.tutorialTags?.nodes ?? []).map((t) => t.name),
                         excerpt: stripHtmlAndTruncate(
                             tutorial.tutorialFields?.tutorialTeaser,
                             200,
@@ -295,7 +326,7 @@ export function registerSearchContent(server: McpServer): void {
                     tutorialResults,
                     note:
                         "Build-log searches match every query term across model title, model slug, historical year, part title, and excerpt. " +
-                        "Tutorial searches match every query term across tutorial title and short description only; full tutorial body text is not searched.",
+                        "Tutorial searches match every query term across tutorial title, short description, and tag names; full tutorial body text is not searched here.",
                 });
             } catch (error) {
                 return errorResult(
