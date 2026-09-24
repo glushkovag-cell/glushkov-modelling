@@ -4,7 +4,6 @@ import { stripHtmlAndTruncate } from "./text.js";
 const MAX_CONTENT_LENGTH = 20_000;
 const EXCERPT_RADIUS = 140;
 
-// Добавлено "tags" в union
 export type MatchedField = "title" | "teaser" | "content" | "tags";
 
 export interface TutorialSearchable {
@@ -34,10 +33,10 @@ export function includesAllTerms(value: string, terms: string[]): boolean {
 
 /**
  * Ищет все слова запроса в объединённом индексе title + teaser + content + tags.
- * AND-логика сохранена: каждое слово обязательно должно присутствовать
- * хотя бы в одном из полей в совокупности.
- * Tags индексируются как единая строка через пробел, что позволяет найти
- * статью по имени тега даже если тег не упомянут в тексте.
+ * AND-логика: каждое слово обязано присутствовать хотя бы в одном поле в совокупности.
+ *
+ * matchedFields — поля, в которых найдено ХОТЯ БЫ ОДНО слово запроса
+ * (не требуется, чтобы все слова были в одном поле).
  */
 export function findTutorialTextMatch(
     tutorial: TutorialSearchable,
@@ -51,29 +50,31 @@ export function findTutorialTextMatch(
     const content = normalizeText(plainContent);
 
     // Теги объединяются в строку — каждое имя тега отдельным словом
-    const tagsText = normalizeText(
-        (tutorial.tagNames ?? []).join(" "),
-    );
+    const tagsText = normalizeText((tutorial.tagNames ?? []).join(" "));
 
     const searchableText = `${title} ${teaser} ${content} ${tagsText}`;
 
+    // AND-проверка по объединённому индексу: все слова должны быть где-то
     if (!includesAllTerms(searchableText, terms)) {
         return null;
     }
 
+    // matchedFields: поля, в которых встречается хотя бы одно слово запроса.
+    // Это информативнее, чем требовать все слова в одном поле.
+    const fieldHit = (fieldText: string): boolean =>
+        terms.some((term) => fieldText.includes(term));
+
     const matchedFields: MatchedField[] = [];
 
-    if (includesAllTerms(title, terms)) {
-        matchedFields.push("title");
-    }
-    if (includesAllTerms(teaser, terms)) {
-        matchedFields.push("teaser");
-    }
-    if (includesAllTerms(content, terms)) {
+    if (fieldHit(title))                 matchedFields.push("title");
+    if (fieldHit(teaser))                matchedFields.push("teaser");
+    if (fieldHit(content))               matchedFields.push("content");
+    if (tagsText && fieldHit(tagsText))  matchedFields.push("tags");
+
+    // Гарантия: если ни одно поле не дало hit (крайний случай при пустых полях),
+    // считаем совпадение по объединённому тексту как content.
+    if (matchedFields.length === 0) {
         matchedFields.push("content");
-    }
-    if (tagsText && includesAllTerms(tagsText, terms)) {
-        matchedFields.push("tags");
     }
 
     return { matchedFields, plainContent };
