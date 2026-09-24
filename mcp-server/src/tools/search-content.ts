@@ -29,6 +29,7 @@ interface TutorialSearchNode {
     title: string;
     slug: string;
     tutorialFields?: { tutorialTeaser?: string | null } | null;
+    tutorialTags?: { nodes: Array<{ name: string; isRestricted?: boolean | null }> } | null;
 }
 
 interface GetTutorialsForSearchResponse {
@@ -79,6 +80,12 @@ const TUTORIALS_FOR_SEARCH_QUERY = `
       slug
       tutorialFields {
         tutorialTeaser
+      }
+      tutorialTags {
+        nodes {
+          name
+          isRestricted
+        }
       }
     }
   }
@@ -134,7 +141,8 @@ type MatchedField =
     | "historicalYear"
     | "title"
     | "excerpt"
-    | "teaser";
+    | "teaser"
+    | "tutorialTag";
 
 function getMatchedFields(
     fields: Array<[MatchedField, string | null | undefined]>,
@@ -267,7 +275,7 @@ export function registerSearchContent(server: McpServer): void {
                             [
                                 ["title",  tutorial.title],
                                 ["teaser", tutorial.tutorialFields?.tutorialTeaser],
-                                ["tags",   tagNames || undefined],
+                                ["tutorialTag", tagNames || undefined],
                             ],
                             searchTerms,
                         );
