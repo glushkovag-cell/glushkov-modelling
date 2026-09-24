@@ -1,3 +1,4 @@
+// mcp-server/src/lib/tutorial-search.test.ts
 import { describe, expect, it } from "vitest";
 import {
     createExcerpt,
@@ -33,6 +34,8 @@ describe("tutorial full-text search helpers", () => {
         expect(match).toBeNull();
     });
 
+    // ИСПРАВЛЕНО: слова распределены по полям — matchedFields отражает
+    // каждое поле, где нашлось хотя бы одно слово запроса.
     it("finds terms distributed across title and body", () => {
         const match = findTutorialTextMatch(
             tutorial,
@@ -40,7 +43,11 @@ describe("tutorial full-text search helpers", () => {
         );
 
         expect(match).not.toBeNull();
-        expect(match?.matchedFields).toEqual([]);
+        // "running" → title, "waxed" → content
+        expect(match?.matchedFields).toContain("title");
+        expect(match?.matchedFields).toContain("content");
+        expect(match?.matchedFields).not.toContain("teaser");
+        expect(match?.matchedFields).not.toContain("tags");
     });
 
     it("preserves individual-field matches", () => {
@@ -77,5 +84,66 @@ describe("tutorial full-text search helpers", () => {
         );
 
         expect(excerpt).toBe(tutorial.teaser);
+    });
+
+    // НОВЫЕ ТЕСТЫ для поддержки tagNames (новая таксономия v1)
+
+    it("finds a tutorial by tag name", () => {
+        const withTags = {
+            ...tutorial,
+            tagNames: ["Caulking", "Hull", "Wood Bending"],
+        };
+
+        const match = findTutorialTextMatch(
+            withTags,
+            getSearchTerms("caulking"),
+        );
+
+        expect(match).not.toBeNull();
+        expect(match?.matchedFields).toContain("tags");
+        expect(match?.matchedFields).not.toContain("content");
+    });
+
+    it("matches when one term is in tag and another in title", () => {
+        const withTags = {
+            ...tutorial,
+            tagNames: ["Caulking", "Hull"],
+        };
+
+        // "running" → title, "caulking" → tags
+        const match = findTutorialTextMatch(
+            withTags,
+            getSearchTerms("running caulking"),
+        );
+
+        expect(match).not.toBeNull();
+        expect(match?.matchedFields).toContain("title");
+        expect(match?.matchedFields).toContain("tags");
+    });
+
+    it("returns null when tag term is absent from all fields", () => {
+        const withTags = {
+            ...tutorial,
+            tagNames: ["Hull", "Deck"],
+        };
+
+        const match = findTutorialTextMatch(
+            withTags,
+            getSearchTerms("caulking"),
+        );
+
+        expect(match).toBeNull();
+    });
+
+    it("handles missing tagNames gracefully", () => {
+        const noTags = { ...tutorial, tagNames: null };
+
+        const match = findTutorialTextMatch(
+            noTags,
+            getSearchTerms("running rigging"),
+        );
+
+        expect(match).not.toBeNull();
+        expect(match?.matchedFields).not.toContain("tags");
     });
 });
