@@ -1,14 +1,18 @@
+// mcp-server/src/lib/tutorial-search.ts
 import { stripHtmlAndTruncate } from "./text.js";
 
 const MAX_CONTENT_LENGTH = 20_000;
 const EXCERPT_RADIUS = 140;
 
-export type MatchedField = "title" | "teaser" | "content";
+// Добавлено "tags" в union
+export type MatchedField = "title" | "teaser" | "content" | "tags";
 
 export interface TutorialSearchable {
     title: string;
     teaser?: string | null;
     content?: string | null;
+    // Имена тегов (display name) — нормализуются и включаются в индекс поиска
+    tagNames?: string[] | null;
 }
 
 export interface TutorialTextMatch {
@@ -29,9 +33,11 @@ export function includesAllTerms(value: string, terms: string[]): boolean {
 }
 
 /**
- * Ищет все слова запроса в объединённом индексе title + teaser + content.
- * Это позволяет найти статью, если разные слова запроса оказались в разных
- * полях, но сохраняет AND-логику: каждое слово обязательно должно присутствовать.
+ * Ищет все слова запроса в объединённом индексе title + teaser + content + tags.
+ * AND-логика сохранена: каждое слово обязательно должно присутствовать
+ * хотя бы в одном из полей в совокупности.
+ * Tags индексируются как единая строка через пробел, что позволяет найти
+ * статью по имени тега даже если тег не упомянут в тексте.
  */
 export function findTutorialTextMatch(
     tutorial: TutorialSearchable,
@@ -39,15 +45,17 @@ export function findTutorialTextMatch(
 ): TutorialTextMatch | null {
     const title = normalizeText(tutorial.title);
     const teaser = normalizeText(tutorial.teaser);
-    const plainContent = stripHtmlAndTruncate(
-        tutorial.content,
-        MAX_CONTENT_LENGTH,
-    )
+    const plainContent = stripHtmlAndTruncate(tutorial.content, MAX_CONTENT_LENGTH)
         .replace(/\s+/g, " ")
         .trim();
     const content = normalizeText(plainContent);
 
-    const searchableText = `${title} ${teaser} ${content}`;
+    // Теги объединяются в строку — каждое имя тега отдельным словом
+    const tagsText = normalizeText(
+        (tutorial.tagNames ?? []).join(" "),
+    );
+
+    const searchableText = `${title} ${teaser} ${content} ${tagsText}`;
 
     if (!includesAllTerms(searchableText, terms)) {
         return null;
@@ -58,19 +66,17 @@ export function findTutorialTextMatch(
     if (includesAllTerms(title, terms)) {
         matchedFields.push("title");
     }
-
     if (includesAllTerms(teaser, terms)) {
         matchedFields.push("teaser");
     }
-
     if (includesAllTerms(content, terms)) {
         matchedFields.push("content");
     }
+    if (tagsText && includesAllTerms(tagsText, terms)) {
+        matchedFields.push("tags");
+    }
 
-    return {
-        matchedFields,
-        plainContent,
-    };
+    return { matchedFields, plainContent };
 }
 
 export function createExcerpt(
@@ -84,11 +90,7 @@ export function createExcerpt(
     const matchIndex = normalizedText.indexOf(normalizedTerm);
 
     if (matchIndex < 0) {
-        const fallbackText = stripHtmlAndTruncate(
-            fallback,
-            EXCERPT_RADIUS * 2,
-        ).trim();
-
+        const fallbackText = stripHtmlAndTruncate(fallback, EXCERPT_RADIUS * 2).trim();
         return fallbackText || null;
     }
 

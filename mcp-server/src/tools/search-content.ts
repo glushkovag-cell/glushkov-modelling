@@ -259,10 +259,15 @@ export function registerSearchContent(server: McpServer): void {
 
                 const tutorialResults = tutorialsData.tutorialsFiltered
                     .map((tutorial) => {
+                        const tagNames = (tutorial.tutorialTags?.nodes ?? [])
+                            .map((t: { name: string }) => t.name)
+                            .join(" ");
+
                         const matchedFields = getMatchedFields(
                             [
-                                ["title", tutorial.title],
+                                ["title",  tutorial.title],
                                 ["teaser", tutorial.tutorialFields?.tutorialTeaser],
+                                ["tags",   tagNames || undefined],
                             ],
                             searchTerms,
                         );

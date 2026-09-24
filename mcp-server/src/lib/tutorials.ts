@@ -30,10 +30,23 @@ export interface RelatedTutorialNode {
   tutorialFields?: { tutorialTeaser?: string | null; tutorialLevel?: string[] | string | null } | null;
 }
 
+/**
+ * Метаданные тега из ACF-группы TagSettings.
+ * Поля facet и status объявлены как массивы строк (checkbox в ACF).
+ * Опечатка prefferedLabel сохранена намеренно — соответствует имени поля в WordPress.
+ */
+export interface TagSettingsNode {
+  facet?: string[] | null;        // ["component"] | ["technique"] | ["material"] | ["context"]
+  status?: string[] | null;       // ["active"] | ["deprecated"]
+  public?: boolean | null;        // видимость в UI-фильтрах
+  prefferedLabel?: string | null; // нормализованное отображаемое имя
+}
+
 export interface TutorialTermNode {
   id: string;
   name: string;
   slug: string;
+  tagSettings?: TagSettingsNode | null; // заполняется только для тегов; у категорий будет null
 }
 
 export interface TutorialListNode {
@@ -65,6 +78,8 @@ interface GetTutorialBySlugResponse {
  * таксономии (list_tutorial_taxonomy). CMS и MCP-сервер работают на одном VPS,
  * поэтому клиентская фильтрация по всему списку статей не создаёт заметной
  * задержки или лишней сетевой нагрузки.
+ * Теги включают tagSettings для передачи метаданных (facet, status, public,
+ * prefferedLabel) во все инструменты, использующие fetchAllTutorials().
  */
 const TUTORIALS_FULL_QUERY = `
   query GetTutorialsFull {
@@ -83,7 +98,17 @@ const TUTORIALS_FULL_QUERY = `
         nodes { id name slug }
       }
       tutorialTags {
-        nodes { id name slug }
+        nodes {
+          id
+          name
+          slug
+          tagSettings {
+            facet
+            status
+            public
+            prefferedLabel
+          }
+        }
       }
     }
   }
@@ -128,7 +153,17 @@ const TUTORIAL_BY_SLUG_QUERY = `
         nodes { id name slug }
       }
       tutorialTags {
-        nodes { id name slug }
+        nodes {
+          id
+          name
+          slug
+          tagSettings {
+            facet
+            status
+            public
+            prefferedLabel
+          }
+        }
       }
     }
   }
@@ -136,6 +171,46 @@ const TUTORIAL_BY_SLUG_QUERY = `
 
 export function levelOf(raw: string[] | string | null | undefined): string {
   return Array.isArray(raw) ? raw[0] || "" : raw || "";
+}
+
+/**
+ * Извлекает первое значение facet из ACF-checkbox или возвращает null.
+ * Единственная точка нормализации — используется в get-tutorials.ts и
+ * list-tutorial-taxonomy.ts.
+ */
+export function facetOf(
+    raw: string[] | null | undefined,
+): "component" | "technique" | "material" | "context" | null {
+  const v = Array.isArray(raw) ? raw[0] ?? null : null;
+  if (
+      v === "component" ||
+      v === "technique" ||
+      v === "material" ||
+      v === "context"
+  )
+    return v;
+  return null;
+}
+
+/**
+ * Возвращает только активные теги (без status "deprecated").
+ * По умолчанию используется во всех инструментах, чтобы устаревшие
+ * теги не попадали в ответы клиентам.
+ *
+ * @param nodes             - массив тегов из tutorialTags.nodes
+ * @param includeDeprecated - если true, возвращает все теги без фильтрации
+ */
+export function activeTagsOf(
+    nodes: TutorialTermNode[] | undefined | null,
+    includeDeprecated = false,
+): TutorialTermNode[] {
+  if (!nodes) return [];
+  if (includeDeprecated) return nodes;
+  return nodes.filter((t) => {
+    const status = t.tagSettings?.status;
+    if (!status || status.length === 0) return true; // нет статуса — считаем активным
+    return !status.includes("deprecated");
+  });
 }
 
 let tutorialsCache: { data: TutorialListNode[]; fetchedAt: number } | null = null;
@@ -161,14 +236,14 @@ export async function fetchTutorialBySlug(slug: string): Promise<TutorialDetailN
 /** Ищет статью по человекочитаемому названию: точное совпадение title (без учёта регистра),
  * затем частичное совпадение. Возвращает первую найденную — используется get_tutorial_by_title. */
 export function findTutorialByTitle(
-  tutorials: TutorialListNode[],
-  title: string,
+    tutorials: TutorialListNode[],
+    title: string,
 ): TutorialListNode | null {
   const normalized = title.trim().toLowerCase();
 
   return (
-    tutorials.find((t) => t.title.trim().toLowerCase() === normalized) ??
-    tutorials.find((t) => t.title.trim().toLowerCase().includes(normalized)) ??
-    null
+      tutorials.find((t) => t.title.trim().toLowerCase() === normalized) ??
+      tutorials.find((t) => t.title.trim().toLowerCase().includes(normalized)) ??
+      null
   );
 }

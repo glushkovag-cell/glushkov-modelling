@@ -1,8 +1,9 @@
+// mcp-server/src/tools/search-tutorial-content.ts
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
 import { tutorialUrl } from "../lib/public-urls.js";
-import { fetchAllTutorials, levelOf } from "../lib/tutorials.js";
+import { fetchAllTutorials, levelOf, activeTagsOf } from "../lib/tutorials.js";
 import {
     createExcerpt,
     findTutorialTextMatch,
@@ -19,7 +20,7 @@ const inputSchema = {
         .string()
         .min(2)
         .describe(
-            "Search terms for educational tutorial title, summary, and full article content. Every query term is evaluated by the tutorial text-matching logic.",
+            "Search terms for educational tutorial title, summary, tags, and full article content. Every query term is evaluated by the tutorial text-matching logic.",
         ),
 
     limit: z
@@ -39,11 +40,12 @@ export function registerSearchTutorialContent(server: McpServer): void {
         {
             title: "Search tutorial content",
             description:
-                "Read-only. Searches educational tutorials by full article body text, title, and summary. " +
+                "Read-only. Searches educational tutorials by full article body text, title, summary, and tags. " +
                 "Use this tool when the user asks about a term, technique, material, tool, or instruction that may occur inside a tutorial. " +
                 "Use search_content for broad discovery across build-log metadata and tutorial metadata when full tutorial body text is not required. " +
                 "Use get_tutorials to browse tutorials or retrieve the content and metadata for a tutorial after identifying a relevant result. " +
                 "Returns matching tutorial summaries with matchedFields and a relevant excerpt. " +
+                "matchedFields may include: title, teaser, content, tags. " +
                 "Results are limited to the requested limit. If no tutorial content matches, returns an empty results array.",
             inputSchema,
         },
@@ -61,16 +63,19 @@ export function registerSearchTutorialContent(server: McpServer): void {
 
                 const matches = tutorials
                     .map((tutorial) => {
+                        // Передаём tagNames — имена активных тегов для включения в индекс
+                        const activeTags = activeTagsOf(tutorial.tutorialTags?.nodes);
                         const match = findTutorialTextMatch(
                             {
                                 title: tutorial.title,
                                 teaser: tutorial.tutorialFields?.tutorialTeaser,
                                 content: tutorial.content,
+                                tagNames: activeTags.map((t) => t.name),
                             },
                             terms,
                         );
 
-                        return match ? { tutorial, match } : null;
+                        return match ? { tutorial, match, activeTags } : null;
                     })
                     .filter(
                         (
@@ -78,17 +83,33 @@ export function registerSearchTutorialContent(server: McpServer): void {
                         ): item is {
                             tutorial: (typeof tutorials)[number];
                             match: NonNullable<ReturnType<typeof findTutorialTextMatch>>;
+                            activeTags: ReturnType<typeof activeTagsOf>;
                         } => item !== null,
                     );
 
                 const total = matches.length;
 
-                const results = matches.slice(0, limit).map(({ tutorial, match }) => ({
+                const results = matches.slice(0, limit).map(({ tutorial, match, activeTags }) => ({
                     title: tutorial.title,
                     slug: tutorial.slug,
                     url: tutorialUrl(tutorial.slug),
                     level: levelOf(tutorial.tutorialFields?.tutorialLevel),
-                    tags: (tutorial.tutorialTags?.nodes || []).map((tag) => tag.name),
+                    // Теги как объекты {name, slug, facet} — консистентно с get_tutorials
+                    tags: activeTags.map((t) => ({
+                        name: t.name,
+                        slug: t.slug,
+                        facet: (() => {
+                            const v = Array.isArray(t.tagSettings?.facet)
+                                ? (t.tagSettings!.facet![0] ?? null)
+                                : null;
+                            return v === "component" ||
+                            v === "technique" ||
+                            v === "material" ||
+                            v === "context"
+                                ? v
+                                : null;
+                        })(),
+                    })),
                     matchedFields: match.matchedFields,
                     excerpt: createExcerpt(
                         match.plainContent,
