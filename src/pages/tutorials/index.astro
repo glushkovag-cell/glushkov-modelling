@@ -81,31 +81,33 @@ const visibleTags = allTags.filter(
 const selectedCategorySlugSet = new Set(selectedCategorySlugs);
 const selectedTagSlugSet = new Set(selectedTagSlugs);
 
-const tutorials = tutorialsRaw.filter((tutorial: NormalizedTutorial) => {
-    const tutorialCategorySlugs = tutorial.categories.map(
-        (c: TutorialCategory) => c.slug,
-    );
+const tutorials = [...tutorialsRaw]
+    .sort((a, b) => Number(b.views || 0) - Number(a.views || 0))
+    .filter((tutorial: NormalizedTutorial) => {
+        const tutorialCategorySlugs = tutorial.categories.map(
+            (c: TutorialCategory) => c.slug,
+        );
 
-    const tutorialVisibleTagSlugs = tutorial.tags
-        .filter(isVisibleTag)
-        .map((t: TutorialTag) => t.slug);
+        const tutorialVisibleTagSlugs = tutorial.tags
+            .filter(isVisibleTag)
+            .map((t: TutorialTag) => t.slug);
 
-    const tutorialLevel = String(tutorial.level ?? '')
-        .trim()
-        .toLowerCase();
+        const tutorialLevel = String(tutorial.level ?? '')
+            .trim()
+            .toLowerCase();
 
-    const matchesCategories =
-        selectedCategorySlugSet.size === 0 ||
-        tutorialCategorySlugs.some((s) => selectedCategorySlugSet.has(s));
+        const matchesCategories =
+            selectedCategorySlugSet.size === 0 ||
+            tutorialCategorySlugs.some((s) => selectedCategorySlugSet.has(s));
 
-    const matchesTags =
-        selectedTagSlugSet.size === 0 ||
-        tutorialVisibleTagSlugs.some((s) => selectedTagSlugSet.has(s));
+        const matchesTags =
+            selectedTagSlugSet.size === 0 ||
+            tutorialVisibleTagSlugs.some((s) => selectedTagSlugSet.has(s));
 
-    const matchesLevel = !selectedLevel || tutorialLevel === selectedLevel;
+        const matchesLevel = !selectedLevel || tutorialLevel === selectedLevel;
 
-    return matchesCategories && matchesTags && matchesLevel;
-});
+        return matchesCategories && matchesTags && matchesLevel;
+    });
 
 const topTags = getTopTutorialFilterTags(visibleTags, 10);
 const groupedTags = groupTutorialTagsByFacet(visibleTags);
