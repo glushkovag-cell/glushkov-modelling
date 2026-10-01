@@ -2,86 +2,982 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SeoHead from '../../components/seo/SeoHead.astro';
 import { getAllModels, getAllNews, hasFreshNews } from '../../lib/wordpress';
+import {
+  parseBuildFilterState,
+  collectBuildFilterOptions,
+  deriveHistoricalPeriod,
+  getHistoricalPeriodLabel,
+  getBuildStatusValues,
+} from '../../lib/modelFilters';
 
 const models = await getAllModels();
+const filterState = parseBuildFilterState(Astro.url.searchParams);
+const filterOptions = collectBuildFilterOptions(models);
+
+const hasActiveFilters =
+    filterState.status.length > 0 ||
+    filterState.period.length > 0 ||
+    filterState.scale.length > 0 ||
+    filterState.manufacturer.length > 0;
+
+const mobileFilterSummaryParts: string[] = [];
+
+if (filterState.status.length > 0) {
+  mobileFilterSummaryParts.push(
+      `${filterState.status.length} ${filterState.status.length === 1 ? 'status' : 'statuses'}`
+  );
+}
+
+if (filterState.period.length > 0) {
+  mobileFilterSummaryParts.push(
+      `${filterState.period.length} ${filterState.period.length === 1 ? 'period' : 'periods'}`
+  );
+}
+
+if (filterState.scale.length > 0) {
+  mobileFilterSummaryParts.push(
+      `${filterState.scale.length} ${filterState.scale.length === 1 ? 'scale' : 'scales'}`
+  );
+}
+
+if (filterState.manufacturer.length > 0) {
+  mobileFilterSummaryParts.push(
+      `${filterState.manufacturer.length} ${
+          filterState.manufacturer.length === 1 ? 'manufacturer' : 'manufacturers'
+      }`
+  );
+}
+
+const mobileFilterSummary =
+    mobileFilterSummaryParts.length > 0
+        ? mobileFilterSummaryParts.join(' · ')
+        : 'Browse by status, historical period, scale, and manufacturer';
 
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
+
+function isSelected(value: string, selected: string[]): boolean {
+  return selected.includes(value);
+}
+
+function normalizeClientValue(value?: string | null): string {
+  return String(value ?? '').trim().toLowerCase();
+}
+
+function getHistoricalPeriodLabelParts(period: string): { primary: string; secondary: string | null } {
+  switch (period) {
+    case 'age-of-discovery':
+      return {
+        primary: 'Age of Discovery ·',
+        secondary: '15th–16th c.',
+      };
+    case '17th-century':
+      return {
+        primary: '17th century',
+        secondary: null,
+      };
+    case 'age-of-sail-18th':
+      return {
+        primary: 'Age of Sail ·',
+        secondary: '18th c.',
+      };
+    case 'age-of-sail-19th':
+      return {
+        primary: 'Age of Sail ·',
+        secondary: '19th c.',
+      };
+    case 'early-modern-20th':
+      return {
+        primary: 'Early Modern ·',
+        secondary: '20th c.',
+      };
+    case 'other-unknown':
+      return {
+        primary: 'Other / unknown',
+        secondary: null,
+      };
+    default:
+      return {
+        primary: getHistoricalPeriodLabel(period),
+        secondary: null,
+      };
+  }
+}
 ---
 
 <BaseLayout title="Builds | Glushkov Modelling" hasFreshNews={newsFlag}>
   <SeoHead
-    slot="head"
-    pageType="default"
-    title="Builds | Glushkov Modelling"
-    description="Current and completed wooden scale model build logs — progress, techniques, and detailed photos."
-    canonicalPath="/builds"
-    breadcrumbs={[{ name: 'Builds', url: '/builds' }]}
+      slot="head"
+      pageType="default"
+      title="Builds | Glushkov Modelling"
+      description="Current and completed wooden scale model build logs — progress, techniques, and detailed photos."
+      canonicalPath="/builds"
+      breadcrumbs={[{ name: 'Builds', url: '/builds' }]}
   />
-  <section class="page-section">
-    <div class="container">
-      <span class="eyebrow">Build Catalogue</span>
-      <h1 class="section-title">Current and completed models</h1>
 
-      <div class="builds-grid">
-        {models.map((model: any) => (
-            <div class="build-card card">
-              <a
-                  href={`/builds/${model.slug}`}
-                  aria-label={`Open build log: ${model.title}`}
-              >
-                {model.heroImage && (
-                    <img
-                        src={model.heroImage}
-                        alt={model.heroImageAlt || model.title}
-                        loading="lazy"
-                        class="build-card-image"
-                    />
-                )}
+  <div class="builds-page">
+    <section class="page-section">
+      <div class="container">
+        <header class="page-header">
+          <span class="eyebrow">Build Catalogue</span>
+          <h1 class="section-title">Current and completed models</h1>
+        </header>
 
-                <div class="build-card-body">
-                  <h2>{model.title}</h2>
+        <div class="content-layout">
+          <aside class="filters-sidebar">
+            <button
+                type="button"
+                class="mobile-filter-toggle"
+                data-mobile-filter-toggle
+                aria-expanded={hasActiveFilters ? 'true' : 'false'}
+                aria-controls="build-filters-panel"
+            >
+              <span class="mobile-filter-toggle__row">
+                <span class="mobile-filter-toggle__text">
+                  {hasActiveFilters ? 'Hide filters' : 'Show filters'}
+                </span>
+              </span>
 
-                  <p>
-                    Scale: {model.modelinfo?.modelscale || '—'} · {model.modelinfo?.manufacturer || '—'}
-                  </p>
+              <span class="mobile-filter-toggle__summary">
+                {mobileFilterSummary}
+              </span>
+            </button>
 
-                  {model.modelinfo?.shortdescription && (
-                      <p class="build-card-description">{model.modelinfo.shortdescription}</p>
-                  )}
+            <div
+                id="build-filters-panel"
+                class="filters-section card"
+                data-mobile-filter-panel
+                data-open={hasActiveFilters ? 'true' : 'false'}
+            >
+              <form class="build-filter" data-build-filter-form>
+                <div class="build-filter__topbar">
+                  <h2 class="build-filter__heading-title">Filters</h2>
 
-                  <div class="build-card-actions">
-                    {model.buildstatusText && (
-                        <span class={`meta-pill status-${model.buildstatusClass}`}>
-                      {model.buildstatusText}
-                    </span>
-                    )}
+                  <button
+                      type="button"
+                      class="build-filter__reset-top"
+                      data-build-filter-reset
+                      hidden={!hasActiveFilters}
+                  >
+                    Reset
+                  </button>
+                </div>
+
+                <div class="build-filter__section">
+                  <h3 class="build-filter__title">Status</h3>
+
+                  <div class="build-filter__chips">
+                    {filterOptions.statuses.map((option) => {
+                      const selected = isSelected(option.value, filterState.status);
+
+                      return (
+                          <label
+                              class:list={['filter-chip', selected && 'is-selected']}
+                              data-selected={selected}
+                          >
+                            <input
+                                class="filter-chip__input"
+                                type="checkbox"
+                                name="status"
+                                value={option.value}
+                                checked={selected}
+                            />
+                            <span class="filter-chip__label">{option.label}</span>
+                          </label>
+                      );
+                    })}
                   </div>
                 </div>
-              </a>
+
+                <div class="build-filter__section">
+                  <h3 class="build-filter__title">Historical period</h3>
+
+                  <div class="build-filter__chips">
+                    {filterOptions.periods.map((option) => {
+                      const selected = isSelected(option.value, filterState.period);
+                      const label = getHistoricalPeriodLabelParts(option.value);
+
+                      return (
+                          <label
+                              class:list={['filter-chip', selected && 'is-selected']}
+                              data-selected={selected}
+                          >
+                            <input
+                                class="filter-chip__input"
+                                type="checkbox"
+                                name="period"
+                                value={option.value}
+                                checked={selected}
+                            />
+
+                            <span
+                                class="filter-chip__label filter-chip__label--period"
+                                data-period-label
+                            >
+                            {label.secondary ? (
+                                <span class="filter-chip__period-inline" data-period-inline>
+                                <span class="filter-chip__period-primary">{label.primary}</span>
+                                <span class="filter-chip__period-secondary">{label.secondary}</span>
+                              </span>
+                            ) : (
+                                <span class="filter-chip__period-inline" data-period-inline>
+                                <span class="filter-chip__period-primary">{label.primary}</span>
+                              </span>
+                            )}
+                          </span>
+                          </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div class="build-filter__section">
+                  <h3 class="build-filter__title">Scale</h3>
+
+                  <div class="build-filter__chips">
+                    {filterOptions.scales.map((option) => {
+                      const selected = isSelected(option.value, filterState.scale);
+
+                      return (
+                          <label
+                              class:list={['filter-chip', selected && 'is-selected']}
+                              data-selected={selected}
+                          >
+                            <input
+                                class="filter-chip__input"
+                                type="checkbox"
+                                name="scale"
+                                value={option.value}
+                                checked={selected}
+                            />
+                            <span class="filter-chip__label">{option.label}</span>
+                          </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div class="build-filter__section">
+                  <h3 class="build-filter__title">Manufacturer</h3>
+
+                  <div class="build-filter__chips">
+                    {filterOptions.manufacturers.map((option) => {
+                      const selected = isSelected(option.value, filterState.manufacturer);
+
+                      return (
+                          <label
+                              class:list={['filter-chip', selected && 'is-selected']}
+                              data-selected={selected}
+                          >
+                            <input
+                                class="filter-chip__input"
+                                type="checkbox"
+                                name="manufacturer"
+                                value={option.value}
+                                checked={selected}
+                            />
+                            <span class="filter-chip__label">{option.label}</span>
+                          </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </form>
             </div>
-        ))}
+          </aside>
+
+          <main class="builds-main">
+            <div class="active-filters">
+              <span class="filter-count" data-build-filter-count>
+                {models.length}
+                {models.length === 1 ? ' build' : ' builds'} found
+              </span>
+            </div>
+
+            <div class="builds-grid" data-build-grid>
+              {models.map((model: any) => (
+                  <article
+                      class="build-card card"
+                      data-build-card
+                      data-filter-status={getBuildStatusValues(model).join(' ')}
+                      data-filter-period={deriveHistoricalPeriod(model.modelinfo?.historicalyear)}
+                      data-filter-scale={normalizeClientValue(model.modelinfo?.modelscale)}
+                      data-filter-manufacturer={normalizeClientValue(model.modelinfo?.manufacturer)}
+                  >
+                    <a
+                        class="build-card__link"
+                        href={`/builds/${model.slug}?returnTo=${encodeURIComponent(
+                            `/builds${Astro.url.search}`
+                        )}`}
+                        data-build-link
+                        data-build-slug={model.slug}
+                        aria-label={`Open build log: ${model.title}`}
+                    >
+                      {model.heroImage && (
+                          <div class="build-card__media">
+                            <img
+                                src={model.heroImage}
+                                alt={model.heroImageAlt || model.title}
+                                loading="lazy"
+                                width="640"
+                                height="400"
+                                class="build-card-image"
+                            />
+                          </div>
+                      )}
+
+                      <div class="build-card__body">
+                        <div class="build-card__meta">
+                        <span class="build-card__spec">
+                          Scale: {model.modelinfo?.modelscale || '—'}
+                        </span>
+
+                          <span class="build-card__spec">
+                          {model.modelinfo?.manufacturer || '—'}
+                        </span>
+                        </div>
+
+                        <h2 class="build-card__title">{model.title}</h2>
+
+                        {model.modelinfo?.shortdescription && (
+                            <p class="build-card__description">
+                              {model.modelinfo.shortdescription}
+                            </p>
+                        )}
+
+                        <div class="build-card__footer">
+                          {model.buildstatusText && (
+                              <span class={`meta-pill status-${model.buildstatusClass}`}>
+                            {model.buildstatusText}
+                          </span>
+                          )}
+                        </div>
+                      </div>
+                    </a>
+                  </article>
+              ))}
+            </div>
+
+            <div class="no-results card" data-build-empty hidden>
+              <h2>No builds found</h2>
+              <p>Try clearing one or more filters to broaden results.</p>
+              <button type="button" class="btn-primary" data-build-filter-reset>
+                Reset filters
+              </button>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </BaseLayout>
 
-<style>
-  .build-card-actions {
+<script>
+  function initBuildsMobileFilters() {
+    const mq = window.matchMedia('(max-width: 767px)');
+
+    document.querySelectorAll('.filters-sidebar').forEach((sidebar) => {
+      if (sidebar.dataset.mobileFilterReady === 'true') return;
+      sidebar.dataset.mobileFilterReady = 'true';
+
+      const toggle = sidebar.querySelector('[data-mobile-filter-toggle]');
+      const panel = sidebar.querySelector('[data-mobile-filter-panel]');
+      const text = toggle?.querySelector('.mobile-filter-toggle__text');
+
+      if (!toggle || !panel || !text) return;
+
+      function isOpen() {
+        return panel.dataset.open === 'true';
+      }
+
+      function applyState(open) {
+        panel.dataset.open = String(open);
+        toggle.setAttribute('aria-expanded', String(open));
+        text.textContent = open ? 'Hide filters' : 'Show filters';
+      }
+
+      function syncForViewport() {
+        if (mq.matches) {
+          if (!panel.dataset.open) {
+            applyState(false);
+          } else {
+            applyState(panel.dataset.open === 'true');
+          }
+        } else {
+          panel.dataset.open = 'true';
+          toggle.setAttribute('aria-expanded', 'true');
+          text.textContent = 'Hide filters';
+        }
+      }
+
+      toggle.addEventListener('click', () => {
+        if (!mq.matches) return;
+        applyState(!isOpen());
+      });
+
+      if (typeof mq.addEventListener === 'function') {
+        mq.addEventListener('change', syncForViewport);
+      } else if (typeof mq.addListener === 'function') {
+        mq.addListener(syncForViewport);
+      }
+
+      syncForViewport();
+    });
+  }
+
+  function initPeriodChipWrapping() {
+    const labels = document.querySelectorAll('[data-period-label]');
+
+    labels.forEach((label) => {
+      const inline = label.querySelector('[data-period-inline]');
+      if (!inline) return;
+
+      label.classList.remove('is-wrapped');
+
+      const fits = inline.scrollWidth <= label.clientWidth + 1;
+      label.classList.toggle('is-wrapped', !fits);
+    });
+  }
+
+  function initBuildsFilters() {
+    const root = document.querySelector('.builds-page');
+    if (!root) return;
+
+    const form = root.querySelector('[data-build-filter-form]');
+    const cards = Array.from(root.querySelectorAll('[data-build-card]'));
+    const count = root.querySelector('[data-build-filter-count]');
+    const resetButtons = Array.from(root.querySelectorAll('[data-build-filter-reset]'));
+    const emptyState = root.querySelector('[data-build-empty]');
+    const grid = root.querySelector('[data-build-grid]');
+    const summary = root.querySelector('.mobile-filter-toggle__summary');
+    const links = Array.from(root.querySelectorAll('[data-build-link]'));
+
+    if (!form || !count || !emptyState || !grid) return;
+
+    const alreadyReady = root.dataset.filtersReady === 'true';
+
+    function getSelected(name) {
+      return Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map(
+          (input) => input.value
+      );
+    }
+
+    function syncInputsFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+
+      const selected = {
+        status: params.getAll('status'),
+        period: params.getAll('period'),
+        scale: params.getAll('scale'),
+        manufacturer: params.getAll('manufacturer'),
+      };
+
+      form.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+        const values = selected[input.name] || [];
+        input.checked = values.includes(input.value);
+      });
+    }
+
+    function updateChipStates() {
+      form.querySelectorAll('.filter-chip').forEach((chip) => {
+        const input = chip.querySelector('.filter-chip__input');
+        const selected = Boolean(input?.checked);
+
+        chip.dataset.selected = selected ? 'true' : 'false';
+        chip.classList.toggle('is-selected', selected);
+      });
+    }
+
+    function getCurrentReturnTo() {
+      const query = window.location.search;
+      return `${window.location.pathname}${query}`;
+    }
+
+    function updateLinks() {
+      const returnTo = getCurrentReturnTo();
+
+      links.forEach((link) => {
+        const slug = link.dataset.buildSlug;
+        if (!slug) return;
+
+        link.href = `/builds/${slug}?returnTo=${encodeURIComponent(returnTo)}`;
+      });
+    }
+
+    function updateUrl(state) {
+      const params = new URLSearchParams();
+
+      state.status.forEach((value) => params.append('status', value));
+      state.period.forEach((value) => params.append('period', value));
+      state.scale.forEach((value) => params.append('scale', value));
+      state.manufacturer.forEach((value) => params.append('manufacturer', value));
+
+      const nextUrl = params.toString()
+          ? `${window.location.pathname}?${params.toString()}`
+          : window.location.pathname;
+
+      window.history.replaceState({}, '', nextUrl);
+      updateLinks();
+    }
+
+    function updateSummary(state) {
+      if (!summary) return;
+
+      const parts = [];
+
+      if (state.status.length > 0) {
+        parts.push(`${state.status.length} ${state.status.length === 1 ? 'status' : 'statuses'}`);
+      }
+
+      if (state.period.length > 0) {
+        parts.push(`${state.period.length} ${state.period.length === 1 ? 'period' : 'periods'}`);
+      }
+
+      if (state.scale.length > 0) {
+        parts.push(`${state.scale.length} ${state.scale.length === 1 ? 'scale' : 'scales'}`);
+      }
+
+      if (state.manufacturer.length > 0) {
+        parts.push(
+            `${state.manufacturer.length} ${
+                state.manufacturer.length === 1 ? 'manufacturer' : 'manufacturers'
+            }`
+        );
+      }
+
+      summary.textContent = parts.length > 0
+          ? parts.join(' · ')
+          : 'Browse by status, historical period, scale, and manufacturer';
+    }
+
+    function matchesAny(selectedValues, rawValue, split = false) {
+      if (!selectedValues.length) return true;
+      if (!rawValue) return false;
+
+      const values = split ? rawValue.split(/\s+/).filter(Boolean) : [rawValue];
+      return values.some((value) => selectedValues.includes(value));
+    }
+
+    function applyFilters({ syncUrl = true } = {}) {
+      const state = {
+        status: getSelected('status'),
+        period: getSelected('period'),
+        scale: getSelected('scale'),
+        manufacturer: getSelected('manufacturer'),
+      };
+
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const matchesStatus = matchesAny(state.status, card.dataset.filterStatus || '', true);
+        const matchesPeriod = matchesAny(state.period, card.dataset.filterPeriod || '');
+        const matchesScale = matchesAny(state.scale, card.dataset.filterScale || '');
+        const matchesManufacturer = matchesAny(
+            state.manufacturer,
+            card.dataset.filterManufacturer || ''
+        );
+
+        const visible =
+            matchesStatus &&
+            matchesPeriod &&
+            matchesScale &&
+            matchesManufacturer;
+
+        card.hidden = !visible;
+
+        if (visible) {
+          visibleCount += 1;
+        }
+      });
+
+      count.textContent = `${visibleCount} ${visibleCount === 1 ? 'build' : 'builds'} found`;
+      grid.hidden = visibleCount === 0;
+      emptyState.hidden = visibleCount > 0;
+
+      const hasActive =
+          state.status.length > 0 ||
+          state.period.length > 0 ||
+          state.scale.length > 0 ||
+          state.manufacturer.length > 0;
+
+      resetButtons.forEach((button) => {
+        button.hidden = !hasActive;
+      });
+
+      updateChipStates();
+      updateSummary(state);
+
+      if (syncUrl) {
+        updateUrl(state);
+      } else {
+        updateLinks();
+      }
+
+      requestAnimationFrame(initPeriodChipWrapping);
+    }
+
+    if (!alreadyReady) {
+      root.dataset.filtersReady = 'true';
+
+      form.addEventListener('change', () => applyFilters({ syncUrl: true }));
+
+      resetButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          form.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+            input.checked = false;
+          });
+
+          applyFilters({ syncUrl: true });
+        });
+      });
+    }
+
+    syncInputsFromUrl();
+    applyFilters({ syncUrl: false });
+  }
+
+  initBuildsMobileFilters();
+  initBuildsFilters();
+  initPeriodChipWrapping();
+
+  window.addEventListener('resize', initPeriodChipWrapping);
+
+  document.addEventListener('astro:page-load', () => {
+    initBuildsMobileFilters();
+    initBuildsFilters();
+    initPeriodChipWrapping();
+  });
+</script>
+
+<style is:global>
+  .builds-page {
+    padding: 3rem 0;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .content-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  .filters-sidebar {
+    position: sticky;
+    top: 2rem;
+    height: fit-content;
+  }
+
+  .mobile-filter-toggle {
+    display: none;
+  }
+
+  .filters-section {
+    padding: 1.5rem;
+  }
+
+  .build-filter {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .build-filter__topbar {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .build-filter__heading-title {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.2;
+    font-family: 'General Sans', sans-serif;
+    font-weight: 600;
+  }
+
+  .build-filter__reset-top {
+    color: var(--color-primary);
+    font-size: 0.95rem;
+    line-height: 1.2;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .build-filter__section {
+    display: grid;
     gap: 0.75rem;
-    margin-top: 0.75rem;
   }
 
-  .build-card > a {
-    display: block;
-    color: inherit;
+  .build-filter__title {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    font-family: 'General Sans', sans-serif;
+    font-weight: 600;
   }
 
-  .build-link {
+  .build-filter__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+  }
+
+  .filter-chip {
+    position: relative;
     display: inline-flex;
     align-items: center;
+    cursor: pointer;
+  }
+
+  .filter-chip__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .filter-chip__label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 0.95rem;
+    line-height: 1.2;
+    font-family: inherit;
+    transition:
+        border-color 180ms ease,
+        background-color 180ms ease,
+        color 180ms ease,
+        box-shadow 180ms ease;
+  }
+
+  .filter-chip.is-selected .filter-chip__label,
+  .filter-chip[data-selected='true'] .filter-chip__label {
+    border-color: var(--color-primary);
+    background: var(--color-primary-highlight);
+    color: var(--color-primary-active);
+  }
+
+  .filter-chip__label--period {
+    display: block;
+    text-align: left;
+    min-height: auto;
+  }
+
+  .filter-chip__period-inline {
+    display: inline;
+  }
+
+  .filter-chip__period-primary {
+    display: inline;
+  }
+
+  .filter-chip__period-secondary {
+    white-space: nowrap;
+    color: var(--color-text-muted);
+  }
+
+  .filter-chip.is-selected .filter-chip__period-secondary,
+  .filter-chip[data-selected='true'] .filter-chip__period-secondary {
+    color: color-mix(in srgb, var(--color-primary-active) 72%, white 28%);
+  }
+
+  .filter-chip__label--period.is-wrapped .filter-chip__period-inline {
+    display: block;
+  }
+
+  .filter-chip__label--period.is-wrapped .filter-chip__period-primary {
+    display: inline;
+  }
+
+  .filter-chip__label--period.is-wrapped .filter-chip__period-secondary {
+    display: block;
+    white-space: nowrap;
+    margin-top: 0.1rem;
+  }
+
+  .builds-main {
+    min-width: 0;
+  }
+
+  .active-filters {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .filter-count {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+  }
+
+  .builds-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    align-items: stretch;
+  }
+
+  .build-card {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .build-card__link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .build-card__media {
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: var(--color-surface-offset);
+  }
+
+  .build-card__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .build-card__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 1.25rem;
+  }
+
+  .build-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .build-card__spec {
+    white-space: nowrap;
+  }
+
+  .build-card__title {
+    margin: 0 0 0.75rem;
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+
+  .build-card__description {
+    margin: 0;
+    color: var(--color-text-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .build-card__footer {
+    margin-top: auto;
+    padding-top: 1rem;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .no-results {
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .no-results h2 {
+    margin: 0 0 0.75rem;
+  }
+
+  .no-results p {
+    margin: 0 0 1rem;
+    color: var(--color-text-muted);
+  }
+
+  @media (max-width: 900px) {
+    .content-layout {
+      grid-template-columns: 240px 1fr;
+      gap: 2rem;
+    }
+
+    .builds-grid {
+      gap: 1.25rem;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .content-layout {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .filters-sidebar {
+      position: static;
+    }
+
+    .mobile-filter-toggle {
+      width: 100%;
+      display: grid;
+      gap: 0.35rem;
+      padding: 0.9rem 1rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      text-align: left;
+      margin-bottom: 1rem;
+    }
+
+    .mobile-filter-toggle__row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .mobile-filter-toggle__text {
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .mobile-filter-toggle__summary {
+      color: var(--color-text-muted);
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .filters-section {
+      display: none;
+    }
+
+    .filters-section[data-open='true'] {
+      display: block;
+    }
+
+    .builds-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>

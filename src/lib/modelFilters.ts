@@ -141,6 +141,10 @@ export function parseBuildFilterState(searchParams: URLSearchParams): BuildFilte
     };
 }
 
+export function getBuildStatusValues(model: FilterableBuildModel): string[] {
+    return extractStatusValues(model);
+}
+
 export function collectBuildFilterOptions(models: FilterableBuildModel[]): BuildFilterOptions {
     const statuses = uniqueSorted(
         models.flatMap((model) => {

@@ -87,7 +87,6 @@ const seoDatePublished = info?.donedate ?? undefined;
           id="detail-back-btn"
           data-default-href={defaultBackHref}
           data-default-label={defaultBackLabel}
-          data-tutorial-label="Back to tutorial"
       >
         <span class="detail-back-icon">←</span>
         <span id="detail-back-btn-label">{defaultBackLabel}</span>
@@ -151,17 +150,18 @@ const seoDatePublished = info?.donedate ?? undefined;
                     {part.heroImage ? (
                         <img
                             src={part.heroImage}
-                            alt={part.heroImageAlt}
-                            class="part-thumb-image"
+                            alt={part.heroImageAlt || part.title}
                             loading="lazy"
                         />
                     ) : (
-                        <div class="part-thumb-placeholder">Part {part.partNumber}</div>
+                        <div class="part-thumb-card__placeholder" aria-hidden="true"></div>
                     )}
 
-                    <div class="part-thumb-body">
-                      <span class="part-thumb-number">Part {part.partNumber}</span>
-                      <span class="part-thumb-title">{part.title}</span>
+                    <div class="part-thumb-card__body">
+                  <span class="part-thumb-card__eyebrow">
+                    Part {part.partNumber}
+                  </span>
+                      <h3>{part.title}</h3>
                     </div>
                   </a>
               ))}
@@ -171,257 +171,158 @@ const seoDatePublished = info?.donedate ?? undefined;
       </section>
   )}
 
-  {info?.historicalnote && (
-      <section class="section">
-        <div class="container narrow">
-          <article class="prose-card card">
-            <h2>Historical Background</h2>
-            <div set:html={info.historicalnote} />
-          </article>
-        </div>
-      </section>
-  )}
+  <section id="build-log" class="build-log-section">
+    <div class="container">
+      <div class="section-head">
+        <h2>Build Log</h2>
+      </div>
 
-  <span id="build-log" aria-hidden="true"></span>
-
-  {parts.length > 0 && (
-      <section class="section">
-        <div class="container narrow">
-          <h2>Build Log</h2>
-
-          {parts.map((part: any) => (
-              <article id={`part-${part.partNumber}`} class="build-part-card card">
-                <header class="part-header">
-                  <div class="part-header-top">
-                    <p class="eyebrow">Part {part.partNumber}</p>
-                    {part.recordDay && (
-                        <span class="part-date">{part.recordDay}</span>
-                    )}
-                  </div>
+      <div class="build-log-list">
+        {parts.map((part: any) => (
+            <article id={`part-${part.partNumber}`} class="build-log-part card">
+              <div class="build-log-part__header">
+                <div>
+                  <span class="build-log-part__eyebrow">Part {part.partNumber}</span>
                   <h3>{part.title}</h3>
-                </header>
+                </div>
 
-                {part.partContent ? (
-                    <div
-                        class="part-content"
-                        data-build-log-content
-                        data-part-title={part.title}
-                        data-part-number={part.partNumber}
-                        set:html={part.partContent}
+                <a href="#top">↑ Back to all parts</a>
+              </div>
+
+              {part.heroImage && (
+                  <div class="build-log-part__hero">
+                    <img
+                        src={part.heroImage}
+                        alt={part.heroImageAlt || part.title}
+                        loading="lazy"
                     />
-                ) : (
-                    <p>Content coming soon.</p>
-                )}
+                  </div>
+              )}
 
-                {parts.length > 1 && (
-                    <p class="back-top">
-                      <a href="#top">↑ Back to all parts</a>
-                    </p>
-                )}
-              </article>
-          ))}
-        </div>
-      </section>
-  )}
+              {part.content && (
+                  <div
+                      class="build-log-part__content prose"
+                      data-part-number={part.partNumber}
+                      data-part-title={part.title}
+                      set:html={part.content}
+                  />
+              )}
+            </article>
+        ))}
+      </div>
+    </div>
+  </section>
 
-  {info && (
-      <section class="section specs-shell">
-        <div class="container narrow">
-          <article class="specs-card card">
-            <div class="section-head specs-head">
-              <h2>Project Specs</h2>
+  {hasGallery && (
+      <section class="build-gallery-section">
+        <div class="container">
+          <div class="build-gallery-cta card">
+            <div>
+              <span class="eyebrow">Gallery</span>
+              <h2>Explore the photo gallery</h2>
+              <p>Open the dedicated gallery view for hi-res images of this build.</p>
             </div>
 
-            <dl class="specs-grid">
-              <div class="spec-item">
-                <dt>Model</dt>
-                <dd>{model.title || '—'}</dd>
-              </div>
-
-              <div class="spec-item">
-                <dt>Scale</dt>
-                <dd>{info.modelscale || '—'}</dd>
-              </div>
-
-              <div class="spec-item">
-                <dt>Manufacturer</dt>
-                <dd>{info.manufacturer || '—'}</dd>
-              </div>
-
-              <div class="spec-item">
-                <dt>Length</dt>
-                <dd>{info.modellength ? `${info.modellength} mm` : '—'}</dd>
-              </div>
-
-              <div class="spec-item">
-                <dt>Historical Year</dt>
-                <dd>{info.historicalyear || '—'}</dd>
-              </div>
-
-              <div class="spec-item">
-                <dt>Total Parts</dt>
-                <dd>{info.totalparts || '—'}</dd>
-              </div>
-
-              <div class="spec-item">
-                <dt>Status</dt>
-                <dd>
-                  {Array.isArray(info.buildstatus)
-                      ? info.buildstatus.join(', ')
-                      : info.buildstatus || '—'}
-                </dd>
-              </div>
-            </dl>
-          </article>
+            <a href={`/gallery/${model.slug}`} class="btn-primary">
+              Open gallery
+            </a>
+          </div>
         </div>
       </section>
   )}
 
-  <HiResViewer backLabel="← Back to build" />
+  <HiResViewer />
   <ContentMediaViewerBridge
-      rootSelector='[data-build-log-content]'
-      titleAttr='data-part-title'
-      itemTitleBuilder='build-part'
-      globalKey='__buildLogViewerBridgeInit'
+      rootSelector=".build-log-part__content"
+      titleAttr="data-part-title"
+      itemTitleBuilder="build-part"
   />
 </BaseLayout>
 
-<script is:inline>
-  (() => {
-    const link = document.getElementById('detail-back-btn');
-    const label = document.getElementById('detail-back-btn-label');
+<script>
+  function initBuildBackLink() {
+    const backLink = document.getElementById('detail-back-btn');
 
-    if (!link || !label) return;
-    if (!document.referrer) return;
-
-    try {
-      const ref = new URL(document.referrer);
-      const sameOrigin = ref.origin === window.location.origin;
-
-      if (!sameOrigin) return;
-
-      if (ref.pathname.startsWith('/tutorials/')) {
-        link.href = ref.pathname + ref.search + ref.hash;
-        label.textContent = link.dataset.tutorialLabel || 'Back to tutorial';
-      }
-    } catch {
-      // keep default fallback
+    if (!(backLink instanceof HTMLAnchorElement)) {
+      return;
     }
-  })();
+
+    const params = new URLSearchParams(window.location.search);
+    const returnTo = params.get('returnTo');
+
+    backLink.href =
+        returnTo && returnTo.startsWith('/builds')
+            ? returnTo
+            : '/builds';
+  }
+
+  initBuildBackLink();
+  document.addEventListener('astro:page-load', initBuildBackLink);
 </script>
 
-<style>
-  .container {
-    width: min(1120px, calc(100% - 2rem));
-    margin: 0 auto;
-  }
-
-  .container.narrow {
-    width: min(820px, calc(100% - 2rem));
-  }
-
+<style is:global>
   .build-hero {
-    padding: 2.5rem 0 2rem;
+    padding: 3rem 0 2rem;
   }
 
   .detail-back-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 0.9rem;
-    border-radius: 999px;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-text);
-    font-family: 'General Sans', sans-serif;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease, transform 0.1s ease;
     margin-bottom: 1.5rem;
+    color: var(--color-text);
+    text-decoration: none;
+    font-size: 0.95rem;
+    line-height: 1.2;
   }
 
   .detail-back-btn:hover {
-    background: var(--color-surface-2);
-    border-color: var(--color-primary);
-    transform: translateY(-1px);
+    color: var(--color-primary);
   }
 
   .detail-back-icon {
-    font-size: 0.9rem;
-  }
-
-  .gallery-cta-pill {
-    border-color: var(--color-primary);
-    background: var(--color-primary-highlight);
-    color: var(--color-primary);
-    text-decoration: none;
-    transition: background var(--transition), color var(--transition), border-color var(--transition);
-  }
-
-  .gallery-cta-pill:hover {
-    background: var(--color-primary);
-    color: var(--color-text-inverse);
+    font-size: 1rem;
+    line-height: 1;
   }
 
   .hero-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 520px);
     gap: 2rem;
     align-items: start;
   }
 
-  .hero-copy h1 {
-    margin: 0;
+  .hero-copy {
+    min-width: 0;
   }
 
   .hero-meta {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-top: 1.25rem;
-  }
-
-  .meta-pill {
-    display: inline-flex;
-    align-items: center;
-    min-height: 2.25rem;
-    padding: 0.55rem 0.9rem;
-    border-radius: 999px;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-text);
-    font-size: 0.95rem;
-    line-height: 1;
-    white-space: nowrap;
-  }
-
-  .status-pill {
-    background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
-    color: var(--color-primary);
-    border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
-    font-weight: 600;
+    margin: 1rem 0 1.25rem;
   }
 
   .hero-summary {
-    margin-top: 1.25rem;
-    max-width: 62ch;
+    margin: 0;
     color: var(--color-text-muted);
+    max-width: 62ch;
   }
 
   .hero-image-wrap {
-    border-radius: 1rem;
+    overflow: hidden;
   }
 
   .hero-image {
     display: block;
     width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
+    height: auto;
   }
 
-  .section {
-    padding: 2.5rem 0;
+  .parts-strip-section,
+  .build-log-section,
+  .build-gallery-section {
+    padding: 2rem 0;
   }
 
   .section-head {
@@ -429,228 +330,119 @@ const seoDatePublished = info?.donedate ?? undefined;
     align-items: baseline;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .section-head h2 {
+    margin: 0;
   }
 
   .section-link {
     color: var(--color-primary);
     text-decoration: none;
-    font-size: 0.95rem;
-  }
-
-  .section-link:hover {
-    text-decoration: underline;
-  }
-
-  .parts-strip-section {
-    padding: 0.5rem 0 1rem;
   }
 
   .parts-strip-wrap {
     overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 0.5rem;
+    padding-bottom: 0.25rem;
   }
 
   .parts-strip {
-    display: flex;
-    flex-wrap: nowrap;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(220px, 260px);
     gap: 1rem;
-    width: max-content;
-    min-width: 100%;
-  }
-
-  .parts-strip-wrap::-webkit-scrollbar {
-    height: 10px;
-  }
-
-  .parts-strip-wrap::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 999px;
   }
 
   .part-thumb-card {
-    flex: 0 0 210px;
-    width: 210px;
     display: flex;
     flex-direction: column;
-    text-decoration: none;
-    color: inherit;
-    border: 1px solid var(--color-border);
-    background: var(--color-surface);
-    border-radius: 1rem;
     overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: inherit;
+    text-decoration: none;
   }
 
-  .part-thumb-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--color-primary);
-    box-shadow: var(--shadow-md);
-  }
-
-  .part-thumb-image,
-  .part-thumb-placeholder {
+  .part-thumb-card img,
+  .part-thumb-card__placeholder {
     display: block;
     width: 100%;
-    height: 130px;
-    flex: 0 0 130px;
-  }
-
-  .part-thumb-image {
+    aspect-ratio: 16 / 10;
     object-fit: cover;
-  }
-
-  .part-thumb-placeholder {
     background: var(--color-surface-offset);
+  }
+
+  .part-thumb-card__body {
+    padding: 1rem;
+  }
+
+  .part-thumb-card__eyebrow,
+  .build-log-part__eyebrow {
+    display: inline-block;
+    margin-bottom: 0.35rem;
     color: var(--color-text-muted);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.95rem;
-  }
-
-  .part-thumb-body {
-    display: grid;
-    gap: 0.3rem;
-    padding: 0.85rem 0.95rem 1rem;
-  }
-
-  .part-thumb-number {
-    font-size: 0.82rem;
-    letter-spacing: 0.08em;
+    font-size: 0.78rem;
     text-transform: uppercase;
-    color: var(--color-primary);
-    font-weight: 700;
+    letter-spacing: 0.08em;
   }
 
-  .part-thumb-title {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.35;
-    font-weight: 600;
+  .part-thumb-card__body h3,
+  .build-log-part__header h3 {
+    margin: 0;
   }
 
-  .prose-card,
-  .build-part-card,
-  .specs-card {
+  .build-log-list {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .build-log-part {
     padding: 1.5rem;
   }
 
-  .prose-card h2 {
-    margin-bottom: 1.25rem;
-  }
-
-  .section > .container.narrow > h2 {
-    margin-bottom: 1.5rem;
-  }
-
-  .build-part-card + .build-part-card {
-    margin-top: 1.5rem;
-  }
-
-  .part-header-top {
+  .build-log-part__header {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
   }
 
-  .part-header-top .eyebrow {
-    margin: 0;
-  }
-
-  .part-date {
-    font-size: 0.82rem;
-    line-height: 1.2;
-    color: var(--color-text-muted);
-    font-weight: 500;
+  .build-log-part__header a {
+    color: var(--color-primary);
+    text-decoration: none;
     white-space: nowrap;
   }
 
-  .part-header h3 {
-    margin-top: 0.15rem;
+  .build-log-part__hero {
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+    border-radius: var(--radius);
   }
 
-  .part-content :global(p) {
-    margin: 1rem 0;
-  }
-
-  .part-content :global(a) {
-    color: var(--color-primary);
-    text-decoration: underline;
-    text-decoration-color: color-mix(in srgb, var(--color-primary) 55%, transparent);
-    text-underline-offset: 0.14em;
-    font-weight: 500;
-  }
-
-  .part-content :global(a:hover),
-  .part-content :global(a:focus-visible) {
-    color: var(--color-primary-hover);
-    text-decoration: underline;
-    text-decoration-color: currentColor;
-    font-weight: 700;
-  }
-
-  .part-content :global(img) {
+  .build-log-part__hero img {
     display: block;
-    max-width: 100%;
+    width: 100%;
     height: auto;
-    margin: 1.25rem 0;
-    border-radius: 0.75rem;
   }
 
-  .back-top {
-    margin-top: 1.25rem;
+  .build-gallery-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.5rem;
   }
 
-  .back-top a {
-    text-decoration: none;
-    color: var(--color-primary);
+  .build-gallery-cta h2 {
+    margin: 0.35rem 0 0.5rem;
   }
 
-  .back-top a:hover {
-    text-decoration: underline;
-  }
-
-  .specs-shell {
-    padding-top: 1rem;
-    padding-bottom: 3rem;
-  }
-
-  .specs-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
-  }
-
-  .spec-item {
-    padding: 1rem 1rem 0.95rem;
-    border: 1px solid var(--color-border);
-    border-radius: 1rem;
-    background: var(--color-surface-2);
-  }
-
-  .spec-item dt {
-    margin-bottom: 0.4rem;
-    font-size: 0.78rem;
-    line-height: 1.2;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--color-text-muted);
-    font-weight: 700;
-  }
-
-  .spec-item dd {
+  .build-gallery-cta p {
     margin: 0;
-    font-size: 1.02rem;
-    line-height: 1.45;
-    color: var(--color-text);
-    font-weight: 600;
+    color: var(--color-text-muted);
   }
 
   @media (max-width: 900px) {
@@ -658,38 +450,29 @@ const seoDatePublished = info?.donedate ?? undefined;
       grid-template-columns: 1fr;
     }
 
-    .hero-image-wrap {
-      max-width: 760px;
+    .build-gallery-cta {
+      flex-direction: column;
+      align-items: flex-start;
     }
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 767px) {
     .build-hero {
-      padding-top: 2rem;
+      padding: 2rem 0 1.5rem;
     }
 
-    .section {
-      padding: 2rem 0;
-    }
-
-    .part-thumb-card {
-      flex-basis: 185px;
-      width: 185px;
-    }
-
-    .part-thumb-image,
-    .part-thumb-placeholder {
-      height: 116px;
-      flex-basis: 116px;
-    }
-
-    .specs-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .section-head {
-      align-items: flex-start;
+    .section-head,
+    .build-log-part__header {
       flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .parts-strip {
+      grid-auto-columns: minmax(200px, 240px);
+    }
+
+    .build-log-part {
+      padding: 1.25rem;
     }
   }
 </style>
