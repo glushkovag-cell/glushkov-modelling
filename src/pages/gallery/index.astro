@@ -7,103 +7,554 @@ import { getAllNews, hasFreshNews } from '../../lib/wordpress';
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
 
+const scaleOptions = Array.from(new Set(entries.map((entry) => entry.scale).filter(Boolean))).sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+);
+
+const photoCountOptions = [
+  { value: '1-9', label: '1–9 photos' },
+  { value: '10-24', label: '10–24 photos' },
+  { value: '25-plus', label: '25+ photos' },
+];
+
+function getPhotoCountBucket(count) {
+  if (count >= 25) return '25-plus';
+  if (count >= 10) return '10-24';
+  return '1-9';
+}
+
 /* console.log('[gallery page] entries:', JSON.stringify(entries, null, 2)); */
 ---
-<BaseLayout title="Gallery | Glushkov Modelling"
-  description="Curated hi-res photo galleries for all scale model builds — rigging, hull, deck details and workshop views."
-  hasFreshNews={newsFlag}
->
-  <SeoHead
-    slot="head"
-    pageType="default"
+
+<BaseLayout
     title="Gallery | Glushkov Modelling"
     description="Curated hi-res photo galleries for all scale model builds — rigging, hull, deck details and workshop views."
-    canonicalPath="/gallery"
-    breadcrumbs={[{ name: 'Gallery', url: '/gallery' }]}
+    hasFreshNews={newsFlag}
+>
+  <SeoHead
+      slot="head"
+      pageType="default"
+      title="Gallery | Glushkov Modelling"
+      description="Curated hi-res photo galleries for all scale model builds — rigging, hull, deck details and workshop views."
+      canonicalPath="/gallery"
+      breadcrumbs={[{ name: 'Gallery', url: '/gallery' }]}
   />
-  <section class="page-section">
+
+  <section class="gallery-page page-section">
     <div class="container">
-      <span class="eyebrow">Visual Archive</span>
-      <h1 class="section-title">Model Gallery</h1>
-      <p class="gallery-hub-lead">
-        Selected hi-res photographs for each build, arranged by model.
-        Click a card to open the full gallery with detailed viewer.
-      </p>
+      <div class="page-header">
+        <span class="eyebrow">Visual Archive</span>
+        <h1 class="section-title">Model Gallery</h1>
+        <p class="gallery-hub-lead">
+          Selected hi-res photographs for each build, arranged by model.
+          Browse by scale or photo count, then open the full gallery with the detailed viewer.
+        </p>
+      </div>
 
       {entries.length > 0 ? (
-        <div class="gallery-hub-grid">
-          {entries.map((entry) => {
-            const coverSrc = entry.cover?.paths.lowRes ?? entry.cover?.paths.hiRes ?? null;
-            const coverAlt = entry.cover?.alt ?? entry.title;
-            return (
-              <a
-                href={`/gallery/${entry.slug}`}
-                class="gallery-hub-card build-card"
-                aria-label={`Open gallery: ${entry.title}`}
+          <div class="content-layout">
+            <aside class="filters-sidebar">
+              <button
+                  type="button"
+                  class="mobile-filter-toggle"
+                  data-mobile-filter-toggle
+                  aria-expanded="false"
+                  aria-controls="gallery-filter-panel"
               >
-                <div class="gallery-hub-cover">
-                  {coverSrc ? (
-                    <img
-                      src={coverSrc}
-                      alt={coverAlt}
-                      loading="lazy"
-                      width={entry.cover?.width}
-                      height={entry.cover?.height}
-                      class="build-card-image"
-                    />
-                  ) : (
-                    <div class="gallery-hub-cover-empty" aria-hidden="true">
-                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
-                        <rect x="3" y="3" width="18" height="18" rx="3" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <path d="m21 15-5-5L5 21" />
-                      </svg>
+              <span class="mobile-filter-toggle__row">
+                <span class="mobile-filter-toggle__text">Filter galleries</span>
+              </span>
+                <span class="mobile-filter-toggle__summary">
+                Browse by scale and photo count
+              </span>
+              </button>
+
+              <div
+                  class="filters-section card"
+                  id="gallery-filter-panel"
+                  data-mobile-filter-panel
+                  data-open="false"
+              >
+                <form class="gallery-filter" data-gallery-filter-form>
+                  <div class="gallery-filter__topbar">
+                    <h2 class="gallery-filter__heading-title">Filter galleries</h2>
+                    <button type="button" class="gallery-filter__reset-top" data-gallery-filter-reset>
+                      Reset
+                    </button>
+                  </div>
+
+                  <section class="gallery-filter__section" aria-labelledby="gallery-filter-scale">
+                    <h3 id="gallery-filter-scale" class="gallery-filter__title">Scale</h3>
+                    <div class="gallery-filter__chips">
+                      {scaleOptions.map((option) => (
+                          <label class="filter-chip" data-selected="false">
+                            <input
+                                class="filter-chip__input"
+                                type="checkbox"
+                                name="scale"
+                                value={option}
+                            />
+                            <span class="filter-chip__label">{option}</span>
+                          </label>
+                      ))}
                     </div>
-                  )}
-                </div>
-                <div class="gallery-hub-body build-card-body">
-                  <p class="eyebrow">{entry.scale}</p>
-                  <h2 class="gallery-hub-title">{entry.title}</h2>
-                  <p class="gallery-hub-count">
-                    {entry.imageCount} {entry.imageCount === 1 ? 'photograph' : 'photographs'}
-                  </p>
-                </div>
-              </a>
-            );
-          })}
-        </div>
+                  </section>
+
+                  <section class="gallery-filter__section" aria-labelledby="gallery-filter-count">
+                    <h3 id="gallery-filter-count" class="gallery-filter__title">Photo count</h3>
+                    <div class="gallery-filter__chips">
+                      {photoCountOptions.map((option) => (
+                          <label class="filter-chip" data-selected="false">
+                            <input
+                                class="filter-chip__input"
+                                type="checkbox"
+                                name="count"
+                                value={option.value}
+                            />
+                            <span class="filter-chip__label">{option.label}</span>
+                          </label>
+                      ))}
+                    </div>
+                  </section>
+                </form>
+              </div>
+            </aside>
+
+            <div class="gallery-main">
+              <div class="active-filters">
+              <span class="filter-count" data-gallery-filter-count>
+                {entries.length} {entries.length === 1 ? 'gallery' : 'galleries'}
+              </span>
+                <button type="button" class="gallery-filter__reset-top" data-gallery-filter-reset>
+                  Clear filters
+                </button>
+              </div>
+
+              <div class="gallery-hub-grid" data-gallery-grid>
+                {entries.map((entry) => {
+                  const coverSrc = entry.cover?.paths.lowRes ?? entry.cover?.paths.hiRes ?? null;
+                  const coverAlt = entry.cover?.alt ?? entry.title;
+                  const photoCountBucket = getPhotoCountBucket(entry.imageCount);
+
+                  return (
+                      <article
+                          class="gallery-hub-card build-card"
+                          data-gallery-card
+                          data-scale={entry.scale}
+                          data-count={photoCountBucket}
+                      >
+                        <a
+                            href={`/gallery/${entry.slug}?returnTo=${encodeURIComponent(
+                                `/gallery${Astro.url.search || ''}`
+                            )}`}
+                            class="gallery-hub-card__link"
+                            data-gallery-link
+                            data-gallery-slug={entry.slug}
+                            aria-label={`Open gallery: ${entry.title}`}
+                        >
+                          <div class="gallery-hub-cover">
+                            {coverSrc ? (
+                                <img
+                                    src={coverSrc}
+                                    alt={coverAlt}
+                                    loading="lazy"
+                                    width={entry.cover?.width}
+                                    height={entry.cover?.height}
+                                    class="build-card-image"
+                                />
+                            ) : (
+                                <div class="gallery-hub-cover-empty" aria-hidden="true">
+                                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+                                    <rect x="3" y="3" width="18" height="18" rx="3" />
+                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                    <path d="m21 15-5-5L5 21" />
+                                  </svg>
+                                </div>
+                            )}
+                          </div>
+
+                          <div class="gallery-hub-body build-card-body">
+                            <p class="eyebrow">{entry.scale}</p>
+                            <h2 class="gallery-hub-title">{entry.title}</h2>
+                            <p class="gallery-hub-count">
+                              {entry.imageCount} {entry.imageCount === 1 ? 'photograph' : 'photographs'}
+                            </p>
+                          </div>
+                        </a>
+                      </article>
+                  );
+                })}
+              </div>
+
+              <div class="gallery-hub-empty card-surface" data-gallery-empty hidden>
+                <p>No galleries match these filters. Try another scale or photo count range.</p>
+              </div>
+            </div>
+          </div>
       ) : (
-        <div class="gallery-hub-empty">
-          <p>No galleries available yet. Check CMS gallery index or publish model manifests.</p>
-        </div>
+          <div class="gallery-hub-empty">
+            <p>No galleries available yet. Check CMS gallery index or publish model manifests.</p>
+          </div>
       )}
     </div>
   </section>
 </BaseLayout>
-<style>
+
+<script is:inline>
+  function initGalleryMobileFilters() {
+    const sidebar = document.querySelector('.filters-sidebar');
+    if (!sidebar) return;
+
+    const toggle = sidebar.querySelector('[data-mobile-filter-toggle]');
+    const panel = sidebar.querySelector('[data-mobile-filter-panel]');
+
+    if (!toggle || !panel) return;
+
+    function setOpen(open) {
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      panel.dataset.open = open ? 'true' : 'false';
+    }
+
+    const mobile = window.matchMedia('(max-width: 767px)');
+
+    function syncMode() {
+      if (!mobile.matches) {
+        panel.dataset.open = 'true';
+        toggle.setAttribute('aria-expanded', 'false');
+      } else if (!panel.dataset.open || panel.dataset.open === 'true') {
+        setOpen(false);
+      }
+    }
+
+    toggle.addEventListener('click', () => {
+      if (!mobile.matches) return;
+      setOpen(panel.dataset.open !== 'true');
+    });
+
+    if (typeof mobile.addEventListener === 'function') {
+      mobile.addEventListener('change', syncMode);
+    } else if (typeof mobile.addListener === 'function') {
+      mobile.addListener(syncMode);
+    }
+
+    syncMode();
+  }
+
+  function initGalleryFilters() {
+    const root = document.querySelector('.gallery-page');
+    if (!root) return;
+
+    const form = root.querySelector('[data-gallery-filter-form]');
+    const cards = Array.from(root.querySelectorAll('[data-gallery-card]'));
+    const count = root.querySelector('[data-gallery-filter-count]');
+    const resetButtons = Array.from(root.querySelectorAll('[data-gallery-filter-reset]'));
+    const emptyState = root.querySelector('[data-gallery-empty]');
+    const grid = root.querySelector('[data-gallery-grid]');
+    const summary = root.querySelector('.mobile-filter-toggle__summary');
+    const links = Array.from(root.querySelectorAll('[data-gallery-link]'));
+
+    if (!form || !count || !emptyState || !grid) return;
+
+    function getSelected(name) {
+      return Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map((input) => input.value);
+    }
+
+    function syncInputsFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+
+      const selected = {
+        scale: params.getAll('scale'),
+        count: params.getAll('count'),
+      };
+
+      form.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+        const values = selected[input.name] || [];
+        input.checked = values.includes(input.value);
+      });
+    }
+
+    function updateChipStates() {
+      form.querySelectorAll('.filter-chip').forEach((chip) => {
+        const input = chip.querySelector('.filter-chip__input');
+        const selected = Boolean(input?.checked);
+
+        chip.dataset.selected = selected ? 'true' : 'false';
+        chip.classList.toggle('is-selected', selected);
+      });
+    }
+
+    function getCurrentReturnTo() {
+      const query = window.location.search;
+      return `${window.location.pathname}${query}`;
+    }
+
+    function updateLinks() {
+      const returnTo = getCurrentReturnTo();
+
+      links.forEach((link) => {
+        const slug = link.dataset.gallerySlug;
+        if (!slug) return;
+
+        link.href = `/gallery/${slug}?returnTo=${encodeURIComponent(returnTo)}`;
+      });
+    }
+
+    function updateUrl(state) {
+      const params = new URLSearchParams();
+
+      state.scale.forEach((value) => params.append('scale', value));
+      state.count.forEach((value) => params.append('count', value));
+
+      const nextUrl = params.toString()
+          ? `${window.location.pathname}?${params.toString()}`
+          : window.location.pathname;
+
+      window.history.replaceState({}, '', nextUrl);
+    }
+
+    function updateSummary(state) {
+      if (!summary) return;
+
+      const parts = [];
+
+      if (state.scale.length > 0) {
+        parts.push(`${state.scale.length} ${state.scale.length === 1 ? 'scale' : 'scales'}`);
+      }
+
+      if (state.count.length > 0) {
+        parts.push(`${state.count.length} ${state.count.length === 1 ? 'range' : 'ranges'}`);
+      }
+
+      summary.textContent = parts.length > 0
+          ? parts.join(' · ')
+          : 'Browse by scale and photo count';
+    }
+
+    function matchesAny(selectedValues, rawValue) {
+      if (!selectedValues.length) return true;
+      if (!rawValue) return false;
+      return selectedValues.includes(rawValue);
+    }
+
+    function applyFilters({ syncUrl = true } = {}) {
+      const state = {
+        scale: getSelected('scale'),
+        count: getSelected('count'),
+      };
+
+      updateChipStates();
+      updateSummary(state);
+      if (syncUrl) updateUrl(state);
+      updateLinks();
+
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const matches =
+            matchesAny(state.scale, card.dataset.scale || '') &&
+            matchesAny(state.count, card.dataset.count || '');
+
+        card.style.display = matches ? '' : 'none';
+        if (matches) visibleCount += 1;
+      });
+
+      count.textContent = `${visibleCount} ${visibleCount === 1 ? 'gallery' : 'galleries'}`;
+      emptyState.hidden = visibleCount !== 0;
+      grid.style.display = visibleCount === 0 ? 'none' : 'grid';
+    }
+
+    form.addEventListener('change', () => applyFilters());
+
+    resetButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        form.reset();
+        applyFilters();
+      });
+    });
+
+    syncInputsFromUrl();
+    updateChipStates();
+    updateLinks();
+    applyFilters({ syncUrl: false });
+  }
+
+  initGalleryMobileFilters();
+  initGalleryFilters();
+</script>
+
+<style is:global>
+  .gallery-page {
+    padding: 2.5rem 0 3rem;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
   .gallery-hub-lead {
     color: var(--color-text-muted);
     font-size: 1rem;
     line-height: 1.72;
-    margin-bottom: 28px;
+    margin: 0 auto;
     max-width: 60ch;
   }
+
+  .content-layout {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .filters-sidebar {
+    position: sticky;
+    top: 2rem;
+    height: fit-content;
+  }
+
+  .mobile-filter-toggle {
+    display: none;
+  }
+
+  .filters-section {
+    padding: 1.5rem;
+  }
+
+  .gallery-filter {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .gallery-filter__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .gallery-filter__heading-title {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.2;
+    font-family: 'General Sans', sans-serif;
+    font-weight: 600;
+  }
+
+  .gallery-filter__reset-top {
+    color: var(--color-primary);
+    font-size: 0.875rem;
+    line-height: 1.2;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .gallery-filter__section {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .gallery-filter__title {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    font-family: 'General Sans', sans-serif;
+    font-weight: 600;
+  }
+
+  .gallery-filter__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+  }
+
+  .filter-chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .filter-chip__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .filter-chip__label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.25rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 0.875rem;
+    line-height: 1.2;
+    font-family: inherit;
+    transition:
+        border-color 180ms ease,
+        background-color 180ms ease,
+        color 180ms ease,
+        box-shadow 180ms ease;
+  }
+
+  .filter-chip.is-selected .filter-chip__label,
+  .filter-chip[data-selected='true'] .filter-chip__label {
+    border-color: var(--color-primary);
+    background: var(--color-primary-highlight);
+    color: var(--color-primary-active);
+  }
+
+  .gallery-main {
+    min-width: 0;
+  }
+
+  .active-filters {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .filter-count {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
   .gallery-hub-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
   }
+
   .gallery-hub-card {
+    height: 100%;
+  }
+
+  .gallery-hub-card__link {
     display: flex;
     flex-direction: column;
-    text-decoration: none;
+    height: 100%;
     color: inherit;
+    text-decoration: none;
   }
+
   .gallery-hub-cover {
     aspect-ratio: 4 / 3;
     overflow: hidden;
     background: var(--color-surface-offset);
   }
+
   .gallery-hub-cover-empty {
     width: 100%;
     height: 100%;
@@ -111,20 +562,24 @@ const newsFlag = hasFreshNews(allNews);
     place-items: center;
     color: var(--color-text-faint);
   }
+
   .gallery-hub-body .eyebrow {
     margin-bottom: 6px;
   }
+
   .gallery-hub-title {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: 1.85rem;
     line-height: 1.05;
     margin: 0 0 8px;
   }
+
   .gallery-hub-count {
     color: var(--color-text-muted);
     font-size: 0.88rem;
     margin: 0;
   }
+
   .gallery-hub-empty {
     padding: 40px 32px;
     border: 1px dashed var(--color-primary-highlight);
@@ -132,6 +587,7 @@ const newsFlag = hasFreshNews(allNews);
     color: var(--color-text-muted);
     text-align: center;
   }
+
   .gallery-hub-empty code {
     font-size: 0.85em;
     background: var(--color-surface-offset);
@@ -139,14 +595,133 @@ const newsFlag = hasFreshNews(allNews);
     border-radius: 4px;
     white-space: nowrap;
   }
-  @media (max-width: 900px) {
+
+  @media (max-width: 1024px) {
+    .content-layout {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .filters-sidebar {
+      position: static;
+    }
+
     .gallery-hub-grid {
       grid-template-columns: repeat(2, 1fr);
     }
   }
-  @media (max-width: 540px) {
+
+  @media (max-width: 767px) {
+    .gallery-page {
+      padding: 1.5rem 0 2rem;
+    }
+
+    .page-header {
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+
+    .content-layout {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .filters-sidebar {
+      position: static;
+      order: 1;
+    }
+
+    .mobile-filter-toggle {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.2rem;
+      width: 100%;
+      padding: 0;
+      border: none;
+      background: transparent;
+      text-align: left;
+      box-shadow: none;
+      color: var(--color-primary);
+      font-family: 'General Sans', sans-serif;
+    }
+
+    .mobile-filter-toggle__row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .mobile-filter-toggle__text {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      transition: color 0.2s ease;
+    }
+
+    .mobile-filter-toggle__summary {
+      font-size: 0.78rem;
+      line-height: 1.3;
+      color: var(--color-text-muted);
+    }
+
+    .mobile-filter-toggle:hover .mobile-filter-toggle__text {
+      color: var(--color-primary-hover);
+    }
+
+    .filters-section {
+      padding: 1rem;
+      margin-top: 0.75rem;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 0.75rem;
+      box-shadow:
+          0 18px 48px rgba(15, 23, 42, 0.08),
+          0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+
+    .filters-section[data-mobile-filter-panel][data-open='false'] {
+      display: none;
+    }
+
+    .filters-section[data-mobile-filter-panel][data-open='true'] {
+      display: block;
+    }
+
+    .gallery-main {
+      order: 2;
+    }
+
+    .active-filters {
+      margin-bottom: 1rem;
+    }
+
+    .filter-count {
+      display: block;
+      font-size: 0.8125rem;
+    }
+
     .gallery-hub-grid {
       grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .gallery-hub-card {
+      border-radius: 0.75rem;
+    }
+
+    .gallery-hub-title {
+      font-size: 1.35rem;
+      line-height: 1.15;
+    }
+
+    .gallery-hub-count {
+      font-size: 0.8125rem;
+    }
+
+    .gallery-hub-empty {
+      padding: 1.5rem 1rem;
+      border-radius: 0.75rem;
     }
   }
 </style>
