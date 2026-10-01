@@ -651,18 +651,41 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
 
 <style is:global>
   .builds-page {
-    padding: 3rem 0;
+    padding: 2.5rem 0 3rem;
   }
 
   .page-header {
+    margin-bottom: 2rem;
     text-align: center;
-    margin-bottom: 3rem;
+  }
+
+  .page-eyebrow {
+    margin-bottom: 0.65rem;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+
+  .page-header h1 {
+    margin: 0 0 0.9rem;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    line-height: 1.05;
+  }
+
+  .page-intro {
+    width: min(760px, 100%);
+    margin: 0 auto;
+    color: var(--color-text-muted);
+    font-size: 1.02rem;
+    line-height: 1.7;
   }
 
   .content-layout {
     display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 3rem;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 2rem;
     align-items: start;
   }
 
@@ -694,7 +717,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
 
   .build-filter__heading-title {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.875rem;
     line-height: 1.2;
     font-family: 'General Sans', sans-serif;
     font-weight: 600;
@@ -702,7 +725,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
 
   .build-filter__reset-top {
     color: var(--color-primary);
-    font-size: 0.95rem;
+    font-size: 0.875rem;
     line-height: 1.2;
     background: none;
     border: 0;
@@ -718,7 +741,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
 
   .build-filter__title {
     margin: 0;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     line-height: 1.2;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -755,7 +778,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
     border: 1px solid var(--color-border);
     background: var(--color-surface);
     color: var(--color-text);
-    font-size: 0.95rem;
+    font-size: 0.875rem;
     line-height: 1.2;
     font-family: inherit;
     transition:
@@ -824,7 +847,8 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
 
   .filter-count {
     color: var(--color-text-muted);
-    font-size: 0.95rem;
+    font-size: 0.875rem;
+    font-weight: 600;
   }
 
   .builds-grid {
@@ -840,94 +864,86 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
   }
 
   .build-card__link {
-    display: flex;
-    flex-direction: column;
+    display: grid;
     height: 100%;
     color: inherit;
     text-decoration: none;
   }
 
-  .build-card__media {
-    aspect-ratio: 16 / 10;
-    overflow: hidden;
-    background: var(--color-surface-offset);
-  }
-
   .build-card__media img {
+    display: block;
     width: 100%;
-    height: 100%;
+    aspect-ratio: 16 / 10;
     object-fit: cover;
   }
 
   .build-card__body {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    gap: 0.85rem;
     padding: 1.25rem;
+    min-width: 0;
   }
 
   .build-card__meta {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem 0.75rem;
-    margin-bottom: 0.75rem;
-    color: var(--color-text-muted);
     font-size: 0.875rem;
-    line-height: 1.4;
-  }
-
-  .build-card__spec {
-    white-space: nowrap;
+    color: var(--color-text-muted);
   }
 
   .build-card__title {
-    margin: 0 0 0.75rem;
-    font-size: 1.25rem;
+    margin: 0;
+    font-size: 1.35rem;
     line-height: 1.2;
   }
 
-  .build-card__description {
+  .build-card__teaser {
     margin: 0;
     color: var(--color-text-muted);
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    font-size: 0.98rem;
+    line-height: 1.6;
   }
 
-  .build-card__footer {
-    margin-top: auto;
-    padding-top: 1rem;
-    display: flex;
-    align-items: flex-end;
+  .build-card__meta-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+    line-height: 1.1;
+  }
+
+  .build-card__meta-pill--status {
+    color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+    background: color-mix(in srgb, var(--color-primary) 9%, var(--color-surface));
+    font-weight: 600;
   }
 
   .no-results {
-    padding: 2rem;
     text-align: center;
+    padding: 2.25rem 1.5rem;
   }
 
   .no-results h2 {
     margin: 0 0 0.75rem;
+    font-size: 1.6rem;
   }
 
   .no-results p {
-    margin: 0 0 1rem;
+    margin: 0;
     color: var(--color-text-muted);
+    font-size: 1rem;
+    line-height: 1.6;
   }
 
-  @media (max-width: 900px) {
-    .content-layout {
-      grid-template-columns: 240px 1fr;
-      gap: 2rem;
-    }
-
-    .builds-grid {
-      gap: 1.25rem;
-    }
-  }
-
-  @media (max-width: 767px) {
+  @media (max-width: 1024px) {
     .content-layout {
       grid-template-columns: 1fr;
       gap: 1.5rem;
@@ -936,48 +952,157 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
     .filters-sidebar {
       position: static;
     }
+  }
+
+  @media (max-width: 767px) {
+    .builds-page {
+      padding: 1.5rem 0 2rem;
+    }
+
+    .page-header {
+      margin-bottom: 1.5rem;
+      text-align: left;
+    }
+
+    .page-eyebrow {
+      margin-bottom: 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .page-header h1 {
+      margin-bottom: 0.75rem;
+      font-size: 2.125rem;
+      line-height: 1.08;
+    }
+
+    .page-intro {
+      margin: 0;
+      max-width: none;
+      font-size: 1rem;
+    }
+
+    .content-layout {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .filters-sidebar {
+      position: static;
+      order: 1;
+    }
 
     .mobile-filter-toggle {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.2rem;
       width: 100%;
-      display: grid;
-      gap: 0.35rem;
-      padding: 0.9rem 1rem;
-      border-radius: var(--radius);
-      border: 1px solid var(--color-border);
-      background: var(--color-surface);
+      padding: 0;
+      border: none;
+      background: transparent;
       text-align: left;
-      margin-bottom: 1rem;
+      box-shadow: none;
+      color: var(--color-primary);
+      font-family: 'General Sans', sans-serif;
     }
 
     .mobile-filter-toggle__row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
+      gap: 0.5rem;
     }
 
     .mobile-filter-toggle__text {
-      font-size: 1rem;
+      font-size: 0.85rem;
       font-weight: 600;
-      line-height: 1.2;
+      color: var(--color-primary);
+      transition: color 0.2s ease;
     }
 
     .mobile-filter-toggle__summary {
+      font-size: 0.78rem;
+      line-height: 1.3;
       color: var(--color-text-muted);
-      font-size: 0.9rem;
-      line-height: 1.4;
+    }
+
+    .mobile-filter-toggle:hover .mobile-filter-toggle__text {
+      color: var(--color-primary-hover);
     }
 
     .filters-section {
+      padding: 1rem;
+      border-radius: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .filters-section[data-mobile-filter-panel][data-open='false'] {
       display: none;
     }
 
-    .filters-section[data-open='true'] {
+    .filters-section[data-mobile-filter-panel][data-open='true'] {
       display: block;
+    }
+
+    .builds-main {
+      order: 2;
+    }
+
+    .active-filters {
+      margin-bottom: 1rem;
+    }
+
+    .filter-count {
+      display: block;
+      font-size: 0.8125rem;
     }
 
     .builds-grid {
       grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .build-card {
+      border-radius: 0.75rem;
+    }
+
+    .build-card__body {
+      gap: 0.75rem;
+      padding: 1rem;
+    }
+
+    .build-card__title {
+      font-size: 1.125rem;
+      line-height: 1.25;
+    }
+
+    .build-card__teaser {
+      font-size: 0.9375rem;
+      line-height: 1.5;
+    }
+
+    .build-card__meta {
+      gap: 0.375rem 0.625rem;
+      font-size: 0.8125rem;
+    }
+
+    .build-card__meta-pill {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.78rem;
+    }
+
+    .no-results {
+      padding: 1.5rem 1rem;
+      border-radius: 0.75rem;
+    }
+
+    .no-results h2 {
+      font-size: 1.375rem;
+    }
+
+    .no-results p {
+      font-size: 1rem;
+      margin-bottom: 1.25rem;
     }
   }
 </style>
+

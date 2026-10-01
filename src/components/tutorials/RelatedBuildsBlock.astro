@@ -23,7 +23,7 @@ if (!builds || builds.length === 0) return null;
                 <article class="build-card card">
                     <a
                             href={tutorialSlug
-                                ? `/builds/${build.slug}?backLabel=${encodeURIComponent(backLabel)}&backHref=${encodeURIComponent(backHref)}`
+                                ? `/builds/${build.slug}?returnTo=${encodeURIComponent(backHref)}&returnLabel=${encodeURIComponent(backLabel)}`
                                 : `/builds/${build.slug}`
                             }
                             class="build-link"

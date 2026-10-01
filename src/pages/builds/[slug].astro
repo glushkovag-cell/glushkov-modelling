@@ -288,6 +288,7 @@ const seoDatePublished = info?.donedate ?? undefined;
 <script>
   function initBuildBackLink() {
     const backLink = document.getElementById('detail-back-btn');
+    const label = document.getElementById('detail-back-btn-label');
 
     if (!(backLink instanceof HTMLAnchorElement)) {
       return;
@@ -295,11 +296,31 @@ const seoDatePublished = info?.donedate ?? undefined;
 
     const params = new URLSearchParams(window.location.search);
     const returnTo = params.get('returnTo');
+    const returnLabel = params.get('returnLabel');
 
-    backLink.href =
-        returnTo && returnTo.startsWith('/builds')
-            ? returnTo
-            : '/builds';
+    const isAllowedReturnTo =
+        !!returnTo &&
+        (returnTo.startsWith('/builds') || returnTo.startsWith('/tutorials'));
+
+    if (isAllowedReturnTo) {
+      backLink.href = returnTo;
+
+      if (label) {
+        label.textContent =
+            returnLabel?.trim() ||
+            (returnTo.startsWith('/tutorials')
+                ? 'Back to tutorial'
+                : 'Back to builds');
+      }
+
+      return;
+    }
+
+    backLink.href = '/builds';
+
+    if (label) {
+      label.textContent = 'Back to builds';
+    }
   }
 
   initBuildBackLink();
