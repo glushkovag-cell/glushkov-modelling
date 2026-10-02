@@ -62,7 +62,7 @@ function getPhotoCountBucket(count) {
                   aria-controls="gallery-filter-panel"
               >
               <span class="mobile-filter-toggle__row">
-                <span class="mobile-filter-toggle__text">Filter galleries</span>
+                <span class="mobile-filter-toggle__text">Show filters</span>
               </span>
                 <span class="mobile-filter-toggle__summary">
                 Browse by scale and photo count
@@ -125,9 +125,6 @@ function getPhotoCountBucket(count) {
               <span class="filter-count" data-gallery-filter-count>
                 {entries.length} {entries.length === 1 ? 'gallery' : 'galleries'}
               </span>
-                <button type="button" class="gallery-filter__reset-top" data-gallery-filter-reset>
-                  Clear filters
-                </button>
               </div>
 
               <div class="gallery-hub-grid" data-gallery-grid>
@@ -207,20 +204,24 @@ function getPhotoCountBucket(count) {
 
     const toggle = sidebar.querySelector('[data-mobile-filter-toggle]');
     const panel = sidebar.querySelector('[data-mobile-filter-panel]');
+    const text = toggle?.querySelector('.mobile-filter-toggle__text');
 
-    if (!toggle || !panel) return;
+    if (!toggle || !panel || !text) return;
 
     function setOpen(open) {
       toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       panel.dataset.open = open ? 'true' : 'false';
+      text.textContent = open ? 'Hide filters' : 'Show filters';
     }
+
 
     const mobile = window.matchMedia('(max-width: 767px)');
 
     function syncMode() {
       if (!mobile.matches) {
         panel.dataset.open = 'true';
-        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-expanded', 'true');
+        text.textContent = 'Hide filters';
       } else if (!panel.dataset.open || panel.dataset.open === 'true') {
         setOpen(false);
       }
