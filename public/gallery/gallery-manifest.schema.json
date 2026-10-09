@@ -1,0 +1,106 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["slug", "title", "scale", "images"],
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly identifier"
+    },
+    "title": {
+      "type": "string",
+      "description": "Display title"
+    },
+    "scale": {
+      "type": "string",
+      "pattern": "^1:[0-9]+$",
+      "description": "Model scale (e.g., 1:48)"
+    },
+    "galleryTitle": {
+      "type": "string"
+    },
+    "buildLogUrl": {
+      "type": "string"
+    },
+    "breadcrumbs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "href"],
+        "properties": {
+          "label": { "type": "string" },
+          "href": { "type": "string" }
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" },
+        "focus": { "type": "string" },
+        "viewerMode": { "type": "string" }
+      }
+    },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "order", "section", "caption", "alt", "lead", "orientation", "width", "height", "paths"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Filename (e.g., 54.webp)"
+          },
+          "order": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Display order"
+          },
+          "section": {
+            "type": "string",
+            "enum": ["overall", "rigging", "deck", "hull", "details", "workshop"],
+            "description": "Image category"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Short caption"
+          },
+          "alt": {
+            "type": "string",
+            "description": "Accessibility description"
+          },
+          "lead": {
+            "type": "boolean",
+            "description": "Use as cover image"
+          },
+          "orientation": {
+            "type": "string",
+            "enum": ["landscape", "portrait", "square"]
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "paths": {
+            "type": "object",
+            "required": ["lowRes", "hiRes"],
+            "properties": {
+              "lowRes": {
+                "type": ["string", "null"],
+                "description": "Path to low-res preview"
+              },
+              "hiRes": {
+                "type": ["string", "null"],
+                "description": "Path to hi-res source"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

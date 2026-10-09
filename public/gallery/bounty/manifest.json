@@ -1,0 +1,943 @@
+{
+  "slug": "bounty",
+  "title": "Bounty",
+  "scale": "1:60",
+  "galleryTitle": "Bounty — Gallery",
+  "buildLogUrl": "/builds/bounty",
+  "breadcrumbs": [
+    {
+      "label": "Builds",
+      "href": "/builds"
+    },
+    {
+      "label": "Bounty",
+      "href": "/builds/bounty"
+    },
+    {
+      "label": "Gallery",
+      "href": "/builds/bounty/gallery"
+    }
+  ],
+  "meta": {
+    "status": "Completed",
+    "focus": "Overall views, rigging, deck details",
+    "viewerMode": "hi-res overlay"
+  },
+  "images": [
+    {
+      "file": "2.webp",
+      "order": 2,
+      "section": "overall",
+      "caption": "Side view",
+      "alt": "Bounty, Side",
+      "lead": true,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/2.webp",
+        "hiRes": "bounty/hi-res/2.webp"
+      }
+    },
+    {
+      "file": "5.webp",
+      "order": 5,
+      "section": "hull",
+      "caption": "Coppering",
+      "alt": "Bounty, Coppering",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/5.webp",
+        "hiRes": "bounty/hi-res/5.webp"
+      }
+    },
+    {
+      "file": "7.webp",
+      "order": 7,
+      "section": "rigging",
+      "caption": "Bowsprit rigging",
+      "alt": "Bounty, Bowsprit",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/7.webp",
+        "hiRes": "bounty/hi-res/7.webp"
+      }
+    },
+    {
+      "file": "8.webp",
+      "order": 8,
+      "section": "overall",
+      "caption": "Bow",
+      "alt": "Bounty, Bow",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/8.webp",
+        "hiRes": "bounty/hi-res/8.webp"
+      }
+    },
+    {
+      "file": "9.webp",
+      "order": 9,
+      "section": "overall",
+      "caption": "Foremast shrouds",
+      "alt": "Bounty, shrouds",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/9.webp",
+        "hiRes": "bounty/hi-res/9.webp"
+      }
+    },
+    {
+      "file": "11.webp",
+      "order": 11,
+      "section": "overall",
+      "caption": "Anchor",
+      "alt": "Bounty, Anchor",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/11.webp",
+        "hiRes": "bounty/hi-res/11.webp"
+      }
+    },
+    {
+      "file": "12.webp",
+      "order": 12,
+      "section": "overall",
+      "caption": "Boat, side view",
+      "alt": "Bounty, Boat",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/12.webp",
+        "hiRes": "bounty/hi-res/12.webp"
+      }
+    },
+    {
+      "file": "13.webp",
+      "order": 13,
+      "section": "deck",
+      "caption": "Boat deck",
+      "alt": "Bounty, Boat",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/13.webp",
+        "hiRes": "bounty/hi-res/13.webp"
+      }
+    },
+    {
+      "file": "14.webp",
+      "order": 14,
+      "section": "rigging",
+      "caption": "Stays",
+      "alt": "Bounty, Stays",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/14.webp",
+        "hiRes": "bounty/hi-res/14.webp"
+      }
+    },
+    {
+      "file": "15.webp",
+      "order": 15,
+      "section": "overall",
+      "caption": "Topsail",
+      "alt": "Bounty, Topsail",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/15.webp",
+        "hiRes": "bounty/hi-res/15.webp"
+      }
+    },
+    {
+      "file": "16.webp",
+      "order": 16,
+      "section": "overall",
+      "caption": "Foretop",
+      "alt": "Bounty, Foretop",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/16.webp",
+        "hiRes": "bounty/hi-res/16.webp"
+      }
+    },
+    {
+      "file": "17.webp",
+      "order": 17,
+      "section": "rigging",
+      "caption": "Crow's feet",
+      "alt": "Bounty, Crowfoot",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/17.webp",
+        "hiRes": "bounty/hi-res/17.webp"
+      }
+    },
+    {
+      "file": "18.webp",
+      "order": 18,
+      "section": "overall",
+      "caption": "Main topgallant",
+      "alt": "Bounty, topgallant",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/18.webp",
+        "hiRes": "bounty/hi-res/18.webp"
+      }
+    },
+    {
+      "file": "19.webp",
+      "order": 19,
+      "section": "overall",
+      "caption": "Foredeck",
+      "alt": "Bounty, Foredeck",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/19.webp",
+        "hiRes": "bounty/hi-res/19.webp"
+      }
+    },
+    {
+      "file": "20.webp",
+      "order": 20,
+      "section": "overall",
+      "caption": "Capstan",
+      "alt": "Bounty, Capstan",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/20.webp",
+        "hiRes": "bounty/hi-res/20.webp"
+      }
+    },
+    {
+      "file": "21.webp",
+      "order": 21,
+      "section": "deck",
+      "caption": "Main deck",
+      "alt": "Bounty, deck",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/21.webp",
+        "hiRes": "bounty/hi-res/21.webp"
+      }
+    },
+    {
+      "file": "22.webp",
+      "order": 22,
+      "section": "overall",
+      "caption": "Cannons",
+      "alt": "Bounty, Cannons",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/22.webp",
+        "hiRes": "bounty/hi-res/22.webp"
+      }
+    },
+    {
+      "file": "23.webp",
+      "order": 23,
+      "section": "overall",
+      "caption": "Wheel",
+      "alt": "Bounty, Wheel",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/23.webp",
+        "hiRes": "bounty/hi-res/23.webp"
+      }
+    },
+    {
+      "file": "24.webp",
+      "order": 24,
+      "section": "hull",
+      "caption": "Side view",
+      "alt": "Bounty, side",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/24.webp",
+        "hiRes": "bounty/hi-res/24.webp"
+      }
+    },
+    {
+      "file": "25.webp",
+      "order": 25,
+      "section": "overall",
+      "caption": "Mizzen mast",
+      "alt": "Bounty, Mizzen",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/25.webp",
+        "hiRes": "bounty/hi-res/25.webp"
+      }
+    },
+    {
+      "file": "26.webp",
+      "order": 26,
+      "section": "overall",
+      "caption": "Mizzen top",
+      "alt": "Bounty, Mizzen",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/26.webp",
+        "hiRes": "bounty/hi-res/26.webp"
+      }
+    },
+    {
+      "file": "27.webp",
+      "order": 27,
+      "section": "overall",
+      "caption": "Mizzen sails",
+      "alt": "Bounty, Mizzen",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/27.webp",
+        "hiRes": "bounty/hi-res/27.webp"
+      }
+    },
+    {
+      "file": "28.webp",
+      "order": 28,
+      "section": "overall",
+      "caption": "Quarterdeck",
+      "alt": "Bounty, Quarterdeck",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/28.webp",
+        "hiRes": "bounty/hi-res/28.webp"
+      }
+    },
+    {
+      "file": "29.webp",
+      "order": 29,
+      "section": "details",
+      "caption": "Lanterns",
+      "alt": "Bounty, Lanterns",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/29.webp",
+        "hiRes": "bounty/hi-res/29.webp"
+      }
+    },
+    {
+      "file": "30.webp",
+      "order": 30,
+      "section": "overall",
+      "caption": "Side",
+      "alt": "Bounty, side",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/30.webp",
+        "hiRes": "bounty/hi-res/30.webp"
+      }
+    },
+    {
+      "file": "31.webp",
+      "order": 31,
+      "section": "overall",
+      "caption": "Rudder",
+      "alt": "Bounty, Stern",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/31.webp",
+        "hiRes": "bounty/hi-res/31.webp"
+      }
+    },
+    {
+      "file": "32.webp",
+      "order": 32,
+      "section": "overall",
+      "caption": "Stern",
+      "alt": "Bounty, Stern",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/32.webp",
+        "hiRes": "bounty/hi-res/32.webp"
+      }
+    },
+    {
+      "file": "33.webp",
+      "order": 33,
+      "section": "overall",
+      "caption": "Stern gallery",
+      "alt": "Bounty, gallery",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/33.webp",
+        "hiRes": "bounty/hi-res/33.webp"
+      }
+    },
+    {
+      "file": "36.webp",
+      "order": 36,
+      "section": "overall",
+      "caption": "Deck from stern",
+      "alt": "Bounty, deck",
+      "lead": false,
+      "orientation": "portrait",
+      "width": 2560,
+      "height": 3840,
+      "paths": {
+        "lowRes": "bounty/low-res/36.webp",
+        "hiRes": "bounty/hi-res/36.webp"
+      }
+    },
+    {
+      "file": "37.webp",
+      "order": 37,
+      "section": "overall",
+      "caption": "Topsails",
+      "alt": "Bounty, Topsails",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/37.webp",
+        "hiRes": "bounty/hi-res/37.webp"
+      }
+    },
+    {
+      "file": "39.webp",
+      "order": 39,
+      "section": "overall",
+      "caption": "Maintop",
+      "alt": "Bounty, Maintop",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/39.webp",
+        "hiRes": "bounty/hi-res/39.webp"
+      }
+    },
+    {
+      "file": "40.webp",
+      "order": 40,
+      "section": "overall",
+      "caption": "Mizzentop",
+      "alt": "Bounty, Mizzentop",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/40.webp",
+        "hiRes": "bounty/hi-res/40.webp"
+      }
+    },
+    {
+      "file": "42.webp",
+      "order": 42,
+      "section": "overall",
+      "caption": "Main topgallant",
+      "alt": "Bounty, topgallant",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/42.webp",
+        "hiRes": "bounty/hi-res/42.webp"
+      }
+    },
+    {
+      "file": "43.webp",
+      "order": 43,
+      "section": "overall",
+      "caption": "Quarterdeck topview",
+      "alt": "Bounty, Quarterdeck",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/43.webp",
+        "hiRes": "bounty/hi-res/43.webp"
+      }
+    },
+    {
+      "file": "44.webp",
+      "order": 44,
+      "section": "overall",
+      "caption": "Topview",
+      "alt": "Bounty, topview",
+      "lead": false,
+      "orientation": "portrait",
+      "width": 2560,
+      "height": 3840,
+      "paths": {
+        "lowRes": "bounty/low-res/44.webp",
+        "hiRes": "bounty/hi-res/44.webp"
+      }
+    },
+    {
+      "file": "45.webp",
+      "order": 45,
+      "section": "overall",
+      "caption": "Foresails and spritsail",
+      "alt": "Bounty, spritsail",
+      "lead": false,
+      "orientation": "portrait",
+      "width": 2560,
+      "height": 3840,
+      "paths": {
+        "lowRes": "bounty/low-res/45.webp",
+        "hiRes": "bounty/hi-res/45.webp"
+      }
+    },
+    {
+      "file": "46.webp",
+      "order": 46,
+      "section": "overall",
+      "caption": "Boat on deck",
+      "alt": "Bounty, Boat",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/46.webp",
+        "hiRes": "bounty/hi-res/46.webp"
+      }
+    },
+    {
+      "file": "47.webp",
+      "order": 47,
+      "section": "overall",
+      "caption": "Windlass",
+      "alt": "Bounty, Windlass",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/47.webp",
+        "hiRes": "bounty/hi-res/47.webp"
+      }
+    },
+    {
+      "file": "48.webp",
+      "order": 48,
+      "section": "overall",
+      "caption": "Capstan",
+      "alt": "Bounty, Capstan",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/48.webp",
+        "hiRes": "bounty/hi-res/48.webp"
+      }
+    },
+    {
+      "file": "49.webp",
+      "order": 49,
+      "section": "overall",
+      "caption": "Anchor",
+      "alt": "Bounty, Anchor",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/49.webp",
+        "hiRes": "bounty/hi-res/49.webp"
+      }
+    },
+    {
+      "file": "50.webp",
+      "order": 50,
+      "section": "overall",
+      "caption": "Belaying pin rail",
+      "alt": "Bounty, pin rail",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/50.webp",
+        "hiRes": "bounty/hi-res/50.webp"
+      }
+    },
+    {
+      "file": "51.webp",
+      "order": 51,
+      "section": "overall",
+      "caption": "Foremast pin rail",
+      "alt": "Bounty, pin rail",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/51.webp",
+        "hiRes": "bounty/hi-res/51.webp"
+      }
+    },
+    {
+      "file": "54.webp",
+      "order": 54,
+      "section": "overall",
+      "caption": "Head figure",
+      "alt": "Bounty, Head figure",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/54.webp",
+        "hiRes": "bounty/hi-res/54.webp"
+      }
+    },
+    {
+      "file": "55.webp",
+      "order": 55,
+      "section": "overall",
+      "caption": "Crew",
+      "alt": "Bounty, Crew",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/55.webp",
+        "hiRes": "bounty/hi-res/55.webp"
+      }
+    },
+    {
+      "file": "57.webp",
+      "order": 57,
+      "section": "overall",
+      "caption": "Captain",
+      "alt": "Bounty, Captain",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/57.webp",
+        "hiRes": "bounty/hi-res/57.webp"
+      }
+    },
+    {
+      "file": "58.webp",
+      "order": 58,
+      "section": "overall",
+      "caption": "Sailor",
+      "alt": "Bounty, Sailor",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/58.webp",
+        "hiRes": "bounty/hi-res/58.webp"
+      }
+    },
+    {
+      "file": "59.webp",
+      "order": 59,
+      "section": "overall",
+      "caption": "Deck",
+      "alt": "Bounty, deck",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/59.webp",
+        "hiRes": "bounty/hi-res/59.webp"
+      }
+    },
+    {
+      "file": "60.webp",
+      "order": 60,
+      "section": "overall",
+      "caption": "Deck close up",
+      "alt": "Bounty, deck",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/60.webp",
+        "hiRes": "bounty/hi-res/60.webp"
+      }
+    },
+    {
+      "file": "61.webp",
+      "order": 61,
+      "section": "overall",
+      "caption": "Bulwark",
+      "alt": "Bounty, Bulwark",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/61.webp",
+        "hiRes": "bounty/hi-res/61.webp"
+      }
+    },
+    {
+      "file": "63.webp",
+      "order": 63,
+      "section": "overall",
+      "caption": "Bowsprit close up",
+      "alt": "Bounty, Bowsprit",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/63.webp",
+        "hiRes": "bounty/hi-res/63.webp"
+      }
+    },
+    {
+      "file": "65.webp",
+      "order": 65,
+      "section": "overall",
+      "caption": "Bowline",
+      "alt": "Bounty, Bowline",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/65.webp",
+        "hiRes": "bounty/hi-res/65.webp"
+      }
+    },
+    {
+      "file": "67.webp",
+      "order": 67,
+      "section": "overall",
+      "caption": "Crowfoot block",
+      "alt": "Bounty, Crowfoot",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/67.webp",
+        "hiRes": "bounty/hi-res/67.webp"
+      }
+    },
+    {
+      "file": "69.webp",
+      "order": 69,
+      "section": "overall",
+      "caption": "Deadeyes",
+      "alt": "Bounty, Deadeyes",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/69.webp",
+        "hiRes": "bounty/hi-res/69.webp"
+      }
+    },
+    {
+      "file": "70.webp",
+      "order": 70,
+      "section": "overall",
+      "caption": "Common view",
+      "alt": "Bounty, Common",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/70.webp",
+        "hiRes": "bounty/hi-res/70.webp"
+      }
+    },
+    {
+      "file": "72.webp",
+      "order": 72,
+      "section": "overall",
+      "caption": "Under sails",
+      "alt": "Bounty, sails",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/72.webp",
+        "hiRes": "bounty/hi-res/72.webp"
+      }
+    },
+    {
+      "file": "73.webp",
+      "order": 73,
+      "section": "hull",
+      "caption": "Side",
+      "alt": "Bounty, side",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/73.webp",
+        "hiRes": "bounty/hi-res/73.webp"
+      }
+    },
+    {
+      "file": "74.webp",
+      "order": 74,
+      "section": "overall",
+      "caption": "Boat on deck",
+      "alt": "Bounty, deck",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/74.webp",
+        "hiRes": "bounty/hi-res/74.webp"
+      }
+    },
+    {
+      "file": "76.webp",
+      "order": 76,
+      "section": "overall",
+      "caption": "Mizzen shrouds",
+      "alt": "Bounty, shrouds",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/76.webp",
+        "hiRes": "bounty/hi-res/76.webp"
+      }
+    },
+    {
+      "file": "77.webp",
+      "order": 77,
+      "section": "overall",
+      "caption": "Gun port",
+      "alt": "Bounty, Gun",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/77.webp",
+        "hiRes": "bounty/hi-res/77.webp"
+      }
+    },
+    {
+      "file": "78.webp",
+      "order": 78,
+      "section": "overall",
+      "caption": "Flag",
+      "alt": "Bounty, Flag",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/78.webp",
+        "hiRes": "bounty/hi-res/78.webp"
+      }
+    },
+    {
+      "file": "79.webp",
+      "order": 79,
+      "section": "overall",
+      "caption": "Main stay",
+      "alt": "Bounty, stay",
+      "lead": false,
+      "orientation": "landscape",
+      "width": 3840,
+      "height": 2560,
+      "paths": {
+        "lowRes": "bounty/low-res/79.webp",
+        "hiRes": "bounty/hi-res/79.webp"
+      }
+    }
+  ]
+}
