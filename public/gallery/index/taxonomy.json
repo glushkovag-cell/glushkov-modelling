@@ -1,0 +1,614 @@
+{
+  "version": 1,
+  "facets": [
+    "component",
+    "technique",
+    "material",
+    "context",
+    "view"
+  ],
+  "terms": [
+    {
+      "slug": "hull",
+      "name": "Hull",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "masts",
+      "name": "Masts",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "spars",
+      "name": "Spars",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "yards",
+      "name": "Yards",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "blocks",
+      "name": "Blocks",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "ratlines",
+      "name": "Ratlines",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "shrouds",
+      "name": "Shrouds",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "deck",
+      "name": "Deck",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "stern",
+      "name": "Stern",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "bow",
+      "name": "Bow",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "fittings",
+      "name": "Fittings",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "gluing",
+      "name": "Gluing",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "sail-attachment",
+      "name": "Sail Attachment",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "stitching",
+      "name": "Stitching",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "blackening",
+      "name": "Blackening",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "wood-bending",
+      "name": "Wood bending",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "caulking",
+      "name": "Caulking",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "nailing",
+      "name": "Nailing",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "sanding",
+      "name": "Sanding",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "coppering",
+      "name": "Coppering",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "spiling",
+      "name": "Spiling",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "tapering",
+      "name": "Tapering",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "double-planking",
+      "name": "Double Planking",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "copper",
+      "name": "Copper",
+      "facet": "material",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "adhesives",
+      "name": "Adhesives",
+      "facet": "material",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "fabric",
+      "name": "Fabric",
+      "facet": "material",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "thread",
+      "name": "Thread",
+      "facet": "material",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "aluminium",
+      "name": "Aluminium",
+      "facet": "material",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "brass",
+      "name": "Brass",
+      "facet": "material",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "running-rigging",
+      "name": "Running Rigging",
+      "facet": "context",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "standing-rigging",
+      "name": "Standing Rigging",
+      "facet": "context",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "power-tools",
+      "name": "Power Tools",
+      "facet": "context",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "workshop-equipment",
+      "name": "Workshop Equipment",
+      "facet": "context",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "hand-tools",
+      "name": "Hand Tools",
+      "facet": "context",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "safety",
+      "name": "Safety",
+      "facet": "context",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "workspace",
+      "name": "Workspace",
+      "facet": "context",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "getting-started",
+      "name": "Getting Started",
+      "facet": "context",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "overall-view",
+      "name": "Overall View",
+      "facet": "view",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": false
+      }
+    },
+    {
+      "slug": "side-view",
+      "name": "Side View",
+      "facet": "view",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": false
+      }
+    },
+    {
+      "slug": "bow-view",
+      "name": "Bow View",
+      "facet": "view",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": false
+      }
+    },
+    {
+      "slug": "stern-view",
+      "name": "Stern View",
+      "facet": "view",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": false
+      }
+    },
+    {
+      "slug": "top-view",
+      "name": "Top View",
+      "facet": "view",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": false
+      }
+    },
+    {
+      "slug": "close-up",
+      "name": "Close-up",
+      "facet": "view",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": false
+      }
+    }
+  ]
+}

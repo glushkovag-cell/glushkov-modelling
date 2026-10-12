@@ -115,7 +115,12 @@ const seoDatePublished = info?.donedate ?? undefined;
             )}
 
             {hasGallery && (
-                <a href={`/gallery/${model.slug}`} class="meta-pill gallery-cta-pill">
+                <a
+                    href={`/gallery/${model.slug}`}
+                    class="meta-pill gallery-cta-pill"
+                    id="gallery-cta-link"
+                    data-gallery-href={`/gallery/${model.slug}`}
+                >
                   View gallery →
                 </a>
             )}
@@ -300,6 +305,7 @@ const seoDatePublished = info?.donedate ?? undefined;
 
     const isAllowedReturnTo =
         !!returnTo &&
+        !returnTo.startsWith('//') &&
         (returnTo.startsWith('/builds') || returnTo.startsWith('/tutorials'));
 
     if (isAllowedReturnTo) {
@@ -323,8 +329,37 @@ const seoDatePublished = info?.donedate ?? undefined;
     }
   }
 
-  initBuildBackLink();
-  document.addEventListener('astro:page-load', initBuildBackLink);
+  function initGalleryLink() {
+    const link = document.getElementById('gallery-cta-link');
+
+    if (!(link instanceof HTMLAnchorElement)) {
+      return;
+    }
+
+    const base = link.dataset.galleryHref;
+
+    if (!base) {
+      return;
+    }
+
+    // Return to this build log, preserving its own returnTo/returnLabel chain
+    const currentBuildUrl = `${window.location.pathname}${window.location.search}`;
+
+    const query = new URLSearchParams({
+      returnTo: currentBuildUrl,
+      returnLabel: 'Back to build log',
+    });
+
+    link.href = `${base}?${query.toString()}`;
+  }
+
+  function initBuildPage() {
+    initBuildBackLink();
+    initGalleryLink();
+  }
+
+  initBuildPage();
+  document.addEventListener('astro:page-load', initBuildPage);
 </script>
 
 <style>

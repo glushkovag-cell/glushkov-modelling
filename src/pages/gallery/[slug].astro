@@ -84,7 +84,9 @@ const galleryBreadcrumbs = [
             <span class="ghost-pill">{sortedImages.length} photos</span>
           </div>
         </div>
-        <a href="/gallery" class="buildlog-btn" id="gallery-back-btn">← Back to gallery</a>
+        <a href="/gallery" class="buildlog-btn" id="gallery-back-btn">
+          <span id="gallery-back-btn-label">← Back to gallery</span>
+        </a>
       </section>
 
       <!-- Gallery content card -->
@@ -109,6 +111,7 @@ const galleryBreadcrumbs = [
 <script>
   function initGalleryBackLink() {
     const backLink = document.getElementById('gallery-back-btn');
+    const label = document.getElementById('gallery-back-btn-label');
 
     if (!(backLink instanceof HTMLAnchorElement)) {
       return;
@@ -116,11 +119,35 @@ const galleryBreadcrumbs = [
 
     const params = new URLSearchParams(window.location.search);
     const returnTo = params.get('returnTo');
+    const returnLabel = params.get('returnLabel');
 
-    backLink.href =
-        returnTo && returnTo.startsWith('/gallery')
-            ? returnTo
-            : '/gallery';
+    // Same-site paths only; "//" would be a protocol-relative redirect
+    const isAllowed =
+        !!returnTo &&
+        !returnTo.startsWith('//') &&
+        (returnTo.startsWith('/gallery') || returnTo.startsWith('/builds'));
+
+    if (isAllowed) {
+      backLink.href = returnTo;
+
+      if (label) {
+        const cleanLabel = returnLabel?.trim().replace(/^←\s*/, '');
+
+        label.textContent = cleanLabel
+            ? `← ${cleanLabel}`
+            : returnTo.startsWith('/builds')
+                ? '← Back to build log'
+                : '← Back to gallery';
+      }
+
+      return;
+    }
+
+    backLink.href = '/gallery';
+
+    if (label) {
+      label.textContent = '← Back to gallery';
+    }
   }
 
   initGalleryBackLink();

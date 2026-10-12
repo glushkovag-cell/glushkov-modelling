@@ -1,27 +1,20 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Gallery manifest (v1 + v2)",
   "type": "object",
   "required": ["slug", "title", "scale", "images"],
   "properties": {
-    "slug": {
-      "type": "string",
-      "description": "URL-friendly identifier"
+    "$schema": { "type": "string" },
+    "schemaVersion": {
+      "type": "integer",
+      "enum": [1, 2],
+      "description": "Отсутствует или 1 = v1; 2 = v2"
     },
-    "title": {
-      "type": "string",
-      "description": "Display title"
-    },
-    "scale": {
-      "type": "string",
-      "pattern": "^1:[0-9]+$",
-      "description": "Model scale (e.g., 1:48)"
-    },
-    "galleryTitle": {
-      "type": "string"
-    },
-    "buildLogUrl": {
-      "type": "string"
-    },
+    "slug": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "scale": { "type": "string", "pattern": "^1:[0-9]+$" },
+    "galleryTitle": { "type": "string" },
+    "buildLogUrl": { "type": "string" },
     "breadcrumbs": {
       "type": "array",
       "items": {
@@ -43,63 +36,114 @@
     },
     "images": {
       "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["file", "order", "section", "caption", "alt", "lead", "orientation", "width", "height", "paths"],
-        "properties": {
-          "file": {
-            "type": "string",
-            "description": "Filename (e.g., 54.webp)"
-          },
-          "order": {
-            "type": "integer",
-            "minimum": 1,
-            "description": "Display order"
-          },
-          "section": {
-            "type": "string",
-            "enum": ["overall", "rigging", "deck", "hull", "details", "workshop"],
-            "description": "Image category"
-          },
-          "caption": {
-            "type": "string",
-            "description": "Short caption"
-          },
-          "alt": {
-            "type": "string",
-            "description": "Accessibility description"
-          },
-          "lead": {
-            "type": "boolean",
-            "description": "Use as cover image"
-          },
-          "orientation": {
-            "type": "string",
-            "enum": ["landscape", "portrait", "square"]
-          },
-          "width": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "height": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "paths": {
-            "type": "object",
-            "required": ["lowRes", "hiRes"],
-            "properties": {
-              "lowRes": {
-                "type": ["string", "null"],
-                "description": "Path to low-res preview"
-              },
-              "hiRes": {
-                "type": ["string", "null"],
-                "description": "Path to hi-res source"
-              }
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/image" }
+    }
+  },
+  "if": {
+    "required": ["schemaVersion"],
+    "properties": { "schemaVersion": { "const": 2 } }
+  },
+  "then": {
+    "properties": {
+      "images": { "items": { "$ref": "#/definitions/imageV2" } }
+    }
+  },
+  "else": {
+    "properties": {
+      "images": { "items": { "$ref": "#/definitions/imageV1" } }
+    }
+  },
+  "definitions": {
+    "termSlug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "sectionV1": {
+      "type": "string",
+      "enum": ["overall", "rigging", "deck", "hull", "details", "workshop"]
+    },
+    "image": {
+      "type": "object",
+      "required": [
+        "file", "order", "section", "caption", "alt",
+        "lead", "orientation", "width", "height", "paths"
+      ],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "order": { "type": "integer", "minimum": 1 },
+        "section": {
+          "oneOf": [
+            { "$ref": "#/definitions/sectionV1" },
+            {
+              "type": "array",
+              "items": { "$ref": "#/definitions/termSlug" },
+              "uniqueItems": true
+            }
+          ]
+        },
+        "legacySection": { "type": "string" },
+        "review": { "type": "boolean" },
+        "suggested": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/termSlug" },
+          "uniqueItems": true
+        },
+        "caption": { "type": "string" },
+        "alt": { "type": "string" },
+        "lead": { "type": "boolean" },
+        "orientation": {
+          "type": "string",
+          "enum": ["landscape", "portrait", "square"]
+        },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "paths": {
+          "type": "object",
+          "required": ["lowRes", "hiRes"],
+          "properties": {
+            "lowRes": {
+              "type": ["string", "null"],
+              "pattern": "^[^/].*",
+              "description": "Относительный путь от public/gallery"
+            },
+            "hiRes": {
+              "type": ["string", "null"],
+              "pattern": "^[^/].*",
+              "description": "Относительный путь от public/gallery"
             }
           }
         }
+      }
+    },
+    "imageV1": {
+      "allOf": [{ "$ref": "#/definitions/image" }],
+      "properties": {
+        "section": { "$ref": "#/definitions/sectionV1" }
+      },
+      "not": {
+        "anyOf": [
+          { "required": ["legacySection"] },
+          { "required": ["review"] },
+          { "required": ["suggested"] }
+        ]
+      }
+    },
+    "imageV2": {
+      "allOf": [{ "$ref": "#/definitions/image" }],
+      "properties": {
+        "section": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/termSlug" },
+          "uniqueItems": true
+        }
+      },
+      "if": {
+        "properties": { "section": { "maxItems": 0 } }
+      },
+      "then": {
+        "required": ["review"],
+        "properties": { "review": { "const": true } }
       }
     }
   }
