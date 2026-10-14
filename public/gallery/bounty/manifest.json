@@ -23,11 +23,12 @@
     "focus": "Overall views, rigging, deck details",
     "viewerMode": "hi-res overlay"
   },
+  "schemaVersion": 2,
   "images": [
     {
       "file": "2.webp",
       "order": 2,
-      "section": "overall",
+      "section": [],
       "caption": "Side view",
       "alt": "Bounty, Side",
       "lead": true,
@@ -37,12 +38,19 @@
       "paths": {
         "lowRes": "bounty/low-res/2.webp",
         "hiRes": "bounty/hi-res/2.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "side-view"
+      ]
     },
     {
       "file": "5.webp",
       "order": 5,
-      "section": "hull",
+      "section": [
+        "hull"
+      ],
       "caption": "Coppering",
       "alt": "Bounty, Coppering",
       "lead": false,
@@ -52,12 +60,14 @@
       "paths": {
         "lowRes": "bounty/low-res/5.webp",
         "hiRes": "bounty/hi-res/5.webp"
-      }
+      },
+      "legacySection": "hull",
+      "review": false
     },
     {
       "file": "7.webp",
       "order": 7,
-      "section": "rigging",
+      "section": [],
       "caption": "Bowsprit rigging",
       "alt": "Bounty, Bowsprit",
       "lead": false,
@@ -67,12 +77,14 @@
       "paths": {
         "lowRes": "bounty/low-res/7.webp",
         "hiRes": "bounty/hi-res/7.webp"
-      }
+      },
+      "legacySection": "rigging",
+      "review": true
     },
     {
       "file": "8.webp",
       "order": 8,
-      "section": "overall",
+      "section": [],
       "caption": "Bow",
       "alt": "Bounty, Bow",
       "lead": false,
@@ -82,12 +94,17 @@
       "paths": {
         "lowRes": "bounty/low-res/8.webp",
         "hiRes": "bounty/hi-res/8.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "bow-view"
+      ]
     },
     {
       "file": "9.webp",
       "order": 9,
-      "section": "overall",
+      "section": [],
       "caption": "Foremast shrouds",
       "alt": "Bounty, shrouds",
       "lead": false,
@@ -97,12 +114,17 @@
       "paths": {
         "lowRes": "bounty/low-res/9.webp",
         "hiRes": "bounty/hi-res/9.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "shrouds"
+      ]
     },
     {
       "file": "11.webp",
       "order": 11,
-      "section": "overall",
+      "section": [],
       "caption": "Anchor",
       "alt": "Bounty, Anchor",
       "lead": false,
@@ -112,12 +134,14 @@
       "paths": {
         "lowRes": "bounty/low-res/11.webp",
         "hiRes": "bounty/hi-res/11.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "12.webp",
       "order": 12,
-      "section": "overall",
+      "section": [],
       "caption": "Boat, side view",
       "alt": "Bounty, Boat",
       "lead": false,
@@ -127,12 +151,19 @@
       "paths": {
         "lowRes": "bounty/low-res/12.webp",
         "hiRes": "bounty/hi-res/12.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "side-view"
+      ]
     },
     {
       "file": "13.webp",
       "order": 13,
-      "section": "deck",
+      "section": [
+        "deck"
+      ],
       "caption": "Boat deck",
       "alt": "Bounty, Boat",
       "lead": false,
@@ -142,12 +173,14 @@
       "paths": {
         "lowRes": "bounty/low-res/13.webp",
         "hiRes": "bounty/hi-res/13.webp"
-      }
+      },
+      "legacySection": "deck",
+      "review": false
     },
     {
       "file": "14.webp",
       "order": 14,
-      "section": "rigging",
+      "section": [],
       "caption": "Stays",
       "alt": "Bounty, Stays",
       "lead": false,
@@ -157,12 +190,14 @@
       "paths": {
         "lowRes": "bounty/low-res/14.webp",
         "hiRes": "bounty/hi-res/14.webp"
-      }
+      },
+      "legacySection": "rigging",
+      "review": true
     },
     {
       "file": "15.webp",
       "order": 15,
-      "section": "overall",
+      "section": [],
       "caption": "Topsail",
       "alt": "Bounty, Topsail",
       "lead": false,
@@ -172,12 +207,14 @@
       "paths": {
         "lowRes": "bounty/low-res/15.webp",
         "hiRes": "bounty/hi-res/15.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "16.webp",
       "order": 16,
-      "section": "overall",
+      "section": [],
       "caption": "Foretop",
       "alt": "Bounty, Foretop",
       "lead": false,
@@ -187,12 +224,14 @@
       "paths": {
         "lowRes": "bounty/low-res/16.webp",
         "hiRes": "bounty/hi-res/16.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "17.webp",
       "order": 17,
-      "section": "rigging",
+      "section": [],
       "caption": "Crow's feet",
       "alt": "Bounty, Crowfoot",
       "lead": false,
@@ -202,12 +241,14 @@
       "paths": {
         "lowRes": "bounty/low-res/17.webp",
         "hiRes": "bounty/hi-res/17.webp"
-      }
+      },
+      "legacySection": "rigging",
+      "review": true
     },
     {
       "file": "18.webp",
       "order": 18,
-      "section": "overall",
+      "section": [],
       "caption": "Main topgallant",
       "alt": "Bounty, topgallant",
       "lead": false,
@@ -217,12 +258,14 @@
       "paths": {
         "lowRes": "bounty/low-res/18.webp",
         "hiRes": "bounty/hi-res/18.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "19.webp",
       "order": 19,
-      "section": "overall",
+      "section": [],
       "caption": "Foredeck",
       "alt": "Bounty, Foredeck",
       "lead": false,
@@ -232,12 +275,14 @@
       "paths": {
         "lowRes": "bounty/low-res/19.webp",
         "hiRes": "bounty/hi-res/19.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "20.webp",
       "order": 20,
-      "section": "overall",
+      "section": [],
       "caption": "Capstan",
       "alt": "Bounty, Capstan",
       "lead": false,
@@ -247,12 +292,16 @@
       "paths": {
         "lowRes": "bounty/low-res/20.webp",
         "hiRes": "bounty/hi-res/20.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "21.webp",
       "order": 21,
-      "section": "deck",
+      "section": [
+        "deck"
+      ],
       "caption": "Main deck",
       "alt": "Bounty, deck",
       "lead": false,
@@ -262,12 +311,14 @@
       "paths": {
         "lowRes": "bounty/low-res/21.webp",
         "hiRes": "bounty/hi-res/21.webp"
-      }
+      },
+      "legacySection": "deck",
+      "review": false
     },
     {
       "file": "22.webp",
       "order": 22,
-      "section": "overall",
+      "section": [],
       "caption": "Cannons",
       "alt": "Bounty, Cannons",
       "lead": false,
@@ -277,12 +328,14 @@
       "paths": {
         "lowRes": "bounty/low-res/22.webp",
         "hiRes": "bounty/hi-res/22.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "23.webp",
       "order": 23,
-      "section": "overall",
+      "section": [],
       "caption": "Wheel",
       "alt": "Bounty, Wheel",
       "lead": false,
@@ -292,12 +345,16 @@
       "paths": {
         "lowRes": "bounty/low-res/23.webp",
         "hiRes": "bounty/hi-res/23.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "24.webp",
       "order": 24,
-      "section": "hull",
+      "section": [
+        "hull"
+      ],
       "caption": "Side view",
       "alt": "Bounty, side",
       "lead": false,
@@ -307,12 +364,14 @@
       "paths": {
         "lowRes": "bounty/low-res/24.webp",
         "hiRes": "bounty/hi-res/24.webp"
-      }
+      },
+      "legacySection": "hull",
+      "review": false
     },
     {
       "file": "25.webp",
       "order": 25,
-      "section": "overall",
+      "section": [],
       "caption": "Mizzen mast",
       "alt": "Bounty, Mizzen",
       "lead": false,
@@ -322,12 +381,17 @@
       "paths": {
         "lowRes": "bounty/low-res/25.webp",
         "hiRes": "bounty/hi-res/25.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "masts"
+      ]
     },
     {
       "file": "26.webp",
       "order": 26,
-      "section": "overall",
+      "section": [],
       "caption": "Mizzen top",
       "alt": "Bounty, Mizzen",
       "lead": false,
@@ -337,12 +401,17 @@
       "paths": {
         "lowRes": "bounty/low-res/26.webp",
         "hiRes": "bounty/hi-res/26.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "top-view"
+      ]
     },
     {
       "file": "27.webp",
       "order": 27,
-      "section": "overall",
+      "section": [],
       "caption": "Mizzen sails",
       "alt": "Bounty, Mizzen",
       "lead": false,
@@ -352,12 +421,14 @@
       "paths": {
         "lowRes": "bounty/low-res/27.webp",
         "hiRes": "bounty/hi-res/27.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "28.webp",
       "order": 28,
-      "section": "overall",
+      "section": [],
       "caption": "Quarterdeck",
       "alt": "Bounty, Quarterdeck",
       "lead": false,
@@ -367,12 +438,14 @@
       "paths": {
         "lowRes": "bounty/low-res/28.webp",
         "hiRes": "bounty/hi-res/28.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "29.webp",
       "order": 29,
-      "section": "details",
+      "section": [],
       "caption": "Lanterns",
       "alt": "Bounty, Lanterns",
       "lead": false,
@@ -382,12 +455,14 @@
       "paths": {
         "lowRes": "bounty/low-res/29.webp",
         "hiRes": "bounty/hi-res/29.webp"
-      }
+      },
+      "legacySection": "details",
+      "review": true
     },
     {
       "file": "30.webp",
       "order": 30,
-      "section": "overall",
+      "section": [],
       "caption": "Side",
       "alt": "Bounty, side",
       "lead": false,
@@ -397,12 +472,17 @@
       "paths": {
         "lowRes": "bounty/low-res/30.webp",
         "hiRes": "bounty/hi-res/30.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "side-view"
+      ]
     },
     {
       "file": "31.webp",
       "order": 31,
-      "section": "overall",
+      "section": [],
       "caption": "Rudder",
       "alt": "Bounty, Stern",
       "lead": false,
@@ -412,12 +492,19 @@
       "paths": {
         "lowRes": "bounty/low-res/31.webp",
         "hiRes": "bounty/hi-res/31.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "stern-view",
+        "stern",
+        "fittings"
+      ]
     },
     {
       "file": "32.webp",
       "order": 32,
-      "section": "overall",
+      "section": [],
       "caption": "Stern",
       "alt": "Bounty, Stern",
       "lead": false,
@@ -427,12 +514,18 @@
       "paths": {
         "lowRes": "bounty/low-res/32.webp",
         "hiRes": "bounty/hi-res/32.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "stern-view",
+        "stern"
+      ]
     },
     {
       "file": "33.webp",
       "order": 33,
-      "section": "overall",
+      "section": [],
       "caption": "Stern gallery",
       "alt": "Bounty, gallery",
       "lead": false,
@@ -442,12 +535,18 @@
       "paths": {
         "lowRes": "bounty/low-res/33.webp",
         "hiRes": "bounty/hi-res/33.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "stern-view",
+        "stern"
+      ]
     },
     {
       "file": "36.webp",
       "order": 36,
-      "section": "overall",
+      "section": [],
       "caption": "Deck from stern",
       "alt": "Bounty, deck",
       "lead": false,
@@ -457,12 +556,19 @@
       "paths": {
         "lowRes": "bounty/low-res/36.webp",
         "hiRes": "bounty/hi-res/36.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "stern-view",
+        "deck",
+        "stern"
+      ]
     },
     {
       "file": "37.webp",
       "order": 37,
-      "section": "overall",
+      "section": [],
       "caption": "Topsails",
       "alt": "Bounty, Topsails",
       "lead": false,
@@ -472,12 +578,14 @@
       "paths": {
         "lowRes": "bounty/low-res/37.webp",
         "hiRes": "bounty/hi-res/37.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "39.webp",
       "order": 39,
-      "section": "overall",
+      "section": [],
       "caption": "Maintop",
       "alt": "Bounty, Maintop",
       "lead": false,
@@ -487,12 +595,14 @@
       "paths": {
         "lowRes": "bounty/low-res/39.webp",
         "hiRes": "bounty/hi-res/39.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "40.webp",
       "order": 40,
-      "section": "overall",
+      "section": [],
       "caption": "Mizzentop",
       "alt": "Bounty, Mizzentop",
       "lead": false,
@@ -502,12 +612,14 @@
       "paths": {
         "lowRes": "bounty/low-res/40.webp",
         "hiRes": "bounty/hi-res/40.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "42.webp",
       "order": 42,
-      "section": "overall",
+      "section": [],
       "caption": "Main topgallant",
       "alt": "Bounty, topgallant",
       "lead": false,
@@ -517,12 +629,14 @@
       "paths": {
         "lowRes": "bounty/low-res/42.webp",
         "hiRes": "bounty/hi-res/42.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "43.webp",
       "order": 43,
-      "section": "overall",
+      "section": [],
       "caption": "Quarterdeck topview",
       "alt": "Bounty, Quarterdeck",
       "lead": false,
@@ -532,12 +646,14 @@
       "paths": {
         "lowRes": "bounty/low-res/43.webp",
         "hiRes": "bounty/hi-res/43.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "44.webp",
       "order": 44,
-      "section": "overall",
+      "section": [],
       "caption": "Topview",
       "alt": "Bounty, topview",
       "lead": false,
@@ -547,12 +663,14 @@
       "paths": {
         "lowRes": "bounty/low-res/44.webp",
         "hiRes": "bounty/hi-res/44.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "45.webp",
       "order": 45,
-      "section": "overall",
+      "section": [],
       "caption": "Foresails and spritsail",
       "alt": "Bounty, spritsail",
       "lead": false,
@@ -562,12 +680,14 @@
       "paths": {
         "lowRes": "bounty/low-res/45.webp",
         "hiRes": "bounty/hi-res/45.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "46.webp",
       "order": 46,
-      "section": "overall",
+      "section": [],
       "caption": "Boat on deck",
       "alt": "Bounty, Boat",
       "lead": false,
@@ -577,12 +697,17 @@
       "paths": {
         "lowRes": "bounty/low-res/46.webp",
         "hiRes": "bounty/hi-res/46.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "deck"
+      ]
     },
     {
       "file": "47.webp",
       "order": 47,
-      "section": "overall",
+      "section": [],
       "caption": "Windlass",
       "alt": "Bounty, Windlass",
       "lead": false,
@@ -592,12 +717,14 @@
       "paths": {
         "lowRes": "bounty/low-res/47.webp",
         "hiRes": "bounty/hi-res/47.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "48.webp",
       "order": 48,
-      "section": "overall",
+      "section": [],
       "caption": "Capstan",
       "alt": "Bounty, Capstan",
       "lead": false,
@@ -607,12 +734,14 @@
       "paths": {
         "lowRes": "bounty/low-res/48.webp",
         "hiRes": "bounty/hi-res/48.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "49.webp",
       "order": 49,
-      "section": "overall",
+      "section": [],
       "caption": "Anchor",
       "alt": "Bounty, Anchor",
       "lead": false,
@@ -622,12 +751,14 @@
       "paths": {
         "lowRes": "bounty/low-res/49.webp",
         "hiRes": "bounty/hi-res/49.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "50.webp",
       "order": 50,
-      "section": "overall",
+      "section": [],
       "caption": "Belaying pin rail",
       "alt": "Bounty, pin rail",
       "lead": false,
@@ -637,12 +768,14 @@
       "paths": {
         "lowRes": "bounty/low-res/50.webp",
         "hiRes": "bounty/hi-res/50.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "51.webp",
       "order": 51,
-      "section": "overall",
+      "section": [],
       "caption": "Foremast pin rail",
       "alt": "Bounty, pin rail",
       "lead": false,
@@ -652,12 +785,14 @@
       "paths": {
         "lowRes": "bounty/low-res/51.webp",
         "hiRes": "bounty/hi-res/51.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "54.webp",
       "order": 54,
-      "section": "overall",
+      "section": [],
       "caption": "Head figure",
       "alt": "Bounty, Head figure",
       "lead": false,
@@ -667,12 +802,14 @@
       "paths": {
         "lowRes": "bounty/low-res/54.webp",
         "hiRes": "bounty/hi-res/54.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "55.webp",
       "order": 55,
-      "section": "overall",
+      "section": [],
       "caption": "Crew",
       "alt": "Bounty, Crew",
       "lead": false,
@@ -682,12 +819,14 @@
       "paths": {
         "lowRes": "bounty/low-res/55.webp",
         "hiRes": "bounty/hi-res/55.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "57.webp",
       "order": 57,
-      "section": "overall",
+      "section": [],
       "caption": "Captain",
       "alt": "Bounty, Captain",
       "lead": false,
@@ -697,12 +836,14 @@
       "paths": {
         "lowRes": "bounty/low-res/57.webp",
         "hiRes": "bounty/hi-res/57.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "58.webp",
       "order": 58,
-      "section": "overall",
+      "section": [],
       "caption": "Sailor",
       "alt": "Bounty, Sailor",
       "lead": false,
@@ -712,12 +853,14 @@
       "paths": {
         "lowRes": "bounty/low-res/58.webp",
         "hiRes": "bounty/hi-res/58.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "59.webp",
       "order": 59,
-      "section": "overall",
+      "section": [],
       "caption": "Deck",
       "alt": "Bounty, deck",
       "lead": false,
@@ -727,12 +870,17 @@
       "paths": {
         "lowRes": "bounty/low-res/59.webp",
         "hiRes": "bounty/hi-res/59.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "deck"
+      ]
     },
     {
       "file": "60.webp",
       "order": 60,
-      "section": "overall",
+      "section": [],
       "caption": "Deck close up",
       "alt": "Bounty, deck",
       "lead": false,
@@ -742,12 +890,18 @@
       "paths": {
         "lowRes": "bounty/low-res/60.webp",
         "hiRes": "bounty/hi-res/60.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "close-up",
+        "deck"
+      ]
     },
     {
       "file": "61.webp",
       "order": 61,
-      "section": "overall",
+      "section": [],
       "caption": "Bulwark",
       "alt": "Bounty, Bulwark",
       "lead": false,
@@ -757,12 +911,14 @@
       "paths": {
         "lowRes": "bounty/low-res/61.webp",
         "hiRes": "bounty/hi-res/61.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "63.webp",
       "order": 63,
-      "section": "overall",
+      "section": [],
       "caption": "Bowsprit close up",
       "alt": "Bounty, Bowsprit",
       "lead": false,
@@ -772,12 +928,17 @@
       "paths": {
         "lowRes": "bounty/low-res/63.webp",
         "hiRes": "bounty/hi-res/63.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "close-up"
+      ]
     },
     {
       "file": "65.webp",
       "order": 65,
-      "section": "overall",
+      "section": [],
       "caption": "Bowline",
       "alt": "Bounty, Bowline",
       "lead": false,
@@ -787,12 +948,14 @@
       "paths": {
         "lowRes": "bounty/low-res/65.webp",
         "hiRes": "bounty/hi-res/65.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "67.webp",
       "order": 67,
-      "section": "overall",
+      "section": [],
       "caption": "Crowfoot block",
       "alt": "Bounty, Crowfoot",
       "lead": false,
@@ -802,12 +965,17 @@
       "paths": {
         "lowRes": "bounty/low-res/67.webp",
         "hiRes": "bounty/hi-res/67.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "blocks"
+      ]
     },
     {
       "file": "69.webp",
       "order": 69,
-      "section": "overall",
+      "section": [],
       "caption": "Deadeyes",
       "alt": "Bounty, Deadeyes",
       "lead": false,
@@ -817,12 +985,14 @@
       "paths": {
         "lowRes": "bounty/low-res/69.webp",
         "hiRes": "bounty/hi-res/69.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "70.webp",
       "order": 70,
-      "section": "overall",
+      "section": [],
       "caption": "Common view",
       "alt": "Bounty, Common",
       "lead": false,
@@ -832,12 +1002,17 @@
       "paths": {
         "lowRes": "bounty/low-res/70.webp",
         "hiRes": "bounty/hi-res/70.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "overall-view"
+      ]
     },
     {
       "file": "72.webp",
       "order": 72,
-      "section": "overall",
+      "section": [],
       "caption": "Under sails",
       "alt": "Bounty, sails",
       "lead": false,
@@ -847,12 +1022,16 @@
       "paths": {
         "lowRes": "bounty/low-res/72.webp",
         "hiRes": "bounty/hi-res/72.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "73.webp",
       "order": 73,
-      "section": "hull",
+      "section": [
+        "hull"
+      ],
       "caption": "Side",
       "alt": "Bounty, side",
       "lead": false,
@@ -862,12 +1041,14 @@
       "paths": {
         "lowRes": "bounty/low-res/73.webp",
         "hiRes": "bounty/hi-res/73.webp"
-      }
+      },
+      "legacySection": "hull",
+      "review": false
     },
     {
       "file": "74.webp",
       "order": 74,
-      "section": "overall",
+      "section": [],
       "caption": "Boat on deck",
       "alt": "Bounty, deck",
       "lead": false,
@@ -877,12 +1058,17 @@
       "paths": {
         "lowRes": "bounty/low-res/74.webp",
         "hiRes": "bounty/hi-res/74.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "deck"
+      ]
     },
     {
       "file": "76.webp",
       "order": 76,
-      "section": "overall",
+      "section": [],
       "caption": "Mizzen shrouds",
       "alt": "Bounty, shrouds",
       "lead": false,
@@ -892,12 +1078,17 @@
       "paths": {
         "lowRes": "bounty/low-res/76.webp",
         "hiRes": "bounty/hi-res/76.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "shrouds"
+      ]
     },
     {
       "file": "77.webp",
       "order": 77,
-      "section": "overall",
+      "section": [],
       "caption": "Gun port",
       "alt": "Bounty, Gun",
       "lead": false,
@@ -907,12 +1098,17 @@
       "paths": {
         "lowRes": "bounty/low-res/77.webp",
         "hiRes": "bounty/hi-res/77.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true,
+      "suggested": [
+        "side-view"
+      ]
     },
     {
       "file": "78.webp",
       "order": 78,
-      "section": "overall",
+      "section": [],
       "caption": "Flag",
       "alt": "Bounty, Flag",
       "lead": false,
@@ -922,12 +1118,14 @@
       "paths": {
         "lowRes": "bounty/low-res/78.webp",
         "hiRes": "bounty/hi-res/78.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     },
     {
       "file": "79.webp",
       "order": 79,
-      "section": "overall",
+      "section": [],
       "caption": "Main stay",
       "alt": "Bounty, stay",
       "lead": false,
@@ -937,7 +1135,9 @@
       "paths": {
         "lowRes": "bounty/low-res/79.webp",
         "hiRes": "bounty/hi-res/79.webp"
-      }
+      },
+      "legacySection": "overall",
+      "review": true
     }
   ]
 }

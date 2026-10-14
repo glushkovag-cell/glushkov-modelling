@@ -38,7 +38,12 @@
         "lowRes": "santa-maria/low-res/22.webp",
         "hiRes": "santa-maria/hi-res/22.webp"
       },
-      "section": ["overall-view","hull","rigging"],
+      "section": [
+        "overall-view",
+        "hull",
+        "running-rigging",
+        "standing-rigging"
+      ],
       "review": false
     },
     {
@@ -54,14 +59,19 @@
         "lowRes": "santa-maria/low-res/23.webp",
         "hiRes": "santa-maria/hi-res/23.webp"
       },
-      "section": ["side-view","rigging","hull"],
+      "section": [
+        "side-view",
+        "running-rigging",
+        "hull",
+        "standing-rigging"
+      ],
       "review": false
     },
     {
       "file": "24.webp",
       "order": 24,
-      "caption": "Stern view",
-      "alt": "Santa Maria, stern view",
+      "caption": "Starboard and Stern view",
+      "alt": "Santa Maria, Starboard and Stern view",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -70,14 +80,20 @@
         "lowRes": "santa-maria/low-res/24.webp",
         "hiRes": "santa-maria/hi-res/24.webp"
       },
-      "section": ["stern-view","stern","rigging"],
+      "section": [
+        "stern-view",
+        "side-view",
+        "stern",
+        "running-rigging",
+        "standing-rigging"
+      ],
       "review": false
     },
     {
       "file": "25.webp",
       "order": 25,
-      "caption": "Photo 25",
-      "alt": "Santa Maria, photo 25",
+      "caption": "Stern View",
+      "alt": "Santa Maria, Stern View",
       "lead": false,
       "orientation": "portrait",
       "width": 3840,
@@ -86,14 +102,19 @@
         "lowRes": "santa-maria/low-res/25.webp",
         "hiRes": "santa-maria/hi-res/25.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "stern-view",
+        "stern",
+        "running-rigging",
+        "standing-rigging"
+      ],
+      "review": false
     },
     {
       "file": "26.webp",
       "order": 26,
-      "caption": "Photo 26",
-      "alt": "Santa Maria, photo 26",
+      "caption": "Backboard and Stern View",
+      "alt": "Santa Maria, Backboard and Stern View",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -102,14 +123,20 @@
         "lowRes": "santa-maria/low-res/26.webp",
         "hiRes": "santa-maria/hi-res/26.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "stern-view",
+        "side-view",
+        "stern",
+        "running-rigging",
+        "standing-rigging"
+      ],
+      "review": false
     },
     {
       "file": "27.webp",
       "order": 27,
-      "caption": "Photo 27",
-      "alt": "Santa Maria, photo 27",
+      "caption": "Bow and backboard view",
+      "alt": "Santa Maria, Bow and backboard view",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -118,14 +145,21 @@
         "lowRes": "santa-maria/low-res/27.webp",
         "hiRes": "santa-maria/hi-res/27.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "bow-view",
+        "side-view",
+        "overall-view",
+        "bow",
+        "running-rigging",
+        "standing-rigging"
+      ],
+      "review": false
     },
     {
       "file": "28.webp",
       "order": 28,
-      "caption": "Photo 28",
-      "alt": "Santa Maria, photo 28",
+      "caption": "Bow and backboard view",
+      "alt": "Santa Maria, Bow and backboard view",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -134,14 +168,21 @@
         "lowRes": "santa-maria/low-res/28.webp",
         "hiRes": "santa-maria/hi-res/28.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "bow-view",
+        "side-view",
+        "overall-view",
+        "bow",
+        "running-rigging",
+        "standing-rigging"
+      ],
+      "review": false
     },
     {
       "file": "29.webp",
       "order": 29,
-      "caption": "Photo 29",
-      "alt": "Santa Maria, photo 29",
+      "caption": "Bow view",
+      "alt": "Santa Maria, Bow view",
       "lead": false,
       "orientation": "portrait",
       "width": 3840,
@@ -150,14 +191,19 @@
         "lowRes": "santa-maria/low-res/29.webp",
         "hiRes": "santa-maria/hi-res/29.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "bow-view",
+        "bow",
+        "running-rigging",
+        "standing-rigging"
+      ],
+      "review": false
     },
     {
       "file": "30.webp",
       "order": 30,
-      "caption": "Photo 30",
-      "alt": "Santa Maria, photo 30",
+      "caption": "Bow and top view",
+      "alt": "Santa Maria, Bow and top view",
       "lead": false,
       "orientation": "portrait",
       "width": 3840,
@@ -166,14 +212,19 @@
         "lowRes": "santa-maria/low-res/30.webp",
         "hiRes": "santa-maria/hi-res/30.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "bow-view",
+        "top-view",
+        "bow",
+        "spars"
+      ],
+      "review": false
     },
     {
       "file": "31.webp",
       "order": 31,
-      "caption": "Photo 31",
-      "alt": "Santa Maria, photo 31",
+      "caption": "Top view",
+      "alt": "Santa Maria, Top View",
       "lead": false,
       "orientation": "portrait",
       "width": 3840,
@@ -182,14 +233,20 @@
         "lowRes": "santa-maria/low-res/31.webp",
         "hiRes": "santa-maria/hi-res/31.webp"
       },
-      "section": [],
+      "section": [
+        "top-view",
+        "spars",
+        "deck",
+        "running-rigging",
+        "standing-rigging"
+      ],
       "review": true
     },
     {
       "file": "32.webp",
       "order": 32,
-      "caption": "Photo 32",
-      "alt": "Santa Maria, photo 32",
+      "caption": "Top View",
+      "alt": "Santa Maria, Top View",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -198,14 +255,20 @@
         "lowRes": "santa-maria/low-res/32.webp",
         "hiRes": "santa-maria/hi-res/32.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "top-view",
+        "spars",
+        "deck",
+        "running-rigging",
+        "standing-rigging"
+      ],
+      "review": false
     },
     {
       "file": "33.webp",
       "order": 33,
-      "caption": "Photo 33",
-      "alt": "Santa Maria, photo 33",
+      "caption": "Side and deck view",
+      "alt": "Santa Maria, Side and deck view",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -214,14 +277,21 @@
         "lowRes": "santa-maria/low-res/33.webp",
         "hiRes": "santa-maria/hi-res/33.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "top-view",
+        "side-view",
+        "spars",
+        "deck",
+        "running-rigging",
+        "standing-rigging"
+      ],
+      "review": false
     },
     {
       "file": "34.webp",
       "order": 34,
-      "caption": "Photo 34",
-      "alt": "Santa Maria, photo 34",
+      "caption": "Mizzen mast flag",
+      "alt": "Santa Maria, Mizzen mast flag",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -230,14 +300,18 @@
         "lowRes": "santa-maria/low-res/34.webp",
         "hiRes": "santa-maria/hi-res/34.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "sail-attachment",
+        "running-rigging"
+      ],
+      "review": false
     },
     {
       "file": "35.webp",
       "order": 35,
-      "caption": "Photo 35",
-      "alt": "Santa Maria, photo 35",
+      "caption": "Stern decor",
+      "alt": "Santa Maria, Stern decor",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -246,14 +320,17 @@
         "lowRes": "santa-maria/low-res/35.webp",
         "hiRes": "santa-maria/hi-res/35.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "stern-view",
+        "stern"
+      ],
+      "review": false
     },
     {
       "file": "36.webp",
       "order": 36,
-      "caption": "Photo 36",
-      "alt": "Santa Maria, photo 36",
+      "caption": "Stern decor",
+      "alt": "Santa Maria, Stern decor",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -262,14 +339,17 @@
         "lowRes": "santa-maria/low-res/36.webp",
         "hiRes": "santa-maria/hi-res/36.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "stern-view",
+        "stern"
+      ],
+      "review": false
     },
     {
       "file": "37.webp",
       "order": 37,
-      "caption": "Photo 37",
-      "alt": "Santa Maria, photo 37",
+      "caption": "Rudder",
+      "alt": "Santa Maria, Rudder",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -278,14 +358,18 @@
         "lowRes": "santa-maria/low-res/37.webp",
         "hiRes": "santa-maria/hi-res/37.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "stern-view",
+        "stern",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "38.webp",
       "order": 38,
-      "caption": "Photo 38",
-      "alt": "Santa Maria, photo 38",
+      "caption": "Channels and deadeyes",
+      "alt": "Santa Maria, Channels and deadeyes",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -294,14 +378,17 @@
         "lowRes": "santa-maria/low-res/38.webp",
         "hiRes": "santa-maria/hi-res/38.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "standing-rigging"
+      ],
+      "review": false
     },
     {
       "file": "39.webp",
       "order": 39,
-      "caption": "Photo 39",
-      "alt": "Santa Maria, photo 39",
+      "caption": "Deadeyes and cannons",
+      "alt": "Santa Maria, Deadeyes and cannons",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -310,14 +397,18 @@
         "lowRes": "santa-maria/low-res/39.webp",
         "hiRes": "santa-maria/hi-res/39.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "standing-rigging",
+        "cannons"
+      ],
+      "review": false
     },
     {
       "file": "40.webp",
       "order": 40,
-      "caption": "Photo 40",
-      "alt": "Santa Maria, photo 40",
+      "caption": "Aftcastle deck",
+      "alt": "Santa Maria, Aftcastle deck",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -326,14 +417,18 @@
         "lowRes": "santa-maria/low-res/40.webp",
         "hiRes": "santa-maria/hi-res/40.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "deck",
+        "running-rigging"
+      ],
+      "review": false
     },
     {
       "file": "41.webp",
       "order": 41,
-      "caption": "Photo 41",
-      "alt": "Santa Maria, photo 41",
+      "caption": "Quarterdeck",
+      "alt": "Santa Maria, Quarterdeck",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -342,14 +437,18 @@
         "lowRes": "santa-maria/low-res/41.webp",
         "hiRes": "santa-maria/hi-res/41.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "running-rigging",
+        "deck"
+      ],
+      "review": false
     },
     {
       "file": "42.webp",
       "order": 42,
-      "caption": "Photo 42",
-      "alt": "Santa Maria, photo 42",
+      "caption": "Quarterdeck",
+      "alt": "Santa Maria, quarterdeck",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -358,14 +457,18 @@
         "lowRes": "santa-maria/low-res/42.webp",
         "hiRes": "santa-maria/hi-res/42.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "fittings",
+        "deck"
+      ],
+      "review": false
     },
     {
       "file": "43.webp",
       "order": 43,
-      "caption": "Photo 43",
-      "alt": "Santa Maria, photo 43",
+      "caption": "Quarterdeck",
+      "alt": "Santa Maria, quarterdeck",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -374,14 +477,18 @@
         "lowRes": "santa-maria/low-res/43.webp",
         "hiRes": "santa-maria/hi-res/43.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "running-rigging",
+        "deck"
+      ],
+      "review": false
     },
     {
       "file": "44.webp",
       "order": 44,
-      "caption": "Photo 44",
-      "alt": "Santa Maria, photo 44",
+      "caption": "Quarterdeck hatch",
+      "alt": "Santa Maria, quarterdeck hatch",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -390,14 +497,18 @@
         "lowRes": "santa-maria/low-res/44.webp",
         "hiRes": "santa-maria/hi-res/44.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "top-view",
+        "deck"
+      ],
+      "review": false
     },
     {
       "file": "45.webp",
       "order": 45,
-      "caption": "Photo 45",
-      "alt": "Santa Maria, photo 45",
+      "caption": "Windlass",
+      "alt": "Santa Maria, windlass",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -406,14 +517,18 @@
         "lowRes": "santa-maria/low-res/45.webp",
         "hiRes": "santa-maria/hi-res/45.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "fittings",
+        "deck"
+      ],
+      "review": false
     },
     {
       "file": "46.webp",
       "order": 46,
-      "caption": "Photo 46",
-      "alt": "Santa Maria, photo 46",
+      "caption": "Cannon",
+      "alt": "Santa Maria, cannon",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -422,14 +537,18 @@
         "lowRes": "santa-maria/low-res/46.webp",
         "hiRes": "santa-maria/hi-res/46.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "cannons",
+        "deck"
+      ],
+      "review": false
     },
     {
       "file": "47.webp",
       "order": 47,
-      "caption": "Photo 47",
-      "alt": "Santa Maria, photo 47",
+      "caption": "Cannon, top view",
+      "alt": "Santa Maria, cannon",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -438,14 +557,19 @@
         "lowRes": "santa-maria/low-res/47.webp",
         "hiRes": "santa-maria/hi-res/47.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "cannons",
+        "top-view",
+        "deck"
+      ],
+      "review": false
     },
     {
       "file": "48.webp",
       "order": 48,
-      "caption": "Photo 48",
-      "alt": "Santa Maria, photo 48",
+      "caption": "Anchor, side view",
+      "alt": "Santa Maria, anchor",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -454,14 +578,18 @@
         "lowRes": "santa-maria/low-res/48.webp",
         "hiRes": "santa-maria/hi-res/48.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "anchor",
+        "side-view"
+      ],
+      "review": false
     },
     {
       "file": "49.webp",
       "order": 49,
-      "caption": "Photo 49",
-      "alt": "Santa Maria, photo 49",
+      "caption": "Anchor",
+      "alt": "Santa Maria, anchor",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -470,14 +598,18 @@
         "lowRes": "santa-maria/low-res/49.webp",
         "hiRes": "santa-maria/hi-res/49.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "anchor",
+        "deck"
+      ],
+      "review": false
     },
     {
       "file": "50.webp",
       "order": 50,
-      "caption": "Photo 50",
-      "alt": "Santa Maria, photo 50",
+      "caption": "Anchor cable",
+      "alt": "Santa Maria, anchor cable",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -486,14 +618,18 @@
         "lowRes": "santa-maria/low-res/50.webp",
         "hiRes": "santa-maria/hi-res/50.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "anchor",
+        "side-view"
+      ],
+      "review": false
     },
     {
       "file": "51.webp",
       "order": 51,
-      "caption": "Photo 51",
-      "alt": "Santa Maria, photo 51",
+      "caption": "Anchor cable",
+      "alt": "Santa Maria, Anchor cable",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -502,14 +638,18 @@
         "lowRes": "santa-maria/low-res/51.webp",
         "hiRes": "santa-maria/hi-res/51.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up",
+        "anchor",
+        "side-view"
+      ],
+      "review": false
     },
     {
       "file": "52.webp",
       "order": 52,
-      "caption": "Photo 52",
-      "alt": "Santa Maria, photo 52",
+      "caption": "Bow",
+      "alt": "Santa Maria, bow",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -518,14 +658,18 @@
         "lowRes": "santa-maria/low-res/52.webp",
         "hiRes": "santa-maria/hi-res/52.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "bow",
+        "anchor",
+        "bow-view"
+      ],
+      "review": false
     },
     {
       "file": "53.webp",
       "order": 53,
-      "caption": "Photo 53",
-      "alt": "Santa Maria, photo 53",
+      "caption": "Head figure",
+      "alt": "Santa Maria, Head figure",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -534,14 +678,17 @@
         "lowRes": "santa-maria/low-res/53.webp",
         "hiRes": "santa-maria/hi-res/53.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "bow",
+        "bow-view"
+      ],
+      "review": false
     },
     {
       "file": "54.webp",
       "order": 54,
-      "caption": "Photo 54",
-      "alt": "Santa Maria, photo 54",
+      "caption": "Main Stay",
+      "alt": "Santa Maria, main stay",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -550,14 +697,18 @@
         "lowRes": "santa-maria/low-res/54.webp",
         "hiRes": "santa-maria/hi-res/54.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "bow",
+        "standing-rigging",
+        "bow-view"
+      ],
+      "review": false
     },
     {
       "file": "55.webp",
       "order": 55,
-      "caption": "Photo 55",
-      "alt": "Santa Maria, photo 55",
+      "caption": "Forecastle deck",
+      "alt": "Santa Maria, Forecastle deck",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -566,14 +717,18 @@
         "lowRes": "santa-maria/low-res/55.webp",
         "hiRes": "santa-maria/hi-res/55.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "bow",
+        "deck",
+        "bow-view"
+      ],
+      "review": false
     },
     {
       "file": "56.webp",
       "order": 56,
-      "caption": "Photo 56",
-      "alt": "Santa Maria, photo 56",
+      "caption": "Main stay",
+      "alt": "Santa Maria, main stay",
       "lead": false,
       "orientation": "portrait",
       "width": 3840,
@@ -582,14 +737,18 @@
         "lowRes": "santa-maria/low-res/56.webp",
         "hiRes": "santa-maria/hi-res/56.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "bow",
+        "standing-rigging",
+        "bow-view"
+      ],
+      "review": false
     },
     {
       "file": "57.webp",
       "order": 57,
-      "caption": "Photo 57",
-      "alt": "Santa Maria, photo 57",
+      "caption": "Fore sail",
+      "alt": "Santa Maria, fore sail",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -598,14 +757,18 @@
         "lowRes": "santa-maria/low-res/57.webp",
         "hiRes": "santa-maria/hi-res/57.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "sail-attachment",
+        "running-rigging",
+        "bow-view"
+      ],
+      "review": false
     },
     {
       "file": "58.webp",
       "order": 58,
-      "caption": "Photo 58",
-      "alt": "Santa Maria, photo 58",
+      "caption": "Foremast flag",
+      "alt": "Santa Maria, foremast flag",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -614,14 +777,16 @@
         "lowRes": "santa-maria/low-res/58.webp",
         "hiRes": "santa-maria/hi-res/58.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "59.webp",
       "order": 59,
-      "caption": "Photo 59",
-      "alt": "Santa Maria, photo 59",
+      "caption": "Main deck",
+      "alt": "Santa Maria, main deck",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -630,14 +795,18 @@
         "lowRes": "santa-maria/low-res/59.webp",
         "hiRes": "santa-maria/hi-res/59.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "deck",
+        "close-up",
+        "top-view"
+      ],
+      "review": false
     },
     {
       "file": "60.webp",
       "order": 60,
-      "caption": "Photo 60",
-      "alt": "Santa Maria, photo 60",
+      "caption": "Fore sail, back view",
+      "alt": "Santa Maria, fore sail",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -646,14 +815,18 @@
         "lowRes": "santa-maria/low-res/60.webp",
         "hiRes": "santa-maria/hi-res/60.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "sail-attachment",
+        "running-rigging",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "61.webp",
       "order": 61,
-      "caption": "Photo 61",
-      "alt": "Santa Maria, photo 61",
+      "caption": "Main mast shrouds",
+      "alt": "Santa Maria, shrouds",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -662,14 +835,18 @@
         "lowRes": "santa-maria/low-res/61.webp",
         "hiRes": "santa-maria/hi-res/61.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "spars",
+        "standing-rigging",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "62.webp",
       "order": 62,
-      "caption": "Photo 62",
-      "alt": "Santa Maria, photo 62",
+      "caption": "Main mast shrouds",
+      "alt": "Santa Maria, Main mast shrouds",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -678,14 +855,18 @@
         "lowRes": "santa-maria/low-res/62.webp",
         "hiRes": "santa-maria/hi-res/62.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "spars",
+        "standing-rigging",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "63.webp",
       "order": 63,
-      "caption": "Photo 63",
-      "alt": "Santa Maria, photo 63",
+      "caption": "Main top",
+      "alt": "Santa Maria, main top",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -694,14 +875,18 @@
         "lowRes": "santa-maria/low-res/63.webp",
         "hiRes": "santa-maria/hi-res/63.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "spars",
+        "standing-rigging",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "64.webp",
       "order": 64,
-      "caption": "Photo 64",
-      "alt": "Santa Maria, photo 64",
+      "caption": "Top sail",
+      "alt": "Santa Maria, top sail",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -710,14 +895,18 @@
         "lowRes": "santa-maria/low-res/64.webp",
         "hiRes": "santa-maria/hi-res/64.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "spars",
+        "sail-attachment",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "65.webp",
       "order": 65,
-      "caption": "Photo 65",
-      "alt": "Santa Maria, photo 65",
+      "caption": "Mizzen flag",
+      "alt": "Santa Maria, mizzen flag",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -726,14 +915,16 @@
         "lowRes": "santa-maria/low-res/65.webp",
         "hiRes": "santa-maria/hi-res/65.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "66.webp",
       "order": 66,
-      "caption": "Photo 66",
-      "alt": "Santa Maria, photo 66",
+      "caption": "Hull from bow",
+      "alt": "Santa Maria, hull, bow",
       "lead": false,
       "orientation": "portrait",
       "width": 3840,
@@ -742,14 +933,18 @@
         "lowRes": "santa-maria/low-res/66.webp",
         "hiRes": "santa-maria/hi-res/66.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "hull",
+        "bow",
+        "bow-view"
+      ],
+      "review": false
     },
     {
       "file": "67.webp",
       "order": 67,
-      "caption": "Photo 67",
-      "alt": "Santa Maria, photo 67",
+      "caption": "Main mast pennant",
+      "alt": "Santa Maria, main mast pennant",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -758,14 +953,18 @@
         "lowRes": "santa-maria/low-res/67.webp",
         "hiRes": "santa-maria/hi-res/67.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "spars",
+        "sail-attachment",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "68.webp",
       "order": 68,
-      "caption": "Photo 68",
-      "alt": "Santa Maria, photo 68",
+      "caption": "Top sail",
+      "alt": "Santa Maria, top sail",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -774,14 +973,18 @@
         "lowRes": "santa-maria/low-res/68.webp",
         "hiRes": "santa-maria/hi-res/68.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "spars",
+        "sail-attachment",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "69.webp",
       "order": 69,
-      "caption": "Photo 69",
-      "alt": "Santa Maria, photo 69",
+      "caption": "Mizzen Flag",
+      "alt": "Santa Maria, mizzen flag",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -790,14 +993,17 @@
         "lowRes": "santa-maria/low-res/69.webp",
         "hiRes": "santa-maria/hi-res/69.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "spars",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "70.webp",
       "order": 70,
-      "caption": "Photo 70",
-      "alt": "Santa Maria, photo 70",
+      "caption": "Main top",
+      "alt": "Santa Maria, main top",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -806,14 +1012,18 @@
         "lowRes": "santa-maria/low-res/70.webp",
         "hiRes": "santa-maria/hi-res/70.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "spars",
+        "sail-attachment",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "71.webp",
       "order": 71,
-      "caption": "Photo 71",
-      "alt": "Santa Maria, photo 71",
+      "caption": "Deck",
+      "alt": "Santa Maria, deck",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -822,14 +1032,18 @@
         "lowRes": "santa-maria/low-res/71.webp",
         "hiRes": "santa-maria/hi-res/71.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "deck",
+        "spars",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "72.webp",
       "order": 72,
-      "caption": "Photo 72",
-      "alt": "Santa Maria, photo 72",
+      "caption": "Deadeyes",
+      "alt": "Santa Maria, deadeyes",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -838,14 +1052,18 @@
         "lowRes": "santa-maria/low-res/72.webp",
         "hiRes": "santa-maria/hi-res/72.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "deck",
+        "standing-rigging",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "73.webp",
       "order": 73,
-      "caption": "Photo 73",
-      "alt": "Santa Maria, photo 73",
+      "caption": "Bowsprit",
+      "alt": "Santa Maria, bowsprit",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -854,14 +1072,19 @@
         "lowRes": "santa-maria/low-res/73.webp",
         "hiRes": "santa-maria/hi-res/73.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "spars",
+        "close-up",
+        "bow",
+        "bow-view"
+      ],
+      "review": false
     },
     {
       "file": "74.webp",
       "order": 74,
-      "caption": "Photo 74",
-      "alt": "Santa Maria, photo 74",
+      "caption": "Main mast and pump",
+      "alt": "Santa Maria, pump",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -870,14 +1093,19 @@
         "lowRes": "santa-maria/low-res/74.webp",
         "hiRes": "santa-maria/hi-res/74.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "spars",
+        "fittings",
+        "deck",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "75.webp",
       "order": 75,
-      "caption": "Photo 75",
-      "alt": "Santa Maria, photo 75",
+      "caption": "Deck details",
+      "alt": "Santa Maria, deck details",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -886,14 +1114,17 @@
         "lowRes": "santa-maria/low-res/75.webp",
         "hiRes": "santa-maria/hi-res/75.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "deck",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "76.webp",
       "order": 76,
-      "caption": "Photo 76",
-      "alt": "Santa Maria, photo 76",
+      "caption": "Steps",
+      "alt": "Santa Maria, steps",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -902,14 +1133,17 @@
         "lowRes": "santa-maria/low-res/76.webp",
         "hiRes": "santa-maria/hi-res/76.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "deck",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "77.webp",
       "order": 77,
-      "caption": "Photo 77",
-      "alt": "Santa Maria, photo 77",
+      "caption": "Main top",
+      "alt": "Santa Maria, main top",
       "lead": false,
       "orientation": "portrait",
       "width": 3122,
@@ -918,14 +1152,18 @@
         "lowRes": "santa-maria/low-res/77.webp",
         "hiRes": "santa-maria/hi-res/77.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "spars",
+        "sail-attachment",
+        "close-up"
+      ],
+      "review": false
     },
     {
       "file": "78.webp",
       "order": 78,
-      "caption": "Photo 78",
-      "alt": "Santa Maria, photo 78",
+      "caption": "Main top",
+      "alt": "Santa Maria, main top",
       "lead": false,
       "orientation": "portrait",
       "width": 3840,
@@ -934,8 +1172,12 @@
         "lowRes": "santa-maria/low-res/78.webp",
         "hiRes": "santa-maria/hi-res/78.webp"
       },
-      "section": [],
-      "review": true
+      "section": [
+        "spars",
+        "sail-attachment",
+        "close-up"
+      ],
+      "review": false
     }
   ]
 }

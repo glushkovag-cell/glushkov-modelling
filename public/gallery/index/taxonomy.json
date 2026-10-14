@@ -163,6 +163,34 @@
       }
     },
     {
+      "slug": "anchor",
+      "name": "Anchor",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "cannons",
+      "name": "Cannons/guns",
+      "facet": "component",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
       "slug": "gluing",
       "name": "Gluing",
       "facet": "technique",
@@ -220,7 +248,7 @@
     },
     {
       "slug": "wood-bending",
-      "name": "Wood bending",
+      "name": "Wood Bending",
       "facet": "technique",
       "appliesTo": [
         "gallery",
@@ -319,6 +347,48 @@
     {
       "slug": "double-planking",
       "name": "Double Planking",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "priming",
+      "name": "Priming",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "varnishing",
+      "name": "Varnishing",
+      "facet": "technique",
+      "appliesTo": [
+        "gallery",
+        "tutorials"
+      ],
+      "status": "active",
+      "publicFilter": {
+        "gallery": true,
+        "tutorials": true
+      }
+    },
+    {
+      "slug": "weathering",
+      "name": "Weathering",
       "facet": "technique",
       "appliesTo": [
         "gallery",
