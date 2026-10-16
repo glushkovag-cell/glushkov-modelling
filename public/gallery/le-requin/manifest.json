@@ -28,7 +28,12 @@
     {
       "file": "1.webp",
       "order": 1,
-      "section": [],
+      "section": [
+        "bow",
+        "standing-rigging",
+        "deck",
+        "close-up"
+      ],
       "caption": "Bow and foremast",
       "alt": "Le Requin, Bow",
       "lead": false,
@@ -40,7 +45,7 @@
         "hiRes": "le-requin/hi-res/1.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "bow-view"
       ]
@@ -48,7 +53,11 @@
     {
       "file": "2.webp",
       "order": 2,
-      "section": [],
+      "section": [
+        "deck",
+        "close-up",
+        "fittings"
+      ],
       "caption": "Main hatch",
       "alt": "Le Requin, Main hatch",
       "lead": false,
@@ -60,7 +69,7 @@
         "hiRes": "le-requin/hi-res/2.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "fittings"
       ]
@@ -68,7 +77,10 @@
     {
       "file": "3.webp",
       "order": 3,
-      "section": [],
+      "section": [
+        "stern",
+        "close-up"
+      ],
       "caption": "Quarterdeck decor",
       "alt": "Le Requin, Quarterdeck",
       "lead": false,
@@ -80,12 +92,16 @@
         "hiRes": "le-requin/hi-res/3.webp"
       },
       "legacySection": "details",
-      "review": true
+      "review": false
     },
     {
       "file": "4.webp",
       "order": 4,
-      "section": [],
+      "section": [
+        "deck",
+        "masts",
+        "top-view"
+      ],
       "caption": "Mizzen mast",
       "alt": "Le Requin, Mizzen mast",
       "lead": false,
@@ -97,7 +113,7 @@
         "hiRes": "le-requin/hi-res/4.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "masts"
       ]
@@ -105,7 +121,10 @@
     {
       "file": "5.webp",
       "order": 5,
-      "section": [],
+      "section": [
+        "side-view",
+        "stern"
+      ],
       "caption": "Rudder",
       "alt": "Le Requin, Rudder",
       "lead": false,
@@ -117,7 +136,7 @@
         "hiRes": "le-requin/hi-res/5.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "fittings"
       ]
@@ -125,7 +144,10 @@
     {
       "file": "6.webp",
       "order": 6,
-      "section": [],
+      "section": [
+        "side-view",
+        "stern"
+      ],
       "caption": "Rudder",
       "alt": "Le Requin, Rudder",
       "lead": false,
@@ -137,7 +159,7 @@
         "hiRes": "le-requin/hi-res/6.webp"
       },
       "legacySection": "details",
-      "review": true,
+      "review": false,
       "suggested": [
         "fittings"
       ]
@@ -145,7 +167,10 @@
     {
       "file": "7.webp",
       "order": 7,
-      "section": [],
+      "section": [
+        "top-view",
+        "deck"
+      ],
       "caption": "Quarterdeck top view",
       "alt": "Le Requin, Quarterdeck",
       "lead": false,
@@ -157,7 +182,7 @@
         "hiRes": "le-requin/hi-res/7.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "top-view"
       ]
@@ -165,7 +190,11 @@
     {
       "file": "8.webp",
       "order": 8,
-      "section": [],
+      "section": [
+        "bow",
+        "standing-rigging",
+        "bow-view"
+      ],
       "caption": "Foremast rigging",
       "alt": "Le Requin, foremast",
       "lead": false,
@@ -177,12 +206,15 @@
         "hiRes": "le-requin/hi-res/8.webp"
       },
       "legacySection": "rigging",
-      "review": true
+      "review": false
     },
     {
       "file": "9.webp",
       "order": 9,
-      "section": [],
+      "section": [
+        "top-view",
+        "deck"
+      ],
       "caption": "Quarterdeck",
       "alt": "Le Requin, Quarterdeck",
       "lead": false,
@@ -194,12 +226,14 @@
         "hiRes": "le-requin/hi-res/9.webp"
       },
       "legacySection": "overall",
-      "review": true
+      "review": false
     },
     {
       "file": "10.webp",
       "order": 10,
       "section": [
+        "top-view",
+        "cannons",
         "deck"
       ],
       "caption": "Main deck",
@@ -218,9 +252,13 @@
     {
       "file": "11.webp",
       "order": 11,
-      "section": [],
-      "caption": "Stern",
-      "alt": "Le Requin, Stern",
+      "section": [
+        "stern-view",
+        "close-up",
+        "stern"
+      ],
+      "caption": "Stern decor",
+      "alt": "Le Requin, Stern decor",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -230,7 +268,7 @@
         "hiRes": "le-requin/hi-res/11.webp"
       },
       "legacySection": "details",
-      "review": true,
+      "review": false,
       "suggested": [
         "stern-view",
         "stern"
@@ -239,9 +277,13 @@
     {
       "file": "12.webp",
       "order": 12,
-      "section": [],
-      "caption": "Rear hatch",
-      "alt": "Le Requin, rear hatch",
+      "section": [
+        "stern-view",
+        "close-up",
+        "stern"
+      ],
+      "caption": "Stern hatch",
+      "alt": "Le Requin, stern hatch",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -251,7 +293,7 @@
         "hiRes": "le-requin/hi-res/12.webp"
       },
       "legacySection": "details",
-      "review": true,
+      "review": false,
       "suggested": [
         "stern-view",
         "fittings"
@@ -260,7 +302,10 @@
     {
       "file": "13.webp",
       "order": 13,
-      "section": [],
+      "section": [
+        "fittings",
+        "side-view"
+      ],
       "caption": "Oars",
       "alt": "Le Requin, Oars",
       "lead": false,
@@ -272,12 +317,16 @@
         "hiRes": "le-requin/hi-res/13.webp"
       },
       "legacySection": "details",
-      "review": true
+      "review": false
     },
     {
       "file": "14.webp",
       "order": 14,
-      "section": [],
+      "section": [
+        "stern-view",
+        "close-up",
+        "stern"
+      ],
       "caption": "Stern decor",
       "alt": "Le Requin, stern decor",
       "lead": false,
@@ -289,7 +338,7 @@
         "hiRes": "le-requin/hi-res/14.webp"
       },
       "legacySection": "details",
-      "review": true,
+      "review": false,
       "suggested": [
         "stern-view",
         "stern"
@@ -298,7 +347,11 @@
     {
       "file": "15.webp",
       "order": 15,
-      "section": [],
+      "section": [
+        "stern-view",
+        "close-up",
+        "stern"
+      ],
       "caption": "Decor",
       "alt": "Le Requin, decor",
       "lead": false,
@@ -310,16 +363,19 @@
         "hiRes": "le-requin/hi-res/15.webp"
       },
       "legacySection": "details",
-      "review": true
+      "review": false
     },
     {
       "file": "16.webp",
       "order": 16,
       "section": [
-        "hull"
+        "hull",
+        "stern-view",
+        "close-up",
+        "stern"
       ],
-      "caption": "Rear view",
-      "alt": "Le Requin, rear view",
+      "caption": "Stern view",
+      "alt": "Le Requin, stern view",
       "lead": false,
       "orientation": "landscape",
       "width": 3840,
@@ -335,7 +391,8 @@
       "file": "17.webp",
       "order": 17,
       "section": [
-        "hull"
+        "hull",
+        "stern-view"
       ],
       "caption": "Hull - rear",
       "alt": "Le Requin, hull",
@@ -353,7 +410,11 @@
     {
       "file": "18.webp",
       "order": 18,
-      "section": [],
+      "section": [
+        "cannons",
+        "deck",
+        "top-view"
+      ],
       "caption": "Pinnace",
       "alt": "Le Requin, pinnace",
       "lead": false,
@@ -365,12 +426,16 @@
         "hiRes": "le-requin/hi-res/18.webp"
       },
       "legacySection": "overall",
-      "review": true
+      "review": false
     },
     {
       "file": "19.webp",
       "order": 19,
-      "section": [],
+      "section": [
+        "anchor",
+        "standing-rigging",
+        "close-up"
+      ],
       "caption": "Anchor",
       "alt": "Le Requin, Anchor",
       "lead": false,
@@ -382,13 +447,15 @@
         "hiRes": "le-requin/hi-res/19.webp"
       },
       "legacySection": "details",
-      "review": true
+      "review": false
     },
     {
       "file": "20.webp",
       "order": 20,
       "section": [
-        "deck"
+        "deck",
+        "close-up",
+        "cannons"
       ],
       "caption": "Cannons",
       "alt": "Le Requin, Cannons",
@@ -406,7 +473,10 @@
     {
       "file": "21.webp",
       "order": 21,
-      "section": [],
+      "section": [
+        "side-view",
+        "close-up"
+      ],
       "caption": "Quarterdeck decor",
       "alt": "Le Requin, decor",
       "lead": false,
@@ -418,12 +488,15 @@
         "hiRes": "le-requin/hi-res/21.webp"
       },
       "legacySection": "details",
-      "review": true
+      "review": false
     },
     {
       "file": "22.webp",
       "order": 22,
-      "section": [],
+      "section": [
+        "side-view",
+        "close-up"
+      ],
       "caption": "Quarterdeck decor - close up",
       "alt": "Le Requin, decor",
       "lead": false,
@@ -435,7 +508,7 @@
         "hiRes": "le-requin/hi-res/22.webp"
       },
       "legacySection": "details",
-      "review": true,
+      "review": false,
       "suggested": [
         "close-up"
       ]
@@ -443,7 +516,10 @@
     {
       "file": "23.webp",
       "order": 23,
-      "section": [],
+      "section": [
+        "standing-rigging",
+        "close-up"
+      ],
       "caption": "Mainmast rigging",
       "alt": "Le Requin, rigging",
       "lead": false,
@@ -455,12 +531,17 @@
         "hiRes": "le-requin/hi-res/23.webp"
       },
       "legacySection": "rigging",
-      "review": true
+      "review": false
     },
     {
       "file": "24.webp",
       "order": 24,
-      "section": [],
+      "section": [
+        "deck",
+        "masts",
+        "fittings",
+        "close-up"
+      ],
       "caption": "Pumps",
       "alt": "Le Requin, Pumps",
       "lead": false,
@@ -472,12 +553,16 @@
         "hiRes": "le-requin/hi-res/24.webp"
       },
       "legacySection": "details",
-      "review": true
+      "review": false
     },
     {
       "file": "25.webp",
       "order": 25,
-      "section": [],
+      "section": [
+        "bow",
+        "close-up",
+        "bow-view"
+      ],
       "caption": "Bow - close up",
       "alt": "Le Requin, Bow",
       "lead": false,
@@ -489,7 +574,7 @@
         "hiRes": "le-requin/hi-res/25.webp"
       },
       "legacySection": "details",
-      "review": true,
+      "review": false,
       "suggested": [
         "bow-view",
         "close-up"
@@ -498,7 +583,10 @@
     {
       "file": "26.webp",
       "order": 26,
-      "section": [],
+      "section": [
+        "bow",
+        "bow-view"
+      ],
       "caption": "View from Bow",
       "alt": "Le Requin, bow",
       "lead": false,
@@ -510,7 +598,7 @@
         "hiRes": "le-requin/hi-res/26.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "bow-view"
       ]
@@ -518,7 +606,10 @@
     {
       "file": "27.webp",
       "order": 27,
-      "section": [],
+      "section": [
+        "bow-view",
+        "standing-rigging"
+      ],
       "caption": "Front view",
       "alt": "Le Requin, Front",
       "lead": false,
@@ -530,7 +621,7 @@
         "hiRes": "le-requin/hi-res/27.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "bow-view"
       ]
@@ -539,7 +630,8 @@
       "file": "28.webp",
       "order": 28,
       "section": [
-        "deck"
+        "deck",
+        "top-view"
       ],
       "caption": "Main deck",
       "alt": "Le Requin, deck",
@@ -557,7 +649,10 @@
     {
       "file": "29.webp",
       "order": 29,
-      "section": [],
+      "section": [
+        "top-view",
+        "yards"
+      ],
       "caption": "Main yard",
       "alt": "Le Requin, yard",
       "lead": false,
@@ -569,7 +664,7 @@
         "hiRes": "le-requin/hi-res/29.webp"
       },
       "legacySection": "details",
-      "review": true,
+      "review": false,
       "suggested": [
         "yards"
       ]
@@ -577,7 +672,11 @@
     {
       "file": "30.webp",
       "order": 30,
-      "section": [],
+      "section": [
+        "top-view",
+        "masts",
+        "yards"
+      ],
       "caption": "Main mast top",
       "alt": "Le Requin, mast top",
       "lead": false,
@@ -589,7 +688,7 @@
         "hiRes": "le-requin/hi-res/30.webp"
       },
       "legacySection": "details",
-      "review": true,
+      "review": false,
       "suggested": [
         "top-view",
         "masts"
@@ -598,7 +697,9 @@
     {
       "file": "31.webp",
       "order": 31,
-      "section": [],
+      "section": [
+        "overall-view"
+      ],
       "caption": "Under sails",
       "alt": "Le Requin, sails",
       "lead": false,
@@ -610,12 +711,16 @@
         "hiRes": "le-requin/hi-res/31.webp"
       },
       "legacySection": "overall",
-      "review": true
+      "review": false
     },
     {
       "file": "32.webp",
       "order": 32,
-      "section": [],
+      "section": [
+        "spars",
+        "running-rigging",
+        "close-up"
+      ],
       "caption": "Foremast top",
       "alt": "Le Requin, foremast",
       "lead": false,
@@ -627,7 +732,7 @@
         "hiRes": "le-requin/hi-res/32.webp"
       },
       "legacySection": "rigging",
-      "review": true,
+      "review": false,
       "suggested": [
         "top-view"
       ]
@@ -635,7 +740,11 @@
     {
       "file": "33.webp",
       "order": 33,
-      "section": [],
+      "section": [
+        "spars",
+        "standing-rigging",
+        "close-up"
+      ],
       "caption": "Mainmast top",
       "alt": "Le Requin, Mainmast top",
       "lead": false,
@@ -647,7 +756,7 @@
         "hiRes": "le-requin/hi-res/33.webp"
       },
       "legacySection": "rigging",
-      "review": true,
+      "review": false,
       "suggested": [
         "top-view"
       ]
@@ -656,7 +765,9 @@
       "file": "34.webp",
       "order": 34,
       "section": [
-        "deck"
+        "deck",
+        "cannons",
+        "top-view"
       ],
       "caption": "Gundeck",
       "alt": "Le Requin, Gundeck",
@@ -675,7 +786,9 @@
       "file": "35.webp",
       "order": 35,
       "section": [
-        "deck"
+        "deck",
+        "close-up",
+        "cannons"
       ],
       "caption": "Cannons",
       "alt": "Le Requin, Cannons",
@@ -693,7 +806,10 @@
     {
       "file": "36.webp",
       "order": 36,
-      "section": [],
+      "section": [
+        "deck",
+        "close-up"
+      ],
       "caption": "Rudder post",
       "alt": "Le Requin, Rudder post",
       "lead": false,
@@ -705,7 +821,7 @@
         "hiRes": "le-requin/hi-res/36.webp"
       },
       "legacySection": "details",
-      "review": true,
+      "review": false,
       "suggested": [
         "fittings"
       ]
@@ -714,7 +830,9 @@
       "file": "37.webp",
       "order": 37,
       "section": [
-        "hull"
+        "hull",
+        "close-up",
+        "cannons"
       ],
       "caption": "Gun ports",
       "alt": "Le Requin, gun ports",
@@ -732,7 +850,10 @@
     {
       "file": "38.webp",
       "order": 38,
-      "section": [],
+      "section": [
+        "close-up",
+        "fittings"
+      ],
       "caption": "Galley stove",
       "alt": "Le Requin, stove",
       "lead": false,
@@ -744,12 +865,15 @@
         "hiRes": "le-requin/hi-res/38.webp"
       },
       "legacySection": "details",
-      "review": true
+      "review": false
     },
     {
       "file": "39.webp",
       "order": 39,
-      "section": [],
+      "section": [
+        "hull",
+        "side-view"
+      ],
       "caption": "Inside view",
       "alt": "Le Requin, Inside",
       "lead": false,
@@ -761,12 +885,15 @@
         "hiRes": "le-requin/hi-res/39.webp"
       },
       "legacySection": "overall",
-      "review": true
+      "review": false
     },
     {
       "file": "40.webp",
       "order": 40,
-      "section": [],
+      "section": [
+        "close-up",
+        "fittings"
+      ],
       "caption": "Ring bell",
       "alt": "Le Requin, bell",
       "lead": false,
@@ -778,12 +905,15 @@
         "hiRes": "le-requin/hi-res/40.webp"
       },
       "legacySection": "details",
-      "review": true
+      "review": false
     },
     {
       "file": "41.webp",
       "order": 41,
-      "section": [],
+      "section": [
+        "close-up",
+        "running-rigging"
+      ],
       "caption": "Mainmast rigging",
       "alt": "Le Requin, rigging",
       "lead": false,
@@ -795,12 +925,16 @@
         "hiRes": "le-requin/hi-res/41.webp"
       },
       "legacySection": "rigging",
-      "review": true
+      "review": false
     },
     {
       "file": "42.webp",
       "order": 42,
-      "section": [],
+      "section": [
+        "close-up",
+        "running-rigging",
+        "blocks"
+      ],
       "caption": "Mainmast tackle",
       "alt": "Le Requin, tackle",
       "lead": false,
@@ -812,12 +946,15 @@
         "hiRes": "le-requin/hi-res/42.webp"
       },
       "legacySection": "rigging",
-      "review": true
+      "review": false
     },
     {
       "file": "43.webp",
       "order": 43,
-      "section": [],
+      "section": [
+        "deck",
+        "close-up"
+      ],
       "caption": "Pinnace deck",
       "alt": "Le Requin, pinnace",
       "lead": false,
@@ -829,7 +966,7 @@
         "hiRes": "le-requin/hi-res/43.webp"
       },
       "legacySection": "details",
-      "review": true,
+      "review": false,
       "suggested": [
         "deck"
       ]
@@ -837,7 +974,13 @@
     {
       "file": "44.webp",
       "order": 44,
-      "section": [],
+      "section": [
+        "standing-rigging",
+        "running-rigging",
+        "bow",
+        "close-up",
+        "anchor"
+      ],
       "caption": "Bow details",
       "alt": "Le Requin, bow",
       "lead": false,
@@ -849,7 +992,7 @@
         "hiRes": "le-requin/hi-res/44.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "bow-view",
         "close-up"
@@ -858,7 +1001,10 @@
     {
       "file": "45.webp",
       "order": 45,
-      "section": [],
+      "section": [
+        "bow",
+        "bow-view"
+      ],
       "caption": "Planking",
       "alt": "Le Requin, Planking",
       "lead": false,
@@ -870,12 +1016,15 @@
         "hiRes": "le-requin/hi-res/45.webp"
       },
       "legacySection": "overall",
-      "review": true
+      "review": false
     },
     {
       "file": "46.webp",
       "order": 46,
-      "section": [],
+      "section": [
+        "close-up",
+        "anchor"
+      ],
       "caption": "Anchor",
       "alt": "Le Requin, Anchor",
       "lead": false,
@@ -887,12 +1036,15 @@
         "hiRes": "le-requin/hi-res/46.webp"
       },
       "legacySection": "overall",
-      "review": true
+      "review": false
     },
     {
       "file": "47.webp",
       "order": 47,
-      "section": [],
+      "section": [
+        "bow",
+        "spars"
+      ],
       "caption": "Bowsprit",
       "alt": "Le Requin, Bowsprit",
       "lead": false,
@@ -904,12 +1056,17 @@
         "hiRes": "le-requin/hi-res/47.webp"
       },
       "legacySection": "overall",
-      "review": true
+      "review": false
     },
     {
       "file": "48.webp",
       "order": 48,
-      "section": [],
+      "section": [
+        "stern",
+        "side-view",
+        "stern-view",
+        "sail-attachment"
+      ],
       "caption": "Side view - stern",
       "alt": "Le Requin, side",
       "lead": false,
@@ -921,7 +1078,7 @@
         "hiRes": "le-requin/hi-res/48.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "stern-view",
         "side-view",
@@ -931,7 +1088,11 @@
     {
       "file": "49.webp",
       "order": 49,
-      "section": [],
+      "section": [
+        "spars",
+        "sail-attachment",
+        "side-view"
+      ],
       "caption": "Side view - middle",
       "alt": "Le Requin, side",
       "lead": false,
@@ -943,7 +1104,7 @@
         "hiRes": "le-requin/hi-res/49.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "side-view"
       ]
@@ -951,7 +1112,12 @@
     {
       "file": "50.webp",
       "order": 50,
-      "section": [],
+      "section": [
+        "bow",
+        "side-view",
+        "spars",
+        "sail-attachment"
+      ],
       "caption": "Side view - bow",
       "alt": "Le Requin, side",
       "lead": false,
@@ -963,7 +1129,7 @@
         "hiRes": "le-requin/hi-res/50.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "bow-view",
         "side-view"
@@ -972,7 +1138,10 @@
     {
       "file": "51.webp",
       "order": 51,
-      "section": [],
+      "section": [
+        "side-view",
+        "spars"
+      ],
       "caption": "Side view - Bowsprit",
       "alt": "Le Requin, side",
       "lead": false,
@@ -984,7 +1153,7 @@
         "hiRes": "le-requin/hi-res/51.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "side-view"
       ]
@@ -993,6 +1162,7 @@
       "file": "52.webp",
       "order": 52,
       "section": [
+        "side-view",
         "hull"
       ],
       "caption": "Hull - middle",
@@ -1012,6 +1182,8 @@
       "file": "53.webp",
       "order": 53,
       "section": [
+        "stern",
+        "side-view",
         "hull"
       ],
       "caption": "Hull - stern",
@@ -1030,7 +1202,10 @@
     {
       "file": "54.webp",
       "order": 54,
-      "section": [],
+      "section": [
+        "overall-view",
+        "side-view"
+      ],
       "caption": "Starboard view",
       "alt": "Le Requin model starboard side",
       "lead": true,
@@ -1042,7 +1217,7 @@
         "hiRes": "le-requin/hi-res/54.webp"
       },
       "legacySection": "overall",
-      "review": true,
+      "review": false,
       "suggested": [
         "side-view"
       ]

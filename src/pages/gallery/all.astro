@@ -1,0 +1,1055 @@
+---
+/**
+    * /gallery/all — All Photos
+    *
+    * Flat feed of all photos of all models, grouped by model title.
+    * Filters come only from the URL (?period=&scale=&tag=), set on the
+    * /gallery hub. A photo matches when it has at least one selected tag
+    * itself; period and scale are inherited from its model.
+    *
+    * Inside each model group the photos use the same mosaic as
+    * /gallery/[slug] (lead, two side images, detail row). Because the
+    * visible set depends on filters, slots are assigned on the client
+    * for the visible photos only.
+    */
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeoHead from '../../components/seo/SeoHead.astro';
+import HiResViewer from '../../components/HiResViewer.astro';
+import {
+    getAllGalleryManifests,
+    getGalleryFilterIndexes,
+    type GalleryImage,
+} from '../../lib/gallery';
+import { getAllNews, hasFreshNews } from '../../lib/wordpress';
+
+const [manifests, indexes, allNews] = await Promise.all([
+    getAllGalleryManifests(),
+    getGalleryFilterIndexes(),
+    getAllNews(),
+]);
+
+const newsFlag = hasFreshNews(allNews);
+
+type Slot = 'lead' | 'side' | 'detail';
+
+interface PhotoView {
+    key: string;
+    image: GalleryImage;
+    slot: Slot;
+}
+
+interface ModelGroup {
+    slug: string;
+    title: string;
+    scale: string;
+    photos: PhotoView[];
+}
+
+/**
+ * Same slot rules as GalleryGrid.astro: the lead image (or the first
+ * one), then two side images, then the detail row.
+ */
+function assignSlots(images: GalleryImage[]): Map<GalleryImage, Slot> {
+    const slots = new Map<GalleryImage, Slot>();
+    const lead = images.find((image) => image.lead) ?? images[0];
+
+    if (!lead) return slots;
+
+    slots.set(lead, 'lead');
+
+    let sideCount = 0;
+    for (const image of images) {
+        if (image === lead) continue;
+
+        if (sideCount < 2) {
+            slots.set(image, 'side');
+            sideCount += 1;
+        } else {
+            slots.set(image, 'detail');
+        }
+    }
+
+    return slots;
+}
+
+const groups: ModelGroup[] = manifests
+    .map((manifest) => {
+        const images = [...manifest.images].sort((a, b) => a.order - b.order);
+        const slots = assignSlots(images);
+
+        return {
+            slug: manifest.slug,
+            title: manifest.title,
+            scale: manifest.scale,
+            photos: images.map((image) => ({
+                key: `${manifest.slug}/${image.file}`,
+                image,
+                slot: slots.get(image) ?? 'detail',
+            })),
+        };
+    })
+    .filter((group) => group.photos.length > 0)
+    .sort((a, b) => a.title.localeCompare(b.title, 'en'));
+
+const totalPhotos = groups.reduce((sum, group) => sum + group.photos.length, 0);
+const totalModels = groups.length;
+
+/** The first photo on the page is loaded eagerly, all others lazily. */
+const firstPhotoKey = groups[0]?.photos.find((photo) => photo.slot === 'lead')?.key;
+
+function sideCountOf(group: ModelGroup): number {
+    return group.photos.filter((photo) => photo.slot === 'side').length;
+}
+
+function photoCountLabel(count: number): string {
+    return `${count} ${count === 1 ? 'photo' : 'photos'}`;
+}
+
+const breadcrumbs = [
+    { label: 'Gallery', href: '/gallery' },
+    { label: 'All Photos', href: '/gallery/all' },
+];
+
+/** Only the photo index is needed: keys are model/file. */
+const embeddedIndex = JSON.stringify(indexes.photos).replace(/</g, '\\u003c');
+
+const pageTitle = 'All Photos | Glushkov Modelling';
+const pageDescription =
+    'All hi-res photographs of every scale model build in one feed, grouped by model.';
+---
+
+<BaseLayout
+        title={pageTitle}
+        description={pageDescription}
+        hasFreshNews={newsFlag}
+>
+    <SeoHead
+            slot="head"
+            pageType="gallery"
+            title={pageTitle}
+            description={pageDescription}
+            canonicalPath="/gallery/all"
+            breadcrumbs={breadcrumbs.map((crumb) => ({
+                name: crumb.label,
+                url: crumb.href,
+            }))}
+    />
+
+    <div class="page-section" data-gallery-all>
+        <div class="container">
+
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb" aria-label="Breadcrumb">
+                {breadcrumbs.map((crumb, i) => (
+                        <>
+                            {i > 0 && <span class="breadcrumb-sep" aria-hidden="true">/</span>}
+                            {i < breadcrumbs.length - 1
+                                ? <a href={crumb.href} class="breadcrumb-link" data-gallery-hub-link>{crumb.label}</a>
+                                : <span class="breadcrumb-current" aria-current="page">{crumb.label}</span>
+                            }
+                        </>
+                ))}
+            </nav>
+
+            <!-- Summary card -->
+            <section class="model-summary-card" aria-label="All photos summary">
+                <div class="model-summary-copy">
+                    <span class="eyebrow">Model Gallery</span>
+                    <h1 class="model-summary-title">All Photos</h1>
+                    <p class="model-summary-desc">
+                        Every photograph from every build in one feed, grouped by model.
+                        Filters are set on the gallery page.
+                    </p>
+                    <div class="model-summary-meta">
+                        <span class="meta-pill">{totalModels} {totalModels === 1 ? 'model' : 'models'}</span>
+                        <span class="ghost-pill">{photoCountLabel(totalPhotos)}</span>
+                    </div>
+                </div>
+                <a href="/gallery" class="buildlog-btn" data-gallery-back>
+                    ← Back to gallery
+                </a>
+            </section>
+
+            <!-- Feed -->
+            <section class="content-card gallery-section" aria-labelledby="allPhotosHeading">
+                <span class="eyebrow">Hi-res viewer</span>
+                <h2 class="section-title" id="allPhotosHeading">Photo feed</h2>
+
+                <div class="all-photos-status">
+                    <p
+                            class="all-photos-summary"
+                            data-all-summary
+                            role="status"
+                            aria-live="polite"
+                            aria-atomic="true"
+                    >
+                        {totalPhotos} of {photoCountLabel(totalPhotos)}
+                    </p>
+
+                    <a
+                            href="/gallery"
+                            class="all-photos-change"
+                            data-gallery-hub-link
+                            data-change-filters
+                            hidden
+                    >
+                        Change filters
+                    </a>
+                </div>
+
+                {groups.length > 0 ? (
+                        <>
+                            <div class="all-photos-groups" data-all-groups>
+                                {groups.map((group) => (
+                                        <section
+                                                class="all-photos-group"
+                                                data-all-group
+                                                data-slug={group.slug}
+                                                aria-labelledby={`group-${group.slug}`}
+                                        >
+                                            <header class="all-photos-group__header">
+                                                <h3 class="all-photos-group__title" id={`group-${group.slug}`}>
+                                                    <a
+                                                            href={`/gallery/${group.slug}`}
+                                                            class="all-photos-group__link"
+                                                            data-model-link
+                                                            data-model-path={`/gallery/${group.slug}`}
+                                                    >
+                                                        {group.title}
+                                                    </a>
+                                                </h3>
+                                                <p class="all-photos-group__meta">
+                                                    <span>Scale {group.scale}</span>
+                                                    <span aria-hidden="true">·</span>
+                                                    <span
+                                                            data-group-count
+                                                            data-total={group.photos.length}
+                                                    >
+                            {photoCountLabel(group.photos.length)}
+                          </span>
+                                                </p>
+                                            </header>
+
+                                            <div
+                                                    class="all-mosaic"
+                                                    data-all-mosaic
+                                                    data-side-count={String(sideCountOf(group))}
+                                            >
+                                                {group.photos.map((photo) => {
+                                                    const { image } = photo;
+                                                    const src = image.paths.lowRes ?? image.paths.hiRes ?? '';
+                                                    const hiRes = image.paths.hiRes ?? image.paths.lowRes ?? '';
+
+                                                    return (
+                                                            <figure
+                                                                    class="all-mosaic__item js-all-viewer-trigger"
+                                                                    data-photo
+                                                                    data-key={photo.key}
+                                                                    data-lead={image.lead ? 'true' : 'false'}
+                                                                    data-slot={photo.slot}
+                                                                    data-src={hiRes}
+                                                                    data-title={`${group.title} — ${image.caption}`}
+                                                                    data-caption={image.caption}
+                                                                    tabindex="0"
+                                                                    aria-label={`Open hi-res viewer: ${group.title} — ${image.caption}`}
+                                                            >
+                                                                <img
+                                                                        src={src}
+                                                                        alt={image.alt}
+                                                                        width={image.width}
+                                                                        height={image.height}
+                                                                        loading={photo.key === firstPhotoKey ? 'eager' : 'lazy'}
+                                                                        decoding="async"
+                                                                />
+                                                                <figcaption class="gallery-caption">{image.caption}</figcaption>
+                                                            </figure>
+                                                    );
+                                                })}
+                                            </div>
+                                        </section>
+                                ))}
+                            </div>
+
+                            <div class="all-photos-empty" data-all-empty hidden>
+                                <p>No photos match these filters.</p>
+                                <div class="all-photos-empty__actions">
+                                    <button type="button" class="all-photos-empty__reset" data-all-reset>
+                                        Reset filters
+                                    </button>
+                                    <a href="/gallery" class="all-photos-empty__link" data-gallery-hub-link>
+                                        Change filters
+                                    </a>
+                                </div>
+                            </div>
+
+                            <p class="gallery-hint">
+                                Click any image to open the hi-res viewer.
+                                Use <kbd>←</kbd><kbd>→</kbd> to navigate, <kbd>Esc</kbd> to close.
+                            </p>
+                        </>
+                ) : (
+                        <div class="all-photos-empty">
+                            <p>No photos available yet. Check CMS gallery index or publish model manifests.</p>
+                        </div>
+                )}
+            </section>
+
+        </div>
+    </div>
+
+    {groups.length > 0 && (
+        <script
+            is:inline
+            type="application/json"
+            id="gallery-photo-index"
+            set:html={embeddedIndex}
+            />
+    )}
+
+    <!-- Hi-res viewer overlay (renders once, controlled by gallery:open) -->
+    <HiResViewer />
+</BaseLayout>
+
+<script>
+    import type { GalleryFilterIndex } from '../../lib/gallery';
+    import {
+        computeResult,
+        createEmptyFilterState,
+        getTotalResultCount,
+        isGalleryFilterIndex,
+        parseUrl,
+        toQuery,
+        updateFilterQuery,
+        type FilterGroup,
+        type FilterState,
+    } from '../../scripts/galleryFilterEngine';
+
+    const FILTER_GROUPS: FilterGroup[] = ['period', 'scale', 'tag'];
+    const SLOT_ORDER: Record<string, number> = { lead: 0, side: 1, detail: 2 };
+
+    function photoCountLabel(count: number): string {
+        return `${count} ${count === 1 ? 'photo' : 'photos'}`;
+    }
+
+    /** Missing or malformed JSON returns null: all photos stay visible. */
+    function readIndex(): GalleryFilterIndex | null {
+        const element = document.getElementById('gallery-photo-index');
+        if (!element?.textContent) return null;
+
+        try {
+            const data: unknown = JSON.parse(element.textContent);
+            if (isGalleryFilterIndex(data)) return data;
+        } catch {
+            /* fall through */
+        }
+
+        console.warn('[gallery] photo index is missing or malformed; showing all photos');
+        return null;
+    }
+
+    function createLabelMap(index: GalleryFilterIndex): Map<string, string> {
+        const labels = new Map<string, string>();
+
+        for (const option of index.periods) labels.set(`period:${option.value}`, option.label);
+        for (const option of index.scales) labels.set(`scale:${option.value}`, option.label);
+
+        for (const group of index.groups) {
+            for (const tag of group.tags) labels.set(`tag:${tag.slug}`, tag.name);
+        }
+
+        return labels;
+    }
+
+    function describeState(state: FilterState, labels: Map<string, string>): string {
+        const titles: Record<FilterGroup, string> = {
+            period: 'Period',
+            scale: 'Scale',
+            tag: 'Tags',
+        };
+
+        return FILTER_GROUPS
+            .filter((group) => state[group].length > 0)
+            .map((group) => {
+                const values = state[group].map(
+                    (value) => labels.get(`${group}:${value}`) ?? value,
+                );
+
+                return `${titles[group]}: ${values.join(', ')}`;
+            })
+            .join(' · ');
+    }
+
+    function hasActiveFilters(state: FilterState): boolean {
+        return FILTER_GROUPS.some((group) => state[group].length > 0);
+    }
+
+    /** returnTo from the hub link; same-site /gallery paths only. */
+    function getSafeReturnTo(): string | null {
+        const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+
+        if (returnTo && returnTo.startsWith('/gallery') && !returnTo.startsWith('//')) {
+            return returnTo;
+        }
+
+        return null;
+    }
+
+    /**
+     * Re-assigns mosaic slots for the visible photos of one group,
+     * using the same rules as GalleryGrid: lead (or first), two side
+     * images, then the detail row.
+     */
+    function layoutMosaic(mosaic: HTMLElement): HTMLElement[] {
+        const visible = Array.from(
+            mosaic.querySelectorAll<HTMLElement>('[data-photo]'),
+        ).filter((figure) => !figure.hidden);
+
+        const lead = visible.find((figure) => figure.dataset.lead === 'true') ?? visible[0];
+        let sideCount = 0;
+
+        for (const figure of visible) {
+            if (figure === lead) {
+                figure.dataset.slot = 'lead';
+            } else if (sideCount < 2) {
+                figure.dataset.slot = 'side';
+                sideCount += 1;
+            } else {
+                figure.dataset.slot = 'detail';
+            }
+        }
+
+        mosaic.dataset.sideCount = String(sideCount);
+
+        /* Visual (and viewer) order: lead, side, detail; DOM order within a slot. */
+        return [...visible].sort(
+            (a, b) =>
+                (SLOT_ORDER[a.dataset.slot ?? 'detail'] ?? 2) -
+                (SLOT_ORDER[b.dataset.slot ?? 'detail'] ?? 2),
+        );
+    }
+
+    function initGalleryAll(): void {
+        const root = document.querySelector<HTMLElement>('[data-gallery-all]');
+        if (!root || root.dataset.initialized === 'true') return;
+        root.dataset.initialized = 'true';
+
+        const groups = Array.from(root.querySelectorAll<HTMLElement>('[data-all-group]'));
+        const groupsContainer = root.querySelector<HTMLElement>('[data-all-groups]');
+        const summary = root.querySelector<HTMLElement>('[data-all-summary]');
+        const emptyState = root.querySelector<HTMLElement>('[data-all-empty]');
+        const changeFilters = root.querySelector<HTMLElement>('[data-change-filters]');
+        const backLink = root.querySelector<HTMLAnchorElement>('[data-gallery-back]');
+        const hubLinks = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-gallery-hub-link]'));
+        const modelLinks = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-model-link]'));
+        const resetButton = root.querySelector<HTMLButtonElement>('[data-all-reset]');
+
+        const index = readIndex();
+        const labels = index ? createLabelMap(index) : new Map<string, string>();
+        const totalPhotos = index
+            ? getTotalResultCount(index)
+            : root.querySelectorAll('[data-photo]').length;
+
+        /** Ordered list of visible figures, used by the viewer. */
+        let viewerFigures: HTMLElement[] = [];
+
+        function updateLinks(state: FilterState): void {
+            const filterQuery = toQuery(state);
+            const hubUrl = `/gallery${filterQuery}`;
+            /* Clean URL of this page: filters only, without returnTo/returnLabel. */
+            const currentUrl = `/gallery/all${filterQuery}`;
+
+            for (const link of hubLinks) link.href = hubUrl;
+
+            if (backLink) backLink.href = getSafeReturnTo() ?? hubUrl;
+
+            /*
+             * Model pages get the same filters, a returnTo pointing back here
+             * and a label for the back button in [slug].astro.
+             */
+            for (const link of modelLinks) {
+                const path = link.dataset.modelPath;
+                if (!path) continue;
+
+                const params = new URLSearchParams(filterQuery);
+                params.set('returnTo', currentUrl);
+                params.set('returnLabel', 'Back to all photos');
+
+                link.href = `${path}?${params.toString()}`;
+            }
+        }
+
+        function apply(state: FilterState): void {
+            const matching = index
+                ? new Set(computeResult(index, state))
+                : null;
+
+            viewerFigures = [];
+            let visiblePhotos = 0;
+            let visibleGroups = 0;
+
+            for (const group of groups) {
+                const mosaic = group.querySelector<HTMLElement>('[data-all-mosaic]');
+                const figures = Array.from(group.querySelectorAll<HTMLElement>('[data-photo]'));
+                let groupVisible = 0;
+
+                for (const figure of figures) {
+                    /* Photos missing from the index are shown only without filters. */
+                    const key = figure.dataset.key ?? '';
+                    const visible = matching
+                        ? matching.has(key) || (!(key in index!.items) && !hasActiveFilters(state))
+                        : true;
+
+                    figure.hidden = !visible;
+                    if (visible) groupVisible += 1;
+                }
+
+                group.hidden = groupVisible === 0;
+
+                if (groupVisible > 0) {
+                    visibleGroups += 1;
+                    visiblePhotos += groupVisible;
+                    if (mosaic) viewerFigures.push(...layoutMosaic(mosaic));
+                }
+
+                const count = group.querySelector<HTMLElement>('[data-group-count]');
+                if (count) {
+                    const total = Number(count.dataset.total ?? figures.length);
+
+                    count.textContent = hasActiveFilters(state)
+                        ? `${groupVisible} of ${photoCountLabel(total)}`
+                        : photoCountLabel(total);
+                }
+            }
+
+            const nothingFound = visiblePhotos === 0;
+            if (groupsContainer) groupsContainer.hidden = nothingFound;
+            if (emptyState) emptyState.hidden = !nothingFound;
+
+            if (summary) {
+                const result = `${visiblePhotos} of ${photoCountLabel(totalPhotos)}`;
+                const description = describeState(state, labels);
+                const models = hasActiveFilters(state)
+                    ? ` in ${visibleGroups} ${visibleGroups === 1 ? 'model' : 'models'}`
+                    : '';
+
+                summary.textContent = description
+                    ? `${result}${models} · ${description}`
+                    : result;
+            }
+
+            if (changeFilters) changeFilters.hidden = !hasActiveFilters(state);
+
+            updateLinks(state);
+        }
+
+        /* Viewer: slides are the visible photos in visual order. */
+        function openViewer(figure: HTMLElement): void {
+            const startIndex = viewerFigures.indexOf(figure);
+            if (startIndex < 0) return;
+
+            const slides = viewerFigures.map((item) => ({
+                src: item.dataset.src ?? '',
+                title: item.dataset.title ?? '',
+                caption: item.dataset.caption ?? '',
+            }));
+
+            document.dispatchEvent(
+                new CustomEvent('gallery:open', {
+                    detail: { slides, index: startIndex, trigger: figure },
+                }),
+            );
+        }
+
+        root.addEventListener('click', (event) => {
+            const figure = (event.target as Element | null)?.closest<HTMLElement>('.js-all-viewer-trigger');
+            if (figure) openViewer(figure);
+        });
+
+        root.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+
+            const figure = (event.target as Element | null)?.closest<HTMLElement>('.js-all-viewer-trigger');
+            if (!figure) return;
+
+            event.preventDefault();
+            openViewer(figure);
+        });
+
+        resetButton?.addEventListener('click', () => {
+            const empty = createEmptyFilterState();
+            const params = new URLSearchParams(updateFilterQuery(window.location.search, empty));
+
+            /* The old returnTo pointed to the filtered hub; drop it on reset. */
+            params.delete('returnTo');
+
+            const query = params.toString();
+            window.history.replaceState(
+                window.history.state,
+                '',
+                `${window.location.pathname}${query ? `?${query}` : ''}${window.location.hash}`,
+            );
+
+            apply(empty);
+        });
+
+        /*
+         * Unknown values and obsolete parameters (count) are ignored by
+         * parseUrl. Without a usable index all photos remain visible.
+         */
+        const initialState = index
+            ? parseUrl(index, window.location.search)
+            : createEmptyFilterState();
+
+        apply(initialState);
+    }
+
+    initGalleryAll();
+    document.addEventListener('astro:page-load', initGalleryAll);
+</script>
+
+<style>
+    /* Breadcrumb — same as [slug].astro */
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 18px;
+        font-size: 0.88rem;
+        color: var(--color-text-muted);
+        flex-wrap: wrap;
+    }
+    .breadcrumb-link {
+        color: var(--color-primary);
+        transition: color var(--transition);
+    }
+    .breadcrumb-link:hover { color: var(--color-primary-hover); }
+    .breadcrumb-sep { color: var(--color-text-faint); }
+    .breadcrumb-current { color: var(--color-text-muted); }
+
+    /* Summary card — same as [slug].astro */
+    .model-summary-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 24px;
+        padding: 24px 28px;
+        margin-bottom: 18px;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        transition: background var(--transition), border-color var(--transition);
+    }
+
+    .model-summary-title {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 2.4rem;
+        line-height: 1.02;
+        letter-spacing: -0.01em;
+        margin: 0 0 8px;
+    }
+
+    .model-summary-desc {
+        color: var(--color-text-muted);
+        font-size: 1rem;
+        line-height: 1.7;
+        margin: 0 0 14px;
+        max-width: 60ch;
+    }
+
+    .model-summary-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .meta-pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 8px 13px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        border: 1px solid var(--color-primary-highlight);
+        background: var(--color-primary-highlight);
+        color: var(--color-primary);
+        white-space: nowrap;
+    }
+
+    .ghost-pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 8px 13px;
+        font-size: 0.88rem;
+        font-weight: 500;
+        border: 1px solid var(--color-border);
+        color: var(--color-text-muted);
+        background: transparent;
+        white-space: nowrap;
+    }
+
+    .buildlog-btn {
+        display: inline-flex;
+        align-items: center;
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 999px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface-2);
+        color: var(--color-text);
+        font-size: 0.92rem;
+        font-weight: 600;
+        white-space: nowrap;
+        box-shadow: var(--shadow-sm);
+        transition: border-color var(--transition), color var(--transition), background var(--transition);
+        flex-shrink: 0;
+    }
+    .buildlog-btn:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+    }
+
+    /* Feed card */
+    .gallery-section {
+        padding: 28px;
+    }
+
+    .section-title {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 2rem;
+        letter-spacing: -0.01em;
+        margin: 0 0 10px;
+        line-height: 1.05;
+    }
+
+    .content-card {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        transition: background var(--transition), border-color var(--transition);
+    }
+
+    .all-photos-status {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.5rem 1rem;
+        margin-bottom: 20px;
+    }
+
+    .all-photos-summary {
+        margin: 0;
+        color: var(--color-text-muted);
+        font-size: 0.875rem;
+        font-weight: 600;
+        line-height: 1.5;
+    }
+
+    .all-photos-change,
+    .all-photos-empty__link {
+        color: var(--color-primary);
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: color var(--transition);
+    }
+
+    .all-photos-change:hover,
+    .all-photos-empty__link:hover {
+        color: var(--color-primary-hover);
+    }
+
+    .all-photos-change[hidden] {
+        display: none;
+    }
+
+    /* Model groups */
+    .all-photos-groups {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 36px;
+    }
+
+    .all-photos-groups[hidden],
+    .all-photos-group[hidden] {
+        display: none;
+    }
+
+    .all-photos-group {
+        min-width: 0;
+        content-visibility: auto;
+        /* Height placeholder only; width must follow the container. */
+        contain-intrinsic-block-size: auto 900px;
+    }
+
+    .all-photos-group__header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.25rem 1rem;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .all-photos-group__title {
+        margin: 0;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.6rem;
+        line-height: 1.1;
+    }
+
+    .all-photos-group__link {
+        color: var(--color-text);
+        text-decoration: none;
+        transition: color var(--transition);
+    }
+
+    .all-photos-group__link:hover {
+        color: var(--color-primary);
+    }
+
+    .all-photos-group__link:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 3px;
+        border-radius: 2px;
+    }
+
+    .all-photos-group__meta {
+        display: flex;
+        gap: 0.4rem;
+        margin: 0;
+        color: var(--color-text-muted);
+        font-size: 0.88rem;
+    }
+
+    /*
+     * Mosaic — same proportions as GalleryGrid.astro:
+     * lead 1.2fr + side 0.8fr (3 : 2), detail row of 3.
+     * 15 columns: lead 9, side 6, detail 5.
+     */
+    .all-mosaic {
+        display: grid;
+        grid-template-columns: repeat(15, minmax(0, 1fr));
+        grid-auto-flow: row dense;
+        gap: 14px;
+    }
+
+    .all-mosaic__item {
+        position: relative;
+        margin: 0;
+        overflow: hidden;
+        border-radius: 14px;
+        background: var(--color-surface-offset);
+        cursor: zoom-in;
+        border: 1px solid var(--color-border);
+        min-height: 160px;
+        grid-column: span 5;
+        order: 2;
+    }
+
+    .all-mosaic__item[hidden] {
+        display: none;
+    }
+
+    .all-mosaic__item[data-slot='lead'] {
+        grid-column: span 9;
+        grid-row: span 2;
+        min-height: 460px;
+        order: 0;
+    }
+
+    .all-mosaic__item[data-slot='side'] {
+        grid-column: span 6;
+        min-height: 223px;
+        order: 1;
+    }
+
+    /* No side images: lead takes the full width. */
+    .all-mosaic[data-side-count='0'] .all-mosaic__item[data-slot='lead'] {
+        grid-column: 1 / -1;
+        grid-row: auto;
+    }
+
+    /* One side image: it takes the full lead height. */
+    .all-mosaic[data-side-count='1'] .all-mosaic__item[data-slot='side'] {
+        grid-row: span 2;
+    }
+
+    .all-mosaic__item img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .all-mosaic__item:hover img {
+        transform: scale(1.03);
+    }
+
+    .all-mosaic__item:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 3px;
+    }
+
+    /* Caption overlay — same as GalleryGrid.astro */
+    .gallery-caption {
+        position: absolute;
+        left: 12px;
+        bottom: 12px;
+        max-width: calc(100% - 24px);
+        padding: 6px 11px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        font-size: 0.78rem;
+        color: var(--color-text);
+        border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+        pointer-events: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Empty state */
+    .all-photos-empty {
+        display: grid;
+        justify-items: center;
+        gap: 1rem;
+        padding: 32px;
+        border: 1px dashed var(--color-primary-highlight);
+        border-radius: 14px;
+        color: var(--color-text-muted);
+        text-align: center;
+    }
+
+    .all-photos-empty[hidden] {
+        display: none;
+    }
+
+    .all-photos-empty p {
+        margin: 0;
+    }
+
+    .all-photos-empty__actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem 1.25rem;
+    }
+
+    .all-photos-empty__reset {
+        min-height: 44px;
+        padding: 0.625rem 1.25rem;
+        border: 1px solid var(--color-primary);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--color-primary);
+        font: inherit;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color var(--transition), color var(--transition);
+    }
+
+    .all-photos-empty__reset:hover {
+        background: var(--color-primary-highlight);
+        color: var(--color-primary-hover);
+    }
+
+    .all-photos-empty__reset:focus-visible,
+    .all-photos-change:focus-visible,
+    .all-photos-empty__link:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 3px;
+    }
+
+    /* Hint — same as GalleryGrid.astro */
+    .gallery-hint {
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+        margin: 20px 0 0;
+    }
+
+    .gallery-hint kbd {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 5px;
+        border-radius: 5px;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface-2);
+        font-size: 0.72rem;
+        font-family: inherit;
+        color: var(--color-text);
+    }
+
+    /* Breakpoints mirror GalleryGrid.astro */
+    @media (max-width: 900px) {
+        .all-mosaic {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .all-mosaic__item {
+            grid-column: span 1;
+        }
+
+        .all-mosaic__item[data-slot='lead'] {
+            grid-column: 1 / -1;
+            grid-row: auto;
+            min-height: 320px;
+        }
+
+        .all-mosaic__item[data-slot='side'] {
+            grid-column: span 1;
+        }
+
+        .all-mosaic[data-side-count='1'] .all-mosaic__item[data-slot='side'] {
+            grid-column: 1 / -1;
+            grid-row: auto;
+        }
+    }
+
+    @media (max-width: 700px) {
+        .model-summary-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .model-summary-title { font-size: 1.85rem; }
+        .gallery-section { padding: 18px; }
+        .all-photos-group__title { font-size: 1.35rem; }
+    }
+
+    @media (max-width: 540px) {
+        .all-mosaic {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        .all-mosaic__item,
+        .all-mosaic__item[data-slot='side'] {
+            grid-column: 1 / -1;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .all-mosaic__item img {
+            transition: none;
+        }
+
+        .all-mosaic__item:hover img {
+            transform: none;
+        }
+    }
+</style>

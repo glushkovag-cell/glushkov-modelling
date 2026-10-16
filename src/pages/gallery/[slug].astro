@@ -5,24 +5,74 @@
     * Dedicated visual page for a single model.
     * Loads images from the CMS manifest, renders the editorial grid,
     * and mounts the hi-res viewer overlay.
+    *
+    * Filters from the /gallery hub arrive in the URL (?period=&scale=&tag=).
+    * Only matching photos are shown: a photo matches when it has at least
+    * one selected tag itself; period and scale are inherited from the model.
+    * The mosaic (lead, two side images, detail row — same rules as
+    * GalleryGrid.astro) is re-laid out on the client for the visible photos,
+    * and the hi-res viewer navigates through the visible photos only.
     */
 
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SeoHead from '../../components/seo/SeoHead.astro';
-import GalleryGrid from '../../components/GalleryGrid.astro';
 import HiResViewer from '../../components/HiResViewer.astro';
-import { getGalleryManifest, getAllGallerySlugs } from '../../lib/gallery';
+import {
+  getGalleryManifest,
+  getAllGallerySlugs,
+  getGalleryFilterIndexes,
+  type GalleryFilterIndex,
+} from '../../lib/gallery';
 import { getAllNews, hasFreshNews } from '../../lib/wordpress';
+
+interface Props {
+  filterIndex: GalleryFilterIndex;
+}
 
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
 
+/**
+ * Indexes are built once for all model pages. Each page receives a
+ * photo index restricted to its own photos; periods, scales and tag
+ * groups stay complete so that URL values from the hub are recognised.
+ */
 export async function getStaticPaths() {
-  const slugs = await getAllGallerySlugs();
-  return slugs.map((slug) => ({ params: { slug } }));
+  const [slugs, indexes] = await Promise.all([
+    getAllGallerySlugs(),
+    getGalleryFilterIndexes(),
+  ]);
+
+  const photos = indexes.photos;
+
+  return slugs.map((slug) => {
+    const prefix = `${slug}/`;
+
+    const items = Object.fromEntries(
+        Object.entries(photos.items).filter(([key]) => key.startsWith(prefix)),
+    );
+
+    const byTag = Object.fromEntries(
+        Object.entries(photos.byTag).map(([tag, keys]) => [
+          tag,
+          keys.filter((key) => key.startsWith(prefix)),
+        ]),
+    );
+
+    const filterIndex: GalleryFilterIndex = {
+      groups: photos.groups,
+      periods: photos.periods,
+      scales: photos.scales,
+      byTag,
+      items,
+    };
+
+    return { params: { slug }, props: { filterIndex } };
+  });
 }
 
 const { slug } = Astro.params;
+const { filterIndex } = Astro.props;
 const manifest = await getGalleryManifest(slug!);
 
 if (!manifest) {
@@ -35,6 +85,18 @@ const galleryBreadcrumbs = [
   { label: 'Gallery', href: '/gallery' },
   { label: manifest.title, href: `/gallery/${slug}` },
 ];
+
+/** Same slot rules as GalleryGrid.astro (initial, unfiltered layout). */
+const leadImage = sortedImages.find((image) => image.lead) ?? sortedImages[0];
+const sideImages = sortedImages.filter((image) => image !== leadImage).slice(0, 2);
+const detailImages = sortedImages.filter(
+    (image) => image !== leadImage && !sideImages.includes(image),
+);
+
+const totalPhotos = sortedImages.length;
+const LEAD_CAPTION = 'Open hi-res viewer';
+
+const embeddedIndex = JSON.stringify(filterIndex).replace(/</g, '\\u003c');
 ---
 
 <BaseLayout
@@ -54,7 +116,7 @@ const galleryBreadcrumbs = [
       }))}
   />
 
-  <div class="page-section">
+  <div class="page-section" data-model-gallery>
     <div class="container">
 
       <!-- Breadcrumb -->
@@ -63,7 +125,7 @@ const galleryBreadcrumbs = [
             <>
               {i > 0 && <span class="breadcrumb-sep" aria-hidden="true">/</span>}
               {i < galleryBreadcrumbs.length - 1
-                  ? <a href={crumb.href} class="breadcrumb-link">{crumb.label}</a>
+                  ? <a href={crumb.href} class="breadcrumb-link" data-gallery-hub-link>{crumb.label}</a>
                   : <span class="breadcrumb-current" aria-current="page">{crumb.label}</span>
               }
             </>
@@ -81,7 +143,7 @@ const galleryBreadcrumbs = [
           <div class="model-summary-meta">
             <span class="meta-pill">Scale {manifest.scale}</span>
             <span class="ghost-pill">{manifest.meta.status}</span>
-            <span class="ghost-pill">{sortedImages.length} photos</span>
+            <span class="ghost-pill" data-photo-count>{totalPhotos} photos</span>
           </div>
         </div>
         <a href="/gallery" class="buildlog-btn" id="gallery-back-btn">
@@ -98,11 +160,145 @@ const galleryBreadcrumbs = [
           scroll wheel to inspect details up to 4K resolution.
         </p>
 
-        <GalleryGrid images={sortedImages} modelTitle={manifest.title} />
+        <!-- Filter summary: filled in only when hub filters are active -->
+        <div class="gallery-filter-status" data-filter-status hidden>
+          <p
+              class="gallery-filter-summary"
+              data-filter-summary
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+          ></p>
+          <a href="/gallery" class="gallery-filter-change" data-gallery-hub-link>
+            Change filters
+          </a>
+        </div>
+
+        {sortedImages.length > 0 ? (
+            <div class="gallery-grid-wrapper" data-grid-wrapper>
+              <!-- Same structure as GalleryGrid.astro; JS re-distributes visible figures -->
+              <div
+                  class="gallery-grid"
+                  data-gallery-grid
+                  data-side-count={String(sideImages.length)}
+              >
+                {leadImage && (
+                    <figure
+                        class="gallery-main js-model-viewer-trigger"
+                        data-photo
+                        data-order={String(sortedImages.indexOf(leadImage))}
+                        data-key={`${slug}/${leadImage.file}`}
+                        data-lead={leadImage.lead ? 'true' : 'false'}
+                        data-src={leadImage.paths.hiRes ?? leadImage.paths.lowRes ?? ''}
+                        data-title={`${manifest.title} — ${leadImage.caption}`}
+                        data-caption={leadImage.caption}
+                        tabindex="0"
+                        aria-label={`Open hi-res viewer: ${leadImage.caption}`}
+                    >
+                      <img
+                          src={leadImage.paths.lowRes ?? leadImage.paths.hiRes ?? ''}
+                          alt={leadImage.alt}
+                          width={leadImage.width}
+                          height={leadImage.height}
+                          loading="eager"
+                      />
+                      <figcaption class="gallery-caption" data-photo-caption>{LEAD_CAPTION}</figcaption>
+                    </figure>
+                )}
+
+                <div class="gallery-side" data-gallery-side hidden={sideImages.length === 0}>
+                  {sideImages.map((image) => (
+                      <figure
+                          class="js-model-viewer-trigger"
+                          data-photo
+                          data-order={String(sortedImages.indexOf(image))}
+                          data-key={`${slug}/${image.file}`}
+                          data-lead={image.lead ? 'true' : 'false'}
+                          data-src={image.paths.hiRes ?? image.paths.lowRes ?? ''}
+                          data-title={`${manifest.title} — ${image.caption}`}
+                          data-caption={image.caption}
+                          tabindex="0"
+                          aria-label={`Open hi-res viewer: ${image.caption}`}
+                      >
+                        <img
+                            src={image.paths.lowRes ?? image.paths.hiRes ?? ''}
+                            alt={image.alt}
+                            width={image.width}
+                            height={image.height}
+                            loading="lazy"
+                        />
+                        <figcaption class="gallery-caption" data-photo-caption>{image.caption}</figcaption>
+                      </figure>
+                  ))}
+                </div>
+              </div>
+
+              <div class="gallery-detail-row" data-gallery-detail hidden={detailImages.length === 0}>
+                {detailImages.map((image) => (
+                    <figure
+                        class="js-model-viewer-trigger"
+                        data-photo
+                        data-order={String(sortedImages.indexOf(image))}
+                        data-key={`${slug}/${image.file}`}
+                        data-lead={image.lead ? 'true' : 'false'}
+                        data-src={image.paths.hiRes ?? image.paths.lowRes ?? ''}
+                        data-title={`${manifest.title} — ${image.caption}`}
+                        data-caption={image.caption}
+                        tabindex="0"
+                        aria-label={`Open hi-res viewer: ${image.caption}`}
+                    >
+                      <img
+                          src={image.paths.lowRes ?? image.paths.hiRes ?? ''}
+                          alt={image.alt}
+                          width={image.width}
+                          height={image.height}
+                          loading="lazy"
+                      />
+                      <figcaption class="gallery-caption" data-photo-caption>{image.caption}</figcaption>
+                    </figure>
+                ))}
+              </div>
+
+              <!-- Pool for photos hidden by filters -->
+              <div class="gallery-pool" data-gallery-pool hidden></div>
+
+              <p class="gallery-hint">
+                Click any image to open the hi-res viewer.
+                Use <kbd>←</kbd><kbd>→</kbd> to navigate, <kbd>Esc</kbd> to close.
+              </p>
+            </div>
+        ) : (
+            <div class="gallery-empty">
+              <p>No images available yet. Add WebP files to <code>public/gallery/{slug}/low-res/</code> and run <code>scripts/update_manifest.py</code>.</p>
+            </div>
+        )}
+
+        {sortedImages.length > 0 && (
+            <div class="gallery-empty gallery-empty--filtered" data-filter-empty hidden>
+              <p>No photos of this model match the selected filters.</p>
+              <div class="gallery-empty__actions">
+                <button type="button" class="gallery-empty__reset" data-filter-reset>
+                  Show all photos
+                </button>
+                <a href="/gallery" class="gallery-filter-change" data-gallery-hub-link>
+                  Change filters
+                </a>
+              </div>
+            </div>
+        )}
       </section>
 
     </div>
   </div>
+
+  {sortedImages.length > 0 && (
+      <script
+          is:inline
+          type="application/json"
+          id="gallery-model-photo-index"
+          set:html={embeddedIndex}
+          />
+  )}
 
   <!-- Hi-res viewer overlay (renders once, controlled by JS events) -->
   <HiResViewer />
@@ -152,6 +348,269 @@ const galleryBreadcrumbs = [
 
   initGalleryBackLink();
   document.addEventListener('astro:page-load', initGalleryBackLink);
+</script>
+
+<script>
+  import type { GalleryFilterIndex } from '../../lib/gallery';
+  import {
+    computeResult,
+    createEmptyFilterState,
+    isGalleryFilterIndex,
+    parseUrl,
+    toQuery,
+    updateFilterQuery,
+    type FilterGroup,
+    type FilterState,
+  } from '../../scripts/galleryFilterEngine';
+
+  const FILTER_GROUPS: FilterGroup[] = ['period', 'scale', 'tag'];
+  const LEAD_CAPTION = 'Open hi-res viewer';
+
+  function photoCountLabel(count: number): string {
+    return `${count} ${count === 1 ? 'photo' : 'photos'}`;
+  }
+
+  /** Missing or malformed JSON returns null: all photos stay visible. */
+  function readIndex(): GalleryFilterIndex | null {
+    const element = document.getElementById('gallery-model-photo-index');
+    if (!element?.textContent) return null;
+
+    try {
+      const data: unknown = JSON.parse(element.textContent);
+      if (isGalleryFilterIndex(data)) return data;
+    } catch {
+      /* fall through */
+    }
+
+    console.warn('[gallery] photo index is missing or malformed; showing all photos');
+    return null;
+  }
+
+  function createLabelMap(index: GalleryFilterIndex): Map<string, string> {
+    const labels = new Map<string, string>();
+
+    for (const option of index.periods) labels.set(`period:${option.value}`, option.label);
+    for (const option of index.scales) labels.set(`scale:${option.value}`, option.label);
+
+    for (const group of index.groups) {
+      for (const tag of group.tags) labels.set(`tag:${tag.slug}`, tag.name);
+    }
+
+    return labels;
+  }
+
+  function describeState(state: FilterState, labels: Map<string, string>): string {
+    const titles: Record<FilterGroup, string> = {
+      period: 'Period',
+      scale: 'Scale',
+      tag: 'Tags',
+    };
+
+    return FILTER_GROUPS
+        .filter((group) => state[group].length > 0)
+        .map((group) => {
+          const values = state[group].map(
+              (value) => labels.get(`${group}:${value}`) ?? value,
+          );
+
+          return `${titles[group]}: ${values.join(', ')}`;
+        })
+        .join(' · ');
+  }
+
+  function hasActiveFilters(state: FilterState): boolean {
+    return FILTER_GROUPS.some((group) => state[group].length > 0);
+  }
+
+  interface GridParts {
+    grid: HTMLElement;
+    side: HTMLElement;
+    detail: HTMLElement;
+    pool: HTMLElement;
+  }
+
+  /**
+   * Distributes figures over the GalleryGrid containers using its rules:
+   * lead (or first visible) in the main slot, the next two in the side
+   * column, the rest in the detail row. Hidden figures go to the pool.
+   * Returns visible figures in visual order, which is the viewer order.
+   */
+  function layoutGrid(parts: GridParts, figures: HTMLElement[]): HTMLElement[] {
+    const ordered = [...figures].sort(
+        (a, b) => Number(a.dataset.order ?? 0) - Number(b.dataset.order ?? 0),
+    );
+    const visible = ordered.filter((figure) => !figure.hidden);
+    const lead = visible.find((figure) => figure.dataset.lead === 'true') ?? visible[0];
+    const rest = visible.filter((figure) => figure !== lead);
+    const sideFigures = rest.slice(0, 2);
+    const detailFigures = rest.slice(2);
+
+    for (const figure of ordered) {
+      if (!figure.hidden) continue;
+
+      figure.classList.remove('gallery-main');
+      parts.pool.append(figure);
+    }
+
+    if (lead) {
+      lead.classList.add('gallery-main');
+      parts.grid.prepend(lead);
+    }
+
+    for (const figure of [...sideFigures, ...detailFigures]) {
+      figure.classList.remove('gallery-main');
+    }
+
+    parts.side.append(...sideFigures);
+    parts.detail.append(...detailFigures);
+
+    for (const figure of visible) {
+      const caption = figure.querySelector<HTMLElement>('[data-photo-caption]');
+      if (caption) {
+        caption.textContent = figure === lead
+            ? LEAD_CAPTION
+            : figure.dataset.caption ?? '';
+      }
+    }
+
+    parts.side.hidden = sideFigures.length === 0;
+    parts.detail.hidden = detailFigures.length === 0;
+    parts.grid.dataset.sideCount = String(sideFigures.length);
+
+    return lead ? [lead, ...sideFigures, ...detailFigures] : [];
+  }
+
+  function initModelGalleryFilters(): void {
+    const root = document.querySelector<HTMLElement>('[data-model-gallery]');
+    if (!root || root.dataset.filtersInitialized === 'true') return;
+    root.dataset.filtersInitialized = 'true';
+
+    const grid = root.querySelector<HTMLElement>('[data-gallery-grid]');
+    const side = root.querySelector<HTMLElement>('[data-gallery-side]');
+    const detail = root.querySelector<HTMLElement>('[data-gallery-detail]');
+    const pool = root.querySelector<HTMLElement>('[data-gallery-pool]');
+    const gridWrapper = root.querySelector<HTMLElement>('[data-grid-wrapper]');
+    const status = root.querySelector<HTMLElement>('[data-filter-status]');
+    const summary = root.querySelector<HTMLElement>('[data-filter-summary]');
+    const emptyState = root.querySelector<HTMLElement>('[data-filter-empty]');
+    const photoCount = root.querySelector<HTMLElement>('[data-photo-count]');
+    const hubLinks = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-gallery-hub-link]'));
+    const resetButton = root.querySelector<HTMLButtonElement>('[data-filter-reset]');
+
+    if (!grid || !side || !detail || !pool || !gridWrapper) return;
+
+    const parts: GridParts = { grid, side, detail, pool };
+    const wrapper: HTMLElement = gridWrapper;
+    const figures = Array.from(wrapper.querySelectorAll<HTMLElement>('[data-photo]'));
+
+    const index = readIndex();
+    const labels = index ? createLabelMap(index) : new Map<string, string>();
+    const totalPhotos = figures.length;
+
+    let viewerFigures: HTMLElement[] = [];
+
+    function apply(state: FilterState): void {
+      const filtered = hasActiveFilters(state);
+      const matching = index && filtered
+          ? new Set(computeResult(index, state))
+          : null;
+
+      let visibleCount = 0;
+
+      for (const figure of figures) {
+        const visible = matching ? matching.has(figure.dataset.key ?? '') : true;
+
+        figure.hidden = !visible;
+        if (visible) visibleCount += 1;
+      }
+
+      viewerFigures = layoutGrid(parts, figures);
+
+      const nothingFound = visibleCount === 0;
+      wrapper.hidden = nothingFound;
+      if (emptyState) emptyState.hidden = !nothingFound;
+
+      if (photoCount) {
+        photoCount.textContent = filtered
+            ? `${visibleCount} of ${photoCountLabel(totalPhotos)}`
+            : photoCountLabel(totalPhotos);
+      }
+
+      if (status) status.hidden = !filtered;
+
+      if (summary) {
+        summary.textContent = filtered
+            ? `${visibleCount} of ${photoCountLabel(totalPhotos)} · ${describeState(state, labels)}`
+            : '';
+      }
+
+      const hubUrl = `/gallery${toQuery(state)}`;
+      for (const link of hubLinks) link.href = hubUrl;
+    }
+
+    /* Viewer: slides are the visible photos in visual order. */
+    function openViewer(figure: HTMLElement): void {
+      const startIndex = viewerFigures.indexOf(figure);
+      if (startIndex < 0) return;
+
+      const slides = viewerFigures.map((item) => ({
+        src: item.dataset.src ?? '',
+        title: item.dataset.title ?? '',
+        caption: item.dataset.caption ?? '',
+      }));
+
+      document.dispatchEvent(
+          new CustomEvent('gallery:open', {
+            detail: { slides, index: startIndex, trigger: figure },
+          }),
+      );
+    }
+
+    wrapper.addEventListener('click', (event) => {
+      const figure = (event.target as Element | null)?.closest<HTMLElement>('.js-model-viewer-trigger');
+      if (figure) openViewer(figure);
+    });
+
+    wrapper.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+
+      const figure = (event.target as Element | null)?.closest<HTMLElement>('.js-model-viewer-trigger');
+      if (!figure) return;
+
+      event.preventDefault();
+      openViewer(figure);
+    });
+
+    /*
+     * "Show all photos" removes only filter parameters; returnTo and
+     * returnLabel stay, so the back button keeps working.
+     */
+    resetButton?.addEventListener('click', () => {
+      const empty = createEmptyFilterState();
+      const query = updateFilterQuery(window.location.search, empty);
+
+      window.history.replaceState(
+          window.history.state,
+          '',
+          `${window.location.pathname}${query}${window.location.hash}`,
+      );
+
+      apply(empty);
+    });
+
+    /*
+     * Unknown values and obsolete parameters (count) are ignored by
+     * parseUrl. Without a usable index all photos remain visible.
+     */
+    const initialState = index
+        ? parseUrl(index, window.location.search)
+        : createEmptyFilterState();
+
+    apply(initialState);
+  }
+
+  initModelGalleryFilters();
+  document.addEventListener('astro:page-load', initModelGalleryFilters);
 </script>
 
 <style>
@@ -286,6 +745,226 @@ const galleryBreadcrumbs = [
     transition: background var(--transition), border-color var(--transition);
   }
 
+  /* Filter summary */
+  .gallery-filter-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    margin: -6px 0 18px;
+  }
+
+  .gallery-filter-status[hidden] {
+    display: none;
+  }
+
+  .gallery-filter-summary {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .gallery-filter-change {
+    color: var(--color-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+
+  .gallery-filter-change:hover {
+    color: var(--color-primary-hover);
+  }
+
+  .gallery-filter-change:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Grid wrapper — same as GalleryGrid.astro */
+  .gallery-grid-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .gallery-grid-wrapper[hidden] {
+    display: none;
+  }
+
+  /* 2-column grid — same as GalleryGrid.astro */
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 14px;
+  }
+
+  /* Filtered set without side images: lead takes the full width. */
+  .gallery-grid[data-side-count='0'] {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-side[hidden],
+  .gallery-detail-row[hidden],
+  .gallery-pool {
+    display: none;
+  }
+
+  /* All clickable figures */
+  .gallery-main,
+  .gallery-side figure,
+  .gallery-detail-row figure {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 14px;
+    background: var(--color-surface-offset);
+    cursor: zoom-in;
+    border: 1px solid var(--color-border);
+  }
+
+  .gallery-main         { min-height: 460px; }
+  .gallery-side         { display: grid; gap: 14px; }
+  .gallery-side figure  { min-height: 223px; }
+
+  /* Hover scale */
+  .gallery-main img,
+  .gallery-side figure img,
+  .gallery-detail-row figure img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  figure:hover img { transform: scale(1.03); }
+
+  /* Detail row */
+  .gallery-detail-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .gallery-detail-row figure { min-height: 160px; }
+
+  /* Focus ring */
+  .js-model-viewer-trigger:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+  }
+
+  /* Caption overlay — same as GalleryGrid.astro */
+  .gallery-caption {
+    position: absolute;
+    left: 12px;
+    bottom: 12px;
+    max-width: calc(100% - 24px);
+    padding: 6px 11px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-bg) 82%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    font-size: 0.78rem;
+    color: var(--color-text);
+    border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    pointer-events: none;
+  }
+
+  /* Hint — same as GalleryGrid.astro */
+  .gallery-hint {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin-top: 4px;
+  }
+
+  .gallery-hint kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 5px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-2);
+    font-size: 0.72rem;
+    font-family: inherit;
+    color: var(--color-text);
+  }
+
+  /* Empty states — same look as GalleryGrid.astro */
+  .gallery-empty {
+    padding: 32px;
+    border: 1px dashed var(--color-primary-highlight);
+    border-radius: 14px;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+
+  .gallery-empty[hidden] {
+    display: none;
+  }
+
+  .gallery-empty p {
+    margin: 0;
+  }
+
+  .gallery-empty code {
+    font-size: 0.85em;
+    background: var(--color-surface-offset);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .gallery-empty--filtered {
+    display: grid;
+    justify-items: center;
+    gap: 1rem;
+  }
+
+  .gallery-empty__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem 1.25rem;
+  }
+
+  .gallery-empty__reset {
+    min-height: 44px;
+    padding: 0.625rem 1.25rem;
+    border: 1px solid var(--color-primary);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-primary);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--transition), color var(--transition);
+  }
+
+  .gallery-empty__reset:hover {
+    background: var(--color-primary-highlight);
+    color: var(--color-primary-hover);
+  }
+
+  .gallery-empty__reset:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+  }
+
+  /* Breakpoints — same as GalleryGrid.astro */
+  @media (max-width: 900px) {
+    .gallery-grid { grid-template-columns: 1fr; }
+    .gallery-main { min-height: 320px; }
+    .gallery-side { grid-template-columns: 1fr 1fr; }
+    .gallery-detail-row { grid-template-columns: 1fr 1fr; }
+  }
+
   @media (max-width: 700px) {
     .model-summary-card {
       flex-direction: column;
@@ -293,5 +972,22 @@ const galleryBreadcrumbs = [
     }
     .model-summary-title { font-size: 1.85rem; }
     .gallery-section { padding: 18px; }
+  }
+
+  @media (max-width: 540px) {
+    .gallery-detail-row { grid-template-columns: 1fr; }
+    .gallery-side { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gallery-main img,
+    .gallery-side figure img,
+    .gallery-detail-row figure img {
+      transition: none;
+    }
+
+    figure:hover img {
+      transform: none;
+    }
   }
 </style>

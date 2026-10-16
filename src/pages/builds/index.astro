@@ -703,57 +703,81 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
     padding: 1.5rem;
   }
 
+  /*
+   * Filter panel: unified with tutorials (TagFilter.astro)
+   * and gallery (GalleryFilters.astro).
+   */
   .build-filter {
-    display: grid;
-    gap: 1.5rem;
+    max-width: 300px;
   }
 
   .build-filter__topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
   }
 
   .build-filter__heading-title {
     margin: 0;
-    font-size: 0.875rem;
-    line-height: 1.2;
     font-family: 'General Sans', sans-serif;
     font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--color-text);
+    line-height: 1.2;
   }
 
   .build-filter__reset-top {
-    color: var(--color-primary);
-    font-size: 0.875rem;
-    line-height: 1.2;
-    background: none;
-    border: 0;
     padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--color-primary);
+    font-family: 'General Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
     cursor: pointer;
-    font-family: inherit;
+    transition: color 0.2s ease;
+  }
+
+  .build-filter__reset-top[hidden] {
+    display: none;
+  }
+
+  .build-filter__reset-top:hover {
+    color: var(--color-primary-hover);
+  }
+
+  .build-filter__reset-top:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
   }
 
   .build-filter__section {
-    display: grid;
-    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .build-filter__section:last-child {
+    margin-bottom: 0;
   }
 
   .build-filter__title {
-    margin: 0;
-    font-size: 0.75rem;
-    line-height: 1.2;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--color-text-muted);
+    margin: 0 0 0.75rem;
     font-family: 'General Sans', sans-serif;
     font-weight: 600;
+    font-size: 0.875rem;
+    line-height: 1.2;
+    color: var(--color-text);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   .build-filter__chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.625rem;
+    gap: 0.45rem;
   }
 
   .filter-chip {
@@ -767,38 +791,50 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
     position: absolute;
     opacity: 0;
     pointer-events: none;
+    width: 1px;
+    height: 1px;
   }
 
   .filter-chip__label {
     display: inline-flex;
     align-items: center;
-    min-height: 2.25rem;
-    padding: 0.5rem 0.85rem;
-    border-radius: 999px;
-    border: 1px solid var(--color-border);
+    min-height: 32px;
+    padding: 0.375rem 0.75rem;
+    border: 1px solid var(--color-text-muted);
+    border-radius: 1rem;
     background: var(--color-surface);
     color: var(--color-text);
-    font-size: 0.875rem;
+    font-family: 'General Sans', sans-serif;
+    font-size: 0.8rem;
     line-height: 1.2;
-    font-family: inherit;
     transition:
-        border-color 180ms ease,
-        background-color 180ms ease,
-        color 180ms ease,
-        box-shadow 180ms ease;
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+  }
+
+  .filter-chip:hover .filter-chip__label {
+    background: var(--color-surface-offset);
   }
 
   .filter-chip.is-selected .filter-chip__label,
-  .filter-chip[data-selected='true'] .filter-chip__label {
+  .filter-chip[data-selected='true'] .filter-chip__label,
+  .filter-chip__input:checked + .filter-chip__label {
+    background: var(--color-primary);
     border-color: var(--color-primary);
-    background: var(--color-primary-highlight);
-    color: var(--color-primary-active);
+    color: white;
   }
 
+  .filter-chip__input:focus-visible + .filter-chip__label {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  /* Two-part period labels: "Age of Sail" + "18th c." */
   .filter-chip__label--period {
     display: block;
     text-align: left;
-    min-height: auto;
+    min-height: 32px;
   }
 
   .filter-chip__period-inline {
@@ -814,9 +850,15 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
     color: var(--color-text-muted);
   }
 
+  /* Astro drops the whitespace between the spans: restore the gap after "·". */
+  .filter-chip__period-primary + .filter-chip__period-secondary {
+    margin-left: 0.25em;
+  }
+
   .filter-chip.is-selected .filter-chip__period-secondary,
-  .filter-chip[data-selected='true'] .filter-chip__period-secondary {
-    color: color-mix(in srgb, var(--color-primary-active) 72%, white 28%);
+  .filter-chip[data-selected='true'] .filter-chip__period-secondary,
+  .filter-chip__input:checked + .filter-chip__label .filter-chip__period-secondary {
+    color: color-mix(in srgb, white 82%, transparent);
   }
 
   .filter-chip__label--period.is-wrapped .filter-chip__period-inline {
@@ -831,6 +873,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
     display: block;
     white-space: nowrap;
     margin-top: 0.1rem;
+    margin-left: 0;
   }
 
   .builds-main {
@@ -954,6 +997,13 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
     }
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    .build-filter__reset-top,
+    .filter-chip__label {
+      transition: none;
+    }
+  }
+
   @media (max-width: 767px) {
     .builds-page {
       padding: 1.5rem 0 2rem;
@@ -1043,6 +1093,49 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
       display: block;
     }
 
+    .build-filter {
+      max-width: 100%;
+    }
+
+    .build-filter__topbar {
+      margin-bottom: 0.875rem;
+    }
+
+    .build-filter__heading-title {
+      font-size: 0.88rem;
+    }
+
+    .build-filter__reset-top {
+      font-size: 0.76rem;
+    }
+
+    .build-filter__section {
+      margin-bottom: 0.875rem;
+    }
+
+    .build-filter__title {
+      margin-bottom: 0.625rem;
+      font-size: 0.75rem;
+    }
+
+    .build-filter__chips {
+      gap: 0.375rem;
+    }
+
+    .filter-chip {
+      max-width: 100%;
+    }
+
+    .filter-chip__label {
+      min-height: 30px;
+      padding: 0.32rem 0.65rem;
+      font-size: 0.76rem;
+    }
+
+    .filter-chip__label--period {
+      min-height: 30px;
+    }
+
     .builds-main {
       order: 2;
     }
@@ -1105,4 +1198,3 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
     }
   }
 </style>
-

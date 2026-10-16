@@ -1,0 +1,747 @@
+---
+import type {
+    GalleryFilterGroup,
+    GalleryFilterIndex,
+    GalleryFilterOption,
+    GalleryFilterTag,
+} from '../lib/gallery';
+
+interface Props {
+    index: GalleryFilterIndex;
+
+    /**
+     * Number of photos per tag slug, used to pick the popular tags.
+     * The hub passes counts from the photo index. Without this prop
+     * the counts fall back to index.byTag of the passed index.
+     */
+    tagPhotoCounts?: Record<string, number>;
+
+    /** Number of tags shown before "Show all tags". */
+    topTagLimit?: number;
+
+    idPrefix?: string;
+    action?: string;
+    heading?: string;
+}
+
+const {
+    index,
+    tagPhotoCounts,
+    topTagLimit = 10,
+    idPrefix = 'gallery',
+    action = '/gallery',
+    heading = 'Filters',
+} = Astro.props;
+
+function formatFacetLabel(facet: string): string {
+    return facet
+        .split(/[-_]+/)
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+}
+
+function uniqueOptions(options: GalleryFilterOption[]): GalleryFilterOption[] {
+    const seen = new Set<string>();
+
+    return options.filter((option) => {
+        if (!option.value || seen.has(option.value)) return false;
+        seen.add(option.value);
+        return true;
+    });
+}
+
+/**
+ * Removes duplicate tags across all groups: a tag slug is kept only
+ * in the first group where it appears.
+ */
+function uniqueGroups(groups: GalleryFilterGroup[]): GalleryFilterGroup[] {
+    const seen = new Set<string>();
+
+    return groups
+        .map((group) => ({
+            ...group,
+            tags: group.tags.filter((tag) => {
+                if (!tag.slug || seen.has(tag.slug)) return false;
+                seen.add(tag.slug);
+                return true;
+            }),
+        }))
+        .filter((group) => group.tags.length > 0);
+}
+
+function getTagCount(slug: string): number {
+    return tagPhotoCounts?.[slug] ?? index.byTag[slug]?.length ?? 0;
+}
+
+const periods = uniqueOptions(index.periods);
+const scales = uniqueOptions(index.scales);
+const groups = uniqueGroups(index.groups);
+
+/**
+ * Popular tags: top N by number of photos, descending.
+ * The order is fixed at build time and does not depend on the
+ * current filters. Ties are sorted by name. Tags without photos
+ * never get into the top and stay in the facet groups.
+ */
+const topTags: GalleryFilterTag[] = groups
+    .flatMap((group) => group.tags)
+    .filter((tag) => getTagCount(tag.slug) > 0)
+    .sort(
+        (a, b) =>
+            getTagCount(b.slug) - getTagCount(a.slug) ||
+            a.name.localeCompare(b.name, 'en'),
+    )
+    .slice(0, topTagLimit);
+
+const topTagSlugs = new Set(topTags.map((tag) => tag.slug));
+
+/** Remaining tags by facet, hidden behind "Show all tags". */
+const hiddenGroups = groups
+    .map((group) => ({
+        ...group,
+        tags: group.tags.filter((tag) => !topTagSlugs.has(tag.slug)),
+    }))
+    .filter((group) => group.tags.length > 0);
+
+const hasHiddenTags = hiddenGroups.length > 0;
+
+const panelId = `${idPrefix}-filter-panel`;
+const groupsId = `${idPrefix}-tag-groups`;
+const periodLegendId = `${idPrefix}-filter-period`;
+const scaleLegendId = `${idPrefix}-filter-scale`;
+const tagsLegendId = `${idPrefix}-filter-tags`;
+---
+
+<aside class="gallery-filters" data-gallery-filters>
+    <button
+            type="button"
+            class="gallery-filters__mobile-toggle"
+            data-gallery-filter-toggle
+            aria-expanded="false"
+            aria-controls={panelId}
+    >
+    <span class="gallery-filters__mobile-row">
+      <span
+              class="gallery-filters__mobile-text"
+              data-gallery-filter-toggle-text
+      >
+        Show filters
+      </span>
+    </span>
+
+        <span class="gallery-filters__mobile-summary">
+      Browse by period, scale and tags
+    </span>
+    </button>
+
+    <div
+            class="gallery-filters__panel card"
+            id={panelId}
+            data-gallery-filter-panel
+            data-open="false"
+    >
+        <form
+                class="gallery-filter"
+                method="GET"
+                action={action}
+                data-gallery-filter-form
+        >
+            <div class="gallery-filter__topbar">
+                <h2 class="gallery-filter__heading-title">{heading}</h2>
+
+                <button
+                        type="button"
+                        class="gallery-filter__reset-top"
+                        data-gallery-filter-reset
+                        hidden
+                >
+                    Reset
+                </button>
+            </div>
+
+            {periods.length > 0 && (
+                    <fieldset
+                            class="gallery-filter__section"
+                            aria-labelledby={periodLegendId}
+                    >
+                        <legend class="gallery-filter__title" id={periodLegendId}>
+                            Period
+                        </legend>
+
+                        <div class="gallery-filter__chips">
+                            {periods.map((option) => (
+                                    <label class="gallery-filter-chip" data-selected="false">
+                                        <input
+                                                class="gallery-filter-chip__input"
+                                                type="checkbox"
+                                                name="period"
+                                                value={option.value}
+                                        />
+                                        <span class="gallery-filter-chip__label">{option.label}</span>
+                                    </label>
+                            ))}
+                        </div>
+                    </fieldset>
+            )}
+
+            {scales.length > 0 && (
+                    <fieldset
+                            class="gallery-filter__section"
+                            aria-labelledby={scaleLegendId}
+                    >
+                        <legend class="gallery-filter__title" id={scaleLegendId}>
+                            Scale
+                        </legend>
+
+                        <div class="gallery-filter__chips">
+                            {scales.map((option) => (
+                                    <label class="gallery-filter-chip" data-selected="false">
+                                        <input
+                                                class="gallery-filter-chip__input"
+                                                type="checkbox"
+                                                name="scale"
+                                                value={option.value}
+                                        />
+                                        <span class="gallery-filter-chip__label">{option.label}</span>
+                                    </label>
+                            ))}
+                        </div>
+                    </fieldset>
+            )}
+
+            {topTags.length > 0 && (
+                    <div class="gallery-filter__section gallery-filter__section--tags">
+                        <fieldset
+                                class="gallery-filter__fieldset"
+                                aria-labelledby={tagsLegendId}
+                        >
+                            <legend class="gallery-filter__title" id={tagsLegendId}>
+                                Popular tags
+                            </legend>
+
+                            <div class="gallery-filter__chips">
+                                {topTags.map((tag) => (
+                                        <label class="gallery-filter-chip" data-selected="false">
+                                            <input
+                                                    class="gallery-filter-chip__input"
+                                                    type="checkbox"
+                                                    name="tag"
+                                                    value={tag.slug}
+                                            />
+                                            <span class="gallery-filter-chip__label">{tag.name}</span>
+                                        </label>
+                                ))}
+                            </div>
+                        </fieldset>
+
+                        {hasHiddenTags && (
+                                <button
+                                        type="button"
+                                        class="gallery-filter__toggle"
+                                        data-gallery-tag-toggle
+                                        aria-expanded="false"
+                                        aria-controls={groupsId}
+                                >
+                                    Show all tags
+                                </button>
+                        )}
+                    </div>
+            )}
+
+            {hasHiddenTags && (
+                    <div
+                            id={groupsId}
+                            class:list={[
+                                'gallery-filter__groups',
+                                topTags.length === 0 && 'gallery-filter__groups--standalone',
+                            ]}
+                            data-gallery-tag-groups
+                            hidden={topTags.length > 0}
+                    >
+                        {hiddenGroups.map((group, groupIndex) => {
+                            const legendId = `${idPrefix}-filter-tag-${groupIndex}`;
+
+                            return (
+                                    <fieldset
+                                            class="gallery-filter__group"
+                                            aria-labelledby={legendId}
+                                    >
+                                        <legend class="gallery-filter__group-title" id={legendId}>
+                                            {formatFacetLabel(group.facet)}
+                                        </legend>
+
+                                        <div class="gallery-filter__chips">
+                                            {group.tags.map((tag) => (
+                                                    <label class="gallery-filter-chip" data-selected="false">
+                                                        <input
+                                                                class="gallery-filter-chip__input"
+                                                                type="checkbox"
+                                                                name="tag"
+                                                                value={tag.slug}
+                                                        />
+                                                        <span class="gallery-filter-chip__label">{tag.name}</span>
+                                                    </label>
+                                            ))}
+                                        </div>
+                                    </fieldset>
+                            );
+                        })}
+                    </div>
+            )}
+        </form>
+    </div>
+</aside>
+
+<script>
+    /**
+     * The page restores state from the URL and handles Reset by setting
+     * input.checked directly, without a change event. To keep the panel
+     * in sync, the page dispatches this event on the form after every
+     * filter update.
+     */
+    const STATE_EVENT = 'gallery-filters:state';
+
+    const FILTER_NAMES = ['period', 'scale', 'tag'];
+
+    function initGalleryFilters(): void {
+        const containers = document.querySelectorAll<HTMLElement>(
+            '[data-gallery-filters]',
+        );
+
+        for (const container of containers) {
+            if (container.dataset.initialized === 'true') continue;
+            container.dataset.initialized = 'true';
+
+            const toggle = container.querySelector<HTMLButtonElement>(
+                '[data-gallery-filter-toggle]',
+            );
+            const toggleText = container.querySelector<HTMLElement>(
+                '[data-gallery-filter-toggle-text]',
+            );
+            const panel = container.querySelector<HTMLElement>(
+                '[data-gallery-filter-panel]',
+            );
+            const form = container.querySelector<HTMLFormElement>(
+                '[data-gallery-filter-form]',
+            );
+            const reset = container.querySelector<HTMLButtonElement>(
+                '[data-gallery-filter-reset]',
+            );
+            const tagToggle = container.querySelector<HTMLButtonElement>(
+                '[data-gallery-tag-toggle]',
+            );
+            const tagGroups = container.querySelector<HTMLElement>(
+                '[data-gallery-tag-groups]',
+            );
+
+            /* Mobile show/hide of the whole panel. */
+            if (toggle && panel) {
+                toggle.addEventListener('click', () => {
+                    const nextIsOpen = toggle.getAttribute('aria-expanded') !== 'true';
+
+                    toggle.setAttribute('aria-expanded', String(nextIsOpen));
+                    panel.dataset.open = String(nextIsOpen);
+
+                    if (toggleText) {
+                        toggleText.textContent = nextIsOpen ? 'Hide filters' : 'Show filters';
+                    }
+                });
+            }
+
+            if (!form) continue;
+
+            function setGroupsExpanded(expanded: boolean): void {
+                if (!tagToggle || !tagGroups) return;
+
+                tagToggle.setAttribute('aria-expanded', String(expanded));
+                tagToggle.textContent = expanded ? 'Hide all tags' : 'Show all tags';
+                tagGroups.hidden = !expanded;
+            }
+
+            function hasCheckedHiddenTag(): boolean {
+                return Boolean(
+                    tagGroups?.querySelector('input[name="tag"]:checked'),
+                );
+            }
+
+            function hasHiddenTagInUrl(): boolean {
+                if (!tagGroups) return false;
+
+                const urlTags = new URLSearchParams(window.location.search).getAll('tag');
+                if (urlTags.length === 0) return false;
+
+                return Array.from(
+                    tagGroups.querySelectorAll<HTMLInputElement>('input[name="tag"]'),
+                ).some((input) => urlTags.includes(input.value));
+            }
+
+            /** Reset is shown only when at least one filter is selected. */
+            function syncReset(): void {
+                if (!reset) return;
+
+                reset.hidden = !FILTER_NAMES.some((name) =>
+                    form!.querySelector(`input[name="${name}"]:checked`),
+                );
+            }
+
+            function syncPanel(): void {
+                syncReset();
+
+                /* A selected hidden tag must stay visible. */
+                if (hasCheckedHiddenTag()) setGroupsExpanded(true);
+            }
+
+            tagToggle?.addEventListener('click', () => {
+                setGroupsExpanded(tagToggle.getAttribute('aria-expanded') !== 'true');
+            });
+
+            form.addEventListener('change', syncPanel);
+            form.addEventListener(STATE_EVENT, syncPanel);
+
+            /*
+             * Open the full tag list on load if the URL selects a tag that is
+             * not among the popular ones, like tutorials does on the server.
+             */
+            if (hasHiddenTagInUrl()) setGroupsExpanded(true);
+
+            syncPanel();
+        }
+    }
+
+    initGalleryFilters();
+    document.addEventListener('astro:page-load', initGalleryFilters);
+</script>
+
+<style>
+    .gallery-filters {
+        position: sticky;
+        top: 2rem;
+        height: fit-content;
+    }
+
+    .gallery-filters__mobile-toggle {
+        display: none;
+    }
+
+    .gallery-filters__panel {
+        padding: 1.5rem;
+    }
+
+    .gallery-filter {
+        max-width: 300px;
+    }
+
+    .gallery-filter__topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .gallery-filter__heading-title {
+        margin: 0;
+        font-family: 'General Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--color-text);
+        line-height: 1.2;
+    }
+
+    .gallery-filter__reset-top,
+    .gallery-filter__toggle {
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: var(--color-primary);
+        font-family: 'General Sans', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        line-height: 1.2;
+        cursor: pointer;
+        transition: color 0.2s ease;
+    }
+
+    .gallery-filter__reset-top[hidden] {
+        display: none;
+    }
+
+    .gallery-filter__reset-top:hover,
+    .gallery-filter__toggle:hover {
+        color: var(--color-primary-hover);
+    }
+
+    .gallery-filter__reset-top:focus-visible,
+    .gallery-filter__toggle:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+
+    /* fieldset reset: keeps semantics, removes browser chrome. */
+    .gallery-filter__section,
+    .gallery-filter__fieldset,
+    .gallery-filter__group {
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+
+    .gallery-filter__section {
+        margin-bottom: 1rem;
+    }
+
+    .gallery-filter__section:last-child {
+        margin-bottom: 0;
+    }
+
+    /* "Show all tags" sits on the title line, as in tutorials. */
+    .gallery-filter__section--tags {
+        position: relative;
+    }
+
+    .gallery-filter__section--tags .gallery-filter__toggle {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+
+    .gallery-filter__section--tags .gallery-filter__title {
+        padding-right: 6rem;
+    }
+
+    .gallery-filter__title {
+        display: block;
+        width: 100%;
+        margin: 0 0 0.75rem;
+        padding: 0;
+        font-family: 'General Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.875rem;
+        line-height: 1.2;
+        color: var(--color-text);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .gallery-filter__group {
+        margin-bottom: 0.85rem;
+    }
+
+    .gallery-filter__group:last-child {
+        margin-bottom: 0;
+    }
+
+    .gallery-filter__group-title {
+        display: block;
+        width: 100%;
+        margin: 0 0 0.45rem;
+        padding: 0;
+        font-family: 'General Sans', sans-serif;
+        font-weight: 600;
+        font-size: 0.75rem;
+        line-height: 1.2;
+        color: var(--color-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .gallery-filter__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+
+    .gallery-filter__groups {
+        margin-top: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--color-border);
+    }
+
+    .gallery-filter__groups--standalone {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 0;
+    }
+
+    .gallery-filter__groups[hidden] {
+        display: none;
+    }
+
+    .gallery-filter-chip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .gallery-filter-chip__input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+        width: 1px;
+        height: 1px;
+    }
+
+    .gallery-filter-chip__label {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 0.375rem 0.75rem;
+        border: 1px solid var(--color-text-muted);
+        border-radius: 1rem;
+        background: var(--color-surface);
+        color: var(--color-text);
+        font-family: 'General Sans', sans-serif;
+        font-size: 0.8rem;
+        line-height: 1.2;
+        transition:
+                background 0.2s ease,
+                color 0.2s ease,
+                border-color 0.2s ease;
+    }
+
+    .gallery-filter-chip:hover .gallery-filter-chip__label {
+        background: var(--color-surface-offset);
+    }
+
+    .gallery-filter-chip.is-selected .gallery-filter-chip__label,
+    .gallery-filter-chip[data-selected='true'] .gallery-filter-chip__label,
+    .gallery-filter-chip__input:checked + .gallery-filter-chip__label {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: white;
+    }
+
+    .gallery-filter-chip__input:focus-visible + .gallery-filter-chip__label {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+
+    @media (max-width: 1024px) {
+        .gallery-filters {
+            position: static;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .gallery-filters__mobile-toggle {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.2rem;
+            width: 100%;
+            padding: 0;
+            border: none;
+            background: transparent;
+            text-align: left;
+            box-shadow: none;
+            color: var(--color-primary);
+            font-family: 'General Sans', sans-serif;
+            cursor: pointer;
+        }
+
+        .gallery-filters__mobile-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .gallery-filters__mobile-text {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            transition: color 0.2s ease;
+        }
+
+        .gallery-filters__mobile-summary {
+            font-size: 0.78rem;
+            line-height: 1.3;
+            color: var(--color-text-muted);
+        }
+
+        .gallery-filters__mobile-toggle:hover .gallery-filters__mobile-text {
+            color: var(--color-primary-hover);
+        }
+
+        .gallery-filters__mobile-toggle:focus-visible {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+
+        .gallery-filters__panel {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .gallery-filters__panel[data-open='false'] {
+            display: none;
+        }
+
+        .gallery-filters__panel[data-open='true'] {
+            display: block;
+        }
+
+        .gallery-filter {
+            max-width: 100%;
+        }
+
+        .gallery-filter__topbar {
+            margin-bottom: 0.875rem;
+        }
+
+        .gallery-filter__heading-title {
+            font-size: 0.88rem;
+        }
+
+        .gallery-filter__reset-top,
+        .gallery-filter__toggle {
+            font-size: 0.76rem;
+        }
+
+        .gallery-filter__section {
+            margin-bottom: 0.875rem;
+        }
+
+        .gallery-filter__title {
+            margin-bottom: 0.625rem;
+            font-size: 0.75rem;
+        }
+
+        .gallery-filter__group-title {
+            font-size: 0.7rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .gallery-filter__chips {
+            gap: 0.375rem;
+        }
+
+        .gallery-filter-chip {
+            max-width: 100%;
+        }
+
+        .gallery-filter-chip__label {
+            min-height: 30px;
+            padding: 0.32rem 0.65rem;
+            font-size: 0.76rem;
+        }
+
+        .gallery-filter__groups {
+            margin-top: 0.375rem;
+            padding-top: 0.625rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .gallery-filter__reset-top,
+        .gallery-filter__toggle,
+        .gallery-filter-chip__label,
+        .gallery-filters__mobile-text {
+            transition: none;
+        }
+    }
+</style>
