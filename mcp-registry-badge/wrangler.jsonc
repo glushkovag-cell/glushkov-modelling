@@ -7,6 +7,7 @@
 	},
 	"vars": {
 		"MCP_SERVER_NAME": "com.glushkov-modelling/content",
-		"CACHE_TTL_SECONDS": "3600"
+		"CACHE_TTL_SECONDS": "3600",
+		"MCP_FALLBACK_VERSION": "1.3.0"
 	}
 }
