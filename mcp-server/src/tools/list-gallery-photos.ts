@@ -1,35 +1,29 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { errorResult, jsonResult } from "../lib/tool-result.js";
 import { config } from "../lib/config.js";
 import { buildUrl, galleryUrl as galleryPageUrl } from "../lib/public-urls.js";
 import { paginate } from "../lib/pagination.js";
+import {
+  effectivePhotoTags,
+  getGallerySlugs,
+  photoMatchesFilter,
+  readGalleryPhotos,
+  type GalleryPhotoRecord,
+  type TagMatchMode,
+} from "../lib/gallery.js";
+import {
+  fetchTaxonomyDictionary,
+  resolveTagValue,
+  TAXONOMY_FACETS,
+  type TaxonomyDictionary,
+  type TaxonomyFacet,
+} from "../lib/taxonomy.js";
 
-interface GalleryImagePaths {
-  lowRes: string | null;
-  hiRes: string | null;
-}
-
-interface GalleryImage {
-  file: string;
-  order: number;
-  section: string;
-  caption: string;
-  alt: string;
-  lead: boolean;
-  orientation: string;
-  width: number;
-  height: number;
-  paths: GalleryImagePaths;
-}
-
-interface GalleryManifest {
+interface PhotoTagDetail {
   slug: string;
-  title: string;
-  scale: string;
-  images: GalleryImage[];
+  name: string;
+  facet: TaxonomyFacet | null;
 }
 
 interface PhotoResult {
@@ -38,7 +32,10 @@ interface PhotoResult {
   projectUrl: string | null;
   galleryUrl: string | null;
   scale: string;
-  section: string;
+  /** Массив slug тегов фотографии (v1-строка приводится к массиву из одного элемента). */
+  section: string[];
+  tagDetails: PhotoTagDetail[];
+  legacySection: string | null;
   caption: string;
   alt: string;
   orientation: string;
@@ -48,9 +45,9 @@ interface PhotoResult {
   hiResUrl: string | null;
 }
 
-const KNOWN_SECTIONS = ["overall", "hull", "deck", "rigging", "details"];
+const MAX_TAG_VALUES = 20;
 
-const inputSchema = {
+export const listGalleryPhotosInputSchema = {
   project: z
       .string()
       .optional()
@@ -59,10 +56,35 @@ const inputSchema = {
       ),
 
   tag: z
-      .string()
+      .union([
+        z.string().min(1),
+        z.array(z.string().min(1)).min(1).max(MAX_TAG_VALUES),
+      ])
       .optional()
       .describe(
-          `Optional gallery section filter. Matches the manifest section field exactly. Known values: ${KNOWN_SECTIONS.join(", ")}.`,
+          "Optional filter by photo taxonomy tags. Accepts a single tag string (legacy format, still supported) or an array of tags. " +
+          "A string is equivalent to a one-element array: tag='hull' and tag=['hull'] return the same photos. " +
+          "Values are taxonomy slugs such as 'hull', 'standing-rigging', 'side-view', 'close-up'; display names from the taxonomy (e.g. 'Standing Rigging') are also accepted, case-insensitive. " +
+          "Matching is exact by slug (no partial matching). How several values combine is controlled by match. " +
+          "Get the allowed values from list_tutorial_taxonomy (tags with 'gallery' in appliesTo, or appliesTo='gallery').",
+      ),
+
+  tagFacet: z
+      .enum(TAXONOMY_FACETS)
+      .optional()
+      .describe(
+          "Optional filter by tag facet: keeps photos that have at least one active tag of this facet. " +
+          "component — model parts (Hull, Deck, Masts…); technique — build methods (Planking, Caulking…); material — materials (Wood, Brass…); " +
+          "context — themes (Standing Rigging, Running Rigging…); view — camera viewpoint (Overall View, Side View, Close-up…). " +
+          "When combined with tag, both conditions must hold (AND).",
+      ),
+
+  match: z
+      .enum(["any", "all"])
+      .default("any")
+      .describe(
+          "How multiple tag values combine. 'any' (default) — a photo matches if it has at least one of the tags (OR). " +
+          "'all' — a photo matches only if it has every listed tag (AND). Has no effect when tag has a single value.",
       ),
 
   limit: z
@@ -102,26 +124,90 @@ function absolutizeAsset(assetPath: string | null | undefined): string | null {
   return buildCmsUrl(assetPath);
 }
 
-async function readJsonFile<T>(filePath: string): Promise<T> {
-  const raw = await readFile(filePath, "utf-8");
-  return JSON.parse(raw) as T;
-}
+/** Строка и массив приводятся к одному виду: массив уникальных slug. */
+export function normalizeTagInput(
+    tag: string | string[] | undefined,
+    dictionary: TaxonomyDictionary | null,
+): { slugs: string[]; unknown: string[] } {
+  const values = tag === undefined ? [] : Array.isArray(tag) ? tag : [tag];
+  const slugs: string[] = [];
+  const unknown: string[] = [];
 
-async function getGallerySlugs(): Promise<string[]> {
-  const filePath = path.join(config.galleryManifestPath, "index", "models.json");
-  const list = await readJsonFile<unknown>(filePath);
-
-  return Array.isArray(list) ? (list as string[]) : [];
-}
-
-async function readManifest(slug: string): Promise<GalleryManifest | null> {
-  const filePath = path.join(config.galleryManifestPath, slug, "manifest.json");
-
-  try {
-    return await readJsonFile<GalleryManifest>(filePath);
-  } catch {
-    return null;
+  for (const value of values) {
+    if (!value.trim()) continue;
+    const resolved = resolveTagValue(value, dictionary);
+    if (!slugs.includes(resolved.slug)) slugs.push(resolved.slug);
+    if (
+        dictionary &&
+        resolved.term?.status !== "active" &&
+        !unknown.includes(resolved.slug)
+    ) {
+      unknown.push(resolved.slug);
+    }
   }
+
+  return { slugs, unknown };
+}
+
+function toPhotoResult(
+    photo: GalleryPhotoRecord,
+    tags: string[],
+    dictionary: TaxonomyDictionary | null,
+): PhotoResult {
+  return {
+    project: photo.project,
+    title: photo.title,
+    projectUrl: buildUrl(photo.project),
+    galleryUrl: galleryPageUrl(photo.project),
+    scale: photo.scale,
+    section: tags,
+    tagDetails: tags.map((slug) => {
+      const term = dictionary?.bySlug.get(slug);
+      return { slug, name: term?.name ?? slug, facet: term?.facet ?? null };
+    }),
+    legacySection: photo.legacySection,
+    caption: photo.caption,
+    alt: photo.alt,
+    orientation: photo.orientation,
+    width: photo.width,
+    height: photo.height,
+    lowResUrl: absolutizeAsset(photo.paths.lowRes),
+    hiResUrl: absolutizeAsset(photo.paths.hiRes),
+  };
+}
+
+export interface FilterGalleryPhotosArgs {
+  tag?: string | string[];
+  tagFacet?: TaxonomyFacet;
+  match: TagMatchMode;
+}
+
+/** Чистая функция фильтрации — используется инструментом и unit-тестами. */
+export function filterGalleryPhotos(
+    photos: GalleryPhotoRecord[],
+    args: FilterGalleryPhotosArgs,
+    dictionary: TaxonomyDictionary | null,
+): { photos: PhotoResult[]; tagSlugs: string[]; unknownTags: string[] } {
+  const { slugs, unknown } = normalizeTagInput(args.tag, dictionary);
+  const results: PhotoResult[] = [];
+
+  for (const photo of photos) {
+    const tags = effectivePhotoTags(photo.tags, dictionary);
+
+    if (
+        !photoMatchesFilter(
+            tags,
+            { tags: slugs, match: args.match, tagFacet: args.tagFacet },
+            dictionary,
+        )
+    ) {
+      continue;
+    }
+
+    results.push(toPhotoResult(photo, tags, dictionary));
+  }
+
+  return { photos: results, tagSlugs: slugs, unknownTags: unknown };
 }
 
 export function registerListGalleryPhotos(server: McpServer): void {
@@ -130,18 +216,21 @@ export function registerListGalleryPhotos(server: McpServer): void {
       {
         title: "List gallery photos",
         description:
-            "Read-only. Returns a paginated list of gallery photo summaries with captions, image URLs, model project references, section tags, and image metadata. " +
-            "Use this tool to browse gallery photos or filter them by model project and gallery section. " +
+            "Read-only. Returns a paginated list of gallery photo summaries with captions, image URLs, model project references, taxonomy tags, and image metadata. " +
+            "Use this tool to browse gallery photos or filter them by model project, taxonomy tags, and tag facet. " +
             "Use get_build_details when the user needs vessel background, technical notes, or build-log content for the related model. " +
-            `Known section tags are: ${KNOWN_SECTIONS.join(", ")}. ` +
-            "Results are ordered by each project's gallery order. " +
+            "Photos share one taxonomy with tutorials; call list_tutorial_taxonomy (appliesTo='gallery') to get the allowed tag slugs, names, and facets. " +
+            "Each photo's section field is an ARRAY of tag slugs (legacy single-string sections are normalized to a one-element array); tagDetails gives name and facet for each tag; legacySection keeps the pre-taxonomy section label when present. " +
+            "Filters: tag accepts a string (legacy) or an array of slugs; match='any' (default) returns photos with at least one listed tag, match='all' returns photos with every listed tag; " +
+            "tagFacet (component | technique | material | context | view) keeps photos with at least one tag of that facet; tag and tagFacet combine with AND. " +
+            "Results are ordered by project and then by each project's gallery order. " +
             "The response includes total matching photos, returned count, limit, offset, nextOffset, and hasMore. " +
             "Use nextOffset from a response with hasMore=true to retrieve the next page. " +
-            "If no photos match a valid filter, returns an empty photos array. " +
+            "If no photos match a valid filter, returns an empty photos array; unknown tag values are listed in unknownTags. " +
             "If project does not identify a gallery project, returns a not-found result.",
-        inputSchema,
+        inputSchema: listGalleryPhotosInputSchema,
       },
-      async ({ project, tag, limit, offset }) => {
+      async ({ project, tag, tagFacet, match, limit, offset }) => {
         try {
           if (!config.galleryManifestPath) {
             return errorResult(
@@ -157,59 +246,30 @@ export function registerListGalleryPhotos(server: McpServer): void {
             );
           }
 
-          let slugsToRead: string[];
-
-          if (project) {
-            if (!allSlugs.includes(project)) {
-              return errorResult(
-                  `Gallery project with slug='${project}' not found. Available project slugs: ${allSlugs.join(", ")}.`,
-              );
-            }
-
-            slugsToRead = [project];
-          } else {
-            slugsToRead = allSlugs;
+          if (project && !allSlugs.includes(project)) {
+            return errorResult(
+                `Gallery project with slug='${project}' not found. Available project slugs: ${allSlugs.join(", ")}.`,
+            );
           }
 
-          const manifests = await Promise.all(
-              slugsToRead.map((slug) => readManifest(slug)),
+          const [photos, dictionary] = await Promise.all([
+            readGalleryPhotos(project ? [project] : allSlugs),
+            fetchTaxonomyDictionary().catch(() => null),
+          ]);
+
+          if (tagFacet && !dictionary) {
+            return errorResult(
+                "The tagFacet filter is temporarily unavailable because the taxonomy dictionary (WPGraphQL TutorialTags) could not be loaded. Retry later or filter by tag only.",
+            );
+          }
+
+          const filtered = filterGalleryPhotos(
+              photos,
+              { tag, tagFacet, match },
+              dictionary,
           );
 
-          const matchingPhotos: PhotoResult[] = [];
-
-          for (const manifest of manifests) {
-            if (!manifest) {
-              continue;
-            }
-
-            const sortedImages = [...manifest.images].sort(
-                (left, right) => left.order - right.order,
-            );
-
-            for (const image of sortedImages) {
-              if (tag && image.section !== tag) {
-                continue;
-              }
-
-              matchingPhotos.push({
-                project: manifest.slug,
-                title: manifest.title,
-                projectUrl: buildUrl(manifest.slug),
-                galleryUrl: galleryPageUrl(manifest.slug),
-                scale: manifest.scale,
-                section: image.section,
-                caption: image.caption,
-                alt: image.alt,
-                orientation: image.orientation,
-                width: image.width,
-                height: image.height,
-                lowResUrl: absolutizeAsset(image.paths?.lowRes),
-                hiResUrl: absolutizeAsset(image.paths?.hiRes),
-              });
-            }
-          }
-
-          const page = paginate(matchingPhotos, limit, offset);
+          const page = paginate(filtered.photos, limit, offset);
 
           const result: Record<string, unknown> = {
             total: page.total,
@@ -219,14 +279,30 @@ export function registerListGalleryPhotos(server: McpServer): void {
             offset: page.offset,
             nextOffset: page.nextOffset,
             project: project ?? null,
-            tag: tag ?? null,
+            tag: filtered.tagSlugs.length > 0 ? filtered.tagSlugs : null,
+            tagFacet: tagFacet ?? null,
+            match,
             photos: page.items,
           };
 
-          if (tag && !KNOWN_SECTIONS.includes(tag)) {
-            result.note =
-                `Tag '${tag}' is not in the known gallery section list ` +
-                `(${KNOWN_SECTIONS.join(", ")}). The filter is applied exactly and may return no photos.`;
+          const notes: string[] = [];
+
+          if (filtered.unknownTags.length > 0) {
+            result.unknownTags = filtered.unknownTags;
+            notes.push(
+                `Tag value(s) ${filtered.unknownTags.map((t) => `'${t}'`).join(", ")} are not active terms of the taxonomy dictionary and match no photos. ` +
+                "Call list_tutorial_taxonomy with appliesTo='gallery' for valid slugs (former section labels map, for example, overall → overall-view, details → close-up, rigging → standing-rigging / running-rigging).",
+            );
+          }
+
+          if (!dictionary) {
+            notes.push(
+                "The taxonomy dictionary could not be loaded; tags are returned as stored in the manifests without name/facet metadata.",
+            );
+          }
+
+          if (notes.length > 0) {
+            result.note = notes.join(" ");
           }
 
           return jsonResult(result);
