@@ -1146,7 +1146,31 @@ export async function getTutorialTags(): Promise<TutorialTag[]> {
 
 // --- AI HUB WORKFLOW STEPS ---
 
-const AI_HUB_ID = 'cG9zdDo2OTY=';
+const AI_HUB_SLUG = 'ai-hub';
+
+/**
+ * The AI Hub entry id, resolved from its slug instead of being hardcoded.
+ * A recreated WordPress entry gets a new id, which used to empty every AI Hub
+ * section without any error. The lookup is cached because several queries
+ * filter their relations by this id.
+ */
+let aiHubIdPromise: Promise<string | null> | null = null;
+
+function getAiHubId(): Promise<string | null> {
+  if (!aiHubIdPromise) {
+    aiHubIdPromise = fetchAPI<{ aiHub: { id: string; status?: string | null } | null }>(
+        `query GetAiHubId($slug: ID!) {
+          aiHub(id: $slug, idType: SLUG) {
+            id
+            status
+          }
+        }`,
+        { slug: AI_HUB_SLUG },
+    ).then((data) => (data.aiHub?.status === 'publish' ? data.aiHub.id : null));
+  }
+
+  return aiHubIdPromise;
+}
 
 interface AiHubPageNode {
   id: string;
@@ -1214,7 +1238,10 @@ const GET_AI_WORKFLOW_STEPS = `
 `;
 
 export async function getAiHubWorkflowSteps(): Promise<AiHubWorkflowStep[]> {
-  const data = await fetchAPI<GetAiWorkflowStepsResponse>(GET_AI_WORKFLOW_STEPS);
+  const [data, aiHubId] = await Promise.all([
+    fetchAPI<GetAiWorkflowStepsResponse>(GET_AI_WORKFLOW_STEPS),
+    getAiHubId(),
+  ]);
 
   return warnIfAtLimit(data.aiWorkflowSteps.nodes, 'aiWorkflowSteps')
       .filter((step) => {
@@ -1222,7 +1249,7 @@ export async function getAiHubWorkflowSteps(): Promise<AiHubWorkflowStep[]> {
 
         return (
             fields?.showOnAiHub === true &&
-            fields.aiHubPage?.nodes?.some((page) => page.id === AI_HUB_ID)
+            fields.aiHubPage?.nodes?.some((page) => page.id === aiHubId) === true
         );
       })
       .map((step) => ({
@@ -1541,7 +1568,7 @@ export async function getAiHubPage(): Promise<AiHubPage | null> {
 
   const page = warnIfAtLimit(data.aiHubs.nodes, 'aiHubs').find(
       (node) =>
-          node.id === AI_HUB_ID &&
+          node.slug === AI_HUB_SLUG &&
           node.status === 'publish',
   );
 
@@ -1628,9 +1655,10 @@ const GET_AI_HUB_CAPABILITIES = `
 `;
 
 export async function getAiHubCapabilities(): Promise<AiHubCapability[]> {
-  const data = await fetchAPI<GetAiCapabilitiesResponse>(
-      GET_AI_HUB_CAPABILITIES,
-  );
+  const [data, aiHubId] = await Promise.all([
+    fetchAPI<GetAiCapabilitiesResponse>(GET_AI_HUB_CAPABILITIES),
+    getAiHubId(),
+  ]);
 
   return warnIfAtLimit(data.aiCapabilities.nodes, 'aiCapabilities')
       .filter((capability) => {
@@ -1639,7 +1667,7 @@ export async function getAiHubCapabilities(): Promise<AiHubCapability[]> {
         return (
             capability.status === 'publish' &&
             fields?.showOnAiHub === true &&
-            fields.hub?.nodes?.some((hub) => hub.id === AI_HUB_ID)
+            fields.hub?.nodes?.some((hub) => hub.id === aiHubId) === true
         );
       })
       .map((capability) => {
