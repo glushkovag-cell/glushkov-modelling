@@ -2,6 +2,7 @@ import {
   deriveHistoricalPeriod,
   getHistoricalPeriodLabel,
 } from './modelFilters';
+import { fetchWithRetry } from './fetch-retry';
 import { getAllModels } from './wordpress';
 
 /**
@@ -330,7 +331,16 @@ function normalizeManifest(
 
 async function fetchJson<T>(url: string): Promise<T | null> {
   try {
-    const response = await fetch(url);
+    const response = await fetchWithRetry(url, {}, {
+      attempts: 2,
+      timeoutMs: 10_000,
+      onRetry: ({ attempt, attempts, delayMs, reason }) => {
+        console.warn(
+            `[gallery] ${url}: ${reason}; attempt ${attempt}/${attempts}, ` +
+            `retrying in ${delayMs} ms`,
+        );
+      },
+    });
 
     if (!response.ok) {
       return null;
