@@ -1,10 +1,10 @@
-import type { Request, Response } from "express";
+import type { ErrorRequestHandler, Request, Response } from "express";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { config } from "./lib/config.js";
 import { bearerAuth } from "./middleware/auth.js";
 import { oauthAuth } from "./middleware/oauth.js";
-import { originCheck } from "./middleware/origin.js";
+import { createOriginCheck } from "./middleware/origin.js";
 import { createMcpServer } from "./server.js";
 
 /**
@@ -16,6 +16,8 @@ import { createMcpServer } from "./server.js";
  * Оба маршрута stateless: на каждый запрос создаётся новый McpServer + transport.
  * Процесс слушает только localhost; внешний доступ идёт через Nginx.
  */
+const originCheck = createOriginCheck(config.allowedOrigins);
+
 const app = createMcpExpressApp({
   host: config.host,
   allowedHosts: [
@@ -115,6 +117,13 @@ app.post("/mcp", originCheck, bearerAuth, handleStatelessMcpRequest);
 app.post("/mcp-oauth", originCheck, oauthAuth, handleStatelessMcpRequest);
 
 /**
+ * CORS preflight for browser clients. Without an explicit OPTIONS route
+ * Express answers 200 with no CORS headers, which browsers treat as a failure.
+ */
+app.options("/mcp", originCheck);
+app.options("/mcp-oauth", originCheck);
+
+/**
  * Stateless Streamable HTTP не поддерживает GET (SSE) и DELETE:
  * sessionIdGenerator отключён, сессии отсутствуют.
  */
@@ -134,6 +143,62 @@ app.delete("/mcp", methodNotAllowed);
 
 app.get("/mcp-oauth", methodNotAllowed);
 app.delete("/mcp-oauth", methodNotAllowed);
+
+/**
+ * Terminal error handler.
+ *
+ * Without it Express falls back to its default handler, which answers with an
+ * HTML page containing the stack trace and absolute file paths — reachable
+ * without authentication by POSTing invalid JSON to /mcp. Body-parser errors
+ * are mapped to JSON-RPC shapes and everything else is reported generically;
+ * details stay in the server log.
+ */
+const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
+  if (res.headersSent) {
+    return;
+  }
+
+  const bodyError = error as {
+    type?: string;
+    status?: number;
+    statusCode?: number;
+    name?: string;
+  };
+
+  const status = typeof bodyError.status === "number"
+    ? bodyError.status
+    : typeof bodyError.statusCode === "number"
+      ? bodyError.statusCode
+      : 500;
+
+  const isParseError = bodyError.type === "entity.parse.failed";
+  const isTooLarge = bodyError.type === "entity.too.large";
+
+  const jsonRpcError = {
+    code: isParseError ? -32700 : isTooLarge ? -32600 : -32603,
+    message: isParseError
+      ? "Parse error"
+      : isTooLarge
+        ? "Request body too large"
+        : "Internal server error",
+  };
+
+  if (status >= 500) {
+    console.error(JSON.stringify({
+      event: "mcp_request_failed",
+      name: bodyError.name ?? "Error",
+      type: bodyError.type ?? null,
+    }));
+  }
+
+  res.status(status >= 400 && status <= 599 ? status : 500).json({
+    jsonrpc: "2.0",
+    error: jsonRpcError,
+    id: null,
+  });
+};
+
+app.use(errorHandler);
 
 app.listen(config.port, config.host, () => {
   console.log(

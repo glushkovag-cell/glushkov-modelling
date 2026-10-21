@@ -43,7 +43,9 @@ jobs:
       OAUTH_RESOURCE_METADATA_URI: https://mcp.glushkov-modelling.com/.well-known/oauth-protected-resource/mcp-oauth
 
       GALLERY_MANIFEST_PATH: /var/www/cms/gallery
-      MCP_ALLOWED_ORIGINS: ""
+      # Browser origins allowed to call the endpoints. The legacy API-key
+      # route is only used by the Perplexity connector.
+      MCP_ALLOWED_ORIGINS: "https://www.perplexity.ai,https://perplexity.ai"
 
     steps:
       - name: Checkout repository
@@ -158,6 +160,7 @@ jobs:
           PUBLIC_SITE_URL=${PUBLIC_SITE_URL}
           GALLERY_MANIFEST_PATH=${GALLERY_MANIFEST_PATH}
           CMS_GALLERY_URL=${CMS_GALLERY_URL}
+          NODE_ENV=production
           HOST=127.0.0.1
           PORT=4322
           MCP_ALLOWED_ORIGINS=${MCP_ALLOWED_ORIGINS}

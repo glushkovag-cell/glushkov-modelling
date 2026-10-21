@@ -1,5 +1,6 @@
-import { GraphQLClient } from "graphql-request";
+import { ClientError, GraphQLClient } from "graphql-request";
 import { config } from "./config.js";
+import { describeGraphQLError } from "./errors.js";
 
 /**
  * Единый клиент к WPGraphQL для всех read-only инструментов.
@@ -47,6 +48,25 @@ export async function requestWithTimeout<TResult>(
       variables: variables ?? {},
       signal: controller.signal,
     });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      console.error(JSON.stringify({
+        event: "graphql_request_timeout",
+        timeout_ms: timeoutMs,
+      }));
+
+      throw new Error(`WPGraphQL request timed out after ${timeoutMs} ms`);
+    }
+
+    // The original message embeds the query, the variables and the response
+    // body; log it here and rethrow a client-safe description.
+    console.error(JSON.stringify({
+      event: "graphql_request_failed",
+      status: error instanceof ClientError ? error.response.status : null,
+      message: describeGraphQLError(error),
+    }));
+
+    throw new Error(describeGraphQLError(error));
   } finally {
     clearTimeout(timeout);
   }
