@@ -784,8 +784,43 @@ const {
       }
     }, { passive: true });
 
+    // `aria-modal="true"` promises that focus cannot leave the dialog, so Tab
+    // and Shift+Tab cycle inside the overlay instead of reaching the page.
+    function trapFocus(event: KeyboardEvent): void {
+      const focusable = Array.from(
+        overlay.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((element) => element.getClientRects().length > 0);
+
+      if (focusable.length === 0) return;
+
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+      const active = document.activeElement;
+
+      if (event.shiftKey) {
+        if (active === first || !overlay.contains(active)) {
+          event.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (active === last || !overlay.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
     window.addEventListener('keydown', (e) => {
       if (overlay.hidden) return;
+
+      if (e.key === 'Tab') {
+        trapFocus(e);
+        return;
+      }
+
       switch (e.key) {
         case 'Escape': closeViewer(); break;
         case 'ArrowLeft': prevSlide(); break;
