@@ -49,11 +49,13 @@ jobs:
 
       - name: Prepare SSH
         shell: bash
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
-          set -euxo pipefail
+          set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/github_actions_deploy
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/github_actions_deploy
           chmod 600 ~/.ssh/github_actions_deploy
 
           test -s ~/.ssh/github_actions_deploy
@@ -88,12 +90,30 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/"
 
       - name: Update .env on VPS
+        shell: bash
         run: |
+          set -euo pipefail
+
+          # A value with a newline would inject extra lines into the .env file.
+          check_value() {
+            if [[ "$2" == *$'\n'* ]]; then
+              echo "::error::$1 contains a newline"
+              exit 1
+            fi
+          }
+
+          check_value WP_GRAPHQL_URL "$WP_GRAPHQL_URL"
+          check_value CMS_GALLERY_URL "$CMS_GALLERY_URL"
+          check_value PUBLIC_WP_REST_URL "$PUBLIC_WP_REST_URL"
+          check_value WP_GRAPHQL_SECRET "$WP_GRAPHQL_SECRET"
+
+          # Single pass: the heredoc is expanded on the runner only, and the
+          # remote side just writes stdin, so `$` in a secret survives intact.
           ssh -p "${DEPLOY_PORT}" \
             -i ~/.ssh/github_actions_deploy \
             -o StrictHostKeyChecking=yes \
-            "${DEPLOY_USER}@${DEPLOY_HOST}" <<EOF
-          cat > "${DEPLOY_PATH}/.env" <<EOT
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "umask 077 && cat > '${DEPLOY_PATH}/.env'" <<EOF
           WP_GRAPHQL_URL=${WP_GRAPHQL_URL}
           CMS_GALLERY_URL=${CMS_GALLERY_URL}
           PUBLIC_WP_REST_URL=${PUBLIC_WP_REST_URL}
@@ -101,8 +121,6 @@ jobs:
           HOST=0.0.0.0
           PORT=4321
           DEPLOYPATH=${DEPLOY_PATH}
-          EOT
-          chmod 600 "${DEPLOY_PATH}/.env"
           EOF
 
       - name: Install production dependencies on VPS
