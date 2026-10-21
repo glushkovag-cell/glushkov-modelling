@@ -5,6 +5,7 @@
  * совместимость со схемой реальной CMS.
  */
 import { requestWithTimeout } from "./graphql-client.js";
+import { collectAllPages, type WpPageInfo } from "./wp-pagination.js";
 
 export { stripHtmlAndTruncate } from "./text.js";
 
@@ -44,16 +45,20 @@ export interface BuildPostNode {
 }
 
 interface GetAllModelsResponse {
-  models: { nodes: ModelNode[] };
+  models: { nodes: ModelNode[]; pageInfo?: WpPageInfo | null };
 }
 
 interface GetBuildPartsResponse {
-  posts: { nodes: BuildPostNode[] };
+  posts: { nodes: BuildPostNode[]; pageInfo?: WpPageInfo | null };
 }
 
 const GET_ALL_MODELS = `
-  query GetAllModels {
-    models(first: 100) {
+  query GetAllModels($first: Int!, $after: String) {
+    models(first: $first, after: $after) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
         id
         slug
@@ -76,8 +81,12 @@ const GET_ALL_MODELS = `
 `;
 
 const GET_BUILD_PARTS = `
-  query GetBuildPartsByModel {
-    posts(where: { categoryName: "Builds" }, first: 100) {
+  query GetBuildPartsByModel($first: Int!, $after: String) {
+    posts(where: { categoryName: "Builds" }, first: $first, after: $after) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
       nodes {
         id
         slug
@@ -131,10 +140,20 @@ export async function fetchAllModels(): Promise<ModelNode[]> {
     return modelsCache.data;
   }
 
-  const data = await requestWithTimeout<GetAllModelsResponse>(GET_ALL_MODELS);
+  const nodes = await collectAllPages<ModelNode>(
+    async ({ first, after }) => {
+      const data = await requestWithTimeout<GetAllModelsResponse>(
+        GET_ALL_MODELS,
+        { first, after },
+      );
+
+      return data.models;
+    },
+    { label: "models" },
+  );
 
   modelsCache = {
-    data: data.models.nodes,
+    data: nodes,
     fetchedAt: Date.now(),
   };
 
@@ -161,9 +180,19 @@ export function findModelByName(
 export async function fetchBuildPartsForSlug(
     slug: string,
 ): Promise<BuildPostNode[]> {
-  const data = await requestWithTimeout<GetBuildPartsResponse>(GET_BUILD_PARTS);
+  const nodes = await collectAllPages<BuildPostNode>(
+    async ({ first, after }) => {
+      const data = await requestWithTimeout<GetBuildPartsResponse>(
+        GET_BUILD_PARTS,
+        { first, after },
+      );
 
-  return data.posts.nodes
+      return data.posts;
+    },
+    { label: "build posts" },
+  );
+
+  return nodes
       .filter((post) => post.buildlog?.modelslug === slug)
       .sort(
           (a, b) =>
