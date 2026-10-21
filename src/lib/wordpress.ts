@@ -1,3 +1,4 @@
+import { memoizeAsync } from './memo';
 import { fetchWithRetry } from './fetch-retry';
 import { collectAllPages, warnIfAtLimit, type WpPageInfo } from './wp-pagination';
 
@@ -89,7 +90,14 @@ interface GetBuildPartsByModelResponse {
   };
 }
 
-async function fetchAPI<T>(query: string, variables: Variables = {}): Promise<T> {
+/**
+ * Identical (query, variables) pairs are answered from memory. The build asks
+ * for the same documents dozens of times and the SSR /tutorials page repeats
+ * four queries on every hit, so this removes the duplicate CMS traffic while
+ * keeping data at most a minute old.
+ */
+const runQuery = memoizeAsync(
+  async (query: string, variables: Variables): Promise<unknown> => {
   if (!WP_GRAPHQL_URL) {
     throw new Error('WP_GRAPHQL_URL is not defined');
   }
@@ -133,7 +141,13 @@ async function fetchAPI<T>(query: string, variables: Variables = {}): Promise<T>
     throw new Error(message);
   }
 
-  return json.data as T;
+  return json.data;
+  },
+  { ttlMs: 60_000, maxEntries: 200 },
+);
+
+async function fetchAPI<T>(query: string, variables: Variables = {}): Promise<T> {
+  return runQuery(query, variables) as Promise<T>;
 }
 
 function slugifyStatus(status: string): string {

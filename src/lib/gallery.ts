@@ -2,6 +2,7 @@ import {
   deriveHistoricalPeriod,
   getHistoricalPeriodLabel,
 } from './modelFilters';
+import { memoizeAsync } from './memo';
 import { fetchWithRetry } from './fetch-retry';
 import { getAllModels } from './wordpress';
 
@@ -329,7 +330,8 @@ function normalizeManifest(
   };
 }
 
-async function fetchJson<T>(url: string): Promise<T | null> {
+const fetchJsonCached = memoizeAsync(
+  async (url: string): Promise<unknown> => {
   try {
     const response = await fetchWithRetry(url, {}, {
       attempts: 2,
@@ -346,10 +348,16 @@ async function fetchJson<T>(url: string): Promise<T | null> {
       return null;
     }
 
-    return (await response.json()) as T;
+    return await response.json();
   } catch {
     return null;
   }
+  },
+  { ttlMs: 60_000, maxEntries: 100 },
+);
+
+async function fetchJson<T>(url: string): Promise<T | null> {
+  return fetchJsonCached(url) as Promise<T | null>;
 }
 
 function createModelMap(
