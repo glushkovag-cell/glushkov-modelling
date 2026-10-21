@@ -102,7 +102,7 @@ function sideCountOf(group: ModelGroup): number {
     return group.photos.filter((photo) => photo.slot === 'side').length;
 }
 
-function photoCountLabel(count: number): string {
+function countLabel(count: number): string {
     return `${count} ${count === 1 ? 'photo' : 'photos'}`;
 }
 
@@ -163,7 +163,7 @@ const pageDescription =
                     </p>
                     <div class="model-summary-meta">
                         <span class="meta-pill">{totalModels} {totalModels === 1 ? 'model' : 'models'}</span>
-                        <span class="ghost-pill">{photoCountLabel(totalPhotos)}</span>
+                        <span class="ghost-pill">{countLabel(totalPhotos)}</span>
                     </div>
                 </div>
                 <a href="/gallery" class="buildlog-btn" data-gallery-back>
@@ -184,7 +184,7 @@ const pageDescription =
                             aria-live="polite"
                             aria-atomic="true"
                     >
-                        {totalPhotos} of {photoCountLabel(totalPhotos)}
+                        {totalPhotos} of {countLabel(totalPhotos)}
                     </p>
 
                     <a
@@ -226,7 +226,7 @@ const pageDescription =
                                                             data-group-count
                                                             data-total={group.photos.length}
                                                     >
-                            {photoCountLabel(group.photos.length)}
+                            {countLabel(group.photos.length)}
                           </span>
                                                 </p>
                                             </header>
@@ -312,88 +312,25 @@ const pageDescription =
 </BaseLayout>
 
 <script>
-    import type { GalleryFilterIndex } from '../../lib/gallery';
     import {
         computeResult,
         createEmptyFilterState,
         getTotalResultCount,
-        isGalleryFilterIndex,
         parseUrl,
         toQuery,
         updateFilterQuery,
-        type FilterGroup,
         type FilterState,
     } from '../../scripts/galleryFilterEngine';
+    import {
+        countLabel,
+        createLabelMap,
+        describeState,
+        getSafeReturnTo,
+        hasActiveFilters,
+    } from '../../scripts/galleryFilterUi';
+    import { readFilterIndex } from '../../scripts/galleryFilterIndex';
 
-    const FILTER_GROUPS: FilterGroup[] = ['period', 'scale', 'tag'];
     const SLOT_ORDER: Record<string, number> = { lead: 0, side: 1, detail: 2 };
-
-    function photoCountLabel(count: number): string {
-        return `${count} ${count === 1 ? 'photo' : 'photos'}`;
-    }
-
-    /** Missing or malformed JSON returns null: all photos stay visible. */
-    function readIndex(): GalleryFilterIndex | null {
-        const element = document.getElementById('gallery-photo-index');
-        if (!element?.textContent) return null;
-
-        try {
-            const data: unknown = JSON.parse(element.textContent);
-            if (isGalleryFilterIndex(data)) return data;
-        } catch {
-            /* fall through */
-        }
-
-        console.warn('[gallery] photo index is missing or malformed; showing all photos');
-        return null;
-    }
-
-    function createLabelMap(index: GalleryFilterIndex): Map<string, string> {
-        const labels = new Map<string, string>();
-
-        for (const option of index.periods) labels.set(`period:${option.value}`, option.label);
-        for (const option of index.scales) labels.set(`scale:${option.value}`, option.label);
-
-        for (const group of index.groups) {
-            for (const tag of group.tags) labels.set(`tag:${tag.slug}`, tag.name);
-        }
-
-        return labels;
-    }
-
-    function describeState(state: FilterState, labels: Map<string, string>): string {
-        const titles: Record<FilterGroup, string> = {
-            period: 'Period',
-            scale: 'Scale',
-            tag: 'Tags',
-        };
-
-        return FILTER_GROUPS
-            .filter((group) => state[group].length > 0)
-            .map((group) => {
-                const values = state[group].map(
-                    (value) => labels.get(`${group}:${value}`) ?? value,
-                );
-
-                return `${titles[group]}: ${values.join(', ')}`;
-            })
-            .join(' · ');
-    }
-
-    function hasActiveFilters(state: FilterState): boolean {
-        return FILTER_GROUPS.some((group) => state[group].length > 0);
-    }
-
-    /** returnTo from the hub link; same-site /gallery paths only. */
-    function getSafeReturnTo(): string | null {
-        const returnTo = new URLSearchParams(window.location.search).get('returnTo');
-
-        if (returnTo && returnTo.startsWith('/gallery') && !returnTo.startsWith('//')) {
-            return returnTo;
-        }
-
-        return null;
-    }
 
     /**
      * Re-assigns mosaic slots for the visible photos of one group,
@@ -444,7 +381,7 @@ const pageDescription =
         const modelLinks = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-model-link]'));
         const resetButton = root.querySelector<HTMLButtonElement>('[data-all-reset]');
 
-        const index = readIndex();
+        const index = readFilterIndex('gallery-photo-index');
         const labels = index ? createLabelMap(index) : new Map<string, string>();
         const totalPhotos = index
             ? getTotalResultCount(index)
@@ -461,7 +398,7 @@ const pageDescription =
 
             for (const link of hubLinks) link.href = hubUrl;
 
-            if (backLink) backLink.href = getSafeReturnTo() ?? hubUrl;
+            if (backLink) backLink.href = getSafeReturnTo(window.location.search) ?? hubUrl;
 
             /*
              * Model pages get the same filters, a returnTo pointing back here
@@ -517,8 +454,8 @@ const pageDescription =
                     const total = Number(count.dataset.total ?? figures.length);
 
                     count.textContent = hasActiveFilters(state)
-                        ? `${groupVisible} of ${photoCountLabel(total)}`
-                        : photoCountLabel(total);
+                        ? `${groupVisible} of ${countLabel(total)}`
+                        : countLabel(total);
                 }
             }
 
@@ -527,7 +464,7 @@ const pageDescription =
             if (emptyState) emptyState.hidden = !nothingFound;
 
             if (summary) {
-                const result = `${visiblePhotos} of ${photoCountLabel(totalPhotos)}`;
+                const result = `${visiblePhotos} of ${countLabel(totalPhotos)}`;
                 const description = describeState(state, labels);
                 const models = hasActiveFilters(state)
                     ? ` in ${visibleGroups} ${visibleGroups === 1 ? 'model' : 'models'}`
