@@ -1,8 +1,18 @@
 ---
-import type { NormalizedModel } from '../../lib/wordpress';
+interface RelatedBuild {
+    id: string;
+    title: string;
+    slug: string;
+    teaser: string;
+    scale: string;
+    featuredImage?: {
+        sourceUrl: string;
+        altText: string;
+    };
+}
 
 interface Props {
-    builds: NormalizedModel[];
+    builds: RelatedBuild[];
     tutorialSlug?: string;
     tutorialTitle?: string;
 }

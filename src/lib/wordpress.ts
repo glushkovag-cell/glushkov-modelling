@@ -202,6 +202,7 @@ export interface NormalizedTutorial {
   id: string;
   title: string;
   slug: string;
+  date?: string;
   content: string;
   teaser: string;
   level: string;
@@ -617,6 +618,7 @@ interface TutorialNode {
   id: string;
   title: string;
   slug: string;
+  date?: string | null;
   content?: string | null;
   tutorialFields?: TutorialFieldsNode | null;
   featuredImage?: {
@@ -828,6 +830,7 @@ const TUTORIAL_BY_SLUG_QUERY = `
       databaseId
       title
       slug
+      date
       content
       tutorialFields {
         tutorialTeaser
@@ -1021,6 +1024,7 @@ export async function getTutorialBySlug(slug: string): Promise<NormalizedTutoria
     databaseId: t.databaseId,
     title: t.title,
     slug: t.slug,
+    date: t.date ?? undefined,
     content: t.content || '',
     teaser: t.tutorialFields?.tutorialTeaser || '',
     level: Array.isArray(t.tutorialFields?.tutorialLevel)

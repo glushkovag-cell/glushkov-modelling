@@ -9,7 +9,7 @@
     */
 
 export interface Props {
-  pageType?: 'home' | 'about' | 'build' | 'tutorial' | 'gallery' | 'default';
+  pageType?: 'home' | 'about' | 'build' | 'tutorial' | 'gallery' | 'website' | 'default';
   title?: string;
   description?: string;
   canonicalPath?: string;
@@ -18,18 +18,18 @@ export interface Props {
   dateModified?: string;
 
   // Build-specific
-  buildTitle?: string;
-  buildDescription?: string;
-  buildScale?: string;
-  buildManufacturer?: string;
-  buildStatus?: string | string[];
-  buildHistoricalYear?: string;
+  buildTitle?: string | null;
+  buildDescription?: string | null;
+  buildScale?: string | null;
+  buildManufacturer?: string | null;
+  buildStatus?: string | string[] | null;
+  buildHistoricalYear?: string | null;
 
   // Tutorial-specific
-  tutorialTitle?: string;
-  tutorialDescription?: string;
-  tutorialCategory?: string;
-  tutorialLevel?: string;
+  tutorialTitle?: string | null;
+  tutorialDescription?: string | null;
+  tutorialCategory?: string | null;
+  tutorialLevel?: string | null;
   tutorialSteps?: Array<{ name: string; text: string }>;
 
   // Breadcrumbs (без Home — добавляется автоматически)

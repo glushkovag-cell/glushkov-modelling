@@ -312,17 +312,21 @@ const currentTutorialsUrl = `${tutorialsPath}${url.search}`;
                 if (sidebar.dataset.mobileFilterReady === 'true') return;
                 sidebar.dataset.mobileFilterReady = 'true';
 
-                const toggle = sidebar.querySelector<HTMLButtonElement>(
+                const toggleNode = sidebar.querySelector<HTMLButtonElement>(
                     '[data-mobile-filter-toggle]',
                 );
-                const panel = sidebar.querySelector<HTMLElement>(
+                const panelNode = sidebar.querySelector<HTMLElement>(
                     '[data-mobile-filter-panel]',
                 );
-                const text = toggle?.querySelector<HTMLElement>(
+                const textNode = toggleNode?.querySelector<HTMLElement>(
                     '.mobile-filter-toggle__text',
                 );
 
-                if (!toggle || !panel || !text) return;
+                if (!toggleNode || !panelNode || !textNode) return;
+
+                const toggle = toggleNode;
+                const panel = panelNode;
+                const text = textNode;
 
                 function isOpen(): boolean {
                     return panel.dataset.open === 'true';
@@ -353,11 +357,7 @@ const currentTutorialsUrl = `${tutorialsPath}${url.search}`;
                     applyState(!isOpen());
                 });
 
-                if (typeof mq.addEventListener === 'function') {
-                    mq.addEventListener('change', syncForViewport);
-                } else if (typeof mq.addListener === 'function') {
-                    mq.addListener(syncForViewport);
-                }
+                mq.addEventListener('change', syncForViewport);
 
                 syncForViewport();
             });

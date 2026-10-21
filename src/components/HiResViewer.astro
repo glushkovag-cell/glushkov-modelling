@@ -592,7 +592,13 @@ const {
 
 <script>
   (() => {
-    let slides = [];
+    interface ViewerSlide {
+      src: string;
+      title?: string;
+      caption?: string;
+    }
+
+    let slides: ViewerSlide[] = [];
     let currentIndex = 0;
     let scale = 1;
     let translateX = 0;
@@ -600,30 +606,40 @@ const {
     let isDragging = false;
     let startX = 0;
     let startY = 0;
-    let lastTrigger = null;
+    let lastTrigger: HTMLElement | null = null;
 
     const MIN_SCALE = 0.5;
     const MAX_SCALE = 5;
     const ZOOM_STEP = 0.25;
     const WHEEL_STEP = 0.10;
 
-    const overlay = document.getElementById('hiResViewer');
-    const img = document.getElementById('viewerImage');
-    const loader = document.getElementById('viewerLoader');
-    const titleEl = document.getElementById('viewerTitle');
-    const captionEl = document.getElementById('viewerCaption');
-    const counterEl = document.getElementById('viewerCounter');
-    const zoomReadout = document.getElementById('viewerZoomReadout');
+    function byId<T extends HTMLElement>(id: string): T {
+      const element = document.getElementById(id);
 
-    const btnClose = document.getElementById('viewerClose');
-    const btnPrev = document.getElementById('viewerPrev');
-    const btnNext = document.getElementById('viewerNext');
-    const btnZoomIn = document.getElementById('viewerZoomIn');
-    const btnZoomOut = document.getElementById('viewerZoomOut');
-    const btnReset = document.getElementById('viewerReset');
-    const btnFullscreen = document.getElementById('viewerFullscreen');
+      if (!element) {
+        throw new Error(`[HiResViewer] missing element: #${id}`);
+      }
 
-    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+      return element as T;
+    }
+
+    const overlay = byId<HTMLElement>('hiResViewer');
+    const img = byId<HTMLImageElement>('viewerImage');
+    const loader = byId<HTMLElement>('viewerLoader');
+    const titleEl = byId<HTMLElement>('viewerTitle');
+    const captionEl = byId<HTMLElement>('viewerCaption');
+    const counterEl = byId<HTMLElement>('viewerCounter');
+    const zoomReadout = byId<HTMLElement>('viewerZoomReadout');
+
+    const btnClose = byId<HTMLButtonElement>('viewerClose');
+    const btnPrev = byId<HTMLButtonElement>('viewerPrev');
+    const btnNext = byId<HTMLButtonElement>('viewerNext');
+    const btnZoomIn = byId<HTMLButtonElement>('viewerZoomIn');
+    const btnZoomOut = byId<HTMLButtonElement>('viewerZoomOut');
+    const btnReset = byId<HTMLButtonElement>('viewerReset');
+    const btnFullscreen = byId<HTMLButtonElement>('viewerFullscreen');
+
+    const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
     function updateTransform() {
       img.style.transform = `translate3d(-50%, -50%, 0) translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`;
@@ -641,7 +657,7 @@ const {
       updateTransform();
     }
 
-    function zoomBy(delta) {
+    function zoomBy(delta: number) {
       scale = clamp(scale + delta, MIN_SCALE, MAX_SCALE);
       if (scale <= 1) {
         translateX = 0;
@@ -656,7 +672,7 @@ const {
       counterEl.textContent = slides.length > 1 ? `${currentIndex + 1} / ${slides.length}` : '';
     }
 
-    function loadSlide(index) {
+    function loadSlide(index: number) {
       if (index < 0 || index >= slides.length) return;
       currentIndex = index;
       const slide = slides[index];
@@ -686,7 +702,7 @@ const {
       };
     }
 
-    function openViewer(allSlides, startIndex, trigger) {
+    function openViewer(allSlides: ViewerSlide[], startIndex: number, trigger?: HTMLElement | null) {
       slides = Array.isArray(allSlides) ? allSlides : [];
       lastTrigger = trigger ?? null;
       if (!slides.length) return;
@@ -783,16 +799,21 @@ const {
       }
     });
 
-    window.__viewer = {
+    (window as Window & { __viewer?: unknown }).__viewer = {
       open: openViewer,
       close: closeViewer,
       openViewer,
       closeViewer,
     };
 
-    document.addEventListener('gallery:open', (e) => {
-      const detail = e.detail || {};
-      openViewer(detail.slides, detail.index ?? 0, detail.trigger ?? null);
+    document.addEventListener('gallery:open', (event) => {
+      const detail = (event as CustomEvent<{
+        slides?: ViewerSlide[];
+        index?: number;
+        trigger?: HTMLElement | null;
+      }>).detail ?? {};
+
+      openViewer(detail.slides ?? [], detail.index ?? 0, detail.trigger ?? null);
     });
   })();
 </script>
