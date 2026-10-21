@@ -105,12 +105,12 @@
             "lowRes": {
               "type": ["string", "null"],
               "pattern": "^[^/].*",
-              "description": "Относительный путь от public/gallery"
+              "description": "Относительный путь от gallery"
             },
             "hiRes": {
               "type": ["string", "null"],
               "pattern": "^[^/].*",
-              "description": "Относительный путь от public/gallery"
+              "description": "Относительный путь от gallery"
             }
           }
         }

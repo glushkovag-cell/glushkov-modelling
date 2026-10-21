@@ -5,3 +5,6 @@ dist/
 .DS_Store
 .idea/
 public/gallery/**/*.webp
+gallery/**/*.webp
+# local integration tooling (binaries, MCP bridge, OAuth token caches)
+.tools/

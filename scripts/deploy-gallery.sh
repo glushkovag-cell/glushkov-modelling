@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 RSYNC="${RSYNC_BIN:-/opt/homebrew/bin/rsync}"   # на Intel: /usr/local/bin/rsync
 HOST="ubuntu@vps-b05d0632.vps.ovh.net"
-SRC="./public/gallery/"
+SRC="./gallery/"
 DST="/var/www/cms/gallery/"
 
 OPTS=(-avz --progress
