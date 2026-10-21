@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { ErrorRequestHandler, Request, Response } from "express";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { config } from "./lib/config.js";
@@ -134,6 +134,62 @@ app.delete("/mcp", methodNotAllowed);
 
 app.get("/mcp-oauth", methodNotAllowed);
 app.delete("/mcp-oauth", methodNotAllowed);
+
+/**
+ * Terminal error handler.
+ *
+ * Without it Express falls back to its default handler, which answers with an
+ * HTML page containing the stack trace and absolute file paths — reachable
+ * without authentication by POSTing invalid JSON to /mcp. Body-parser errors
+ * are mapped to JSON-RPC shapes and everything else is reported generically;
+ * details stay in the server log.
+ */
+const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
+  if (res.headersSent) {
+    return;
+  }
+
+  const bodyError = error as {
+    type?: string;
+    status?: number;
+    statusCode?: number;
+    name?: string;
+  };
+
+  const status = typeof bodyError.status === "number"
+    ? bodyError.status
+    : typeof bodyError.statusCode === "number"
+      ? bodyError.statusCode
+      : 500;
+
+  const isParseError = bodyError.type === "entity.parse.failed";
+  const isTooLarge = bodyError.type === "entity.too.large";
+
+  const jsonRpcError = {
+    code: isParseError ? -32700 : isTooLarge ? -32600 : -32603,
+    message: isParseError
+      ? "Parse error"
+      : isTooLarge
+        ? "Request body too large"
+        : "Internal server error",
+  };
+
+  if (status >= 500) {
+    console.error(JSON.stringify({
+      event: "mcp_request_failed",
+      name: bodyError.name ?? "Error",
+      type: bodyError.type ?? null,
+    }));
+  }
+
+  res.status(status >= 400 && status <= 599 ? status : 500).json({
+    jsonrpc: "2.0",
+    error: jsonRpcError,
+    id: null,
+  });
+};
+
+app.use(errorHandler);
 
 app.listen(config.port, config.host, () => {
   console.log(

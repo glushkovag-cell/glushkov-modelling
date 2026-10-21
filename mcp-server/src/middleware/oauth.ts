@@ -117,7 +117,15 @@ export async function oauthAuth(
 
         next();
     } catch (error) {
-        console.warn("OAuth access token validation failed:", error);
+        // jose keeps the decoded payload on the error object; logging the
+        // whole error would print the token's claims (sub, email, scope).
+        const details = error as { code?: string; claim?: string; name?: string };
+
+        console.warn("OAuth access token validation failed:", {
+            code: details.code ?? details.name ?? "unknown",
+            claim: details.claim ?? null,
+        });
+
         jsonRpcUnauthorized(res, "OAuth access token is invalid or expired.");
     }
 }
