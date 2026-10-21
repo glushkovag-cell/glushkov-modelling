@@ -3,7 +3,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import SeoHead from '../../components/seo/SeoHead.astro';
 import { getAllModels, getAllNews, hasFreshNews } from '../../lib/wordpress';
 import {
-  parseBuildFilterState,
   collectBuildFilterOptions,
   deriveHistoricalPeriod,
   getHistoricalPeriodLabel,
@@ -11,54 +10,19 @@ import {
 } from '../../lib/modelFilters';
 
 const models = await getAllModels();
-const filterState = parseBuildFilterState(Astro.url.searchParams);
 const filterOptions = collectBuildFilterOptions(models);
 
-const hasActiveFilters =
-    filterState.status.length > 0 ||
-    filterState.period.length > 0 ||
-    filterState.scale.length > 0 ||
-    filterState.manufacturer.length > 0;
-
-const mobileFilterSummaryParts: string[] = [];
-
-if (filterState.status.length > 0) {
-  mobileFilterSummaryParts.push(
-      `${filterState.status.length} ${filterState.status.length === 1 ? 'status' : 'statuses'}`
-  );
-}
-
-if (filterState.period.length > 0) {
-  mobileFilterSummaryParts.push(
-      `${filterState.period.length} ${filterState.period.length === 1 ? 'period' : 'periods'}`
-  );
-}
-
-if (filterState.scale.length > 0) {
-  mobileFilterSummaryParts.push(
-      `${filterState.scale.length} ${filterState.scale.length === 1 ? 'scale' : 'scales'}`
-  );
-}
-
-if (filterState.manufacturer.length > 0) {
-  mobileFilterSummaryParts.push(
-      `${filterState.manufacturer.length} ${
-          filterState.manufacturer.length === 1 ? 'manufacturer' : 'manufacturers'
-      }`
-  );
-}
-
+/*
+ * Filters live in the URL and are applied client-side: a static page cannot see
+ * the query string, so the server always renders the unfiltered state and the
+ * script syncs the controls from the URL on load.
+ */
+const hasActiveFilters = false;
 const mobileFilterSummary =
-    mobileFilterSummaryParts.length > 0
-        ? mobileFilterSummaryParts.join(' · ')
-        : 'Browse by status, historical period, scale, and manufacturer';
+    'Browse by status, historical period, scale, and manufacturer';
 
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
-
-function isSelected(value: string, selected: string[]): boolean {
-  return selected.includes(value);
-}
 
 function normalizeClientValue(value?: string | null): string {
   return String(value ?? '').trim().toLowerCase();
@@ -168,7 +132,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
 
                   <div class="build-filter__chips">
                     {filterOptions.statuses.map((option) => {
-                      const selected = isSelected(option.value, filterState.status);
+                      const selected = false;
 
                       return (
                           <label
@@ -194,7 +158,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
 
                   <div class="build-filter__chips">
                     {filterOptions.periods.map((option) => {
-                      const selected = isSelected(option.value, filterState.period);
+                      const selected = false;
                       const label = getHistoricalPeriodLabelParts(option.value);
 
                       return (
@@ -236,7 +200,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
 
                   <div class="build-filter__chips">
                     {filterOptions.scales.map((option) => {
-                      const selected = isSelected(option.value, filterState.scale);
+                      const selected = false;
 
                       return (
                           <label
@@ -262,7 +226,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
 
                   <div class="build-filter__chips">
                     {filterOptions.manufacturers.map((option) => {
-                      const selected = isSelected(option.value, filterState.manufacturer);
+                      const selected = false;
 
                       return (
                           <label

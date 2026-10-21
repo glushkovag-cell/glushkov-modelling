@@ -55,17 +55,6 @@ function uniqueSorted(options: FilterOption[]): FilterOption[] {
     return result.sort((a, b) => a.label.localeCompare(b.label, 'en'));
 }
 
-function parseMultiValue(searchParams: URLSearchParams, key: string): string[] {
-    return [
-        ...new Set(
-            searchParams
-                .getAll(key)
-                .map((value) => normalizeKey(value))
-                .filter(Boolean),
-        ),
-    ];
-}
-
 function extractStatusValues(model: FilterableBuildModel): string[] {
     const raw = model.modelinfo?.buildstatus;
 
@@ -130,15 +119,6 @@ export function getHistoricalPeriodLabel(period: string): string {
         default:
             return period;
     }
-}
-
-export function parseBuildFilterState(searchParams: URLSearchParams): BuildFilterState {
-    return {
-        status: parseMultiValue(searchParams, 'status'),
-        period: parseMultiValue(searchParams, 'period'),
-        scale: parseMultiValue(searchParams, 'scale'),
-        manufacturer: parseMultiValue(searchParams, 'manufacturer'),
-    };
 }
 
 export function getBuildStatusValues(model: FilterableBuildModel): string[] {
