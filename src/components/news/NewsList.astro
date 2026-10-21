@@ -1,4 +1,7 @@
 ---
+import { isExternalNewsLink } from '../../lib/news-links';
+
+const siteOrigin = Astro.site?.origin ?? 'https://www.glushkov-modelling.com';
 import type { NewsItem, NewsType, ExternalSource } from '../../lib/wordpress';
 
 interface Props {
@@ -108,8 +111,8 @@ const formatEventDate = (value: string) =>
             <a
                 href={item.news.targetUrl}
                 class="news-list__cta"
-                target="_blank"
-                rel="noopener noreferrer"
+                target={isExternalNewsLink(item.news.targetUrl, siteOrigin) ? '_blank' : undefined}
+                rel={isExternalNewsLink(item.news.targetUrl, siteOrigin) ? 'noopener noreferrer' : undefined}
             >
               {item.news.targetLabel}
             </a>
