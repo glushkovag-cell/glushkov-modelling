@@ -8,6 +8,8 @@
     * 'home' | 'about' | 'build' | 'tutorial' | 'gallery' | 'default'
     */
 
+import { serializeJsonLd } from '../../lib/structured-data';
+
 export interface Props {
   pageType?: 'home' | 'about' | 'build' | 'tutorial' | 'gallery' | 'website' | 'default';
   title?: string;
@@ -296,5 +298,5 @@ const schemas = [
 <meta name="twitter:image" content={resolvedOgImage} />
 
 {schemas.map((schema) => (
-<script type="application/ld+json" set:html={JSON.stringify(schema)} />
+<script type="application/ld+json" set:html={serializeJsonLd(schema)} />
     ))}
