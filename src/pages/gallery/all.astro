@@ -47,7 +47,7 @@ interface ModelGroup {
 }
 
 /**
- * Same slot rules as GalleryGrid.astro: the lead image (or the first
+ * Same slot rules as the gallery mosaic: the lead image (or the first
  * one), then two side images, then the detail row.
  */
 function assignSlots(images: GalleryImage[]): Map<GalleryImage, Slot> {
@@ -397,7 +397,7 @@ const pageDescription =
 
     /**
      * Re-assigns mosaic slots for the visible photos of one group,
-     * using the same rules as GalleryGrid: lead (or first), two side
+     * using the same rules as the gallery mosaic: lead (or first), two side
      * images, then the detail row.
      */
     function layoutMosaic(mosaic: HTMLElement): HTMLElement[] {
@@ -829,7 +829,7 @@ const pageDescription =
     }
 
     /*
-     * Mosaic — same proportions as GalleryGrid.astro:
+     * Mosaic — same proportions as the gallery mosaic:
      * lead 1.2fr + side 0.8fr (3 : 2), detail row of 3.
      * 15 columns: lead 9, side 6, detail 5.
      */
@@ -899,7 +899,7 @@ const pageDescription =
         outline-offset: 3px;
     }
 
-    /* Caption overlay — same as GalleryGrid.astro */
+    /* Caption overlay — same as the gallery mosaic */
     .gallery-caption {
         position: absolute;
         left: 12px;
@@ -973,7 +973,7 @@ const pageDescription =
         outline-offset: 3px;
     }
 
-    /* Hint — same as GalleryGrid.astro */
+    /* Hint — same as the gallery mosaic */
     .gallery-hint {
         color: var(--color-text-muted);
         font-size: 0.9rem;
@@ -995,7 +995,7 @@ const pageDescription =
         color: var(--color-text);
     }
 
-    /* Breakpoints mirror GalleryGrid.astro */
+    /* Breakpoints mirror the gallery mosaic */
     @media (max-width: 900px) {
         .all-mosaic {
             grid-template-columns: repeat(2, minmax(0, 1fr));
