@@ -373,24 +373,45 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
 </BaseLayout>
 
 <script>
+  interface BuildFilterState {
+    status: string[];
+    period: string[];
+    scale: string[];
+    manufacturer: string[];
+  }
+
+  function must<T extends Element>(root: ParentNode, selector: string): T {
+    const element = root.querySelector(selector);
+
+    if (!element) {
+      throw new Error(`[builds] missing required element: ${selector}`);
+    }
+
+    return element as T;
+  }
+
   function initBuildsMobileFilters() {
     const mq = window.matchMedia('(max-width: 767px)');
 
-    document.querySelectorAll('.filters-sidebar').forEach((sidebar) => {
+    document.querySelectorAll<HTMLElement>('.filters-sidebar').forEach((sidebar) => {
       if (sidebar.dataset.mobileFilterReady === 'true') return;
       sidebar.dataset.mobileFilterReady = 'true';
 
-      const toggle = sidebar.querySelector('[data-mobile-filter-toggle]');
-      const panel = sidebar.querySelector('[data-mobile-filter-panel]');
-      const text = toggle?.querySelector('.mobile-filter-toggle__text');
+      const toggleNode = sidebar.querySelector<HTMLButtonElement>('[data-mobile-filter-toggle]');
+      const panelNode = sidebar.querySelector<HTMLElement>('[data-mobile-filter-panel]');
+      const textNode = toggleNode?.querySelector<HTMLElement>('.mobile-filter-toggle__text');
 
-      if (!toggle || !panel || !text) return;
+      if (!toggleNode || !panelNode || !textNode) return;
+
+      const toggle = toggleNode;
+      const panel = panelNode;
+      const text = textNode;
 
       function isOpen() {
         return panel.dataset.open === 'true';
       }
 
-      function applyState(open) {
+      function applyState(open: boolean) {
         panel.dataset.open = String(open);
         toggle.setAttribute('aria-expanded', String(open));
         text.textContent = open ? 'Hide filters' : 'Show filters';
@@ -415,21 +436,17 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
         applyState(!isOpen());
       });
 
-      if (typeof mq.addEventListener === 'function') {
-        mq.addEventListener('change', syncForViewport);
-      } else if (typeof mq.addListener === 'function') {
-        mq.addListener(syncForViewport);
-      }
+      mq.addEventListener('change', syncForViewport);
 
       syncForViewport();
     });
   }
 
   function initPeriodChipWrapping() {
-    const labels = document.querySelectorAll('[data-period-label]');
+    const labels = document.querySelectorAll<HTMLElement>('[data-period-label]');
 
     labels.forEach((label) => {
-      const inline = label.querySelector('[data-period-inline]');
+      const inline = label.querySelector<HTMLElement>('[data-period-inline]');
       if (!inline) return;
 
       label.classList.remove('is-wrapped');
@@ -440,24 +457,24 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
   }
 
   function initBuildsFilters() {
-    const root = document.querySelector('.builds-page');
+    const root = document.querySelector<HTMLElement>('.builds-page');
     if (!root) return;
 
-    const form = root.querySelector('[data-build-filter-form]');
-    const cards = Array.from(root.querySelectorAll('[data-build-card]'));
-    const count = root.querySelector('[data-build-filter-count]');
-    const resetButtons = Array.from(root.querySelectorAll('[data-build-filter-reset]'));
-    const emptyState = root.querySelector('[data-build-empty]');
-    const grid = root.querySelector('[data-build-grid]');
-    const summary = root.querySelector('.mobile-filter-toggle__summary');
-    const links = Array.from(root.querySelectorAll('[data-build-link]'));
-
-    if (!form || !count || !emptyState || !grid) return;
+    const form = must<HTMLFormElement>(root, '[data-build-filter-form]');
+    const cards = Array.from(root.querySelectorAll<HTMLElement>('[data-build-card]'));
+    const count = must<HTMLElement>(root, '[data-build-filter-count]');
+    const resetButtons = Array.from(
+        root.querySelectorAll<HTMLButtonElement>('[data-build-filter-reset]'),
+    );
+    const emptyState = must<HTMLElement>(root, '[data-build-empty]');
+    const grid = must<HTMLElement>(root, '[data-build-grid]');
+    const summary = root.querySelector<HTMLElement>('.mobile-filter-toggle__summary');
+    const links = Array.from(root.querySelectorAll<HTMLAnchorElement>('[data-build-link]'));
 
     const alreadyReady = root.dataset.filtersReady === 'true';
 
-    function getSelected(name) {
-      return Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map(
+    function getSelected(name: string) {
+      return Array.from(form.querySelectorAll<HTMLInputElement>(`input[name="${name}"]:checked`)).map(
           (input) => input.value
       );
     }
@@ -472,15 +489,15 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
         manufacturer: params.getAll('manufacturer'),
       };
 
-      form.querySelectorAll('input[type="checkbox"]').forEach((input) => {
-        const values = selected[input.name] || [];
+      form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((input) => {
+        const values = selected[input.name as keyof typeof selected] || [];
         input.checked = values.includes(input.value);
       });
     }
 
     function updateChipStates() {
-      form.querySelectorAll('.filter-chip').forEach((chip) => {
-        const input = chip.querySelector('.filter-chip__input');
+      form.querySelectorAll<HTMLElement>('.filter-chip').forEach((chip) => {
+        const input = chip.querySelector<HTMLInputElement>('.filter-chip__input');
         const selected = Boolean(input?.checked);
 
         chip.dataset.selected = selected ? 'true' : 'false';
@@ -504,7 +521,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
       });
     }
 
-    function updateUrl(state) {
+    function updateUrl(state: BuildFilterState) {
       const params = new URLSearchParams();
 
       state.status.forEach((value) => params.append('status', value));
@@ -520,7 +537,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
       updateLinks();
     }
 
-    function updateSummary(state) {
+    function updateSummary(state: BuildFilterState) {
       if (!summary) return;
 
       const parts = [];
@@ -550,7 +567,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
           : 'Browse by status, historical period, scale, and manufacturer';
     }
 
-    function matchesAny(selectedValues, rawValue, split = false) {
+    function matchesAny(selectedValues: string[], rawValue: string, split = false) {
       if (!selectedValues.length) return true;
       if (!rawValue) return false;
 
@@ -558,8 +575,8 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
       return values.some((value) => selectedValues.includes(value));
     }
 
-    function applyFilters({ syncUrl = true } = {}) {
-      const state = {
+    function applyFilters({ syncUrl = true }: { syncUrl?: boolean } = {}) {
+      const state: BuildFilterState = {
         status: getSelected('status'),
         period: getSelected('period'),
         scale: getSelected('scale'),
@@ -623,7 +640,7 @@ function getHistoricalPeriodLabelParts(period: string): { primary: string; secon
 
       resetButtons.forEach((button) => {
         button.addEventListener('click', () => {
-          form.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+          form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((input) => {
             input.checked = false;
           });
 

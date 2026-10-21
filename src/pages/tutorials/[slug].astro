@@ -44,7 +44,7 @@ const seoDescription =
     `Ship modelling tutorial: ${fullTutorial.title}. Technique guide for wooden scale model builders.`;
 
 const seoImage =
-    fullTutorial.featuredImage?.node?.sourceUrl ||
+    fullTutorial.featuredImage?.sourceUrl ||
     'https://www.glushkov-modelling.com/og-default.jpg';
 
 const seoDatePublished = fullTutorial.date ?? undefined;
@@ -55,7 +55,6 @@ const backToTutorialsHref = '/tutorials';
         title={seoTitle}
         description={seoDescription}
         hasFreshNews={newsFlag}
-        ogImage={seoImage}
 >
     <SeoHead
             slot="head"

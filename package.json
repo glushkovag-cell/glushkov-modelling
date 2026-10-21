@@ -10,6 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "check": "astro check",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
     "deploy:gallery:dry": "bash scripts/deploy-gallery.sh --dry-run",
     "deploy:gallery": "bash scripts/deploy-gallery.sh"
   },
