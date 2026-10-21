@@ -1,4 +1,7 @@
 ---
+import { isExternalNewsLink } from '../../lib/news-links';
+
+const siteOrigin = Astro.site?.origin ?? 'https://www.glushkov-modelling.com';
 import type { NewsItem, NewsType } from '../../lib/wordpress';
 
 interface Props {
@@ -40,8 +43,8 @@ const TYPE_LABELS: Record<NewsType, string> = {
           <a
             href={item.news.targetUrl}
             class="news-strip__cta"
-            target="_blank"
-            rel="noopener noreferrer"
+            target={isExternalNewsLink(item.news.targetUrl, siteOrigin) ? '_blank' : undefined}
+            rel={isExternalNewsLink(item.news.targetUrl, siteOrigin) ? 'noopener noreferrer' : undefined}
           >
             {item.news.targetLabel}
           </a>
