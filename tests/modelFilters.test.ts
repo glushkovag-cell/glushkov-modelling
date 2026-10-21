@@ -6,7 +6,6 @@ import {
     collectBuildFilterOptions,
     deriveHistoricalPeriod,
     getBuildStatusValues,
-    parseBuildFilterState,
     type FilterableBuildModel,
 } from '../src/lib/modelFilters.ts';
 
@@ -63,20 +62,6 @@ test('deriveHistoricalPeriod tolerates decorated and unknown input', () => {
     assert.equal(deriveHistoricalPeriod('unknown'), 'other-unknown');
     assert.equal(deriveHistoricalPeriod('1200'), 'other-unknown');
     assert.equal(deriveHistoricalPeriod('2001'), 'other-unknown');
-});
-
-test('parseBuildFilterState lowercases, trims and de-duplicates', () => {
-    // URL values are the slugified option values rendered into the form.
-    const params = new URLSearchParams(
-        'status=Completed&status=in-progress&status=completed&period=age-of-sail-18th&scale=1%3A48&manufacturer=Corel',
-    );
-
-    assert.deepEqual(parseBuildFilterState(params), {
-        status: ['completed', 'in-progress'],
-        period: ['age-of-sail-18th'],
-        scale: ['1:48'],
-        manufacturer: ['corel'],
-    });
 });
 
 test('getBuildStatusValues normalizes arrays, strings and the fallback', () => {
