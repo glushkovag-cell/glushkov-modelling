@@ -256,16 +256,17 @@ const embeddedIndex = JSON.stringify({
     type FilterGroup,
     type FilterState,
   } from '../../scripts/galleryFilterEngine';
+  import {
+    FILTER_GROUPS,
+    countLabel,
+    createLabelMap,
+    describeState,
+    hasActiveFilters,
+  } from '../../scripts/galleryFilterUi';
 
   interface HubIndexes {
     models: GalleryFilterIndex;
     photos: GalleryFilterIndex;
-  }
-
-  const FILTER_GROUPS: FilterGroup[] = ['period', 'scale', 'tag'];
-
-  function pluralize(count: number, one: string, many: string): string {
-    return `${count} ${count === 1 ? one : many}`;
   }
 
   /**
@@ -291,45 +292,6 @@ const embeddedIndex = JSON.stringify({
 
     console.warn('[gallery] filter index is missing or malformed; showing all galleries');
     return null;
-  }
-
-  /**
-   * Builds the value → label map used in the summary line.
-   */
-  function createLabelMap(index: GalleryFilterIndex): Map<string, string> {
-    const labels = new Map<string, string>();
-
-    for (const option of index.periods) labels.set(`period:${option.value}`, option.label);
-    for (const option of index.scales) labels.set(`scale:${option.value}`, option.label);
-
-    for (const group of index.groups) {
-      for (const tag of group.tags) labels.set(`tag:${tag.slug}`, tag.name);
-    }
-
-    return labels;
-  }
-
-  function describeState(state: FilterState, labels: Map<string, string>): string {
-    const titles: Record<FilterGroup, string> = {
-      period: 'Period',
-      scale: 'Scale',
-      tag: 'Tags',
-    };
-
-    return FILTER_GROUPS
-        .filter((group) => state[group].length > 0)
-        .map((group) => {
-          const values = state[group].map(
-              (value) => labels.get(`${group}:${value}`) ?? value,
-          );
-
-          return `${titles[group]}: ${values.join(', ')}`;
-        })
-        .join(' · ');
-  }
-
-  function hasActiveFilters(state: FilterState): boolean {
-    return FILTER_GROUPS.some((group) => state[group].length > 0);
   }
 
   function initGalleryHub(): void {
@@ -474,8 +436,8 @@ const embeddedIndex = JSON.stringify({
           const total = photosPerModel.get(slug) ?? Number(countElement.dataset.total ?? 0);
 
           countElement.textContent = filtered
-              ? `${matched} of ${pluralize(total, 'photograph', 'photographs')}`
-              : pluralize(total, 'photograph', 'photographs');
+              ? `${matched} of ${countLabel(total, 'photograph', 'photographs')}`
+              : countLabel(total, 'photograph', 'photographs');
         }
       }
 
@@ -484,7 +446,7 @@ const embeddedIndex = JSON.stringify({
 
     function updateSummary(state: FilterState, matchedPhotos: number): void {
       const description = describeState(state, labels);
-      const result = `${matchedPhotos} of ${pluralize(totalPhotos, 'photo', 'photos')}`;
+      const result = `${matchedPhotos} of ${countLabel(totalPhotos, 'photo', 'photos')}`;
 
       summary!.textContent = description ? `${result} · ${description}` : result;
 
@@ -495,7 +457,7 @@ const embeddedIndex = JSON.stringify({
         );
 
         mobileSummary.textContent = selected > 0
-            ? `${pluralize(selected, 'filter', 'filters')} selected · ${result}`
+            ? `${countLabel(selected, 'filter', 'filters')} selected · ${result}`
             : defaultMobileSummary;
       }
     }
@@ -512,7 +474,7 @@ const embeddedIndex = JSON.stringify({
       const visibleModels = updateCards(state, matchingPhotoKeys);
 
       if (allCard) allCard.hidden = matchedPhotos === 0;
-      if (allCount) allCount.textContent = pluralize(matchedPhotos, 'photograph', 'photographs');
+      if (allCount) allCount.textContent = countLabel(matchedPhotos, 'photograph', 'photographs');
 
       const nothingFound = matchedPhotos === 0 || visibleModels === 0;
       grid!.hidden = nothingFound;
