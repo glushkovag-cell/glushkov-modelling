@@ -4,7 +4,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { config } from "./lib/config.js";
 import { bearerAuth } from "./middleware/auth.js";
 import { oauthAuth } from "./middleware/oauth.js";
-import { originCheck } from "./middleware/origin.js";
+import { createOriginCheck } from "./middleware/origin.js";
 import { createMcpServer } from "./server.js";
 
 /**
@@ -16,6 +16,8 @@ import { createMcpServer } from "./server.js";
  * Оба маршрута stateless: на каждый запрос создаётся новый McpServer + transport.
  * Процесс слушает только localhost; внешний доступ идёт через Nginx.
  */
+const originCheck = createOriginCheck(config.allowedOrigins);
+
 const app = createMcpExpressApp({
   host: config.host,
   allowedHosts: [
@@ -113,6 +115,13 @@ app.post("/mcp", originCheck, bearerAuth, handleStatelessMcpRequest);
  * подписью JWKS, issuer, audience, exp и scope content:read.
  */
 app.post("/mcp-oauth", originCheck, oauthAuth, handleStatelessMcpRequest);
+
+/**
+ * CORS preflight for browser clients. Without an explicit OPTIONS route
+ * Express answers 200 with no CORS headers, which browsers treat as a failure.
+ */
+app.options("/mcp", originCheck);
+app.options("/mcp-oauth", originCheck);
 
 /**
  * Stateless Streamable HTTP не поддерживает GET (SSE) и DELETE:

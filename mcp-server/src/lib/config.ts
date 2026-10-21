@@ -30,6 +30,9 @@ export const config = {
   oauthRequiredScope: optionalEnv("OAUTH_REQUIRED_SCOPE", "content:read"),
   oauthResourceMetadataUri: optionalEnv("OAUTH_RESOURCE_METADATA_URI", ""),
 
+  // Запросы с заголовком Origin разрешены только для перечисленных источников.
+  // Пустой список — fail closed: браузерные Origin отклоняются, а обращения
+  // server-to-server (без Origin) продолжают работать.
   allowedOrigins: optionalEnv("MCP_ALLOWED_ORIGINS", "")
     .split(",")
     .map((origin) => origin.trim())
