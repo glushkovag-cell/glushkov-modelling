@@ -16,7 +16,8 @@ export default defineConfig({
       filter: (page) => !page.includes('/wp-admin') && !page.includes('/graphql'),
       changefreq: 'weekly',
       priority: 0.7,
-      lastmod: new Date(),
+      // No lastmod: the only date available at build time is the build itself,
+      // which tells search engines nothing and weakens the signal for every URL.
     }),
   ],
   scopedStyleStrategy: 'class',
