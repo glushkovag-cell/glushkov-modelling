@@ -1,3 +1,5 @@
+import { fetchWithRetry } from './fetch-retry';
+
 const WP_GRAPHQL_URL = import.meta.env.WP_GRAPHQL_URL;
 const WP_GRAPHQL_SECRET = import.meta.env.WP_GRAPHQL_SECRET;
 
@@ -97,13 +99,21 @@ async function fetchAPI<T>(query: string, variables: Variables = {}): Promise<T>
     headers['X-GraphQL-Secret'] = WP_GRAPHQL_SECRET;
   }
 
-  const response = await fetch(WP_GRAPHQL_URL, {
+  const response = await fetchWithRetry(WP_GRAPHQL_URL, {
     method: 'POST',
     headers,
     body: JSON.stringify({
       query,
       variables,
     }),
+  }, {
+    attempts: 3,
+    timeoutMs: 15_000,
+    onRetry: ({ attempt, attempts, delayMs, reason }) => {
+      console.warn(
+          `[wordpress] ${reason}; attempt ${attempt}/${attempts}, retrying in ${delayMs} ms`,
+      );
+    },
   });
 
   if (!response.ok) {
