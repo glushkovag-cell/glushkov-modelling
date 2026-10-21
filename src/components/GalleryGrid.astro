@@ -111,7 +111,7 @@ const detailRow = images.filter((img) => img !== lead && !side.includes(img));
   </div>
 ) : (
   <div class="gallery-empty">
-    <p>No images available yet. Add WebP files to <code>public/gallery/{images[0]?.paths?.lowRes?.split('/')[2] ?? 'model'}/low-res/</code> and run <code>scripts/update_manifest.py</code>.</p>
+    <p>No images available yet. Add WebP files to <code>gallery/{images[0]?.paths?.lowRes?.split('/')[2] ?? 'model'}/low-res/</code> and run <code>scripts/update_manifest.py</code>.</p>
   </div>
 )}
 

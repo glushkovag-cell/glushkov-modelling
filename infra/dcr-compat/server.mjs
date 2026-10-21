@@ -269,9 +269,21 @@ function forward(res, upstream, text, requestId) {
     res.end(text);
 }
 
-const server = http.createServer(async (req, res) => {
+async function handleRequest(req, res) {
     const requestId = randomUUID();
-    const path = new URL(req.url, 'http://127.0.0.1').pathname;
+
+    let path;
+
+    try {
+        // The request target is attacker-controlled: a malformed value such as
+        // `http://[` makes `new URL()` throw. Keeping this call inside a
+        // protected region prevents an unhandled rejection that used to stop
+        // the whole proxy process.
+        path = new URL(req.url ?? '/', 'http://127.0.0.1').pathname;
+    } catch {
+        reply(res, 400, { error: 'invalid_request' }, requestId);
+        return;
+    }
 
     try {
         if (req.method === 'GET' && path === '/healthz') {
@@ -486,6 +498,37 @@ const server = http.createServer(async (req, res) => {
         if (!res.headersSent) {
             reply(res, 502, { error: 'server_error' }, requestId);
         }
+    }
+}
+
+const server = http.createServer((req, res) => {
+    handleRequest(req, res).catch((error) => {
+        // Defensive net: a rejected request must never terminate the process.
+        console.error(JSON.stringify({
+            event: 'dcr_proxy_unhandled',
+            code: error?.code ?? error?.name,
+        }));
+
+        if (!res.headersSent) {
+            reply(res, 500, { error: 'server_error' }, randomUUID());
+        } else {
+            res.destroy();
+        }
+    });
+});
+
+// Malformed HTTP framing (bad request line, oversized headers) must produce a
+// 400 instead of an unhandled 'clientError' event.
+server.on('clientError', (error, socket) => {
+    console.error(JSON.stringify({
+        event: 'dcr_proxy_client_error',
+        code: error.code ?? error.name,
+    }));
+
+    if (socket.writable) {
+        socket.end('HTTP/1.1 400 Bad Request\r\nConnection: close\r\n\r\n');
+    } else {
+        socket.destroy();
     }
 });
 

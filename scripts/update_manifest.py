@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """update_manifest.py v3 — создаёт/обновляет manifest.json галереи (схема v1 или v2).
 
-  python scripts/update_manifest.py public/gallery/bounty
-  python scripts/update_manifest.py --all public/gallery --upgrade
-  python scripts/update_manifest.py public/gallery/bounty --schema 1 --dry-run
-  python scripts/update_manifest.py --all public/gallery --check      # только проверка по JSON Schema
+  python scripts/update_manifest.py gallery/bounty
+  python scripts/update_manifest.py --all gallery --upgrade
+  python scripts/update_manifest.py gallery/bounty --schema 1 --dry-run
+  python scripts/update_manifest.py --all gallery --check      # только проверка по JSON Schema
 
 Манифест без schemaVersion считается v1. v1 пишется без маркера, v2 — с "schemaVersion": 2.
 """
@@ -182,7 +182,7 @@ def validate(slug, images, taxonomy, ver):
     return warns
 
 def load_schema_validator(gallery_root: Path):
-    """Опционально: jsonschema + public/gallery/gallery-manifest.schema.json."""
+    """Опционально: jsonschema + gallery/gallery-manifest.schema.json."""
     p = gallery_root / SCHEMA_FILE
     if not p.exists():
         print(f"  note: {SCHEMA_FILE} not found — schema check skipped", file=sys.stderr)
@@ -322,7 +322,7 @@ def update_index(root: Path, slugs: list[str], dry: bool) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="Create/update gallery manifest.json (schema v1 or v2).")
-    ap.add_argument("path", nargs="?", default="public/gallery")
+    ap.add_argument("path", nargs="?", default="gallery")
     ap.add_argument("--all", action="store_true", help="path is the gallery root; process all models")
     ap.add_argument("--schema", type=int, choices=(1, 2), help="force output schema version")
     ap.add_argument("--upgrade", action="store_true", help="convert v1 → v2 (auto-migrate hull/deck)")

@@ -33,6 +33,8 @@ jobs:
       WP_READONLY_USERNAME: ${{ secrets.WP_READONLY_USERNAME }}
       WP_READONLY_APP_PASSWORD: ${{ secrets.WP_READONLY_APP_PASSWORD }}
       CMS_GALLERY_URL: ${{ secrets.CMS_GALLERY_URL }}
+      # Public origin used to build canonical URLs in tool results.
+      PUBLIC_SITE_URL: https://www.glushkov-modelling.com
 
       OAUTH_ISSUER: ${{ secrets.OAUTH_ISSUER }}
       OAUTH_JWKS_URI: ${{ secrets.OAUTH_JWKS_URI }}
@@ -65,11 +67,13 @@ jobs:
 
       - name: Prepare SSH
         shell: bash
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
-          set -euxo pipefail
+          set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/github_actions_deploy
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/github_actions_deploy
           chmod 600 ~/.ssh/github_actions_deploy
 
           test -s ~/.ssh/github_actions_deploy
@@ -108,12 +112,39 @@ jobs:
       - name: Update .env on VPS
         shell: bash
         run: |
+          set -euo pipefail
+
+          # A value with a newline would inject extra lines into the .env file.
+          check_value() {
+            if [[ "$2" == *$'\n'* ]]; then
+              echo "::error::$1 contains a newline"
+              exit 1
+            fi
+          }
+
+          check_value MCP_API_KEY "$MCP_API_KEY"
+          check_value WP_GRAPHQL_URL "$WP_GRAPHQL_URL"
+          check_value WP_GRAPHQL_SECRET "$WP_GRAPHQL_SECRET"
+          check_value WP_READONLY_USERNAME "$WP_READONLY_USERNAME"
+          check_value WP_READONLY_APP_PASSWORD "$WP_READONLY_APP_PASSWORD"
+          check_value PUBLIC_SITE_URL "$PUBLIC_SITE_URL"
+          check_value GALLERY_MANIFEST_PATH "$GALLERY_MANIFEST_PATH"
+          check_value CMS_GALLERY_URL "$CMS_GALLERY_URL"
+          check_value MCP_ALLOWED_ORIGINS "$MCP_ALLOWED_ORIGINS"
+          check_value OAUTH_ISSUER "$OAUTH_ISSUER"
+          check_value OAUTH_JWKS_URI "$OAUTH_JWKS_URI"
+          check_value OAUTH_AUDIENCE "$OAUTH_AUDIENCE"
+          check_value OAUTH_REQUIRED_SCOPE "$OAUTH_REQUIRED_SCOPE"
+          check_value OAUTH_RESOURCE_METADATA_URI "$OAUTH_RESOURCE_METADATA_URI"
+
           ssh -p "${DEPLOY_PORT}" \
             -i ~/.ssh/github_actions_deploy \
             -o StrictHostKeyChecking=yes \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "mkdir -p '${MCP_DEPLOY_PATH}' && chmod 700 '${MCP_DEPLOY_PATH}'"
 
+          # Single pass: the heredoc is expanded on the runner only, and the
+          # remote side just writes stdin, so `$` in a secret survives intact.
           cat <<EOF | ssh -p "${DEPLOY_PORT}" \
             -i ~/.ssh/github_actions_deploy \
             -o StrictHostKeyChecking=yes \
