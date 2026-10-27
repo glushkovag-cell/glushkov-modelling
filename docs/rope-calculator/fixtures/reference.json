@@ -1,0 +1,134 @@
+{
+  "schema": 1,
+  "source": {
+    "file": "docs/rope-calculator/reference/RopeCalc.html",
+    "sha256": "e35333eded393c9307b6e3ce9b6594db7cb49a95ecc3ce5200fe748e4d51af70",
+    "threadCount": 9
+  },
+  "algorithm": {
+    "expression": "0.01752 * Math.pow(dtex, 0.5437) * Math.pow(threads, 0.5880)",
+    "source": "RopeCalc.html: diameterByDtex(dtex, threads)",
+    "threadsPerStrand": [
+      1,
+      2,
+      3
+    ],
+    "strands": 3,
+    "maxDeviation": 0.15,
+    "nearZeroPercent": 0.005
+  },
+  "threads": [
+    {
+      "brand": "Skala",
+      "number": "360",
+      "dtex": 80,
+      "diametersMm": {
+        "1": 0.18977724066342466,
+        "2": 0.28526583757883744,
+        "3": 0.3620690691986526
+      }
+    },
+    {
+      "brand": "Skala",
+      "number": "240",
+      "dtex": 120,
+      "diametersMm": {
+        "1": 0.23658376849893561,
+        "2": 0.355623607143181,
+        "3": 0.4513695348739894
+      }
+    },
+    {
+      "brand": "Skala",
+      "number": "200",
+      "dtex": 150,
+      "diametersMm": {
+        "1": 0.2671006343078204,
+        "2": 0.4014953842583926,
+        "3": 0.5095915490610288
+      }
+    },
+    {
+      "brand": "Tera",
+      "number": "80",
+      "dtex": 350,
+      "diametersMm": {
+        "1": 0.42339321841422894,
+        "2": 0.636428375994468,
+        "3": 0.8077764644504414
+      }
+    },
+    {
+      "brand": "Tera",
+      "number": "60",
+      "dtex": 500,
+      "diametersMm": {
+        "1": 0.5140011529882192,
+        "2": 0.7726267328531751,
+        "3": 0.9806440349690794
+      }
+    },
+    {
+      "brand": "Tera",
+      "number": "40",
+      "dtex": 750,
+      "diametersMm": {
+        "1": 0.6407740430920248,
+        "2": 0.9631868577202545,
+        "3": 1.222509403856563
+      }
+    },
+    {
+      "brand": "Tera",
+      "number": "30",
+      "dtex": 1000,
+      "diametersMm": {
+        "1": 0.7492626807844824,
+        "2": 1.1262627987073686,
+        "3": 1.4294909150779367
+      }
+    },
+    {
+      "brand": "Tera",
+      "number": "20",
+      "dtex": 1500,
+      "diametersMm": {
+        "1": 0.934060311952736,
+        "2": 1.4040434791172551,
+        "3": 1.7820595691130716
+      }
+    },
+    {
+      "brand": "Tera",
+      "number": "10",
+      "dtex": 3000,
+      "diametersMm": {
+        "1": 1.3615855320156014,
+        "2": 2.046682920817257,
+        "3": 2.597719328660539
+      }
+    }
+  ],
+  "custom": [
+    {
+      "dtex": 80,
+      "threadsPerStrand": 1,
+      "diameterMm": 0.18977724066342466
+    },
+    {
+      "dtex": 750,
+      "threadsPerStrand": 2,
+      "diameterMm": 0.9631868577202545
+    },
+    {
+      "dtex": 3000,
+      "threadsPerStrand": 3,
+      "diameterMm": 2.597719328660539
+    },
+    {
+      "dtex": 6000,
+      "threadsPerStrand": 3,
+      "diameterMm": 3.7867116382956283
+    }
+  ]
+}

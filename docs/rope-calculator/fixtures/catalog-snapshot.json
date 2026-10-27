@@ -1,0 +1,312 @@
+{
+  "schema": 1,
+  "source": {
+    "system": "WPGraphQL",
+    "type": "RopeThread",
+    "field": "ropethreadfields",
+    "publishedCount": 23,
+    "activeCount": 23
+  },
+  "catalogVersion": "40dc45531758",
+  "threads": [
+    {
+      "threadId": "mara-220",
+      "brand": "Mara",
+      "number": "220",
+      "dtex": 130,
+      "sortOrder": 101,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.24710703089226407,
+        "2": 0.3714417697964083,
+        "3": 0.47144648301785574
+      }
+    },
+    {
+      "threadId": "mara-150",
+      "brand": "Mara",
+      "number": "150",
+      "dtex": 200,
+      "sortOrder": 102,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.31232310275085806,
+        "2": 0.4694720567650024,
+        "3": 0.5958698456512677
+      }
+    },
+    {
+      "threadId": "mara-120",
+      "brand": "Mara",
+      "number": "120",
+      "dtex": 250,
+      "sortOrder": 103,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.3526095614379228,
+        "2": 0.5300291095510778,
+        "3": 0.6727309094286942
+      }
+    },
+    {
+      "threadId": "mara-100",
+      "brand": "Mara",
+      "number": "100",
+      "dtex": 300,
+      "sortOrder": 104,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.38935425754832914,
+        "2": 0.5852623212674661,
+        "3": 0.7428347736864604
+      }
+    },
+    {
+      "threadId": "mara-80",
+      "brand": "Mara",
+      "number": "80",
+      "dtex": 400,
+      "sortOrder": 105,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.45527533134424464,
+        "2": 0.6843523399902035,
+        "3": 0.8686031837783396
+      }
+    },
+    {
+      "threadId": "mara-70",
+      "brand": "Mara",
+      "number": "70",
+      "dtex": 400,
+      "sortOrder": 106,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.45527533134424464,
+        "2": 0.6843523399902035,
+        "3": 0.8686031837783396
+      }
+    },
+    {
+      "threadId": "mara-50",
+      "brand": "Mara",
+      "number": "50",
+      "dtex": 600,
+      "sortOrder": 107,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.5675641252738576,
+        "2": 0.8531405294436399,
+        "3": 1.0828348743509693
+      }
+    },
+    {
+      "threadId": "mara-30",
+      "brand": "Mara",
+      "number": "30",
+      "dtex": 1000,
+      "sortOrder": 108,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.7492626807844824,
+        "2": 1.1262627987073686,
+        "3": 1.4294909150779367
+      }
+    },
+    {
+      "threadId": "mara-15",
+      "brand": "Mara",
+      "number": "15",
+      "dtex": 2000,
+      "sortOrder": 109,
+      "enabled": true,
+      "diametersMm": {
+        "1": 1.0922048745466846,
+        "2": 1.6417602935740068,
+        "3": 2.0837778066480452
+      }
+    },
+    {
+      "threadId": "mara-11",
+      "brand": "Mara",
+      "number": "11",
+      "dtex": 2599,
+      "sortOrder": 110,
+      "enabled": true,
+      "diametersMm": {
+        "1": 1.2594017023172457,
+        "2": 1.8930841243334768,
+        "3": 2.402766530439315
+      }
+    },
+    {
+      "threadId": "skala-360",
+      "brand": "Skala",
+      "number": "360",
+      "dtex": 80,
+      "sortOrder": 201,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.18977724066342466,
+        "2": 0.28526583757883744,
+        "3": 0.3620690691986526
+      }
+    },
+    {
+      "threadId": "skala-240",
+      "brand": "Skala",
+      "number": "240",
+      "dtex": 119,
+      "sortOrder": 202,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.23550980059683416,
+        "2": 0.3540092599640632,
+        "3": 0.4493205507212862
+      }
+    },
+    {
+      "threadId": "skala-200",
+      "brand": "Skala",
+      "number": "200",
+      "dtex": 150,
+      "sortOrder": 203,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.2671006343078204,
+        "2": 0.4014953842583926,
+        "3": 0.5095915490610288
+      }
+    },
+    {
+      "threadId": "tera-fine-180",
+      "brand": "Tera",
+      "number": "180",
+      "dtex": 160,
+      "sortOrder": 301,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.2766394652321305,
+        "2": 0.41583378744959615,
+        "3": 0.5277903363441337
+      }
+    },
+    {
+      "threadId": "tera-80",
+      "brand": "Tera",
+      "number": "80",
+      "dtex": 350,
+      "sortOrder": 302,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.42339321841422894,
+        "2": 0.636428375994468,
+        "3": 0.8077764644504414
+      }
+    },
+    {
+      "threadId": "tera-60",
+      "brand": "Tera",
+      "number": "60",
+      "dtex": 500,
+      "sortOrder": 303,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.5140011529882192,
+        "2": 0.7726267328531751,
+        "3": 0.9806440349690794
+      }
+    },
+    {
+      "threadId": "tera-40",
+      "brand": "Tera",
+      "number": "40",
+      "dtex": 750,
+      "sortOrder": 304,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.6407740430920248,
+        "2": 0.9631868577202545,
+        "3": 1.222509403856563
+      }
+    },
+    {
+      "threadId": "tera-30",
+      "brand": "Tera",
+      "number": "30",
+      "dtex": 1000,
+      "sortOrder": 305,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.7492626807844824,
+        "2": 1.1262627987073686,
+        "3": 1.4294909150779367
+      }
+    },
+    {
+      "threadId": "tera-20",
+      "brand": "Tera",
+      "number": "20",
+      "dtex": 1500,
+      "sortOrder": 306,
+      "enabled": true,
+      "diametersMm": {
+        "1": 0.934060311952736,
+        "2": 1.4040434791172551,
+        "3": 1.7820595691130716
+      }
+    },
+    {
+      "threadId": "tera-15",
+      "brand": "Tera",
+      "number": "15",
+      "dtex": 2000,
+      "sortOrder": 307,
+      "enabled": true,
+      "diametersMm": {
+        "1": 1.0922048745466846,
+        "2": 1.6417602935740068,
+        "3": 2.0837778066480452
+      }
+    },
+    {
+      "threadId": "tera-10",
+      "brand": "Tera",
+      "number": "10",
+      "dtex": 2900,
+      "sortOrder": 308,
+      "enabled": true,
+      "diametersMm": {
+        "1": 1.3367182987678694,
+        "2": 2.009303453733195,
+        "3": 2.550276042183841
+      }
+    },
+    {
+      "threadId": "tera-8",
+      "brand": "Tera",
+      "number": "8",
+      "dtex": 3750,
+      "sortOrder": 309,
+      "enabled": true,
+      "diametersMm": {
+        "1": 1.5372160210870696,
+        "2": 2.3106839063633027,
+        "3": 2.932798326957231
+      }
+    },
+    {
+      "threadId": "tera-5",
+      "brand": "Tera",
+      "number": "5",
+      "dtex": 6000,
+      "sortOrder": 310,
+      "enabled": true,
+      "diametersMm": {
+        "1": 1.9847917069920613,
+        "2": 2.983462435934458,
+        "3": 3.7867116382956283
+      }
+    }
+  ]
+}

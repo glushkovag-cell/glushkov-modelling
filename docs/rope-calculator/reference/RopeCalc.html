@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rope Diameter Calculator</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #f5f7fa;
+    }
+
+    .rope-calculator {
+      box-sizing: border-box;
+      max-width: 720px;
+      margin: 24px auto;
+      padding: 24px;
+      border: 1px solid #d9dee5;
+      border-radius: 12px;
+      background: #fff;
+      color: #202936;
+      font: 16px/1.5 system-ui, sans-serif;
+    }
+
+    .rope-calculator *,
+    .rope-calculator *::before,
+    .rope-calculator *::after {
+      box-sizing: inherit;
+    }
+
+    .rope-calculator [hidden] {
+      display: none !important;
+    }
+
+    .rope-calculator h2 {
+      margin: 0 0 16px;
+      color: inherit;
+      font-size: 22px;
+      line-height: 1.3;
+    }
+
+    .rope-calculator .rc-field {
+      margin-bottom: 16px;
+    }
+
+    .rope-calculator .rc-label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .rope-calculator input[type="number"],
+    .rope-calculator select {
+      display: block;
+      width: 100%;
+      min-height: 44px;
+      margin: 0;
+      padding: 10px 12px;
+      border: 1px solid #aeb8c4;
+      border-radius: 6px;
+      background: #fff;
+      color: #202936;
+      font: inherit;
+    }
+
+    .rope-calculator input:focus-visible,
+    .rope-calculator select:focus-visible,
+    .rope-calculator button:focus-visible {
+      outline: 2px solid #2864b4;
+      outline-offset: 2px;
+    }
+
+    .rope-calculator input[aria-invalid="true"] {
+      border-color: #b42318;
+    }
+
+    .rope-calculator .rc-hint,
+    .rope-calculator .rc-note {
+      margin: 6px 0 0;
+      color: #586575;
+      font-size: 13px;
+    }
+
+    .rope-calculator .rc-note {
+      margin-top: 16px;
+    }
+
+    .rope-calculator .rc-error {
+      margin: 0 0 16px;
+      color: #b42318;
+      font-size: 14px;
+    }
+
+    .rope-calculator .rc-result {
+      padding: 16px;
+      border-radius: 8px;
+      background: #f0f5fa;
+    }
+
+    .rope-calculator .rc-result-label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .rope-calculator .rc-result-value {
+      display: block;
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .rope-calculator fieldset {
+      min-width: 0;
+      margin: 0 0 16px;
+      padding: 14px;
+      border: 1px solid #d9dee5;
+      border-radius: 8px;
+    }
+
+    .rope-calculator legend {
+      padding: 0 6px;
+      font-weight: 600;
+    }
+
+    .rope-calculator .rc-thread-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 16px;
+      margin-top: 12px;
+    }
+
+    .rope-calculator .rc-thread-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .rope-calculator input[type="checkbox"] {
+      flex: 0 0 auto;
+      width: 18px;
+      height: 18px;
+      margin: 2px 0 0;
+      accent-color: #2864b4;
+    }
+
+    .rope-calculator .rc-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .rope-calculator button {
+      padding: 7px 12px;
+      border: 1px solid #aeb8c4;
+      border-radius: 6px;
+      background: #f7f9fc;
+      color: #202936;
+      font: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .rope-calculator button:hover {
+      background: #eaf0f7;
+    }
+
+    .rope-calculator .rc-search-status {
+      margin: 0 0 12px;
+    }
+
+    .rope-calculator .rc-table-wrap {
+      overflow-x: auto;
+    }
+
+    .rope-calculator table {
+      width: 100%;
+      margin: 0;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .rope-calculator th,
+    .rope-calculator td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #d9dee5;
+      text-align: left;
+      vertical-align: top;
+      white-space: nowrap;
+    }
+
+    .rope-calculator th {
+      background: #f0f5fa;
+      font-weight: 600;
+    }
+
+    .rope-calculator .rc-fallback {
+      margin: 0;
+      padding: 16px;
+      border: 1px solid #e3c378;
+      border-radius: 8px;
+      background: #fff8e6;
+      color: #594619;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 12px;
+      }
+
+      .rope-calculator {
+        padding: 16px;
+        margin: 12px auto;
+      }
+
+      .rope-calculator .rc-thread-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section class="rope-calculator">
+    <p class="rc-fallback" role="status">
+      To use this calculator, open this page in a browser that supports
+      JavaScript and make sure JavaScript is enabled.
+    </p>
+
+    <div class="rc-interface" hidden>
+      <h2>Rope Diameter Calculator</h2>
+
+      <div class="rc-field">
+        <label>
+          <span class="rc-label">Calculator mode</span>
+          <select class="rc-calculator-mode">
+            <option value="forward">Calculate rope diameter</option>
+            <option value="reverse">Find threads for a target diameter</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="rc-forward">
+        <div class="rc-field">
+          <label>
+            <span class="rc-label">Calculation basis</span>
+            <select class="rc-forward-basis">
+              <option value="catalog">Catalog thread</option>
+              <option value="dtex">Custom dTex</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="rc-field rc-catalog-field">
+          <label>
+            <span class="rc-label">Thread</span>
+            <select class="rc-thread-select"></select>
+          </label>
+          <p class="rc-hint">
+            Choose a thread from the built-in catalog.
+          </p>
+        </div>
+
+        <div class="rc-field rc-dtex-field" hidden>
+          <label>
+            <span class="rc-label">Linear density (dTex)</span>
+            <input
+              class="rc-custom-dtex"
+              type="number"
+              min="80"
+              max="3000"
+              step="any"
+              value="750"
+              required
+              aria-invalid="false"
+            >
+          </label>
+          <p class="rc-hint">
+            Enter a value from 80 to 3000 dTex.
+          </p>
+        </div>
+
+        <div class="rc-field">
+          <label>
+            <span class="rc-label">Threads per strand</span>
+            <select class="rc-count">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+            </select>
+          </label>
+          <p class="rc-hint">
+            All ropes have three strands. A 2 × 3 construction uses
+            two threads per strand, six threads in total.
+          </p>
+        </div>
+
+        <p class="rc-error rc-forward-error" role="alert" hidden></p>
+
+        <div
+          class="rc-result"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <span class="rc-result-label">Estimated rope diameter</span>
+          <output class="rc-result-value">—</output>
+        </div>
+      </div>
+
+      <div class="rc-reverse" hidden>
+        <div class="rc-field">
+          <label>
+            <span class="rc-label">Target rope diameter (mm)</span>
+            <input
+              class="rc-target"
+              type="number"
+              min="0"
+              step="any"
+              value="1.00"
+              required
+              aria-invalid="false"
+            >
+          </label>
+          <p class="rc-hint">
+            Enter a diameter greater than zero.
+            Only matches within ±15% of the target are shown.
+          </p>
+        </div>
+
+        <fieldset>
+          <legend>Available threads</legend>
+
+          <div class="rc-actions">
+            <button type="button" class="rc-select-all">Select all</button>
+            <button type="button" class="rc-clear-all">Clear all</button>
+          </div>
+
+          <div class="rc-thread-list"></div>
+        </fieldset>
+
+        <p class="rc-hint">
+          The calculator checks 1, 2 and 3 threads per strand for each
+          selected thread. Results are sorted by absolute percentage
+          deviation from the target.
+        </p>
+
+        <p class="rc-error rc-reverse-error" role="alert" hidden></p>
+
+        <p
+          class="rc-search-status"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        ></p>
+
+        <div class="rc-table-wrap" hidden>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Brand</th>
+                <th scope="col">Number</th>
+                <th scope="col">dTex</th>
+                <th scope="col">Construction</th>
+                <th scope="col">Diameter (mm)</th>
+                <th scope="col">Deviation</th>
+              </tr>
+            </thead>
+            <tbody class="rc-results-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <p class="rc-note">
+        All diameters are calculated estimates, not measured values.
+        Mean relative error of the dTex model in the source data is
+        approximately 4.8%; this is not a guaranteed tolerance.
+        Actual diameter may vary with material, tension and twist.
+      </p>
+
+      <p class="rc-note">
+        Direct calculation uses either a catalog thread or a custom dTex
+        value. Reverse lookup uses the built-in catalog and checks all
+        1 × 3, 2 × 3 and 3 × 3 constructions within the 15% limit.
+      </p>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        const THREAD_CATALOG = Object.freeze([
+          Object.freeze({ brand: "Skala", number: 360, dtex: 80 }),
+          Object.freeze({ brand: "Skala", number: 240, dtex: 120 }),
+          Object.freeze({ brand: "Skala", number: 200, dtex: 150 }),
+          Object.freeze({ brand: "Tera", number: 80, dtex: 350 }),
+          Object.freeze({ brand: "Tera", number: 60, dtex: 500 }),
+          Object.freeze({ brand: "Tera", number: 40, dtex: 750 }),
+          Object.freeze({ brand: "Tera", number: 30, dtex: 1000 }),
+          Object.freeze({ brand: "Tera", number: 20, dtex: 1500 }),
+          Object.freeze({ brand: "Tera", number: 10, dtex: 3000 })
+        ]);
+
+        const THREAD_COUNTS = Object.freeze([1, 2, 3]);
+        const MAX_DEVIATION = 0.15;
+
+        const root = document.currentScript.closest(".rope-calculator");
+        const find = function (selector) {
+          return root.querySelector(selector);
+        };
+
+        const interfaceElement = find(".rc-interface");
+        const fallbackElement = find(".rc-fallback");
+
+        const calculatorMode = find(".rc-calculator-mode");
+        const forwardPanel = find(".rc-forward");
+        const reversePanel = find(".rc-reverse");
+
+        const forwardBasis = find(".rc-forward-basis");
+        const catalogField = find(".rc-catalog-field");
+        const dtexField = find(".rc-dtex-field");
+        const threadSelect = find(".rc-thread-select");
+        const customDtexInput = find(".rc-custom-dtex");
+        const countInput = find(".rc-count");
+        const forwardError = find(".rc-forward-error");
+        const forwardResult = find(".rc-result-value");
+
+        const targetInput = find(".rc-target");
+        const threadList = find(".rc-thread-list");
+        const reverseError = find(".rc-reverse-error");
+        const searchStatus = find(".rc-search-status");
+        const tableWrap = find(".rc-table-wrap");
+        const resultsBody = find(".rc-results-body");
+
+        function diameterByDtex(dtex, threads) {
+          return (
+            0.01752 *
+            Math.pow(dtex, 0.5437) *
+            Math.pow(threads, 0.5880)
+          );
+        }
+
+        function populateThreadSelect() {
+          const fragment = document.createDocumentFragment();
+
+          THREAD_CATALOG.forEach(function (thread, index) {
+            const option = document.createElement("option");
+            option.value = String(index);
+            option.textContent =
+              thread.brand +
+              " " +
+              thread.number +
+              " — " +
+              thread.dtex +
+              " dTex";
+            fragment.appendChild(option);
+          });
+
+          threadSelect.appendChild(fragment);
+
+          const defaultIndex = THREAD_CATALOG.findIndex(function (thread) {
+            return thread.brand === "Tera" && thread.number === 40;
+          });
+
+          threadSelect.value = String(defaultIndex >= 0 ? defaultIndex : 0);
+        }
+
+        function buildThreadList() {
+          const fragment = document.createDocumentFragment();
+
+          THREAD_CATALOG.forEach(function (thread, index) {
+            const label = document.createElement("label");
+            label.className = "rc-thread-option";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.value = String(index);
+            checkbox.checked = true;
+
+            const text = document.createElement("span");
+            text.textContent =
+              thread.brand +
+              " " +
+              thread.number +
+              " — " +
+              thread.dtex +
+              " dTex";
+
+            label.appendChild(checkbox);
+            label.appendChild(text);
+            fragment.appendChild(label);
+          });
+
+          threadList.appendChild(fragment);
+        }
+
+        function showForwardError(message, markCustomFieldInvalid) {
+          customDtexInput.setAttribute(
+            "aria-invalid",
+            markCustomFieldInvalid ? "true" : "false"
+          );
+          forwardError.textContent = message;
+          forwardError.hidden = false;
+          forwardResult.textContent = "—";
+        }
+
+        function clearForwardError() {
+          customDtexInput.setAttribute("aria-invalid", "false");
+          forwardError.textContent = "";
+          forwardError.hidden = true;
+        }
+
+        function getForwardDtex() {
+          if (forwardBasis.value === "catalog") {
+            const selected = THREAD_CATALOG[Number(threadSelect.value)];
+            return selected ? selected.dtex : NaN;
+          }
+
+          if (customDtexInput.validity.badInput) {
+            return NaN;
+          }
+
+          return customDtexInput.valueAsNumber;
+        }
+
+        function calculateForward() {
+          const threads = Number(countInput.value);
+          const dtex = getForwardDtex();
+
+          if (!THREAD_COUNTS.includes(threads)) {
+            showForwardError(
+              "Please select 1, 2 or 3 threads per strand.",
+              false
+            );
+            return;
+          }
+
+          if (forwardBasis.value === "catalog") {
+            if (!Number.isFinite(dtex)) {
+              showForwardError("Please choose a valid catalog thread.", false);
+              return;
+            }
+          } else {
+            if (customDtexInput.validity.badInput || customDtexInput.value.trim() === "") {
+              showForwardError("Please enter a valid dTex value.", true);
+              return;
+            }
+
+            if (!Number.isFinite(dtex)) {
+              showForwardError("Please enter a valid dTex value.", true);
+              return;
+            }
+
+            if (dtex < 80 || dtex > 3000) {
+              showForwardError("Please enter a dTex value from 80 to 3000.", true);
+              return;
+            }
+          }
+
+          const diameter = diameterByDtex(dtex, threads);
+
+          clearForwardError();
+          forwardResult.textContent = diameter.toFixed(3) + " mm";
+        }
+
+        function updateForwardBasis() {
+          const useCatalog = forwardBasis.value === "catalog";
+          catalogField.hidden = !useCatalog;
+          dtexField.hidden = useCatalog;
+          calculateForward();
+        }
+
+        function resetReverseResults() {
+          resultsBody.textContent = "";
+          tableWrap.hidden = true;
+          searchStatus.textContent = "";
+          reverseError.textContent = "";
+          reverseError.hidden = true;
+          targetInput.setAttribute("aria-invalid", "false");
+        }
+
+        function showReverseError(message, invalidTarget) {
+          reverseError.textContent = message;
+          reverseError.hidden = false;
+          targetInput.setAttribute(
+            "aria-invalid",
+            invalidTarget ? "true" : "false"
+          );
+        }
+
+        function appendCell(row, text) {
+          const cell = document.createElement("td");
+          cell.textContent = text;
+          row.appendChild(cell);
+        }
+
+        function calculateReverse() {
+          resetReverseResults();
+
+          const target = targetInput.valueAsNumber;
+
+          if (
+            targetInput.validity.badInput ||
+            targetInput.value.trim() === "" ||
+            !Number.isFinite(target) ||
+            target <= 0
+          ) {
+            showReverseError(
+              "Please enter a valid target diameter greater than zero.",
+              true
+            );
+            return;
+          }
+
+          const selectedThreads = Array.from(
+            threadList.querySelectorAll('input[type="checkbox"]:checked')
+          ).map(function (checkbox) {
+            return THREAD_CATALOG[Number(checkbox.value)];
+          });
+
+          if (selectedThreads.length === 0) {
+            showReverseError(
+              "Please select at least one available thread.",
+              false
+            );
+            return;
+          }
+
+          const matches = [];
+
+          selectedThreads.forEach(function (thread) {
+            THREAD_COUNTS.forEach(function (threads) {
+              const diameter = diameterByDtex(thread.dtex, threads);
+              const deviation = (diameter - target) / target;
+              const absoluteDeviation = Math.abs(deviation);
+
+              if (absoluteDeviation <= MAX_DEVIATION) {
+                matches.push({
+                  thread: thread,
+                  threads: threads,
+                  diameter: diameter,
+                  deviation: deviation,
+                  absoluteDeviation: absoluteDeviation
+                });
+              }
+            });
+          });
+
+          matches.sort(function (a, b) {
+            return (
+              a.absoluteDeviation - b.absoluteDeviation ||
+              a.thread.dtex - b.thread.dtex ||
+              a.threads - b.threads
+            );
+          });
+
+          if (matches.length === 0) {
+            searchStatus.textContent =
+              "No matching combinations found within ±15% of the target. " +
+              "Select additional threads or change the target diameter.";
+            return;
+          }
+
+          const fragment = document.createDocumentFragment();
+
+          matches.forEach(function (match) {
+            const row = document.createElement("tr");
+            const percentage = match.deviation * 100;
+            const sign = percentage > 0 ? "+" : "";
+            const deviationText = Math.abs(percentage) < 0.005
+              ? "0.00%"
+              : sign + percentage.toFixed(2) + "%";
+
+            appendCell(row, match.thread.brand);
+            appendCell(row, String(match.thread.number));
+            appendCell(row, String(match.thread.dtex));
+            appendCell(row, match.threads + " × 3");
+            appendCell(row, match.diameter.toFixed(3));
+            appendCell(row, deviationText);
+
+            fragment.appendChild(row);
+          });
+
+          resultsBody.appendChild(fragment);
+          tableWrap.hidden = false;
+
+          searchStatus.textContent =
+            matches.length +
+            (matches.length === 1
+              ? " matching combination"
+              : " matching combinations") +
+            " within ±15% of the target. " +
+            "Negative deviation means thinner; positive means thicker.";
+        }
+
+        function updateCalculatorMode() {
+          const reverse = calculatorMode.value === "reverse";
+
+          forwardPanel.hidden = reverse;
+          reversePanel.hidden = !reverse;
+
+          if (reverse) {
+            calculateReverse();
+          } else {
+            calculateForward();
+          }
+        }
+
+        function setAllThreads(checked) {
+          threadList.querySelectorAll(
+            'input[type="checkbox"]'
+          ).forEach(function (checkbox) {
+            checkbox.checked = checked;
+          });
+
+          calculateReverse();
+        }
+
+        populateThreadSelect();
+        buildThreadList();
+
+        calculatorMode.addEventListener("change", updateCalculatorMode);
+        forwardBasis.addEventListener("change", updateForwardBasis);
+        threadSelect.addEventListener("change", calculateForward);
+        customDtexInput.addEventListener("input", calculateForward);
+        countInput.addEventListener("change", calculateForward);
+
+        targetInput.addEventListener("input", calculateReverse);
+        threadList.addEventListener("change", calculateReverse);
+
+        find(".rc-select-all").addEventListener("click", function () {
+          setAllThreads(true);
+        });
+
+        find(".rc-clear-all").addEventListener("click", function () {
+          setAllThreads(false);
+        });
+
+        updateForwardBasis();
+        updateCalculatorMode();
+
+        interfaceElement.hidden = false;
+        fallbackElement.hidden = true;
+      })();
+    </script>
+  </section>
+</body>
+</html>
