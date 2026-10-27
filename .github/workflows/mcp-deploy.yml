@@ -47,6 +47,9 @@ jobs:
       # route is only used by the Perplexity connector.
       MCP_ALLOWED_ORIGINS: "https://www.perplexity.ai,https://perplexity.ai"
 
+      # Base URL of the rope calculator Worker (Cloudflare).
+      ROPE_API_BASE_URL: https://api.glushkov-modelling.com
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -138,6 +141,7 @@ jobs:
           check_value OAUTH_AUDIENCE "$OAUTH_AUDIENCE"
           check_value OAUTH_REQUIRED_SCOPE "$OAUTH_REQUIRED_SCOPE"
           check_value OAUTH_RESOURCE_METADATA_URI "$OAUTH_RESOURCE_METADATA_URI"
+          check_value ROPE_API_BASE_URL "$ROPE_API_BASE_URL"
 
           ssh -p "${DEPLOY_PORT}" \
             -i ~/.ssh/github_actions_deploy \
@@ -169,6 +173,7 @@ jobs:
           OAUTH_AUDIENCE=${OAUTH_AUDIENCE}
           OAUTH_REQUIRED_SCOPE=${OAUTH_REQUIRED_SCOPE}
           OAUTH_RESOURCE_METADATA_URI=${OAUTH_RESOURCE_METADATA_URI}
+          ROPE_API_BASE_URL=${ROPE_API_BASE_URL}
           EOF
 
       - name: Install production dependencies on VPS

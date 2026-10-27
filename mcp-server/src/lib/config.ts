@@ -53,6 +53,14 @@ export const config = {
   // чтобы строить рабочие ссылки на изображения, а не голые относительные пути.
   cmsGalleryUrl: requireEnv("CMS_GALLERY_URL").replace(/\/$/, ""),
 
+  // Базовый URL JSON API калькулятора канатов (Cloudflare Worker).
+  // Вынесен в переменную, чтобы можно было проверить новые версии Worker
+  // до переключения production и чтобы тесты не ходили в сеть.
+  ropeApiBaseUrl: optionalEnv(
+    "ROPE_API_BASE_URL",
+    "https://api.glushkov-modelling.com",
+  ).replace(/\/$/, ""),
+
   // Лимиты по умолчанию для read-only инструментов
   defaultResponseLimit: 50,
   requestTimeoutMs: 8000,

@@ -9,6 +9,8 @@ import { registerGetTutorials } from "./tools/get-tutorials.js";
 import { registerGetTutorialByTitle } from "./tools/get-tutorial-by-title.js";
 import { registerSearchTutorialContent } from "./tools/search-tutorial-content.js";
 import { registerListTutorialTaxonomy } from "./tools/list-tutorial-taxonomy.js";
+import { registerCalculateRopeDiameter } from "./tools/calculate-rope-diameter.js";
+import { registerFindRopeThreads } from "./tools/find-rope-threads.js";
 
 /**
  * Создаёт новый экземпляр McpServer с зарегистрированными read-only
@@ -21,7 +23,7 @@ export function createMcpServer(): McpServer {
   const server = new McpServer(
     {
       name: "glushkov-modelling-mcp-server",
-      version: "0.3.0",
+      version: "0.4.0",
     },
     { capabilities: { tools: {} } },
   );
@@ -36,6 +38,8 @@ export function createMcpServer(): McpServer {
   registerGetTutorialByTitle(server);
   registerSearchTutorialContent(server);
   registerListTutorialTaxonomy(server);
+  registerCalculateRopeDiameter(server);
+  registerFindRopeThreads(server);
 
   return server;
 }
