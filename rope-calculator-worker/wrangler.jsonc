@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rope-calculator-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-14",
+  "observability": {
+    "enabled": true
+  },
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "api.glushkov-modelling.com",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "WP_GRAPHQL_URL": "https://cms.glushkov-modelling.com/wordpress/graphql"
+  }
+}

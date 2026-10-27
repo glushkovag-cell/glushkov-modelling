@@ -1,5 +1,5 @@
 {
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist", "mcp-server", "mcp-registry-badge", "infra"]
+  "exclude": ["dist", "mcp-server", "mcp-registry-badge", "rope-calculator-worker", "infra"]
 }

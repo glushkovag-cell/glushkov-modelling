@@ -12,8 +12,12 @@ export default defineConfig({
   }),
   integrations: [
     sitemap({
-      // Исключаем технические страницы если появятся
-      filter: (page) => !page.includes('/wp-admin') && !page.includes('/graphql'),
+      // Исключаем технические страницы если появятся.
+      // /rope-preview — внутренняя проверочная страница, она ещё и noindex.
+      filter: (page) =>
+        !page.includes('/wp-admin') &&
+        !page.includes('/graphql') &&
+        !page.includes('/rope-preview'),
       changefreq: 'weekly',
       priority: 0.7,
       // No lastmod: the only date available at build time is the build itself,
