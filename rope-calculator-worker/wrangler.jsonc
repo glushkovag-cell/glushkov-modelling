@@ -6,5 +6,14 @@
   "observability": {
     "enabled": true
   },
-  "vars": {}
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "api.glushkov-modelling.com",
+      "custom_domain": true
+    }
+  ],
+  "vars": {
+    "WP_GRAPHQL_URL": "https://cms.glushkov-modelling.com/wordpress/graphql"
+  }
 }

@@ -1,0 +1,98 @@
+name: Deploy rope calculator worker
+
+# Запускается вручную: первый деплой требует секретов, которых до настройки
+# репозитория нет. После первого успешного деплоя можно добавить push-триггер.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: rope-worker-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Cloudflare
+    runs-on: ubuntu-latest
+    environment: production
+
+    defaults:
+      run:
+        working-directory: rope-calculator-worker
+
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: rope-calculator-worker/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Sync CMS secret
+        env:
+          WP_GRAPHQL_SECRET: ${{ secrets.WP_GRAPHQL_SECRET }}
+        run: |
+          set -eu
+          if [ -z "${WP_GRAPHQL_SECRET}" ]; then
+            echo "::error::Repository secret WP_GRAPHQL_SECRET is not set"
+            exit 1
+          fi
+          printf '%s' "${WP_GRAPHQL_SECRET}" | npx wrangler secret put WP_GRAPHQL_SECRET
+
+      - name: Deploy worker
+        run: npx wrangler deploy
+
+      - name: Smoke test health
+        run: |
+          curl --fail --silent --show-error \
+            https://api.glushkov-modelling.com/api/rope/v1/health -o health.json
+          node -e "const d=require('./health.json');if(!d.ok)process.exit(1);console.log('health',d.apiVersion,d.algorithmVersion)"
+
+      - name: Smoke test catalog
+        run: |
+          curl --fail --silent --show-error \
+            https://api.glushkov-modelling.com/api/rope/v1/catalog -o catalog.json
+          node -e "const d=require('./catalog.json');if(!Array.isArray(d.threads)||d.threads.length===0)process.exit(1);console.log('threads',d.threads.length,'version',d.catalogVersion)"
+
+      - name: Smoke test forward and reverse
+        run: |
+          curl --fail --silent --show-error \
+            -X POST https://api.glushkov-modelling.com/api/rope/v1/forward \
+            -H 'content-type: application/json' \
+            -d '{"basis":"catalog","threadId":"tera-40","threadsPerStrand":2}' \
+            -o forward.json
+          node -e "const d=require('./forward.json');if(Math.abs(d.result.diameterMm-0.9631868577202545)>1e-9)process.exit(1);console.log('forward',d.result.diameterMm)"
+
+          curl --fail --silent --show-error \
+            -X POST https://api.glushkov-modelling.com/api/rope/v1/reverse \
+            -H 'content-type: application/json' \
+            -d '{"targetDiameterMm":1}' \
+            -o reverse.json
+          node -e "const d=require('./reverse.json');if(d.results.length!==11)process.exit(1);console.log('reverse',d.results.length)"
+
+      - name: Smoke test CORS preflight
+        run: |
+          code=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -X OPTIONS https://api.glushkov-modelling.com/api/rope/v1/forward \
+            -H 'Origin: https://www.glushkov-modelling.com' \
+            -H 'Access-Control-Request-Method: POST')
+          test "${code}" = "204"
+          echo "preflight ${code}"
