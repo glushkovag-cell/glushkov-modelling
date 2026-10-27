@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+/*
+ * Временная проверочная страница: нужна, чтобы прогнать компонент в реальной
+ * вёрстке сайта до замены старого калькулятора в статье. Индексирование
+ * закрыто, в навигацию страница не добавлена; на этапе 6 её заменяет
+ * production-встраивание.
+ */
+const API_BASE = 'http://localhost:8787';
+---
+
+<BaseLayout
+    title="Rope calculator preview"
+    description="Internal preview of the rope diameter calculator widget."
+    noindex
+>
+  <section class="page-section">
+    <div class="container">
+      <span class="eyebrow">Internal preview</span>
+      <h1 class="section-title">Rope calculator</h1>
+      <p>
+        Temporary page for checking the widget. It calls the local Worker at <code>{API_BASE}</code>,
+        so start it with <code>npx wrangler dev</code> in <code>rope-calculator-worker</code> first.
+      </p>
+
+      <gm-rope-calculator api-base={API_BASE}>
+        <noscript>Enable JavaScript to use the rope calculator.</noscript>
+      </gm-rope-calculator>
+
+      <h2 class="section-title" style="margin-top: 3rem;">Second instance</h2>
+      <p>
+        Два экземпляра на одной странице должны иметь независимое состояние и
+        использовать один запрос каталога.
+      </p>
+
+      <gm-rope-calculator api-base={API_BASE}>
+        <noscript>Enable JavaScript to use the rope calculator.</noscript>
+      </gm-rope-calculator>
+    </div>
+  </section>
+
+  <script>
+    /*
+     * Удобства только для проверочной страницы: ?theme=dark и ?mode=reverse
+     * позволяют снять состояния без ручных кликов. В статье эти параметры
+     * не используются.
+     */
+    const params = new URLSearchParams(window.location.search);
+
+    const apiBase = params.get('api');
+    if (apiBase) {
+      for (const element of document.querySelectorAll('gm-rope-calculator')) {
+        element.setAttribute('api-base', apiBase);
+      }
+    }
+
+    if (params.get('theme') === 'dark') {
+      localStorage.setItem('theme', 'dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    if (params.get('mode') === 'reverse') {
+      customElements.whenDefined('gm-rope-calculator').then(() => {
+        for (const element of document.querySelectorAll('gm-rope-calculator')) {
+          const select = element.shadowRoot?.querySelector<HTMLSelectElement>('#mode');
+          if (select) {
+            select.value = 'reverse';
+            select.dispatchEvent(new Event('change'));
+          }
+        }
+      });
+    }
+  </script>
+</BaseLayout>
