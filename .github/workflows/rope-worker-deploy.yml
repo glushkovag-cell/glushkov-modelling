@@ -60,6 +60,24 @@ jobs:
       - name: Deploy worker
         run: npx wrangler deploy
 
+      # Custom Domain и DNS-запись создаются в момент первого деплоя, а
+      # резолверы GitHub-раннера видят их не сразу. Без ожидания smoke падает
+      # на "Could not resolve host" при живом и уже задеплоенном Worker.
+      - name: Wait for DNS and TLS
+        run: |
+          set -eu
+          for attempt in $(seq 1 24); do
+            if curl --silent --fail --max-time 5 --output /dev/null \
+              https://api.glushkov-modelling.com/api/rope/v1/health; then
+              echo "API reachable after ${attempt} attempt(s)"
+              exit 0
+            fi
+            echo "attempt ${attempt}: not reachable yet"
+            sleep 10
+          done
+          echo "::error::API did not become reachable within 4 minutes"
+          exit 1
+
       - name: Smoke test health
         run: |
           curl --fail --silent --show-error \
