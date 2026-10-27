@@ -56,6 +56,25 @@ export interface FindRopeThreadsResult {
   results: RopeThreadMatch[];
 }
 
+export interface RopeThreadSummary {
+  threadId: string;
+  brand: string;
+  number: string;
+  dtex: number;
+  sortOrder: number;
+  /** Человекочитаемая подпись, как в интерфейсе: "Tera 40 — 750 dTex". */
+  label: string;
+}
+
+export interface ListRopeThreadsResult {
+  catalogVersion: string;
+  fetchedAt: string;
+  totalThreads: number;
+  apiVersion: string;
+  algorithmVersion: string;
+  threads: RopeThreadSummary[];
+}
+
 interface RopeApiErrorBody {
   error?: { code?: unknown; message?: unknown; fields?: unknown };
   requestId?: unknown;
@@ -83,6 +102,23 @@ interface ReverseResponse {
   results: RopeThreadMatch[];
 }
 
+interface CatalogThread {
+  threadId: string;
+  brand: string;
+  number: string;
+  dtex: number;
+  sortOrder: number;
+  enabled: boolean;
+}
+
+interface CatalogResponse {
+  apiVersion: string;
+  algorithmVersion: string;
+  catalogVersion: string;
+  fetchedAt: string;
+  threads: CatalogThread[];
+}
+
 /** Ошибка API с кодом из контракта; сообщение безопасно показывать клиенту. */
 export class RopeApiError extends Error {
   readonly code: string;
@@ -96,15 +132,13 @@ export class RopeApiError extends Error {
   }
 }
 
-async function postToWorker<TResponse>(path: string, body: unknown): Promise<TResponse> {
+async function requestWorker<TResponse>(path: string, init: RequestInit): Promise<TResponse> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), config.requestTimeoutMs);
 
   try {
     const response = await fetch(`${config.ropeApiBaseUrl}${path}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
+      ...init,
       signal: controller.signal,
     });
 
@@ -162,6 +196,21 @@ async function postToWorker<TResponse>(path: string, body: unknown): Promise<TRe
   }
 }
 
+function postToWorker<TResponse>(path: string, body: unknown): Promise<TResponse> {
+  return requestWorker<TResponse>(path, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+function getFromWorker<TResponse>(path: string): Promise<TResponse> {
+  return requestWorker<TResponse>(path, {
+    method: "GET",
+    headers: { accept: "application/json" },
+  });
+}
+
 /**
  * Прямой расчёт диаметра.
  *
@@ -214,5 +263,33 @@ export async function findRopeThreads(
     apiVersion: response.apiVersion,
     algorithmVersion: response.algorithmVersion,
     results: response.results,
+  };
+}
+
+/**
+ * Полный активный каталог нитей в порядке выдачи Worker'а
+ * (`sortOrder`, затем `threadId`).
+ *
+ * Нужен, чтобы модель могла узнать `threadId` для прямого расчёта: API
+ * возвращает только активные опубликованные нити, отключённые в CMS сюда не
+ * попадают.
+ */
+export async function listRopeThreads(): Promise<ListRopeThreadsResult> {
+  const response = await getFromWorker<CatalogResponse>("/api/rope/v1/catalog");
+
+  return {
+    catalogVersion: response.catalogVersion,
+    fetchedAt: response.fetchedAt,
+    totalThreads: response.threads.length,
+    apiVersion: response.apiVersion,
+    algorithmVersion: response.algorithmVersion,
+    threads: response.threads.map((thread) => ({
+      threadId: thread.threadId,
+      brand: thread.brand,
+      number: thread.number,
+      dtex: thread.dtex,
+      sortOrder: thread.sortOrder,
+      label: `${thread.brand} ${thread.number} — ${thread.dtex} dTex`,
+    })),
   };
 }

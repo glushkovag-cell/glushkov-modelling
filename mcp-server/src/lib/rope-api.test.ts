@@ -7,7 +7,7 @@ process.env.WP_GRAPHQL_URL = "https://cms.example.test/graphql";
 process.env.CMS_GALLERY_URL = "https://cms.example.test/gallery";
 process.env.ROPE_API_BASE_URL = "https://api.example.test/";
 
-const { calculateRope, findRopeThreads, RopeApiError } = await import("./rope-api.js");
+const { calculateRope, findRopeThreads, listRopeThreads, RopeApiError } = await import("./rope-api.js");
 
 const forwardResponse = {
     apiVersion: "1",
@@ -41,6 +41,17 @@ const reverseResponse = {
             diameterMm: 0.9806440349690794,
             deviationPercent: -1.935596503092063,
         },
+    ],
+};
+
+const catalogResponse = {
+    apiVersion: "1",
+    algorithmVersion: "1.0.0",
+    catalogVersion: "40dc45531758",
+    fetchedAt: "2026-10-27T06:00:00.000Z",
+    threads: [
+        { threadId: "mara-220", brand: "Mara", number: "220", dtex: 130, sortOrder: 101, enabled: true },
+        { threadId: "tera-40", brand: "Tera", number: "40", dtex: 750, sortOrder: 304, enabled: true },
     ],
 };
 
@@ -199,5 +210,39 @@ describe("findRopeThreads", () => {
 
         expect(result.totalMatched).toBe(0);
         expect(result.results).toEqual([]);
+    });
+});
+
+describe("listRopeThreads", () => {
+    it("reads the catalog with GET and builds human-readable labels", async () => {
+        fetchMock.mockResolvedValue(jsonResponse(catalogResponse));
+
+        const result = await listRopeThreads();
+
+        const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+        expect(url).toBe("https://api.example.test/api/rope/v1/catalog");
+        expect(init.method).toBe("GET");
+
+        expect(result.totalThreads).toBe(2);
+        expect(result.catalogVersion).toBe("40dc45531758");
+        expect(result.threads[0]).toEqual({
+            threadId: "mara-220",
+            brand: "Mara",
+            number: "220",
+            dtex: 130,
+            sortOrder: 101,
+            label: "Mara 220 — 130 dTex",
+        });
+    });
+
+    it("maps an unavailable catalog to CATALOG_UNAVAILABLE", async () => {
+        fetchMock.mockResolvedValue(
+            jsonResponse({ error: { code: "CATALOG_UNAVAILABLE", message: "CMS is down." } }, 503),
+        );
+
+        await expect(listRopeThreads()).rejects.toMatchObject({
+            code: "CATALOG_UNAVAILABLE",
+            status: 503,
+        });
     });
 });

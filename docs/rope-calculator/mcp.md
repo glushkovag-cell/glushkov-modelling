@@ -44,6 +44,18 @@
 `threadsPerStrand` → `sortOrder` → `threadId`. Пустой `results` — успешный
 ответ, а не ошибка.
 
+## list_rope_threads
+
+Полный активный каталог нитей — без параметров. Нужен, чтобы модель узнала
+`threadId` до вызова прямого расчёта.
+
+Ответ: `totalThreads` (23), `threads` в порядке выдачи Worker'а (от тонкой к
+толстой) с полями `threadId`, `brand`, `number`, `dtex`, `sortOrder` и
+`label` вида `Tera 40 — 750 dTex`, плюс `catalogVersion`, `fetchedAt`,
+`apiVersion`, `algorithmVersion`.
+
+Отключённые и неопубликованные в CMS нити в ответ не попадают.
+
 ## Ошибки
 
 `RopeApiError` содержит код контракта (`INVALID_PARAMS`, `THREAD_NOT_FOUND`,

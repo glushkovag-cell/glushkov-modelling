@@ -11,6 +11,7 @@ import { registerSearchTutorialContent } from "./tools/search-tutorial-content.j
 import { registerListTutorialTaxonomy } from "./tools/list-tutorial-taxonomy.js";
 import { registerCalculateRopeDiameter } from "./tools/calculate-rope-diameter.js";
 import { registerFindRopeThreads } from "./tools/find-rope-threads.js";
+import { registerListRopeThreads } from "./tools/list-rope-threads.js";
 
 /**
  * Создаёт новый экземпляр McpServer с зарегистрированными read-only
@@ -40,6 +41,7 @@ export function createMcpServer(): McpServer {
   registerListTutorialTaxonomy(server);
   registerCalculateRopeDiameter(server);
   registerFindRopeThreads(server);
+  registerListRopeThreads(server);
 
   return server;
 }

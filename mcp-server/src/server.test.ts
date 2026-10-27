@@ -24,16 +24,23 @@ describe("MCP server tools", () => {
         const names = tools.map((tool) => tool.name);
 
         expect(names).toEqual(
-            expect.arrayContaining(["calculate_rope_diameter", "find_rope_threads"]),
+            expect.arrayContaining([
+                "calculate_rope_diameter",
+                "find_rope_threads",
+                "list_rope_threads",
+            ]),
         );
 
         const calculate = tools.find((tool) => tool.name === "calculate_rope_diameter");
         const find = tools.find((tool) => tool.name === "find_rope_threads");
+        const list = tools.find((tool) => tool.name === "list_rope_threads");
 
         expect(calculate?.description).toContain("three-strand rope");
         expect(calculate?.inputSchema.required).toContain("threadsPerStrand");
         expect(find?.description).toContain("±15%");
         expect(find?.inputSchema.required).toContain("targetDiameterMm");
+        expect(list?.description).toContain("active rope thread catalog");
+        expect(list?.inputSchema.required).toBeUndefined();
 
         await client.close();
         await server.close();
