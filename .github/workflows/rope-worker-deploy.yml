@@ -1,8 +1,15 @@
 name: Deploy rope calculator worker
 
-# Запускается вручную: первый деплой требует секретов, которых до настройки
-# репозитория нет. После первого успешного деплоя можно добавить push-триггер.
+# Деплой при push в main, если изменился код Worker, эталон/фикстуры
+# калькулятора или сам workflow. Ручной запуск остаётся для повторного деплоя.
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'rope-calculator-worker/**'
+      - 'docs/rope-calculator/fixtures/**'
+      - 'docs/rope-calculator/reference/**'
+      - '.github/workflows/rope-worker-deploy.yml'
   workflow_dispatch:
 
 concurrency:
@@ -82,7 +89,7 @@ jobs:
         run: |
           curl --fail --silent --show-error \
             https://api.glushkov-modelling.com/api/rope/v1/health -o health.json
-          node -e "const d=require('./health.json');if(!d.ok)process.exit(1);console.log('health',d.apiVersion,d.algorithmVersion)"
+          node -e "const d=require('./health.json');if(!d.ok)process.exit(1);if(d.algorithmVersion!=='2.0.0')process.exit(1);console.log('health',d.apiVersion,d.algorithmVersion)"
 
       - name: Smoke test catalog
         run: |
@@ -97,14 +104,14 @@ jobs:
             -H 'content-type: application/json' \
             -d '{"basis":"catalog","threadId":"tera-40","threadsPerStrand":2}' \
             -o forward.json
-          node -e "const d=require('./forward.json');if(Math.abs(d.result.diameterMm-0.9631868577202545)>1e-9)process.exit(1);console.log('forward',d.result.diameterMm)"
+          node -e "const d=require('./forward.json');if(Math.abs(d.result.diameterMm-0.9842333087830643)>1e-9)process.exit(1);console.log('forward',d.result.diameterMm)"
 
           curl --fail --silent --show-error \
             -X POST https://api.glushkov-modelling.com/api/rope/v1/reverse \
             -H 'content-type: application/json' \
             -d '{"targetDiameterMm":1}' \
             -o reverse.json
-          node -e "const d=require('./reverse.json');if(d.results.length!==11)process.exit(1);console.log('reverse',d.results.length)"
+          node -e "const d=require('./reverse.json');if(d.results.length!==18)process.exit(1);console.log('reverse',d.results.length)"
 
       - name: Smoke test CORS preflight
         run: |

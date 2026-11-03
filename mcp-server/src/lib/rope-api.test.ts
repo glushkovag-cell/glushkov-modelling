@@ -11,13 +11,13 @@ const { calculateRope, findRopeThreads, listRopeThreads, RopeApiError } = await 
 
 const forwardResponse = {
     apiVersion: "1",
-    algorithmVersion: "1.0.0",
+    algorithmVersion: "2.0.0",
     catalogVersion: "40dc45531758",
     fetchedAt: "2026-10-27T06:00:00.000Z",
     basis: "catalog",
     input: { threadId: "tera-40", dtex: 750, threadsPerStrand: 2 },
     result: {
-        diameterMm: 0.9631868577202545,
+        diameterMm: 0.9842333087830643,
         threadsPerStrand: 2,
         strands: 3,
         construction: "2 × 3",
@@ -26,7 +26,7 @@ const forwardResponse = {
 
 const reverseResponse = {
     apiVersion: "1",
-    algorithmVersion: "1.0.0",
+    algorithmVersion: "2.0.0",
     catalogVersion: "40dc45531758",
     fetchedAt: "2026-10-27T06:00:00.000Z",
     input: { targetDiameterMm: 1, tolerance: 0.15, threadIds: null },
@@ -38,15 +38,15 @@ const reverseResponse = {
             dtex: 500,
             threadsPerStrand: 3,
             construction: "3 × 3",
-            diameterMm: 0.9806440349690794,
-            deviationPercent: -1.935596503092063,
+            diameterMm: 0.987149903754157,
+            deviationPercent: -1.285009624584299,
         },
     ],
 };
 
 const catalogResponse = {
     apiVersion: "1",
-    algorithmVersion: "1.0.0",
+    algorithmVersion: "2.0.0",
     catalogVersion: "40dc45531758",
     fetchedAt: "2026-10-27T06:00:00.000Z",
     threads: [
@@ -97,7 +97,7 @@ describe("calculateRope", () => {
             basis: "catalog",
             threadId: "tera-40",
             dtex: 750,
-            diameterMm: 0.9631868577202545,
+            diameterMm: 0.9842333087830643,
             construction: "2 × 3",
             catalogVersion: "40dc45531758",
         });

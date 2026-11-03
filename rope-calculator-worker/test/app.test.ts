@@ -73,7 +73,7 @@ describe('rope API', () => {
     expect(await json(response)).toEqual({
       ok: true,
       apiVersion: '1',
-      algorithmVersion: '1.0.0',
+      algorithmVersion: '2.0.0',
     });
     expect(fn).not.toHaveBeenCalled();
   });
@@ -120,7 +120,7 @@ describe('rope API', () => {
     expect(body.basis).toBe('catalog');
     expect(body.input.dtex).toBe(750);
     expect(body.result.construction).toBe('2 × 3');
-    expect(relativeDifference(body.result.diameterMm, 0.9631868577202545)).toBeLessThan(1e-12);
+    expect(relativeDifference(body.result.diameterMm, 0.9842333087830643)).toBeLessThan(1e-12);
   });
 
   it('forward по ручному dTex не обращается к CMS', async () => {
@@ -148,8 +148,8 @@ describe('rope API', () => {
     const body = await json(response);
 
     expect(response.status).toBe(200);
-    expect(body.results).toHaveLength(11);
-    expect(body.results[0].threadId).toBe('tera-60');
+    expect(body.results).toHaveLength(18);
+    expect(body.results[0].threadId).toBe('mara-100');
     expect(body.input.tolerance).toBe(0.15);
     expect(body.input.threadIds).toBeNull();
   });

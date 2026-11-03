@@ -2,7 +2,7 @@
 export const API_VERSION = '1';
 
 /** Версия расчётного алгоритма. Меняется при изменении формулы или допуска. */
-export const ALGORITHM_VERSION = '1.0.0';
+export const ALGORITHM_VERSION = '2.0.0';
 
 /** Прядей в канате всегда три. */
 export const STRANDS = 3;

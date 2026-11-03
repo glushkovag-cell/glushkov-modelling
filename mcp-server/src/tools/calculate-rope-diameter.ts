@@ -28,9 +28,9 @@ const inputSchema = {
       .number()
       .int()
       .min(1)
-      .max(3)
+      .max(5)
       .describe(
-          "Threads per strand: 1, 2 or 3. All ropes have three strands, so 2 means the 2 × 3 construction.",
+          "Threads per strand: 1 to 5. All ropes have three strands, so 2 means the 2 × 3 construction.",
       ),
 };
 
@@ -43,7 +43,7 @@ export function registerCalculateRopeDiameter(server: McpServer): void {
             "Read-only. Calculates the estimated diameter of a three-strand rope from a thread's linear density and the number of threads per strand. " +
             "Use this tool when the user asks how thick a rope made from a given thread will be, or what diameter a custom dTex produces. " +
             "Provide basis 'catalog' with threadId for a catalog thread, or basis 'dtex' with a value between 80 and 6000 for a custom thread. " +
-            "threadsPerStrand is 1, 2 or 3; because all ropes have three strands, 2 corresponds to the 2 × 3 construction. " +
+            "threadsPerStrand is 1 to 5; because all ropes have three strands, 2 corresponds to the 2 × 3 construction. " +
             "Diameters are model estimates, not measured values. The response includes the diameter in millimetres, the construction label, the resolved dTex, and API, algorithm and catalog versions. " +
             "Use find_rope_threads when the user wants threads for a target diameter instead.",
         inputSchema,

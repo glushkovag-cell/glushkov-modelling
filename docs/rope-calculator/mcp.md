@@ -22,7 +22,7 @@
 | `basis` | `"catalog"` или `"dtex"` | да | источник линейной плотности |
 | `threadId` | строка | при `basis = "catalog"` | id нити, например `tera-40` |
 | `dtex` | число 80–6000 | при `basis = "dtex"` | ручная линейная плотность |
-| `threadsPerStrand` | 1, 2 или 3 | да | прядей всегда три, `2` = конструкция 2 × 3 |
+| `threadsPerStrand` | от 1 до 5 | да | прядей всегда три, `2` = конструкция 2 × 3 |
 
 Ответ: `diameterMm`, `construction`, `threadsPerStrand`, `strands`, `dtex`,
 `threadId`, `catalogVersion`, `apiVersion`, `algorithmVersion`.
