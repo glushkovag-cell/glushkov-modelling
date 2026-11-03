@@ -1,12 +1,11 @@
 /**
  * Клиентский контроллер калькулятора толщин такелажа.
  *
- * Читает форму, собирает компактную конфигурацию, вызывает чистое ядро и
- * рисует ведомость. Формул и коэффициентов здесь нет — только перенос данных
- * между DOM и расчётным ядром.
+ * Читает форму, собирает компактную конфигурацию, отправляет её в Worker и
+ * рисует ведомость. Формул и коэффициентов здесь нет: расчёт выполняет
+ * https://rigging-api.glushkov-modelling.com.
  */
 
-import { calculate } from '../lib/rigging/calculate.ts';
 import {
     buildInput,
     type RiggingSettings,
@@ -38,6 +37,7 @@ import type {
     MountingType,
     ResultGroup,
     ResultStatus,
+    RiggingInput,
     RiggingResult,
     SailClass,
     Tier,
@@ -48,7 +48,40 @@ import { PROFILE_ID } from '../lib/rigging/types.ts';
 const MAST_IDS_LIST = MAST_IDS as readonly MastId[];
 const SAIL_CLASSES_LIST = SAIL_CLASSES as readonly SailClass[];
 
+const DEFAULT_API_BASE = 'https://rigging-api.glushkov-modelling.com';
+
+/**
+ * База API. `?api=http://localhost:8787` удобно для локального wrangler dev;
+ * в продакшене параметр не нужен.
+ */
+const API_BASE = (() => {
+    const override = new URLSearchParams(window.location.search).get('api');
+    return (override?.trim() || DEFAULT_API_BASE).replace(/\/+$/, '');
+})();
+
 type GroupFilter = 'all' | ResultGroup;
+
+async function postCalculate(input: RiggingInput, signal: AbortSignal): Promise<Calculation> {
+    const response = await fetch(`${API_BASE}/api/rigging/v1/calculate`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(input),
+        signal,
+    });
+
+    if (!response.ok) {
+        let message = `Calculation service returned ${response.status}.`;
+        try {
+            const body = (await response.json()) as { error?: { message?: string } };
+            if (body?.error?.message) message = body.error.message;
+        } catch {
+            // тело ошибки может быть не JSON — используем статус
+        }
+        throw new Error(message);
+    }
+
+    return (await response.json()) as Calculation;
+}
 
 function byId<T extends HTMLElement = HTMLElement>(id: string): T {
     const element = document.getElementById(id);
@@ -314,7 +347,9 @@ const state = {
     activeGroup: 'all' as GroupFilter,
     showNotApplicable: false,
     dirty: false,
-    rendering: false,
+    formVersion: 0,
+    requestSeq: 0,
+    abort: undefined as AbortController | undefined,
 };
 
 const form = byId<HTMLFormElement>('rigging-form');
@@ -323,6 +358,7 @@ const resultsStatus = byId('results-status');
 const resultsSection = byId('rig-results');
 const summary = byId('summary');
 const resultsList = byId('results-list');
+const calculationError = byId('calculation-error');
 const showNaInput = input('show-na');
 const exportCsv = byId<HTMLButtonElement>('export-csv');
 const exportJson = byId<HTMLButtonElement>('export-json');
@@ -644,40 +680,73 @@ function renderSummary(calc: Calculation): void {
     }
 }
 
-function calculateAndRender(): void {
-    state.rendering = true;
+function calculationErrorMessage(error: unknown): string {
+    const detail = error instanceof Error && error.message ? ` ${error.message}` : '';
+    return `Calculation service is unavailable.${detail} Press "Calculate diameters" to retry.`;
+}
+
+async function calculateAndRender(): Promise<void> {
+    const settings = readSettings();
+    const input = buildInput(settings);
+    const versionAtStart = state.formVersion;
+
+    state.abort?.abort();
+    const controller = new AbortController();
+    state.abort = controller;
+    const seq = ++state.requestSeq;
 
     resultsSection.classList.remove('is-stale');
+    calculateButton.classList.remove('rig-button--attention');
     resultsSection.classList.add('is-calculating');
     resultsSection.setAttribute('aria-busy', 'true');
+    calculationError.hidden = true;
+    calculationError.textContent = '';
 
-    const settings = readSettings();
-    const calc = calculate(buildInput(settings));
+    try {
+        const calc = await postCalculate(input, controller.signal);
+        if (seq !== state.requestSeq || controller.signal.aborted) return;
 
-    state.calculation = calc;
-    state.settings = settings;
-    state.dirty = false;
+        state.calculation = calc;
+        state.settings = settings;
 
-    calculateButton.classList.remove('rig-button--attention');
+        const inputsChanged = state.formVersion !== versionAtStart;
+        state.dirty = inputsChanged;
 
-    renderErrors(calc.validationErrors);
-    renderSummary(calc);
-    renderResults(calc);
+        renderErrors(calc.validationErrors);
+        renderSummary(calc);
+        renderResults(calc);
 
-    const exportable = calc.validationErrors.length === 0 && calc.results.length > 0;
-    exportCsv.disabled = !exportable;
-    exportJson.disabled = !exportable;
+        const exportable = calc.validationErrors.length === 0 && calc.results.length > 0;
+        exportCsv.disabled = !exportable || inputsChanged;
+        exportJson.disabled = !exportable || inputsChanged;
 
-    state.rendering = false;
+        if (inputsChanged) {
+            resultsSection.classList.add('is-stale');
+            calculateButton.classList.add('rig-button--attention');
+        }
+    } catch (error) {
+        if (controller.signal.aborted || seq !== state.requestSeq) return;
 
-    window.setTimeout(() => {
-        resultsSection.classList.remove('is-calculating');
-        resultsSection.setAttribute('aria-busy', 'false');
-    }, 320);
+        state.dirty = true;
+        resultsSection.classList.add('is-stale');
+        calculateButton.classList.add('rig-button--attention');
+        calculationError.textContent = calculationErrorMessage(error);
+        calculationError.hidden = false;
+
+        if (!state.calculation) {
+            resultsStatus.textContent = 'Calculation unavailable.';
+        }
+    } finally {
+        if (seq === state.requestSeq) {
+            resultsSection.classList.remove('is-calculating');
+            resultsSection.setAttribute('aria-busy', 'false');
+        }
+    }
 }
 
 function markDirty(): void {
-    if (state.rendering || !state.calculation) return;
+    state.formVersion += 1;
+    if (!state.calculation) return;
     state.dirty = true;
     resultsSection.classList.add('is-stale');
     calculateButton.classList.add('rig-button--attention');

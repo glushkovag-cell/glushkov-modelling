@@ -633,6 +633,8 @@ const description =
           Press &ldquo;Calculate diameters&rdquo; to build the ledger.
         </p>
 
+        <p class="rig-calculation-error" id="calculation-error" role="alert" hidden></p>
+
         <p class="rig-results__disclaimer">
           All diameters are engineering estimates or a preliminary fit — not
           documented historical values. Use a source document if you have one.
@@ -1146,6 +1148,21 @@ const description =
         color: #b54708;
         font-size: 0.86rem;
         font-weight: 600;
+    }
+
+    .rig-calculation-error {
+        margin: 0.9rem 0 0;
+        padding: 12px 16px;
+        border: 1px solid #b42318;
+        border-radius: var(--radius-md);
+        background: color-mix(in srgb, #b42318 8%, transparent);
+        color: #b42318;
+        font-size: 0.9rem;
+        line-height: 1.55;
+    }
+
+    .rig-calculation-error[hidden] {
+        display: none;
     }
 
     .rig-summary {
