@@ -8,7 +8,7 @@ export const ALGORITHM_VERSION = '1.0.0';
 export const STRANDS = 3;
 
 /** Допустимые значения числа нитей в пряди. */
-export const THREAD_COUNTS = [1, 2, 3] as const;
+export const THREAD_COUNTS = [1, 2, 3, 4, 5] as const;
 
 /**
  * Допуск обратного подбора как доля. Граница включительная:
