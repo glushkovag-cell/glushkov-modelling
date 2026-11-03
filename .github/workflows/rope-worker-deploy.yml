@@ -111,7 +111,10 @@ jobs:
             -H 'content-type: application/json' \
             -d '{"targetDiameterMm":1}' \
             -o reverse.json
-          node -e "const d=require('./reverse.json');if(d.results.length!==18)process.exit(1);console.log('reverse',d.results.length)"
+          # Число совпадений зависит от живого каталога CMS, поэтому проверяем
+          # инварианты, а не точное количество: Tera 40 × 2 найден, все
+          # результаты в пределах допуска.
+          node -e "const d=require('./reverse.json');const r=d.results;if(!Array.isArray(r)||r.length===0)process.exit(1);if(!r.some(x=>x.threadId==='tera-40'&&x.threadsPerStrand===2))process.exit(1);if(r.some(x=>Math.abs(x.diameterMm-1)>0.15+1e-12))process.exit(1);console.log('reverse',r.length)"
 
       - name: Smoke test CORS preflight
         run: |
