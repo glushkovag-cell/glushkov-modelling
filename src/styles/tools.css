@@ -128,6 +128,12 @@
     margin-top: 2rem;
 }
 
+/* Grid items default to min-width:auto; long controls (segmented switcher,
+   tables, selects) must be allowed to shrink on narrow screens. */
+.tools-layout > * {
+    min-width: 0;
+}
+
 .tools-aside {
     display: grid;
     gap: 16px;
