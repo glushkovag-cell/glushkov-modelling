@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "rigging-calculator-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-14",
+  "observability": {
+    "enabled": true
+  },
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "rigging-api.glushkov-modelling.com",
+      "custom_domain": true
+    }
+  ]
+}

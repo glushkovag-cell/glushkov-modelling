@@ -1,0 +1,131 @@
+name: Deploy rigging calculator worker
+
+# Деплой при push в main, если изменился Worker, общее ядро толщин такелажа
+# или сам workflow. Ручной запуск остаётся для повторного деплоя.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'rigging-calculator-worker/**'
+      - 'src/lib/rigging/**'
+      - '.github/workflows/rigging-worker-deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: rigging-worker-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Cloudflare
+    runs-on: ubuntu-latest
+    environment: production
+
+    defaults:
+      run:
+        working-directory: rigging-calculator-worker
+
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: rigging-calculator-worker/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Deploy worker
+        run: npx wrangler deploy
+
+      # Custom Domain и DNS-запись создаются в момент первого деплоя, а
+      # резолверы GitHub-раннера видят их не сразу. Без ожидания smoke падает
+      # на "Could not resolve host" при живом и уже задеплоенном Worker.
+      - name: Wait for DNS and TLS
+        run: |
+          set -eu
+          for attempt in $(seq 1 24); do
+            if curl --silent --fail --max-time 5 --output /dev/null \
+              https://rigging-api.glushkov-modelling.com/api/rigging/v1/health; then
+              echo "API reachable after ${attempt} attempt(s)"
+              exit 0
+            fi
+            echo "attempt ${attempt}: not reachable yet"
+            sleep 10
+          done
+          echo "::error::API did not become reachable within 4 minutes"
+          exit 1
+
+      - name: Smoke test health
+        run: |
+          curl --fail --silent --show-error \
+            https://rigging-api.glushkov-modelling.com/api/rigging/v1/health -o health.json
+          node -e "const d=require('./health.json');if(!d.ok)process.exit(1);if(d.algorithmVersion!=='1.0.0')process.exit(1);console.log('health',d.apiVersion,d.algorithmVersion)"
+
+      - name: Smoke test profiles
+        run: |
+          curl --fail --silent --show-error \
+            https://rigging-api.glushkov-modelling.com/api/rigging/v1/profiles -o profiles.json
+          node -e "const d=require('./profiles.json');const p=d.profiles&&d.profiles[0];if(!p)process.exit(1);if(p.profileId!=='traditional_plant'||p.status!=='published')process.exit(1);if(p.yearFrom!==1625||p.yearTo!==1860)process.exit(1);console.log('profile',p.profileId,p.yearFrom,p.yearTo)"
+
+      - name: Smoke test calculate
+        run: |
+          cat > input.json <<'JSON'
+          {
+            "scaleDenominator": 64,
+            "measurements": {
+              "mastDiameter": {
+                "main": {
+                  "value": 10,
+                  "unitId": "mm",
+                  "basis": "model",
+                  "measurementPointId": "partner"
+                }
+              },
+              "bowspritDiameter": null,
+              "hullWidth": null,
+              "gunBore": null
+            },
+            "nodes": [
+              {
+                "nodeId": "mast.main.lower",
+                "nodeType": "lower_mast",
+                "parentNodeId": null,
+                "ownerType": "mast",
+                "ownerId": "main",
+                "present": true
+              }
+            ]
+          }
+          JSON
+          curl --fail --silent --show-error \
+            -X POST https://rigging-api.glushkov-modelling.com/api/rigging/v1/calculate \
+            -H 'content-type: application/json' \
+            --data @input.json -o calculate.json
+          node -e "const d=require('./calculate.json');const s=d.results&&d.results.find(x=>x.ruleId==='st.lower.stay');if(!s)process.exit(1);if(Math.abs(s.diameterModelMm-1.2)>1e-9)process.exit(1);console.log('stay',s.diameterModelMm,'rows',d.results.length)"
+
+      - name: Smoke test CORS preflight
+        run: |
+          code=$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            -X OPTIONS https://rigging-api.glushkov-modelling.com/api/rigging/v1/calculate \
+            -H 'Origin: https://www.glushkov-modelling.com' \
+            -H 'Access-Control-Request-Method: POST')
+          test "${code}" = "204"
+          echo "preflight ${code}"

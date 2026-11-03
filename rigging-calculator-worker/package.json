@@ -1,0 +1,23 @@
+{
+  "name": "glushkov-rigging-calculator-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker: расчёт толщин такелажа traditional_plant.",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.1.8",
+    "typescript": "^5.7.2",
+    "vitest": "~4.1.11",
+    "wrangler": "^4.131.1"
+  }
+}

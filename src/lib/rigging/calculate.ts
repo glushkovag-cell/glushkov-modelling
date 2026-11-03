@@ -898,7 +898,10 @@ function buildSpritsailSpecs(specs: RuleSpec[], input: RiggingInput): void {
             );
         }
 
-        const unsupportedNames: Record<string, { en: string; ru: string }> = {
+        const unsupportedNames: Record<
+            (typeof SPRITSAIL_UNSUPPORTED_ROLES)[number],
+            { en: string; ru: string }
+        > = {
             tack: { en: 'Spritsail tack', ru: 'Галс блинда-паруса' },
             bowline: { en: 'Spritsail bowline', ru: 'Булинь блинда-паруса' },
             reef_fall: { en: 'Spritsail reef fall', ru: 'Риф-тали блинда-паруса' },
