@@ -814,6 +814,9 @@ form.addEventListener('input', markDirty);
 form.addEventListener('change', (event) => {
     const target = event.target as HTMLElement;
     if (target.id === 'show-na') return;
+    // Пересчитываем доступность зависимых полей сразу: иначе, например,
+    // supporting mast у Upper headsail остаётся disabled до нажатия Calculate.
+    syncDisabled();
     markDirty();
 });
 
