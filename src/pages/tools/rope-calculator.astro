@@ -1,0 +1,118 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/tools.css';
+
+/*
+ * Production-страница калькулятора канатов в разделе Tools. Использует тот же
+ * Web Component, что и статья, и обращается к production Worker по умолчанию
+ * (https://api.glushkov-modelling.com). Пункт меню пока не добавлен.
+ */
+const title = 'Rope diameter calculator — Glushkov Modelling';
+const description =
+    'Estimate the diameter of a three-strand model rope from a thread or dTex, or find threads that match a target diameter.';
+---
+
+<BaseLayout title={title} description={description} noindex>
+  <section class="tools-page">
+    <div class="container">
+      <nav class="tools-breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <a href="/tools">Tools</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Rope diameter calculator</span>
+      </nav>
+
+      <header class="tools-head">
+        <span class="eyebrow">Workshop tools</span>
+        <h1>Rope diameter calculator</h1>
+        <p class="tools-lede">
+          Estimate the diameter of a three-strand rope from a catalog thread or a
+          custom dTex value, or find threads within ±15% of a target diameter.
+        </p>
+      </header>
+
+      <div class="tools-layout">
+        <gm-rope-calculator>
+          <noscript>Enable JavaScript to use the rope calculator.</noscript>
+        </gm-rope-calculator>
+
+        <aside class="tools-aside">
+          <div class="tools-aside-card">
+            <h2>How it works</h2>
+            <p>
+              All ropes have three strands. A 2&nbsp;×&nbsp;3 construction uses two
+              threads per strand, six threads in total. The calculator checks 1, 2
+              and 3 threads per strand.
+            </p>
+            <p>
+              Reverse search lists matches by absolute percentage deviation, then by
+              dTex. Diameters are calculated estimates, not measured values.
+            </p>
+          </div>
+
+          <div class="tools-aside-card">
+            <h2>Need a target diameter?</h2>
+            <p>
+              If you already know the rope diameter you need, switch the mode to
+              <strong>Find threads for a target diameter</strong> or open the rigging
+              calculator, whose rows link here with the diameter prefilled.
+            </p>
+          </div>
+
+          <p class="tools-note">
+            <strong>Estimate only.</strong> Actual diameter varies with material,
+            tension and twist. Not a guarantee for full-size rope.
+          </p>
+        </aside>
+      </div>
+
+      <a class="tools-back" href="/tools">&larr; All tools</a>
+    </div>
+  </section>
+
+  <script>
+    /*
+     * Если на страницу пришли со ссылки «Find a model rope» из калькулятора
+     * толщин такелажа (?target=...), переключаем компонент в обратный подбор и
+     * подставляем диаметр после загрузки каталога.
+     */
+    const target = new URLSearchParams(window.location.search).get('target');
+
+    if (target) {
+      let attempts = 0;
+      const MAX_ATTEMPTS = 60;
+
+      const apply = () => {
+        const element = document.querySelector('gm-rope-calculator');
+        if (!element || !element.shadowRoot) {
+          if (++attempts < MAX_ATTEMPTS) setTimeout(apply, 100);
+          return;
+        }
+
+        const root = element.shadowRoot;
+        const threadList = root?.querySelector<HTMLElement>('[data-thread-list]');
+        const ready =
+          threadList &&
+          threadList.querySelectorAll('input[type="checkbox"]').length > 0;
+
+        if (!ready) {
+          if (++attempts < MAX_ATTEMPTS) setTimeout(apply, 100);
+          return;
+        }
+
+        const mode = root?.querySelector<HTMLSelectElement>('#mode');
+        const targetInput = root?.querySelector<HTMLInputElement>('#target');
+
+        if (mode && targetInput) {
+          mode.value = 'reverse';
+          mode.dispatchEvent(new Event('change'));
+          targetInput.value = target;
+          targetInput.dispatchEvent(new Event('input'));
+        }
+      };
+
+      apply();
+    }
+  </script>
+</BaseLayout>

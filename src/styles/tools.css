@@ -1,0 +1,225 @@
+/* =============================================================
+   Tools section — shared shell
+   Uses the site design tokens from global.css. Loaded only on the
+   hidden /tools pages until a navigation entry is introduced.
+   ============================================================= */
+
+.tools-page {
+    padding: 44px 0 72px;
+}
+
+.tools-breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 1.5rem;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.tools-breadcrumbs a {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.tools-breadcrumbs a:hover {
+    color: var(--color-primary-hover);
+}
+
+.tools-breadcrumbs [aria-hidden="true"] {
+    color: var(--color-text-faint);
+}
+
+.tools-head {
+    max-width: 780px;
+}
+
+.tools-head h1 {
+    margin: 0 0 1rem;
+    font-size: clamp(2.3rem, 4.2vw, 3.6rem);
+    line-height: 1;
+}
+
+.tools-lede {
+    max-width: 68ch;
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 1.04rem;
+    line-height: 1.75;
+}
+
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin-top: 2rem;
+}
+
+.tool-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    padding: 28px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        border-color var(--transition),
+        background var(--transition);
+}
+
+.tool-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-lg);
+}
+
+.tool-card__kicker {
+    margin-bottom: 0.9rem;
+    color: var(--color-primary);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.tool-card__title {
+    margin: 0 0 0.8rem;
+    font-size: clamp(1.55rem, 2vw, 2rem);
+}
+
+.tool-card__text {
+    flex: 1 1 auto;
+    margin: 0 0 1.4rem;
+    color: var(--color-text-muted);
+    line-height: 1.7;
+}
+
+.tool-card__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.tool-card__link:hover {
+    color: var(--color-primary-hover);
+}
+
+.tool-card__link::after {
+    content: '→';
+    transition: transform var(--transition);
+}
+
+.tool-card:hover .tool-card__link::after {
+    transform: translateX(3px);
+}
+
+.tools-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.9fr);
+    gap: 24px;
+    align-items: start;
+    margin-top: 2rem;
+}
+
+.tools-aside {
+    display: grid;
+    gap: 16px;
+    position: sticky;
+    top: 96px;
+}
+
+.tools-aside-card {
+    padding: 20px 22px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+}
+
+.tools-aside-card h2,
+.tools-aside-card h3 {
+    margin: 0 0 0.6rem;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.35rem;
+}
+
+.tools-aside-card p,
+.tools-aside-card li {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    line-height: 1.65;
+}
+
+.tools-aside-card p {
+    margin: 0 0 0.7rem;
+}
+
+.tools-aside-card p:last-child {
+    margin-bottom: 0;
+}
+
+.tools-aside-card ul {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+.tools-aside-card li + li {
+    margin-top: 0.35rem;
+}
+
+.tools-aside-card code {
+    font-size: 0.85em;
+    color: var(--color-text);
+}
+
+.tools-note {
+    margin: 1.25rem 0 0;
+    padding: 14px 16px;
+    border-left: 3px solid var(--color-primary);
+    background: var(--color-primary-highlight);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    color: var(--color-text);
+    font-size: 0.9rem;
+    line-height: 1.65;
+}
+
+.tools-note strong {
+    color: var(--color-primary);
+}
+
+.tools-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 2rem;
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 0.92rem;
+}
+
+@media (max-width: 900px) {
+    .tools-grid,
+    .tools-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .tools-aside {
+        position: static;
+    }
+}
+
+@media (max-width: 640px) {
+    .tools-page {
+        padding: 28px 0 48px;
+    }
+
+    .tool-card {
+        padding: 22px;
+    }
+}

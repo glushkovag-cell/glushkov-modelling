@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/tools.css';
+
+/*
+ * Скрытый раздел Tools. Пункта в основной навигации пока нет: страницы
+ * доступны только по прямым ссылкам, поэтому noindex, а /tools исключён из
+ * sitemap. Когда раздел войдёт в меню, noindex и фильтр sitemap убираются.
+ */
+const title = 'Tools — Glushkov Modelling';
+const description =
+    'Workshop tools for model ship builders: rope diameter calculator and rigging diameter calculator.';
+---
+
+<BaseLayout title={title} description={description} noindex>
+  <section class="tools-page">
+    <div class="container">
+      <nav class="tools-breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Tools</span>
+      </nav>
+
+      <header class="tools-head">
+        <span class="eyebrow">Workshop tools</span>
+        <h1>Tools</h1>
+        <p class="tools-lede">
+          Practical calculators for the virtual shipyard. Each tool is a separate
+          page and works independently — use only the one you need.
+        </p>
+      </header>
+
+      <div class="tools-grid">
+        <a class="tool-card" href="/tools/rope-calculator">
+          <span class="tool-card__kicker">Rope diameter calculator</span>
+          <h2 class="tool-card__title">Calculate a rope from a thread</h2>
+          <p class="tool-card__text">
+            Estimate the diameter of a three-strand rope from a catalog thread or a
+            custom dTex, or find threads that match a target diameter.
+          </p>
+          <span class="tool-card__link">Open rope calculator</span>
+        </a>
+
+        <a class="tool-card" href="/tools/rigging-diameters">
+          <span class="tool-card__kicker">Rigging diameter calculator</span>
+          <h2 class="tool-card__title">Estimate rigging diameters</h2>
+          <p class="tool-card__text">
+            Estimate scale-model diameters of standing and running rigging, spars,
+            anchor gear and gun gear from your model's key dimensions.
+          </p>
+          <span class="tool-card__link">Open rigging calculator</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

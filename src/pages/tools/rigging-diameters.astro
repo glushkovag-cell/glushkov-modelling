@@ -1,0 +1,1541 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/tools.css';
+import { defaultSettings } from '../../lib/rigging/settings.ts';
+import { PROFILE_REGISTRY } from '../../lib/rigging/profiles.ts';
+import {
+    MAST_IDS,
+    MAST_LABELS,
+    SAIL_CLASSES,
+    SAIL_CLASS_LABELS,
+    TIERS,
+    TIER_LABELS,
+} from '../../lib/rigging/profile.ts';
+
+const defaults = defaultSettings();
+
+const unitOptions = [
+    { value: 'mm', label: 'mm' },
+    { value: 'cm', label: 'cm' },
+    { value: 'in', label: 'in' },
+];
+
+const basisOptions = [
+    { value: 'model', label: 'The model' },
+    { value: 'prototype', label: 'The full-size vessel' },
+];
+
+const pointOptions = [
+    { value: 'partner', label: 'At the partner' },
+    { value: 'maximum', label: 'Maximum diameter' },
+];
+
+const mastOptions = MAST_IDS.map((mastId) => ({
+    value: mastId,
+    label: MAST_LABELS[mastId].en,
+}));
+
+function valueOrEmpty(value: number | null | undefined): string {
+    return value === null || value === undefined ? '' : String(value);
+}
+
+const title = 'Rigging diameter calculator — Glushkov Modelling';
+const description =
+    'Estimate scale-model diameters of standing and running rigging, spars, anchor gear and gun gear from your model\u2019s key dimensions.';
+---
+
+<BaseLayout title={title} description={description} noindex>
+  <section class="tools-page">
+    <div class="container">
+      <nav class="tools-breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span aria-hidden="true">/</span>
+        <a href="/tools">Tools</a>
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">Rigging diameter calculator</span>
+      </nav>
+
+      <header class="tools-head">
+        <span class="eyebrow">Workshop tools</span>
+        <h1>Rigging diameter calculator</h1>
+        <p class="tools-lede">
+          Estimated diameters for the main standing and running rigging, spars,
+          anchor gear and gun gear of a static scale model.
+        </p>
+      </header>
+
+      <div class="rig-disclaimer" role="note">
+        <strong>Estimates only — not historical data.</strong>
+        Every value this calculator produces is an <strong>engineering estimate</strong>
+        or a <strong>preliminary fit</strong>. None are documented historical
+        dimensions: if you already have a source document with rigging sizes, use
+        it directly. These figures are for a static model and must not be used for
+        a full-size vessel.
+      </div>
+
+      <div class="tools-layout">
+        <form class="rig-form" id="rigging-form" novalidate>
+          <p class="rig-form__hint">
+            Example values are prefilled — replace them with your model&rsquo;s
+            dimensions. Results update only when you press
+            <strong>Calculate diameters</strong>.
+          </p>
+
+          <div class="rig-form__errors" id="form-errors" role="alert" hidden></div>
+
+          <fieldset class="rig-section">
+            <legend class="rig-section__title">1 · Period &amp; profile</legend>
+
+            <div class="rig-field">
+              <span class="rig-label" id="context-mode-label">When is your vessel from?</span>
+              <div class="rig-segmented" role="radiogroup" aria-labelledby="context-mode-label">
+                <label class="rig-segmented__item">
+                  <input type="radio" name="context-mode" value="year" checked />
+                  <span>Historical year</span>
+                </label>
+                <label class="rig-segmented__item">
+                  <input type="radio" name="context-mode" value="period" />
+                  <span>Historical period</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="rig-field" id="context-year-field">
+              <label class="rig-label" for="context-year">Historical year</label>
+              <input
+                class="rig-input"
+                id="context-year"
+                name="context-year"
+                type="number"
+                min="1000"
+                max="2100"
+                step="1"
+                inputmode="numeric"
+                placeholder="e.g. 1787"
+              />
+            </div>
+
+            <div class="rig-field" id="context-period-field" hidden>
+              <div class="rig-context-period">
+                <div>
+                  <label class="rig-label" for="context-period-from">From</label>
+                  <input
+                    class="rig-input"
+                    id="context-period-from"
+                    name="context-period-from"
+                    type="number"
+                    min="1000"
+                    max="2100"
+                    step="1"
+                    inputmode="numeric"
+                  />
+                </div>
+                <div>
+                  <label class="rig-label" for="context-period-to">To</label>
+                  <input
+                    class="rig-input"
+                    id="context-period-to"
+                    name="context-period-to"
+                    type="number"
+                    min="1000"
+                    max="2100"
+                    step="1"
+                    inputmode="numeric"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="rig-actions">
+              <button class="rig-button rig-button--ghost" type="button" id="find-profiles">Find suitable profiles</button>
+            </div>
+
+            <div class="rig-profiles" role="radiogroup" aria-label="Suitable profiles">
+              {PROFILE_REGISTRY.map((profile, index) => (
+                <label class="rig-profile">
+                  <input
+                    class="rig-profile__radio"
+                    type="radio"
+                    name="profile"
+                    value={profile.profileId}
+                    checked={index === 0}
+                  />
+                  <span class="rig-profile__body">
+                    <span class="rig-profile__head">
+                      <strong>{profile.name}</strong>
+                      <span class="rig-profile__range">{profile.yearFrom}–{profile.yearTo}</span>
+                      <span class="rig-profile__status">{profile.status}</span>
+                    </span>
+                    <span class="rig-profile__desc">{profile.description}</span>
+                    <span class="rig-profile__note">{profile.applicabilityNotes}</span>
+                    {profile.sources.length > 0 && (
+                      <span class="rig-profile__source">Source: {profile.sources.join(' · ')}</span>
+                    )}
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            <p class="rig-profile__context" id="profile-context-note" role="status" aria-live="polite">
+              Enter a year or period. The profile covers 1625–1860 (James Lees).
+            </p>
+          </fieldset>
+
+          <fieldset class="rig-section">
+            <legend class="rig-section__title">2 · Model scale &amp; dimensions</legend>
+
+            <div class="rig-field rig-field--scale">
+              <label class="rig-label" for="scale">Model scale</label>
+              <div class="rig-scale">
+                <span class="rig-scale__prefix">1 :</span>
+                <input
+                  class="rig-input"
+                  id="scale"
+                  name="scale"
+                  type="number"
+                  min="1"
+                  step="any"
+                  inputmode="decimal"
+                  value={defaults.scaleDenominator}
+                />
+              </div>
+            </div>
+
+            <div class="rig-dims">
+              <div class="rig-dims__head" aria-hidden="true">
+                <span>Dimension</span>
+                <span>Value</span>
+                <span>Unit</span>
+                <span>Measured on</span>
+                <span>Point</span>
+              </div>
+
+              {MAST_IDS.map((mastId) => (
+                <div class="rig-dim" data-dim={`mast-${mastId}`}>
+                  <label class="rig-label" for={`mast-${mastId}-value`}>
+                    {MAST_LABELS[mastId].en} diameter
+                  </label>
+                  <input
+                    class="rig-input"
+                    id={`mast-${mastId}-value`}
+                    name={`mast-${mastId}-value`}
+                    type="number"
+                    min="0"
+                    step="any"
+                    inputmode="decimal"
+                    value={valueOrEmpty(defaults.masts[mastId].diameter.value)}
+                  />
+                  <select class="rig-select" id={`mast-${mastId}-unit`} name={`mast-${mastId}-unit`}>
+                    {unitOptions.map((option) => (
+                      <option value={option.value} selected={defaults.masts[mastId].diameter.unitId === option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <select class="rig-select" id={`mast-${mastId}-basis`} name={`mast-${mastId}-basis`}>
+                    {basisOptions.map((option) => (
+                      <option value={option.value} selected={defaults.masts[mastId].diameter.basis === option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <select class="rig-select" id={`mast-${mastId}-point`} name={`mast-${mastId}-point`}>
+                    {pointOptions.map((option) => (
+                      <option value={option.value} selected={defaults.masts[mastId].diameter.measurementPointId === option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+
+              <div class="rig-dim" data-dim="bowsprit">
+                <label class="rig-label" for="bowsprit-value">Bowsprit diameter</label>
+                <input
+                  class="rig-input"
+                  id="bowsprit-value"
+                  name="bowsprit-value"
+                  type="number"
+                  min="0"
+                  step="any"
+                  inputmode="decimal"
+                  value={valueOrEmpty(defaults.bowsprit.diameter.value)}
+                />
+                <select class="rig-select" id="bowsprit-unit" name="bowsprit-unit">
+                  {unitOptions.map((option) => (
+                    <option value={option.value} selected={defaults.bowsprit.diameter.unitId === option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <select class="rig-select" id="bowsprit-basis" name="bowsprit-basis">
+                  {basisOptions.map((option) => (
+                    <option value={option.value} selected={defaults.bowsprit.diameter.basis === option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <span class="rig-dim__empty">—</span>
+              </div>
+
+              <div class="rig-dim" data-dim="hull-width">
+                <label class="rig-label" for="hull-width-value">Maximum hull width</label>
+                <input
+                  class="rig-input"
+                  id="hull-width-value"
+                  name="hull-width-value"
+                  type="number"
+                  min="0"
+                  step="any"
+                  inputmode="decimal"
+                  value={valueOrEmpty(defaults.hullWidth.value)}
+                />
+                <select class="rig-select" id="hull-width-unit" name="hull-width-unit">
+                  {unitOptions.map((option) => (
+                    <option value={option.value} selected={defaults.hullWidth.unitId === option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <select class="rig-select" id="hull-width-basis" name="hull-width-basis">
+                  {basisOptions.map((option) => (
+                    <option value={option.value} selected={defaults.hullWidth.basis === option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <span class="rig-dim__empty">—</span>
+              </div>
+
+              <div class="rig-dim" data-dim="gun-bore">
+                <label class="rig-label" for="gun-bore-value">Gun bore diameter</label>
+                <input
+                  class="rig-input"
+                  id="gun-bore-value"
+                  name="gun-bore-value"
+                  type="number"
+                  min="0"
+                  step="any"
+                  inputmode="decimal"
+                  value={valueOrEmpty(defaults.gun.bore.value)}
+                />
+                <select class="rig-select" id="gun-bore-unit" name="gun-bore-unit">
+                  {unitOptions.map((option) => (
+                    <option value={option.value} selected={defaults.gun.bore.unitId === option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <select class="rig-select" id="gun-bore-basis" name="gun-bore-basis">
+                  {basisOptions.map((option) => (
+                    <option value={option.value} selected={defaults.gun.bore.basis === option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <span class="rig-dim__empty">—</span>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="rig-section">
+            <legend class="rig-section__title">3 · Masts &amp; sails</legend>
+
+            <p class="rig-subtitle">Masts</p>
+            <table class="rig-matrix">
+              <thead>
+                <tr>
+                  <th scope="col">Mast</th>
+                  <th scope="col">Present</th>
+                  <th scope="col">Topmast</th>
+                  <th scope="col">Topgallant</th>
+                </tr>
+              </thead>
+              <tbody>
+                {MAST_IDS.map((mastId) => (
+                  <tr>
+                    <th scope="row">{MAST_LABELS[mastId].en}</th>
+                    <td>
+                      <input
+                        class="rig-checkbox"
+                        type="checkbox"
+                        id={`mast-${mastId}-present`}
+                        name={`mast-${mastId}-present`}
+                        checked={defaults.masts[mastId].present}
+                        aria-label={`${MAST_LABELS[mastId].en} present`}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        class="rig-checkbox"
+                        type="checkbox"
+                        id={`mast-${mastId}-topmast`}
+                        name={`mast-${mastId}-topmast`}
+                        checked={defaults.masts[mastId].topmast}
+                        aria-label={`${MAST_LABELS[mastId].en} topmast`}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        class="rig-checkbox"
+                        type="checkbox"
+                        id={`mast-${mastId}-topgallant`}
+                        name={`mast-${mastId}-topgallant`}
+                        checked={defaults.masts[mastId].topgallant}
+                        aria-label={`${MAST_LABELS[mastId].en} topgallant`}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <p class="rig-subtitle">Square yards &amp; sails</p>
+            <table class="rig-matrix">
+              <thead>
+                <tr>
+                  <th scope="col">Mast</th>
+                  <th scope="col">Tier</th>
+                  <th scope="col">Yard</th>
+                  <th scope="col">Sail</th>
+                </tr>
+              </thead>
+              <tbody>
+                {MAST_IDS.map((mastId) =>
+                  TIERS.map((tier) => (
+                    <tr>
+                      <th scope="row">{MAST_LABELS[mastId].en}</th>
+                      <td>{TIER_LABELS[tier].en}</td>
+                      <td>
+                        <input
+                          class="rig-checkbox"
+                          type="checkbox"
+                          id={`mast-${mastId}-yard-${tier}`}
+                          name={`mast-${mastId}-yard-${tier}`}
+                          checked={defaults.masts[mastId].yards[tier]}
+                          aria-label={`${MAST_LABELS[mastId].en} ${TIER_LABELS[tier].en} yard`}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          class="rig-checkbox"
+                          type="checkbox"
+                          id={`mast-${mastId}-sail-${tier}`}
+                          name={`mast-${mastId}-sail-${tier}`}
+                          checked={defaults.masts[mastId].sails[tier]}
+                          aria-label={`${MAST_LABELS[mastId].en} ${TIER_LABELS[tier].en} sail`}
+                        />
+                      </td>
+                    </tr>
+                  )),
+                )}
+              </tbody>
+            </table>
+
+            <p class="rig-subtitle">Fore-and-aft sails</p>
+            <table class="rig-matrix">
+              <thead>
+                <tr>
+                  <th scope="col">Sail</th>
+                  <th scope="col">Present</th>
+                  <th scope="col">Supporting mast</th>
+                </tr>
+              </thead>
+              <tbody>
+                {SAIL_CLASSES.map((sailClass) => (
+                  <tr>
+                    <th scope="row">{SAIL_CLASS_LABELS[sailClass].en}</th>
+                    <td>
+                      <input
+                        class="rig-checkbox"
+                        type="checkbox"
+                        id={`foreaft-${sailClass}-present`}
+                        name={`foreaft-${sailClass}-present`}
+                        checked={defaults.foreAndAft[sailClass].present}
+                        aria-label={`${SAIL_CLASS_LABELS[sailClass].en} present`}
+                      />
+                    </td>
+                    <td>
+                      <select class="rig-select" id={`foreaft-${sailClass}-mast`} name={`foreaft-${sailClass}-mast`}>
+                        {mastOptions.map((option) => (
+                          <option value={option.value} selected={defaults.foreAndAft[sailClass].supportingMastId === option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <p class="rig-subtitle">Gaff</p>
+            <div class="rig-inline">
+              <label class="rig-check">
+                <input class="rig-checkbox" type="checkbox" id="gaff-present" name="gaff-present" checked={defaults.gaff.present} />
+                <span>Gaff present</span>
+              </label>
+              <label class="rig-check">
+                <input class="rig-checkbox" type="checkbox" id="gaff-sail" name="gaff-sail" checked={defaults.gaff.sailPresent} />
+                <span>Sail bent</span>
+              </label>
+              <label class="rig-check rig-check--select">
+                <span>Supporting mast</span>
+                <select class="rig-select" id="gaff-mast" name="gaff-mast">
+                  {mastOptions.map((option) => (
+                    <option value={option.value} selected={defaults.gaff.supportingMastId === option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="rig-section">
+            <legend class="rig-section__title">4 · Spars &amp; auxiliary gear</legend>
+
+            <div class="rig-block">
+              <p class="rig-subtitle">Bowsprit &amp; spars</p>
+              <div class="rig-inline">
+                <label class="rig-check">
+                  <input class="rig-checkbox" type="checkbox" id="bowsprit-present" name="bowsprit-present" checked={defaults.bowsprit.present} />
+                  <span>Bowsprit</span>
+                </label>
+                <label class="rig-check">
+                  <input class="rig-checkbox" type="checkbox" id="jibboom-present" name="jibboom-present" checked={defaults.bowsprit.jibboom} />
+                  <span>Jibboom</span>
+                </label>
+                <label class="rig-check">
+                  <input class="rig-checkbox" type="checkbox" id="flying-jibboom-present" name="flying-jibboom-present" checked={defaults.bowsprit.flyingJibboom} />
+                  <span>Flying jibboom</span>
+                </label>
+                <label class="rig-check">
+                  <input class="rig-checkbox" type="checkbox" id="martingale-present" name="martingale-present" checked={defaults.bowsprit.martingale} />
+                  <span>Martingale</span>
+                </label>
+                <label class="rig-check">
+                  <input class="rig-checkbox" type="checkbox" id="spritsail-yard-present" name="spritsail-yard-present" checked={defaults.bowsprit.spritsailYard} />
+                  <span>Spritsail yard</span>
+                </label>
+                <label class="rig-check">
+                  <input class="rig-checkbox" type="checkbox" id="spritsail-sail" name="spritsail-sail" checked={defaults.bowsprit.spritsailSail} />
+                  <span>Spritsail sail</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="rig-block">
+              <p class="rig-subtitle">Anchor gear</p>
+              <div class="rig-inline">
+                <label class="rig-check">
+                  <input class="rig-checkbox" type="checkbox" id="anchor-present" name="anchor-present" checked={defaults.anchor.present} />
+                  <span>Anchor gear</span>
+                </label>
+                <label class="rig-check rig-check--select">
+                  <span>Cable material</span>
+                  <select class="rig-select" id="anchor-connection" name="anchor-connection">
+                    <option value="fiber" selected={defaults.anchor.connection === 'fiber'}>Fibre cable</option>
+                    <option value="chain" selected={defaults.anchor.connection === 'chain'}>Chain cable</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+
+            <div class="rig-block">
+              <p class="rig-subtitle">Gun gear</p>
+              <div class="rig-inline">
+                <label class="rig-check">
+                  <input class="rig-checkbox" type="checkbox" id="gun-present" name="gun-present" checked={defaults.gun.present} />
+                  <span>Gun gear</span>
+                </label>
+                <label class="rig-check rig-check--select">
+                  <span>Gun type</span>
+                  <select class="rig-select" id="gun-type" name="gun-type">
+                    <option value="carriage_gun" selected={defaults.gun.gunType === 'carriage_gun'}>Carriage gun</option>
+                    <option value="carronade" selected={defaults.gun.gunType === 'carronade'}>Carronade</option>
+                  </select>
+                </label>
+                <label class="rig-check rig-check--select">
+                  <span>Mounting</span>
+                  <select class="rig-select" id="gun-mounting" name="gun-mounting">
+                    <option value="wheeled" selected={defaults.gun.mountingType === 'wheeled'}>Wheeled carriage</option>
+                    <option value="slide_pivot" selected={defaults.gun.mountingType === 'slide_pivot'}>Slide / pivot mount</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          </fieldset>
+
+          <div class="rig-actions">
+            <button class="rig-button" type="submit" id="calculate">Calculate diameters</button>
+            <button class="rig-button rig-button--ghost" type="reset" id="reset">Reset to example</button>
+          </div>
+        </form>
+
+        <aside class="tools-aside">
+          <div class="tools-aside-card">
+            <h2>What this covers</h2>
+            <ul>
+              <li>Standing rigging: stays, shrouds, backstays, ratlines, lanyards.</li>
+              <li>Running rigging: halyards, lifts, braces, sheets, tacks, buntlines.</li>
+              <li>Bowsprit &amp; spars, anchor gear, gun gear.</li>
+            </ul>
+          </div>
+
+          <div class="tools-aside-card">
+            <h2>Measurement points</h2>
+            <p>
+              Lower-mast diameter is taken <strong>at the partner</strong>. The
+              maximum diameter is only an explicitly marked substitute.
+            </p>
+            <p>
+              Bowsprit diameter is the <strong>maximum working section</strong>;
+              hull width is the greatest moulded width at the waterline; gun bore
+              is the nominal <strong>bore</strong>, not the outside diameter.
+            </p>
+          </div>
+
+          <div class="tools-aside-card">
+            <h2>Read before using</h2>
+            <p>
+              These are <strong>engineering estimates</strong> for a static model,
+              not a strength calculation and not a reconstruction of a specific
+              vessel. The profile has no verified historical range.
+            </p>
+            <p>
+              Counts, lengths and thread consumption are outside this tool. A row
+              in the results does not assert that the rope was historically
+              present.
+            </p>
+          </div>
+
+          <p class="tools-note">
+            <strong>Estimate only.</strong> Do not use these diameters for a
+            full-size vessel. Choose the ropes you need for your own model.
+          </p>
+        </aside>
+      </div>
+
+      <section class="rig-results" id="rig-results">
+        <div class="rig-results__header">
+          <div>
+            <span class="eyebrow">Results</span>
+            <h2 class="rig-results__title">Estimated diameters</h2>
+          </div>
+          <div class="rig-results__actions">
+            <button class="rig-button rig-button--ghost" type="button" id="export-csv" disabled>Export CSV</button>
+            <button class="rig-button rig-button--ghost" type="button" id="export-json" disabled>Export JSON</button>
+          </div>
+        </div>
+
+        <p class="rig-results__status" id="results-status" role="status" aria-live="polite">
+          Press &ldquo;Calculate diameters&rdquo; to build the ledger.
+        </p>
+
+        <p class="rig-results__disclaimer">
+          All diameters are engineering estimates or a preliminary fit — not
+          documented historical values. Use a source document if you have one.
+        </p>
+
+        <div class="rig-summary" id="summary" aria-live="polite"></div>
+
+        <div class="rig-toolbar">
+          <div class="rig-filters" role="group" aria-label="Filter by rigging group">
+            <button class="rig-chip" type="button" data-group="all" aria-pressed="true">All</button>
+            <button class="rig-chip" type="button" data-group="standing" aria-pressed="false">Standing</button>
+            <button class="rig-chip" type="button" data-group="running" aria-pressed="false">Running</button>
+            <button class="rig-chip" type="button" data-group="bowsprit" aria-pressed="false">Bowsprit</button>
+            <button class="rig-chip" type="button" data-group="anchor" aria-pressed="false">Anchor</button>
+            <button class="rig-chip" type="button" data-group="gun" aria-pressed="false">Guns</button>
+          </div>
+
+          <label class="rig-check">
+            <input class="rig-checkbox" type="checkbox" id="show-na" />
+            <span>Show not applicable</span>
+          </label>
+        </div>
+
+        <div class="rig-results__list" id="results-list"></div>
+      </section>
+
+      <a class="tools-back" href="/tools">&larr; All tools</a>
+    </div>
+  </section>
+
+  <div class="rig-modal" id="rope-modal" hidden>
+    <div class="rig-modal__backdrop" data-close-rope></div>
+    <div class="rig-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="rope-modal-title">
+      <header class="rig-modal__header">
+        <h2 id="rope-modal-title">Find a model rope</h2>
+        <button class="rig-modal__close" type="button" data-close-rope aria-label="Close">&times;</button>
+      </header>
+      <div class="rig-modal__body">
+        <p class="rig-modal__target" id="rope-modal-target"></p>
+        <gm-rope-calculator>
+          <noscript>Enable JavaScript to use the rope calculator.</noscript>
+        </gm-rope-calculator>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import '../../scripts/riggingCalculator.ts';
+  </script>
+</BaseLayout>
+
+<style is:global>
+    .rig-form {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        padding: 26px;
+    }
+
+    .rig-disclaimer {
+        margin: 1.5rem 0 0;
+        padding: 14px 18px;
+        border: 1px solid color-mix(in srgb, #b54708 40%, transparent);
+        border-left: 4px solid #b54708;
+        border-radius: var(--radius-md);
+        background: color-mix(in srgb, #b54708 10%, transparent);
+        color: var(--color-text);
+        font-size: 0.92rem;
+        line-height: 1.65;
+    }
+
+    .rig-disclaimer strong {
+        color: #b54708;
+    }
+
+    .rig-form__hint {
+        margin: 0 0 1.25rem;
+        color: var(--color-text-muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .rig-form__errors {
+        margin: 0 0 1.25rem;
+        padding: 14px 16px;
+        border: 1px solid #b42318;
+        border-radius: var(--radius-md);
+        background: color-mix(in srgb, #b42318 8%, transparent);
+        color: #b42318;
+        font-size: 0.9rem;
+    }
+
+    .rig-form__errors ul {
+        margin: 0;
+        padding-left: 1.1rem;
+    }
+
+    .rig-form__errors li + li {
+        margin-top: 0.35rem;
+    }
+
+    .rig-segmented {
+        display: inline-flex;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-full);
+        overflow: hidden;
+    }
+
+    .rig-segmented__item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 9px 16px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--color-text-muted);
+        transition: background var(--transition), color var(--transition);
+    }
+
+    .rig-segmented__item:has(input:checked) {
+        background: var(--color-primary);
+        color: var(--color-text-inverse);
+    }
+
+    .rig-segmented__item input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .rig-context-period {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .rig-profiles {
+        display: grid;
+        gap: 10px;
+        margin-top: 0.75rem;
+    }
+
+    .rig-profile {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 14px 16px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-surface-2);
+        cursor: pointer;
+        transition: border-color var(--transition), background var(--transition);
+    }
+
+    .rig-profile:has(input:checked) {
+        border-color: var(--color-primary);
+        background: var(--color-primary-highlight);
+    }
+
+    .rig-profile__radio {
+        flex: 0 0 auto;
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        accent-color: var(--color-primary);
+    }
+
+    .rig-profile__body {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .rig-profile__head {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    .rig-profile__head strong {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.25rem;
+    }
+
+    .rig-profile__status {
+        padding: 2px 9px;
+        border-radius: var(--radius-full);
+        background: var(--color-surface-offset);
+        color: var(--color-text-muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .rig-profile__range {
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+    }
+
+    .rig-profile__desc {
+        font-size: 0.88rem;
+        line-height: 1.55;
+    }
+
+    .rig-profile__note,
+    .rig-profile__source,
+    .rig-profile__context {
+        color: var(--color-text-muted);
+        font-size: 0.84rem;
+        line-height: 1.55;
+    }
+
+    .rig-profile__source {
+        font-style: italic;
+    }
+
+    .rig-profile__context {
+        margin-top: 0.75rem;
+    }
+
+    .rig-section {
+        min-width: 0;
+        margin: 0 0 1.5rem;
+        padding: 0;
+        border: none;
+    }
+
+    .rig-section__title {
+        width: 100%;
+        padding: 0 0 0.7rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--color-divider);
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--color-text);
+    }
+
+    .rig-subtitle {
+        margin: 1.1rem 0 0.5rem;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+    }
+
+    .rig-field {
+        margin-bottom: 1rem;
+    }
+
+    .rig-label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .rig-input,
+    .rig-select {
+        display: block;
+        width: 100%;
+        min-height: 42px;
+        padding: 8px 11px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        background: var(--color-bg);
+        color: inherit;
+        font: inherit;
+    }
+
+    .rig-input:focus-visible,
+    .rig-select:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+
+    .rig-scale {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .rig-scale__prefix {
+        flex: 0 0 auto;
+        white-space: nowrap;
+        color: var(--color-text-muted);
+        font-weight: 600;
+    }
+
+    .rig-scale .rig-input {
+        width: auto;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .rig-dims {
+        display: grid;
+        gap: 8px;
+    }
+
+    .rig-dims__head,
+    .rig-dim {
+        display: grid;
+        grid-template-columns: minmax(130px, 1.2fr) 90px 74px 150px 150px;
+        gap: 10px;
+        align-items: end;
+    }
+
+    .rig-dims__head {
+        align-items: end;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--color-text-faint);
+    }
+
+    .rig-dim .rig-label {
+        margin-bottom: 0;
+        font-weight: 500;
+        padding-bottom: 9px;
+    }
+
+    .rig-dim__empty {
+        color: var(--color-text-faint);
+        text-align: center;
+        padding-bottom: 9px;
+    }
+
+    .rig-matrix {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .rig-matrix th,
+    .rig-matrix td {
+        padding: 8px 10px;
+        border: 1px solid var(--color-divider);
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .rig-matrix thead th {
+        font-size: 0.74rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+        background: var(--color-surface-offset);
+    }
+
+    .rig-matrix tbody th {
+        font-weight: 600;
+    }
+
+    .rig-checkbox {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--color-primary);
+    }
+
+    .rig-inline {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.7rem 1.4rem;
+        align-items: center;
+    }
+
+    .rig-check {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    .rig-check--select {
+        gap: 0.5rem;
+    }
+
+    .rig-check--select .rig-select {
+        width: auto;
+        min-width: 150px;
+        min-height: 36px;
+    }
+
+    .rig-block {
+        padding: 0.9rem 0;
+        border-top: 1px solid var(--color-divider);
+    }
+
+    .rig-block:first-child {
+        border-top: none;
+        padding-top: 0;
+    }
+
+    .rig-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .rig-button {
+        min-height: 46px;
+        padding: 0 22px;
+        border: 1px solid var(--color-primary);
+        border-radius: var(--radius-sm);
+        background: var(--color-primary);
+        color: var(--color-text-inverse);
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background var(--transition), border-color var(--transition),
+            box-shadow var(--transition), transform var(--transition);
+    }
+
+    .rig-button:hover:not(:disabled) {
+        background: var(--color-primary-hover);
+        border-color: var(--color-primary-hover);
+    }
+
+    .rig-button--attention {
+        min-height: 50px;
+        padding: 0 28px;
+        font-size: 1.06rem;
+        box-shadow: 0 6px 18px color-mix(in srgb, var(--color-primary) 32%, transparent);
+    }
+
+    .rig-button--attention:hover:not(:disabled) {
+        background: var(--color-primary-hover);
+        border-color: var(--color-primary-hover);
+        box-shadow: 0 8px 22px color-mix(in srgb, var(--color-primary) 42%, transparent);
+        transform: translateY(-1px);
+    }
+
+    .rig-button--ghost {
+        background: transparent;
+        color: var(--color-primary);
+        border-color: var(--color-border);
+        box-shadow: none;
+        min-height: 44px;
+        padding: 0 18px;
+        font-size: 0.95rem;
+    }
+
+    .rig-button--ghost:hover:not(:disabled) {
+        background: var(--color-primary-highlight);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+        box-shadow: none;
+        transform: none;
+    }
+
+    .rig-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .rig-results {
+        margin-top: 2.5rem;
+        transition: opacity 180ms ease, filter 180ms ease;
+    }
+
+    .rig-results.is-calculating {
+        opacity: 0.55;
+        color: var(--color-text-faint);
+    }
+
+    .rig-results.is-stale {
+        opacity: 0.5;
+        filter: grayscale(0.5);
+        pointer-events: none;
+    }
+
+    .rig-results__header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .rig-results__title {
+        margin: 0;
+        font-size: clamp(1.9rem, 3vw, 2.6rem);
+    }
+
+    .rig-results__actions {
+        display: flex;
+        gap: 0.6rem;
+    }
+
+    .rig-results__status {
+        margin: 1rem 0 0;
+        color: var(--color-text-muted);
+        font-size: 0.95rem;
+    }
+
+    .rig-results__disclaimer {
+        margin: 0.9rem 0 0;
+        color: #b54708;
+        font-size: 0.86rem;
+        font-weight: 600;
+    }
+
+    .rig-summary {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin: 1.25rem 0;
+    }
+
+    .rig-summary__item {
+        padding: 14px 16px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-surface);
+    }
+
+    .rig-summary__label {
+        display: block;
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+    }
+
+    .rig-summary__value {
+        display: block;
+        margin-top: 4px;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--color-text);
+    }
+
+    .rig-summary__item[data-status="calculated"] .rig-summary__value { color: var(--color-primary); }
+    .rig-summary__item[data-status="needs_input"] .rig-summary__value { color: #b54708; }
+    .rig-summary__item[data-status="unsupported"] .rig-summary__value { color: #b42318; }
+
+    .rig-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .rig-filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .rig-chip {
+        padding: 7px 14px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-full);
+        background: var(--color-surface);
+        color: var(--color-text-muted);
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background var(--transition), border-color var(--transition), color var(--transition);
+    }
+
+    .rig-chip:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+    }
+
+    .rig-chip[aria-pressed="true"] {
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: var(--color-text-inverse);
+    }
+
+    .rig-results__list {
+        display: grid;
+        gap: 14px;
+    }
+
+    .rig-results__empty {
+        color: var(--color-text-muted);
+        font-size: 0.95rem;
+    }
+
+    .rig-group {
+        display: grid;
+        gap: 10px;
+    }
+
+    .rig-group__title {
+        margin: 0.5rem 0 0;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.6rem;
+    }
+
+    .rig-group__rows {
+        display: grid;
+        gap: 8px;
+    }
+
+    .rig-row {
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-surface);
+        overflow: hidden;
+    }
+
+    .rig-row[open] {
+        border-color: var(--color-primary);
+    }
+
+    .rig-row__summary {
+        display: grid;
+        grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) 90px auto;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 16px;
+        list-style: none;
+        cursor: pointer;
+    }
+
+    .rig-row__summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .rig-row__summary:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: -2px;
+    }
+
+    .rig-row__identity {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+
+    .rig-row__name {
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .rig-row__ru {
+        color: var(--color-text-muted);
+        font-size: 0.82rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .rig-row__meta {
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+    }
+
+    .rig-row__estimate {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 2px 8px;
+        border-radius: var(--radius-full);
+        background: var(--color-surface-offset);
+        color: var(--color-text-muted);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        vertical-align: middle;
+    }
+
+    .rig-row__diameter {
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        text-align: right;
+        color: var(--color-text);
+    }
+
+    .rig-row__badge {
+        justify-self: start;
+        padding: 3px 10px;
+        border-radius: var(--radius-full);
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+
+    .rig-row__badge--calculated {
+        background: var(--color-primary-highlight);
+        color: var(--color-primary);
+    }
+
+    .rig-row__badge--needs_input {
+        background: color-mix(in srgb, #b54708 14%, transparent);
+        color: #b54708;
+    }
+
+    .rig-row__badge--unsupported {
+        background: color-mix(in srgb, #b42318 12%, transparent);
+        color: #b42318;
+    }
+
+    .rig-row__badge--not_applicable {
+        background: var(--color-surface-offset);
+        color: var(--color-text-faint);
+    }
+
+    .rig-row__body {
+        padding: 14px 16px 16px;
+        border-top: 1px solid var(--color-divider);
+    }
+
+    .rig-details {
+        display: grid;
+        grid-template-columns: minmax(0, 160px) minmax(0, 1fr);
+        gap: 8px 16px;
+        margin: 0;
+        font-size: 0.88rem;
+    }
+
+    .rig-details__term {
+        color: var(--color-text-muted);
+        font-weight: 600;
+    }
+
+    .rig-details__def {
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .rig-details__list {
+        margin: 0;
+        padding-left: 1.1rem;
+    }
+
+    .rig-details__list li + li {
+        margin-top: 0.3rem;
+    }
+
+    .rig-link {
+        display: inline-block;
+        padding: 0;
+        border: none;
+        background: none;
+        color: var(--color-primary);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        text-align: left;
+    }
+
+    .rig-link:hover {
+        color: var(--color-primary-hover);
+        text-decoration: underline;
+    }
+
+    .rig-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+    }
+
+    .rig-modal[hidden] {
+        display: none;
+    }
+
+    .rig-modal__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+    }
+
+    .rig-modal__dialog {
+        position: relative;
+        width: min(680px, 100%);
+        max-height: calc(100vh - 2rem);
+        overflow: auto;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .rig-modal__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--color-divider);
+    }
+
+    .rig-modal__header h2 {
+        margin: 0;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.5rem;
+    }
+
+    .rig-modal__close {
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-full);
+        background: transparent;
+        color: var(--color-text-muted);
+        font-size: 1.3rem;
+        line-height: 1;
+        cursor: pointer;
+        transition: color var(--transition), border-color var(--transition);
+    }
+
+    .rig-modal__close:hover {
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+    }
+
+    .rig-modal__body {
+        padding: 16px 20px 20px;
+    }
+
+    .rig-modal__target {
+        margin: 0 0 12px;
+        color: var(--color-text-muted);
+        font-size: 0.92rem;
+    }
+
+    @media (max-width: 900px) {
+        .rig-dims__head {
+            display: none;
+        }
+
+        .rig-dim {
+            grid-template-columns: 1fr 1fr;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--color-divider);
+        }
+
+        .rig-dim .rig-label {
+            grid-column: 1 / -1;
+            padding-bottom: 0;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .rig-form {
+            padding: 18px;
+        }
+
+        .rig-summary {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .rig-matrix {
+            display: block;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .rig-row__summary {
+            grid-template-columns: minmax(0, 1fr) auto;
+        }
+
+        .rig-row__meta {
+            grid-column: 1 / -1;
+            grid-row: 2;
+        }
+
+        .rig-row__diameter {
+            grid-column: 1;
+            grid-row: 3;
+            text-align: left;
+        }
+
+        .rig-row__badge {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        .rig-details {
+            grid-template-columns: 1fr;
+            gap: 2px 0;
+        }
+
+        .rig-details__term {
+            margin-top: 8px;
+        }
+    }
+</style>
