@@ -49,7 +49,7 @@
 Полный активный каталог нитей — без параметров. Нужен, чтобы модель узнала
 `threadId` до вызова прямого расчёта.
 
-Ответ: `totalThreads` (23), `threads` в порядке выдачи Worker'а (от тонкой к
+Ответ: `totalThreads` (на 03.11.2026 — 22), `threads` в порядке выдачи Worker'а (от тонкой к
 толстой) с полями `threadId`, `brand`, `number`, `dtex`, `sortOrder` и
 `label` вида `Tera 40 — 750 dTex`, плюс `catalogVersion`, `fetchedAt`,
 `apiVersion`, `algorithmVersion`.

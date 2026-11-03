@@ -8,7 +8,7 @@ export function registerListRopeThreads(server: McpServer): void {
       {
         title: "List rope threads",
         description:
-            "Read-only. Returns the full active rope thread catalog: 23 threads ordered from thin to thick, each with its id, brand, number, linear density in dTex, sort order and a human-readable label. " +
+            "Read-only. Returns the full active rope thread catalog ordered from thin to thick, each with its id, brand, number, linear density in dTex, sort order and a human-readable label. " +
             "Use this tool to discover thread ids before calling calculate_rope_diameter, or when the user asks which threads are available. " +
             "Threads disabled or unpublished in the CMS are not included. The response also carries the catalog version and the moment the catalog was read. " +
             "Use find_rope_threads when the user needs threads for a specific target diameter instead of the whole catalog.",

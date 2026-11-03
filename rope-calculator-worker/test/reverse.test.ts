@@ -8,10 +8,10 @@ function pairs(result: { matches: readonly { threadId: string; threadsPerStrand:
 }
 
 describe('обратный подбор', () => {
-  it('на target = 1.0 даёт 18 совпадений в устойчивом порядке', () => {
+  it('на target = 1.0 даёт 16 совпадений в устойчивом порядке', () => {
     const result = findMatches({ targetDiameterMm: 1 }, catalog);
 
-    expect(result.matches).toHaveLength(18);
+    expect(result.matches).toHaveLength(16);
     expect(result.tolerance).toBe(0.15);
     expect(pairs(result)).toEqual([
       'mara-100 × 5',
@@ -19,14 +19,12 @@ describe('обратный подбор', () => {
       'tera-40 × 2',
       'tera-20 × 1',
       'mara-80 × 4',
-      'mara-70 × 4',
       'tera-80 × 4',
       'tera-80 × 5',
       'mara-50 × 3',
       'mara-120 × 5',
       'mara-100 × 4',
       'mara-80 × 3',
-      'mara-70 × 3',
       'mara-50 × 2',
       'mara-15 × 1',
       'tera-15 × 1',
@@ -112,6 +110,6 @@ describe('обратный подбор', () => {
     const all = pairs(findMatches({ targetDiameterMm: 1 }, withDisabled));
     expect(all).not.toContain('mara-100 × 5');
     expect(all).not.toContain('mara-100 × 4');
-    expect(all).toHaveLength(16);
+    expect(all).toHaveLength(14);
   });
 });

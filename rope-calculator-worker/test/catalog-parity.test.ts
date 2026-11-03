@@ -3,19 +3,19 @@ import { catalogVersion } from '../src/core/version';
 import { catalog, relativeDifference, snapshot } from './helpers';
 
 describe('каталог CMS', () => {
-  it('содержит 23 активные нити и 69 конструкций', () => {
-    expect(snapshot.threads).toHaveLength(23);
+  it('содержит 22 активные нити и 110 конструкций', () => {
+    expect(snapshot.threads).toHaveLength(22);
 
     let checked = 0;
     for (const thread of snapshot.threads) {
-      for (const key of ['1', '2', '3'] as const) {
+      for (const key of ['1', '2', '3', '4', '5'] as const) {
         const expected = thread.diametersMm[key];
         expect(expected).toBeGreaterThan(0);
         checked += 1;
       }
     }
 
-    expect(checked).toBe(69);
+    expect(checked).toBe(110);
   });
 
   it('отсортирован по sortOrder, затем по threadId', () => {

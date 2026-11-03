@@ -12,7 +12,7 @@ const { calculateRope, findRopeThreads, listRopeThreads, RopeApiError } = await 
 const forwardResponse = {
     apiVersion: "1",
     algorithmVersion: "2.0.0",
-    catalogVersion: "40dc45531758",
+    catalogVersion: "0b24290aff0e",
     fetchedAt: "2026-10-27T06:00:00.000Z",
     basis: "catalog",
     input: { threadId: "tera-40", dtex: 750, threadsPerStrand: 2 },
@@ -27,7 +27,7 @@ const forwardResponse = {
 const reverseResponse = {
     apiVersion: "1",
     algorithmVersion: "2.0.0",
-    catalogVersion: "40dc45531758",
+    catalogVersion: "0b24290aff0e",
     fetchedAt: "2026-10-27T06:00:00.000Z",
     input: { targetDiameterMm: 1, tolerance: 0.15, threadIds: null },
     results: [
@@ -47,7 +47,7 @@ const reverseResponse = {
 const catalogResponse = {
     apiVersion: "1",
     algorithmVersion: "2.0.0",
-    catalogVersion: "40dc45531758",
+    catalogVersion: "0b24290aff0e",
     fetchedAt: "2026-10-27T06:00:00.000Z",
     threads: [
         { threadId: "mara-220", brand: "Mara", number: "220", dtex: 130, sortOrder: 101, enabled: true },
@@ -99,7 +99,7 @@ describe("calculateRope", () => {
             dtex: 750,
             diameterMm: 0.9842333087830643,
             construction: "2 × 3",
-            catalogVersion: "40dc45531758",
+            catalogVersion: "0b24290aff0e",
         });
     });
 
@@ -224,7 +224,7 @@ describe("listRopeThreads", () => {
         expect(init.method).toBe("GET");
 
         expect(result.totalThreads).toBe(2);
-        expect(result.catalogVersion).toBe("40dc45531758");
+        expect(result.catalogVersion).toBe("0b24290aff0e");
         expect(result.threads[0]).toEqual({
             threadId: "mara-220",
             brand: "Mara",
