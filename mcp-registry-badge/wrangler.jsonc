@@ -5,6 +5,15 @@
 	"observability": {
 		"enabled": true
 	},
+	// Переходный период: старый адрес *.workers.dev остаётся включённым,
+	// пока сайт не переключён на mcp-badge.glushkov-modelling.com.
+	"workers_dev": true,
+	"routes": [
+		{
+			"pattern": "mcp-badge.glushkov-modelling.com",
+			"custom_domain": true
+		}
+	],
 	"vars": {
 		"MCP_SERVER_NAME": "com.glushkov-modelling/content",
 		"CACHE_TTL_SECONDS": "3600",
