@@ -446,16 +446,21 @@ test('CSV and project JSON export all rows and the profile version', () => {
     assert.equal(csv.trim().split('\r\n').length, calc.results.length + 1);
     assert.ok(csv.includes('st.lower.stay'));
     assert.ok(csv.includes('traditional_plant'));
+    assert.ok(!csv.split('\r\n')[0].includes('formula'), 'CSV must not export formulas');
 
     const json = toProjectJson(calc, settings, '2026-11-03T00:00:00.000Z');
     const parsed = JSON.parse(json) as {
         exportedAt: string;
         profile: { profileVersion: string };
-        calculation: { results: unknown[] };
+        calculation: { results: Array<Record<string, unknown>> };
         settings: { scaleDenominator: number };
     };
     assert.equal(parsed.exportedAt, '2026-11-03T00:00:00.000Z');
     assert.equal(parsed.profile.profileVersion, '1.0.0');
     assert.equal(parsed.calculation.results.length, calc.results.length);
     assert.equal(parsed.settings.scaleDenominator, 64);
+    for (const result of parsed.calculation.results) {
+        assert.ok(!('formula' in result), 'JSON must not export formula');
+        assert.ok(!('trace' in result), 'JSON must not export trace');
+    }
 });

@@ -2,6 +2,9 @@
  * Экспорт ведомости и проекта. Функции чистые, чтобы их можно было проверить
  * без DOM. CSV содержит все строки, включая неподдерживаемые и неприменимые:
  * это исследовательская ведомость, а не только список посчитанных чисел.
+ *
+ * Формулы и пошаговая трассировка намеренно не экспортируются: CSV и JSON
+ * содержат результат и провенанс, но не расчётные выражения.
  */
 
 import type { Calculation, RiggingResult } from './types.ts';
@@ -28,7 +31,6 @@ const CSV_COLUMNS = [
     'diameterModelMm',
     'coefficientBasis',
     'calibrationStatus',
-    'formula',
 ] as const;
 
 function csvCell(value: unknown): string {
@@ -61,6 +63,12 @@ export function toCsv(calculation: Calculation): string {
     return `\uFEFF${lines.join('\r\n')}\r\n`;
 }
 
+export type ExportedResult = Omit<RiggingResult, 'formula' | 'trace'>;
+
+export type ExportedCalculation = Omit<Calculation, 'results'> & {
+    results: ExportedResult[];
+};
+
 export interface ProjectExport {
     exportedAt: string;
     profile: {
@@ -70,7 +78,14 @@ export interface ProjectExport {
         algorithmVersion: string;
     };
     settings: RiggingSettings;
-    calculation: Calculation;
+    calculation: ExportedCalculation;
+}
+
+function withoutFormulas(result: RiggingResult): ExportedResult {
+    const { formula, trace, ...rest } = result;
+    void formula;
+    void trace;
+    return rest;
 }
 
 export function toProjectJson(
@@ -78,6 +93,8 @@ export function toProjectJson(
     settings: RiggingSettings,
     exportedAt = new Date().toISOString(),
 ): string {
+    const { results, ...meta } = calculation;
+
     const project: ProjectExport = {
         exportedAt,
         profile: {
@@ -87,7 +104,10 @@ export function toProjectJson(
             algorithmVersion: calculation.algorithmVersion,
         },
         settings,
-        calculation,
+        calculation: {
+            ...meta,
+            results: results.map(withoutFormulas),
+        },
     };
 
     return `${JSON.stringify(project, null, 2)}\n`;
