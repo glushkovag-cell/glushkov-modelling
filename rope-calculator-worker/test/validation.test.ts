@@ -34,7 +34,7 @@ describe('parseForwardInput', () => {
     );
   });
 
-  it.each([0, 4, 1.5, '2', null])('отклоняет threadsPerStrand = %s', (threadsPerStrand) => {
+  it.each([0, 6, 1.5, '2', null])('отклоняет threadsPerStrand = %s', (threadsPerStrand) => {
     expect(
       errorCodeOf(() => parseForwardInput({ basis: 'dtex', dtex: 750, threadsPerStrand })),
     ).toBe('INVALID_PARAMS');

@@ -17,7 +17,8 @@ export default defineConfig({
       filter: (page) =>
         !page.includes('/wp-admin') &&
         !page.includes('/graphql') &&
-        !page.includes('/rope-preview'),
+        !page.includes('/rope-preview') &&
+        !page.includes('/tools'),
       changefreq: 'weekly',
       priority: 0.7,
       // No lastmod: the only date available at build time is the build itself,

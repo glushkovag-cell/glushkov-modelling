@@ -26,13 +26,14 @@ const SOURCE_FILE = join(ROOT, 'docs/rope-calculator/reference/RopeCalc.html');
 const REFERENCE_FILE = join(ROOT, 'docs/rope-calculator/fixtures/reference.json');
 const SNAPSHOT_FILE = join(ROOT, 'docs/rope-calculator/fixtures/catalog-snapshot.json');
 
-const THREAD_COUNTS = [1, 2, 3];
+const THREAD_COUNTS = [1, 2, 3, 4, 5];
 const STRANDS = 3;
 const CUSTOM_ANCHORS = [
   { dtex: 80, threadsPerStrand: 1 },
   { dtex: 750, threadsPerStrand: 2 },
   { dtex: 3000, threadsPerStrand: 3 },
   { dtex: 6000, threadsPerStrand: 3 },
+  { dtex: 1500, threadsPerStrand: 5 },
 ];
 
 const CATALOG_QUERY = `

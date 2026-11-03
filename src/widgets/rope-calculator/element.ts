@@ -86,6 +86,8 @@ const template = `
         <option value="1">1</option>
         <option value="2" selected>2</option>
         <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
       </select>
       <p class="rc-hint">
         All ropes have three strands. A 2 × 3 construction uses two threads per

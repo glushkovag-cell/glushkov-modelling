@@ -8,23 +8,30 @@ function pairs(result: { matches: readonly { threadId: string; threadsPerStrand:
 }
 
 describe('обратный подбор', () => {
-  it('на target = 1.0 даёт 11 совпадений в устойчивом порядке', () => {
+  it('на target = 1.0 даёт 18 совпадений в устойчивом порядке', () => {
     const result = findMatches({ targetDiameterMm: 1 }, catalog);
 
-    expect(result.matches).toHaveLength(11);
+    expect(result.matches).toHaveLength(18);
     expect(result.tolerance).toBe(0.15);
     expect(pairs(result)).toEqual([
+      'mara-100 × 5',
       'tera-60 × 3',
       'tera-40 × 2',
       'tera-20 × 1',
+      'mara-80 × 4',
+      'mara-70 × 4',
+      'tera-80 × 4',
+      'tera-80 × 5',
       'mara-50 × 3',
+      'mara-120 × 5',
+      'mara-100 × 4',
+      'mara-80 × 3',
+      'mara-70 × 3',
+      'mara-50 × 2',
       'mara-15 × 1',
       'tera-15 × 1',
       'mara-30 × 2',
       'tera-30 × 2',
-      'mara-80 × 3',
-      'mara-70 × 3',
-      'mara-50 × 2',
     ]);
   });
 
@@ -33,10 +40,10 @@ describe('обратный подбор', () => {
     expect(first).toBeDefined();
     if (!first) return;
 
-    expect(first.threadId).toBe('tera-60');
-    expect(first.construction).toBe('3 × 3');
-    expect(relativeDifference(first.diameterMm, 0.9806440349690794)).toBeLessThan(1e-12);
-    expect(first.deviationPercent).toBeCloseTo(-1.935596503092063, 10);
+    expect(first.threadId).toBe('mara-100');
+    expect(first.construction).toBe('5 × 3');
+    expect(relativeDifference(first.diameterMm, 0.990836685359095)).toBeLessThan(1e-12);
+    expect(first.deviationPercent).toBeCloseTo(-0.9163314640905029, 10);
   });
 
   it('порядок не зависит от порядка входа', () => {
@@ -99,11 +106,12 @@ describe('обратный подбор', () => {
 
   it('не включает отключённые нити при выборе всех', () => {
     const withDisabled = catalog.map((thread) =>
-      thread.threadId === 'tera-60' ? { ...thread, enabled: false } : thread,
+      thread.threadId === 'mara-100' ? { ...thread, enabled: false } : thread,
     );
 
     const all = pairs(findMatches({ targetDiameterMm: 1 }, withDisabled));
-    expect(all).not.toContain('tera-60 × 3');
-    expect(all).toHaveLength(10);
+    expect(all).not.toContain('mara-100 × 5');
+    expect(all).not.toContain('mara-100 × 4');
+    expect(all).toHaveLength(16);
   });
 });

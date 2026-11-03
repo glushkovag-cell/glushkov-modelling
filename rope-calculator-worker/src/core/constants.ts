@@ -2,13 +2,13 @@
 export const API_VERSION = '1';
 
 /** Версия расчётного алгоритма. Меняется при изменении формулы или допуска. */
-export const ALGORITHM_VERSION = '1.0.0';
+export const ALGORITHM_VERSION = '2.0.0';
 
 /** Прядей в канате всегда три. */
 export const STRANDS = 3;
 
 /** Допустимые значения числа нитей в пряди. */
-export const THREAD_COUNTS = [1, 2, 3] as const;
+export const THREAD_COUNTS = [1, 2, 3, 4, 5] as const;
 
 /**
  * Допуск обратного подбора как доля. Граница включительная:

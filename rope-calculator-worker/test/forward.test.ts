@@ -15,7 +15,7 @@ describe('прямой расчёт', () => {
     expect(result.threadsPerStrand).toBe(2);
     expect(result.strands).toBe(3);
     expect(result.construction).toBe('2 × 3');
-    expect(relativeDifference(result.diameterMm, 0.9631868577202545)).toBeLessThan(1e-12);
+    expect(relativeDifference(result.diameterMm, 0.9842333087830643)).toBeLessThan(1e-12);
   });
 
   it('не применяет диапазон 80–6000 к каталожной нити', () => {
@@ -29,7 +29,7 @@ describe('прямой расчёт', () => {
       catalog,
     );
 
-    expect(tera5.diameterMm).toBeGreaterThan(3.7);
+    expect(tera5.diameterMm).toBeGreaterThan(3.6);
     expect(tera8.diameterMm).toBeGreaterThan(1.5);
   });
 
@@ -38,7 +38,7 @@ describe('прямой расчёт', () => {
 
     expect(result.basis).toBe('dtex');
     expect(result.threadId).toBeNull();
-    expect(relativeDifference(result.diameterMm, 0.9631868577202545)).toBeLessThan(1e-12);
+    expect(relativeDifference(result.diameterMm, 0.9842333087830643)).toBeLessThan(1e-12);
   });
 
   it('отклоняет неизвестный threadId', () => {

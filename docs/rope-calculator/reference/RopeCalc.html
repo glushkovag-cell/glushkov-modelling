@@ -289,6 +289,8 @@
               <option value="1">1</option>
               <option value="2" selected>2</option>
               <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
             </select>
           </label>
           <p class="rc-hint">
@@ -403,7 +405,7 @@
           Object.freeze({ brand: "Tera", number: 10, dtex: 3000 })
         ]);
 
-        const THREAD_COUNTS = Object.freeze([1, 2, 3]);
+        const THREAD_COUNTS = Object.freeze([1, 2, 3, 4, 5]);
         const MAX_DEVIATION = 0.15;
 
         const root = document.currentScript.closest(".rope-calculator");
@@ -436,9 +438,9 @@
 
         function diameterByDtex(dtex, threads) {
           return (
-            0.01752 *
-            Math.pow(dtex, 0.5437) *
-            Math.pow(threads, 0.5880)
+            0.0204055952 *
+            Math.pow(dtex, 0.5293147610) *
+            Math.pow(threads, 0.5366123919)
           );
         }
 
