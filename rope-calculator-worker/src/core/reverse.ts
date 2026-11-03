@@ -25,7 +25,7 @@ export function withinTolerance(deviation: number): boolean {
  * Сортировка результатов: |отклонение|, dtex, число нитей, sortOrder, threadId.
  *
  * Последние два ключа обязательны: в каталоге есть пары с одинаковым dtex
- * (mara-70/mara-80, mara-15/tera-15, mara-30/tera-30), и без них порядок
+ * (mara-15/tera-15, mara-30/tera-30), и без них порядок
  * зависел бы от порядка входа.
  */
 function compareCandidates(a: Candidate, b: Candidate): number {

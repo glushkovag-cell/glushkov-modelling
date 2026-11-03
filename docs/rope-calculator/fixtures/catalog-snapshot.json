@@ -5,9 +5,9 @@
     "type": "RopeThread",
     "field": "ropethreadfields",
     "publishedCount": 23,
-    "activeCount": 23
+    "activeCount": 22
   },
-  "catalogVersion": "40dc45531758",
+  "catalogVersion": "0b24290aff0e",
   "threads": [
     {
       "threadId": "mara-220",
@@ -75,21 +75,6 @@
       "number": "80",
       "dtex": 400,
       "sortOrder": 105,
-      "enabled": true,
-      "diametersMm": {
-        "1": 0.4864722026317321,
-        "2": 0.7056583021516541,
-        "3": 0.8771769422196624,
-        "4": 1.0236014240931146,
-        "5": 1.1538091941254476
-      }
-    },
-    {
-      "threadId": "mara-70",
-      "brand": "Mara",
-      "number": "70",
-      "dtex": 400,
-      "sortOrder": 106,
       "enabled": true,
       "diametersMm": {
         "1": 0.4864722026317321,

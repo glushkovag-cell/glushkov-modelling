@@ -78,7 +78,7 @@ describe('rope API', () => {
     expect(fn).not.toHaveBeenCalled();
   });
 
-  it('catalog отдаёт 23 нити и версию', async () => {
+  it('catalog отдаёт 22 нити и версию', async () => {
     const fn = fetchMock(async () => cmsResponse());
     const response = await handleRequest(get('/api/rope/v1/catalog'), env, {
       fetchImpl: fn as unknown as typeof fetch,
@@ -86,8 +86,8 @@ describe('rope API', () => {
     const body = await json(response);
 
     expect(response.status).toBe(200);
-    expect(body.threads).toHaveLength(23);
-    expect(body.catalogVersion).toBe('40dc45531758');
+    expect(body.threads).toHaveLength(22);
+    expect(body.catalogVersion).toBe('0b24290aff0e');
     expect(body.apiVersion).toBe('1');
     expect(typeof body.fetchedAt).toBe('string');
   });
@@ -148,7 +148,7 @@ describe('rope API', () => {
     const body = await json(response);
 
     expect(response.status).toBe(200);
-    expect(body.results).toHaveLength(18);
+    expect(body.results).toHaveLength(16);
     expect(body.results[0].threadId).toBe('mara-100');
     expect(body.input.tolerance).toBe(0.15);
     expect(body.input.threadIds).toBeNull();
@@ -289,7 +289,7 @@ describe('rope API', () => {
       fetchImpl: fn as unknown as typeof fetch,
     });
     expect(recovered.status).toBe(200);
-    expect((await json(recovered)).threads).toHaveLength(23);
+    expect((await json(recovered)).threads).toHaveLength(22);
   });
 
   it('preflight отвечает 204 и разрешает только известные origin', async () => {
