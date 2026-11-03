@@ -146,3 +146,55 @@ jobs:
             -o StrictHostKeyChecking=yes \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "pm2 save"
+
+      # Очистка кэша Cloudflare после деплоя. Используется отдельный
+      # CLOUDFLARE_CACHE_TOKEN, если он задан; иначе CLOUDFLARE_API_TOKEN.
+      # Токену нужны Zone:Read и Zone:Cache Purge. Ошибка purge не валит
+      # деплой: сайт уже обновлён, а предупреждение видно в Actions.
+      - name: Purge Cloudflare cache
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_CACHE_TOKEN: ${{ secrets.CLOUDFLARE_CACHE_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+        run: |
+          set -uo pipefail
+
+          token="${CLOUDFLARE_CACHE_TOKEN:-${CLOUDFLARE_API_TOKEN}}"
+          if [ -z "${token}" ]; then
+            echo "::warning::Cloudflare cache purge skipped: no token configured."
+            echo "### Cloudflare cache: skipped (no token)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          zone_id="${CLOUDFLARE_ZONE_ID}"
+          if [ -z "${zone_id}" ]; then
+            if ! zones_json=$(curl --fail --silent --show-error \
+              -H "Authorization: Bearer ${token}" \
+              "https://api.cloudflare.com/client/v4/zones?name=glushkov-modelling.com"); then
+              echo "::warning::Cloudflare zone lookup failed; check Zone:Read on the token."
+              echo "### Cloudflare cache: skipped (zone lookup failed)" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            if ! zone_id=$(node -e "const d=JSON.parse(process.argv[1]);if(!d.success||!d.result||d.result.length===0){console.error(JSON.stringify(d.errors||[]));process.exit(1)}process.stdout.write(d.result[0].id)" "$zones_json"); then
+              echo "::warning::Cloudflare zone glushkov-modelling.com not found."
+              echo "### Cloudflare cache: skipped (zone not found)" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+          fi
+
+          if ! purge_json=$(curl --fail --silent --show-error \
+            -X POST "https://api.cloudflare.com/client/v4/zones/${zone_id}/purge_cache" \
+            -H "Authorization: Bearer ${token}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}'); then
+            echo "::warning::Cloudflare cache purge failed; check Zone:Cache Purge on the token."
+            echo "### Cloudflare cache: purge failed (permission?)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if ! node -e "const d=JSON.parse(process.argv[1]);if(!d.success){console.error(JSON.stringify(d.errors||[]));process.exit(1)}console.log('cloudflare cache purged')" "$purge_json"; then
+            echo "::warning::Cloudflare cache purge returned success=false."
+            echo "### Cloudflare cache: purge failed" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "### Cloudflare cache: purged" >> "$GITHUB_STEP_SUMMARY"
