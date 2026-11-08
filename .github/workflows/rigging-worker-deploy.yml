@@ -88,7 +88,7 @@ jobs:
       - name: Smoke test pinned profile version
         run: |
           curl --fail --silent --show-error \
-            https://rigging-api.glushkov-modelling.com/api/rigging/v1/profiles/early_plant/1.2.1 -o early.json
+            https://www.glushkov-modelling.com/api/rigging/profiles/early_plant/1.2.1 -o early.json
           node -e "const d=require('./early.json');if(d.profile.profileVersion!=='1.2.1')process.exit(1);if(d.rules.length!==48)process.exit(1);console.log('early_plant rules',d.rules.length)"
 
       - name: Smoke test calculate
