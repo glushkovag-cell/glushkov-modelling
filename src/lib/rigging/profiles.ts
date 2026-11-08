@@ -1,125 +1,159 @@
 /**
- * Реестр расчётных профилей и подбор по году/периоду.
+ * Сводки профилей для интерфейса и API.
  *
- * На момент MVP в реестре один профиль traditional_plant в статусе draft без
- * подтверждённого исторического диапазона (yearFrom/yearTo = null). Поэтому он
- * не выдаётся как автоматически подходящий под введённый год, а показывается
- * для явного выбора с честной пометкой. Логика подбора по опубликованным
- * профилям уже заложена и активируется, когда появятся published-профили.
+ * Профиль выбирается явно; год и исторический период профиль не выбирают.
+ * Никакого автоматического подбора по году здесь нет — только сортировка и
+ * представление уже загруженных документов.
  */
 
-import { PROFILE_ID, PROFILE_VERSION, type HistoricalContext } from './types.ts';
+import type {
+    ProfileDocument,
+    ProfileManifestEntry,
+    ProfileMetrics,
+    ProfilePublicationStatus,
+} from './document.ts';
 
-export type ProfileStatus = 'draft' | 'verified' | 'published' | 'deprecated';
+/**
+ * Структурированное пояснение к карточке профиля. Строки показываются
+ * раздельно; числа берутся из документа, а не дублируются в разметке.
+ */
+export interface ProfileExplanation {
+    /** «135 rule definitions: 27 standing, 63 running.» */
+    summary: string;
+    /** «A row in the results does not assert that a rope was historically fitted.» */
+    disclaimer: string;
+    /** «Groups: … · Materials: …» */
+    taxonomy: string;
+    /** «Calibration: 8 fitted roles · MAPE 32.3% · worst deviation —%.» */
+    calibration: string | null;
+    /** Уточнение к калибровке (MAPE, перенос между reference). */
+    accuracy: string | null;
+    /** Короткая оговорка профиля: «These are estimated diameters…». */
+    caveat: string | null;
+}
 
-export interface ProfileMeta {
+export interface ProfileSummary {
     profileId: string;
     profileVersion: string;
+    family: string;
     name: string;
-    status: ProfileStatus;
+    status: ProfilePublicationStatus;
     yearFrom: number | null;
     yearTo: number | null;
     description: string;
-    riggingFamilies: string[];
+    ruleCount: number;
+    groups: string[];
     materialConditions: string[];
-    exclusions: string[];
-    applicabilityNotes: string;
-    sources: string[];
+    warnings: string[];
+    metrics: ProfileMetrics | null;
+    explanation: ProfileExplanation;
+    ui: ProfileDocument['profile']['ui'];
 }
 
-export type ProfileMatchKind =
-    | 'in_range'
-    | 'partial_overlap'
-    | 'draft_unconfirmed'
-    | 'no_range';
+const GROUP_ORDER = ['standing', 'running', 'bowsprit', 'anchor', 'gun'];
 
-export interface ProfileMatch {
-    profile: ProfileMeta;
-    match: ProfileMatchKind;
-    note: string;
+const DISCLAIMER =
+    'A row in the results does not assert that a rope was historically fitted.';
+
+function countGroup(document: ProfileDocument, group: string): number {
+    return document.rules.filter((rule) => rule.group === group).length;
 }
 
-export const PROFILE_REGISTRY: ProfileMeta[] = [
-    {
-        profileId: PROFILE_ID,
-        profileVersion: PROFILE_VERSION,
-        name: 'Traditional plant rigging',
-        status: 'published',
-        yearFrom: 1625,
-        yearTo: 1860,
-        description:
-            'Estimate profile for traditional fibre rigging of square-rigged vessels, headsails, staysails and a gaff sail.',
-        riggingFamilies: ['traditional_plant'],
-        materialConditions: ['fiber'],
-        exclusions: [
-            'topgallant sails and beyond (bomb-topsails, studding sails)',
-            'boat, lateen and yacht rigging',
-            'metal element geometry (wire, chain, rod)',
+function percent(value: number | null | undefined): string {
+    if (value === null || value === undefined || !Number.isFinite(value)) return '—';
+    return String(value);
+}
+
+function firstSentence(text: string): string {
+    const match = text.match(/^.*?[.!?](?=\s|$)/);
+    return (match?.[0] ?? text).trim();
+}
+
+function calibrationLine(metrics: ProfileMetrics | null): string | null {
+    if (!metrics) return null;
+    const transfer =
+        metrics.crossTransferMaxPercent === null || metrics.crossTransferMaxPercent === undefined
+            ? ''
+            : ` · worst transfer ${percent(metrics.crossTransferMaxPercent)}%`;
+    return (
+        `Calibration: ${metrics.fittedRoles ?? '—'} fitted roles · ` +
+        `MAPE ${percent(metrics.mapePercent)}% · ` +
+        `worst deviation ${percent(metrics.maxDeviationPercent)}%${transfer}.`
+    );
+}
+
+/** Краткое описание профиля без коэффициентов. */
+export function summariseProfile(document: ProfileDocument): ProfileSummary {
+    const groups = [...new Set(document.rules.map((rule) => rule.group))].sort(
+        (a, b) => GROUP_ORDER.indexOf(a) - GROUP_ORDER.indexOf(b),
+    );
+    const metrics = document.profile.metrics ?? null;
+    const warnings = [...document.profile.warnings];
+
+    return {
+        profileId: document.profile.profileId,
+        profileVersion: document.profile.profileVersion,
+        family: document.profile.family,
+        name: document.profile.name,
+        status: document.profile.status,
+        yearFrom: document.profile.yearFrom,
+        yearTo: document.profile.yearTo,
+        description: describe(document),
+        ruleCount: document.rules.length,
+        groups,
+        materialConditions: [...document.profile.materialConditions],
+        warnings,
+        metrics,
+        explanation: {
+            summary:
+                `${document.rules.length} rule definitions: ` +
+                `${countGroup(document, 'standing')} standing, ` +
+                `${countGroup(document, 'running')} running.`,
+            disclaimer: DISCLAIMER,
+            taxonomy:
+                `Groups: ${groups.join(', ')} · ` +
+                `Materials: ${document.profile.materialConditions.join(', ')}.`,
+            calibration: calibrationLine(metrics),
+            accuracy: metrics?.cardNote?.trim() || null,
+            caveat: warnings[0] ? firstSentence(warnings[0]) : null,
+        },
+        ui: document.profile.ui,
+    };
+}
+
+function describe(document: ProfileDocument): string {
+    const total = document.rules.length;
+    const standing = countGroup(document, 'standing');
+    const running = countGroup(document, 'running');
+    const draft = document.profile.status === 'draft' ? 'Draft, not published. ' : '';
+    return `${draft}${total} rule definitions: ${standing} standing, ${running} running. ${DISCLAIMER}`;
+}
+
+export function sortProfilesByManifest(
+    documents: ProfileDocument[],
+    entries: ProfileManifestEntry[],
+): ProfileDocument[] {
+    const order = new Map(entries.map((entry, index) => [entry.profileId, index]));
+    return [...documents].sort(
+        (a, b) =>
+            (order.get(a.profile.profileId) ?? 999) - (order.get(b.profile.profileId) ?? 999),
+    );
+}
+
+export function manifestEntryFor(document: ProfileDocument): ProfileManifestEntry {
+    return {
+        profileId: document.profile.profileId,
+        family: document.profile.family,
+        name: document.profile.name,
+        status: document.profile.status,
+        latest: document.profile.profileVersion,
+        versions: [
+            {
+                version: document.profile.profileVersion,
+                status: document.profile.status,
+                document: `profiles/${document.profile.profileId}/${document.profile.profileVersion}.json`,
+                sha256: '',
+            },
         ],
-        applicabilityNotes:
-            'Range 1625–1860 follows the scope of James Lees, "The Masting and Rigging of English Ships of War, 1625–1860". The diameter ratios remain engineering estimates or a preliminary fit, not a verbatim historical table.',
-        sources: [
-            'James Lees, The Masting and Rigging of English Ships of War, 1625–1860 (range accepted as the profile applicability scope).',
-        ],
-    },
-];
-
-/**
- * Подбор профилей. Опубликованные профили сопоставляются по диапазону;
- * draft-профили без диапазона возвращаются как draft_unconfirmed для явного
- * выбора и никогда не выдаются за published-совпадение.
- */
-export function findSuitableProfiles(context: HistoricalContext): ProfileMatch[] {
-    const matches: ProfileMatch[] = [];
-
-    for (const profile of PROFILE_REGISTRY) {
-        if (profile.status !== 'published') {
-            matches.push({
-                profile,
-                match: 'draft_unconfirmed',
-                note: 'Draft — applicability range not yet confirmed. Shown for explicit selection, not as a published match.',
-            });
-            continue;
-        }
-
-        if (profile.yearFrom === null || profile.yearTo === null) {
-            matches.push({
-                profile,
-                match: 'no_range',
-                note: 'Published profile without a confirmed range.',
-            });
-            continue;
-        }
-
-        if (context.mode === 'year') {
-            if (context.year === null) continue;
-            const within = profile.yearFrom <= context.year && context.year <= profile.yearTo;
-            if (!within) continue;
-            matches.push({
-                profile,
-                match: 'in_range',
-                note: `Matches the entered year (profile range ${profile.yearFrom}–${profile.yearTo}).`,
-            });
-            continue;
-        }
-
-        if (context.mode === 'period') {
-            if (context.periodFrom === null || context.periodTo === null) continue;
-            const overlaps =
-                profile.yearFrom <= context.periodTo && profile.yearTo >= context.periodFrom;
-            if (!overlaps) continue;
-            const full =
-                profile.yearFrom <= context.periodFrom && context.periodTo <= profile.yearTo;
-            matches.push({
-                profile,
-                match: full ? 'in_range' : 'partial_overlap',
-                note: full
-                    ? `Covers the entered period (profile range ${profile.yearFrom}–${profile.yearTo}).`
-                    : `Partial coverage: profile range ${profile.yearFrom}–${profile.yearTo}.`,
-            });
-            continue;
-        }
-    }
-
-    return matches;
+    };
 }

@@ -18,6 +18,7 @@ export default defineConfig({
         !page.includes('/wp-admin') &&
         !page.includes('/graphql') &&
         !page.includes('/rope-preview') &&
+        !page.includes('/api') &&
         !page.includes('/tools'),
       changefreq: 'weekly',
       priority: 0.7,

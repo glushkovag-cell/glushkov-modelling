@@ -5,6 +5,9 @@ import { buildInput, defaultSettings, type RiggingSettings } from '../src/lib/ri
 import { calculate } from '../src/lib/rigging/calculate.ts';
 import { toCsv, toProjectJson } from '../src/lib/rigging/export.ts';
 import type { RiggingInput, RiggingNode } from '../src/lib/rigging/types.ts';
+import { TRADITIONAL } from './helpers/profiles.ts';
+
+const TP = TRADITIONAL();
 
 const S = 64;
 
@@ -37,7 +40,7 @@ function settingsWithMast(mastId: 'fore' | 'main' | 'mizzen' = 'main'): RiggingS
 }
 
 function calculationFor(settings: RiggingSettings) {
-    return calculate(buildInput(settings));
+    return calculate(buildInput(settings), TP);
 }
 
 function byRule(calc: ReturnType<typeof calculate>, ruleId: string, nodeSuffix = '') {
@@ -246,7 +249,7 @@ test('an unknown sail configuration produces needs_input, not zero', () => {
     const yard = findNode(input, 'yard.main.lower');
     yard.sailPresent = null;
 
-    const calc = calculate(input);
+    const calc = calculate(input, TP);
     const sheet = byRule(calc, 'rn.square.lower.sheet');
 
     assert.equal(sheet.status, 'needs_input');
@@ -348,7 +351,7 @@ test('a child present under an absent parent is a validation error', () => {
     topmast.present = false;
     findNode(input, 'mast.main.topgallant').present = true;
 
-    const calc = calculate(input);
+    const calc = calculate(input, TP);
     assert.ok(calc.validationErrors.some((issue) => issue.code === 'PARENT_ABSENT'));
     assert.equal(calc.results.length, 0);
 });
@@ -364,7 +367,7 @@ test('duplicate node ids and invalid dimensions are rejected', () => {
         measurementPointId: 'partner',
     };
 
-    const calc = calculate(input);
+    const calc = calculate(input, TP);
     const codes = calc.validationErrors.map((issue) => issue.code);
 
     assert.ok(codes.includes('DUPLICATE_NODE'));
@@ -384,7 +387,7 @@ test('explicit absent nodes are not applicable, never zero', () => {
         anchorConnection: 'fiber',
     });
 
-    const calc = calculate(input);
+    const calc = calculate(input, TP);
     const bower = calc.results.filter((result) => result.ownerId === 'anchor_group.off');
     assert.ok(bower.length > 0);
     for (const result of bower) {
@@ -415,11 +418,15 @@ test('result rows contain no quantity or equipment-count fields', () => {
         'diameterModelMm',
         'method',
         'calculationKind',
+        'material',
         'coefficientBasis',
         'calibrationStatus',
         'profileId',
         'profileVersion',
         'schemaVersion',
+        'sourceIds',
+        'sourceLocator',
+        'measurementPointId',
         'formula',
         'referenceLabel',
         'factorLabel',
@@ -446,6 +453,9 @@ test('CSV and project JSON export all rows and the profile version', () => {
     assert.equal(csv.trim().split('\r\n').length, calc.results.length + 1);
     assert.ok(csv.includes('st.lower.stay'));
     assert.ok(csv.includes('traditional_plant'));
+    assert.ok(csv.split('\r\n')[0].includes('material'));
+    assert.ok(csv.split('\r\n')[0].includes('sourceIds'));
+    assert.ok(csv.includes('fiber'));
     assert.ok(!csv.split('\r\n')[0].includes('formula'), 'CSV must not export formulas');
 
     const json = toProjectJson(calc, settings, '2026-11-03T00:00:00.000Z');

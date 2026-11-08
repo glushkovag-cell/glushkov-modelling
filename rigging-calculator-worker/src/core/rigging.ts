@@ -2,20 +2,23 @@
  * Мост к общему расчётному ядру сайта.
  *
  * Ядро остаётся единственным источником формул: Worker не содержит копии
- * коэффициентов и импортирует те же чистые функции, что и клиент.
+ * коэффициентов, документов профилей или ролей и импортирует те же чистые
+ * функции, что и сайт.
  */
 
 export { calculate } from '../../../src/lib/rigging/calculate.ts';
-export { PROFILE_REGISTRY, findSuitableProfiles } from '../../../src/lib/rigging/profiles.ts';
+export { validateProfileDocument } from '../../../src/lib/rigging/document.ts';
 export {
   ALGORITHM_VERSION,
-  PROFILE_ID,
-  PROFILE_VERSION,
+  DEFAULT_PROFILE_ID,
   SCHEMA_VERSION,
 } from '../../../src/lib/rigging/types.ts';
 export type {
   Calculation,
-  HistoricalContext,
   RiggingInput,
   RiggingResult,
 } from '../../../src/lib/rigging/types.ts';
+export type {
+  ProfileDocument,
+  ProfileManifest,
+} from '../../../src/lib/rigging/document.ts';

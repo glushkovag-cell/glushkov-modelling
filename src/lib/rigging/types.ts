@@ -1,25 +1,40 @@
 /**
  * Типы расчётного ядра калькулятора толщин такелажа.
  *
- * Профиль traditional_plant v1.0.0 (schemaVersion 1.0.0). Ядро чистое: здесь
- * нет DOM, HTTP, CMS и случайных источников. Все размеры внутри — миллиметры
- * прототипа; масштаб применяется один раз при нормализации и один раз при
- * выводе диаметра модели.
+ * Ядро чистое: здесь нет DOM, HTTP, CMS и случайных источников. Все размеры
+ * внутри — миллиметры прототипа; масштаб применяется один раз при
+ * нормализации и один раз при выводе диаметра модели. Коэффициенты и состав
+ * ролей живут в версионированных JSON-документах профилей (data/rigging),
+ * а не в коде.
  */
 
-export const PROFILE_ID = 'traditional_plant';
-export const PROFILE_VERSION = '1.0.0';
+/** Версия контракта расширенной схемы. Изменение контракта — новая версия. */
 export const SCHEMA_VERSION = '1.0.0';
+
+/** Версия алгоритма ядра. Меняется только при изменении вычислений. */
 export const ALGORITHM_VERSION = '1.0.0';
 
+/** Профиль по умолчанию, пока пользователь не выбрал другой явно. */
+export const DEFAULT_PROFILE_ID = 'traditional_plant';
+
 export type MastId = 'fore' | 'main' | 'mizzen';
+export const MAST_IDS: readonly MastId[] = ['fore', 'main', 'mizzen'];
+
 export type Tier = 'lower' | 'topmast' | 'topgallant';
+export const TIERS: readonly Tier[] = ['lower', 'topmast', 'topgallant'];
+
 export type UnitId = 'mm' | 'cm' | 'in';
 export type Basis = 'model' | 'prototype';
+
+/**
+ * Точка измерения. `step` — явно помеченный proxy: диаметр у степа не
+ * взаимозаменяем с диаметром у пяртнерса.
+ */
 export type MeasurementPointId =
     | 'partner'
     | 'maximum'
     | 'working_section'
+    | 'step'
     | 'unknown';
 
 export type SailClass =
@@ -28,6 +43,17 @@ export type SailClass =
     | 'staysail_lower'
     | 'staysail_upper';
 
+export const SAIL_CLASSES: readonly SailClass[] = [
+    'head_lower',
+    'head_upper',
+    'staysail_lower',
+    'staysail_upper',
+];
+
+/**
+ * Словарь узлов. Ранние профили используют подмножество; расширение словаря
+ * не означает, что каждый профиль поддержан для каждого узла.
+ */
 export type NodeType =
     | 'lower_mast'
     | 'topmast'
@@ -35,15 +61,30 @@ export type NodeType =
     | 'yard'
     | 'fore_and_aft_sail'
     | 'gaff'
+    | 'gaff_sail'
+    | 'boom'
+    | 'main_sail'
+    | 'topsail'
+    | 'head_lower'
+    | 'head_upper'
+    | 'staysail'
+    | 'flag'
+    | 'lateen_yard'
     | 'bowsprit'
     | 'jibboom'
     | 'flying_jibboom'
     | 'martingale'
     | 'spritsail_yard'
+    | 'hull_group'
     | 'anchor_group'
     | 'gun_group';
 
-export type OwnerType = 'mast' | 'bowsprit' | 'anchor_group' | 'gun_group';
+export type OwnerType =
+    | 'mast'
+    | 'bowsprit'
+    | 'hull'
+    | 'anchor_group'
+    | 'gun_group';
 
 export type GunType = 'carriage_gun' | 'carronade' | 'unknown';
 export type MountingType = 'wheeled' | 'slide_pivot' | 'unknown';
@@ -79,6 +120,9 @@ export type CoefficientBasis =
 export type CalibrationStatus =
     | 'not_calibrated'
     | 'training_set_only';
+
+/** Материал прототипа. Материал модельной нити не меняет это поле. */
+export type Material = 'fiber' | 'wire' | 'rod' | 'chain' | 'unknown';
 
 export type MeasurementId =
     | `mast.${MastId}.diameter`
@@ -116,14 +160,11 @@ export interface RiggingMeasurements {
     gunBore?: Measurement | null;
 }
 
-export interface HistoricalContext {
-    mode: 'year' | 'period' | null;
-    year: number | null;
-    periodFrom: number | null;
-    periodTo: number | null;
-}
-
 export interface RiggingInput {
+    /** Явно выбранный профиль. Неизвестный профиль не подменяется другим. */
+    profileId: string;
+    /** Зафиксированная версия проекта; null — последняя опубликованная. */
+    profileVersion?: string | null;
     scaleDenominator: number;
     measurements: RiggingMeasurements;
     nodes: RiggingNode[];
@@ -165,11 +206,15 @@ export interface RiggingResult {
     diameterModelMm: number | null;
     method: 'proportional';
     calculationKind: 'estimate';
+    material: Material;
     coefficientBasis: CoefficientBasis;
     calibrationStatus: CalibrationStatus;
-    profileId: typeof PROFILE_ID;
-    profileVersion: typeof PROFILE_VERSION;
-    schemaVersion: typeof SCHEMA_VERSION;
+    profileId: string;
+    profileVersion: string;
+    schemaVersion: string;
+    sourceIds: string[];
+    sourceLocator: string | null;
+    measurementPointId: MeasurementPointId | null;
     formula: string | null;
     referenceLabel: string;
     factorLabel: string;
@@ -180,14 +225,22 @@ export interface RiggingResult {
     sortIndex: number;
 }
 
+export interface CalculationSource {
+    id: string;
+    title: string;
+    locator: string;
+}
+
 export interface Calculation {
-    profileId: typeof PROFILE_ID;
-    profileVersion: typeof PROFILE_VERSION;
-    schemaVersion: typeof SCHEMA_VERSION;
-    algorithmVersion: typeof ALGORITHM_VERSION;
+    profileId: string;
+    profileVersion: string;
+    profileStatus: string;
+    schemaVersion: string;
+    algorithmVersion: string;
     scaleDenominator: number;
     normalizedMeasurements: NormalizedMeasurement[];
     results: RiggingResult[];
+    sources: CalculationSource[];
     warnings: string[];
     validationErrors: ValidationIssue[];
 }

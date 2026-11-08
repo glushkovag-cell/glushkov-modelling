@@ -1,0 +1,1101 @@
+{
+  "documentVersion": "1.0.0",
+  "profile": {
+    "profileId": "yacht_metal_schooner",
+    "profileVersion": "1.0.0",
+    "schemaVersion": "1.0.0",
+    "family": "yacht_metal",
+    "status": "draft",
+    "name": "Yacht metal rigging — gaff schooners",
+    "yearFrom": null,
+    "yearTo": null,
+    "bases": {
+      "mast": 1,
+      "bowsprit": 1,
+      "hullWidth": 1,
+      "gunBore": 1,
+      "thickestMast": 1
+    },
+    "baseLabels": {
+      "mast": "D_m",
+      "bowsprit": "D_b",
+      "hullWidth": "W",
+      "gunBore": "K",
+      "thickestMast": "G"
+    },
+    "baseFactorLabels": {
+      "mast": "1",
+      "bowsprit": "1",
+      "hullWidth": "1",
+      "gunBore": "1",
+      "thickestMast": "1"
+    },
+    "materialConditions": [
+      "wire",
+      "fiber"
+    ],
+    "sources": [
+      {
+        "id": "R-EB",
+        "title": "Rigging report — Endeavour / Bluenose",
+        "locator": "p. 1, table 1"
+      },
+      {
+        "id": "R-FF",
+        "title": "Rigging report — Flying Fish",
+        "locator": "p. 1, dimension table"
+      }
+    ],
+    "warnings": [
+      "Estimates for a static model, not a strength calculation.",
+      "Draft profile: the calibration targets are user-accepted secondary reports; primary archival sheets were not independently verified.",
+      "The FIT coefficients cover four control roles only; the engineering rows are project assumptions and are not calibrated."
+    ],
+    "ui": {
+      "masts": true,
+      "tiers": [
+        "lower",
+        "topmast"
+      ],
+      "yards": false,
+      "squareSails": false,
+      "foreAndAft": [],
+      "lateenYard": false,
+      "gaff": true,
+      "gaffSail": true,
+      "boom": true,
+      "mainSail": false,
+      "topsail": true,
+      "headSails": true,
+      "staysail": true,
+      "flag": true,
+      "bowsprit": true,
+      "spritsaill": false,
+      "jibboom": false,
+      "martingale": false,
+      "anchor": false,
+      "hullGroup": false,
+      "gun": false,
+      "mastPoint": "partner",
+      "bowspritPoint": "working_section",
+      "defaults": {
+        "scaleDenominator": 64,
+        "mastDiameterMm": {
+          "fore": 7.94,
+          "main": 8.73,
+          "mizzen": 6.5
+        }
+      }
+    },
+    "metrics": {
+      "fittedRoles": 4,
+      "mapePercent": 4.54,
+      "maxDeviationPercent": 7.59,
+      "crossTransferMapePercent": 9.1,
+      "crossTransferMaxPercent": 16.42,
+      "note": "Four FIT2 control roles: MAPE 4.54%, maximum 7.59%; worst cross-reference transfer 16.42%. 31 engineering rows are not in this aggregate.",
+      "cardNote": "Four FIT2 control roles: MAPE 4.54%, maximum 7.59%; worst cross-reference transfer 16.42%. 31 engineering rows are not in this aggregate."
+    }
+  },
+  "rules": [
+    {
+      "ruleId": "ym.st.lower.shroud",
+      "role": "lower_shroud",
+      "name": {
+        "en": "Lower shrouds",
+        "ru": "Нижние ванты"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.057841,
+      "materials": [
+        "wire",
+        "fiber"
+      ],
+      "material": "wire",
+      "sources": [
+        "R-EB",
+        "R-FF"
+      ],
+      "materialInvariance": true,
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only"
+    },
+    {
+      "ruleId": "ym.st.lower.stay",
+      "role": "headstay",
+      "name": {
+        "en": "Main lower stay",
+        "ru": "Основной нижний штаг"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.074231,
+      "materials": [
+        "wire",
+        "fiber"
+      ],
+      "material": "wire",
+      "sources": [
+        "R-EB",
+        "R-FF"
+      ],
+      "materialInvariance": true,
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only"
+    },
+    {
+      "ruleId": "ym.st.topmast.shroud",
+      "role": "topmast_shroud",
+      "name": {
+        "en": "Topmast shrouds",
+        "ru": "Стень-ванты"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.026,
+      "materials": [
+        "wire"
+      ],
+      "material": "wire",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.st.topmast.stay",
+      "role": "topmast_stay",
+      "name": {
+        "en": "Topmast stay",
+        "ru": "Стень-штаг"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.028,
+      "materials": [
+        "wire"
+      ],
+      "material": "wire",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.st.topmast.flying_backstay",
+      "role": "flying_backstay",
+      "name": {
+        "en": "Flying backstay",
+        "ru": "Летучая поддержка стеньги"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.026,
+      "materials": [
+        "wire"
+      ],
+      "material": "wire",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.st.lower.ratline",
+      "role": "lower_ratline",
+      "name": {
+        "en": "Lower ratlines",
+        "ru": "Нижние выбленки"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.01,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.st.topmast.ratline",
+      "role": "topmast_ratline",
+      "name": {
+        "en": "Topmast ratlines",
+        "ru": "Стень-выбленки"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.0075,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.st.lower.shroud_lanyard",
+      "role": "lower_shroud_lanyard",
+      "name": {
+        "en": "Lower shroud lanyards",
+        "ru": "Ланьяры нижних вант"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.02,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.st.topmast.shroud_lanyard",
+      "role": "topmast_shroud_lanyard",
+      "name": {
+        "en": "Topmast shroud lanyards",
+        "ru": "Ланьяры стень-вант"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.015,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.gaff.throat_halyard_fall",
+      "role": "throat_halyard_fall",
+      "name": {
+        "en": "Throat halyard fall",
+        "ru": "Гафель-гардель, ходовой конец"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "warnings": [
+        "Throat halyard q=0.030000 is not calibrated: for Flying Fish D=480 mm it gives 14.4 mm against a 21 mm target (−31.43%). This is a known limitation of the applicable engineering rule."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.gaff.peak_halyard_fall",
+      "role": "peak_halyard_fall",
+      "name": {
+        "en": "Peak halyard fall",
+        "ru": "Дирик-фал, ходовой конец"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.038556,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB",
+        "R-FF"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.gaff.sheet_fall",
+      "role": "sheet_fall",
+      "name": {
+        "en": "Mainsail sheet fall",
+        "ru": "Шкот основного паруса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff_sail"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.048132,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB",
+        "R-FF"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.boom.topping_lift",
+      "role": "topping_lift",
+      "name": {
+        "en": "Boom topping lift",
+        "ru": "Гика-топенант"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "boom"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.025,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.gaff.vang",
+      "role": "vang",
+      "name": {
+        "en": "Gaff vang",
+        "ru": "Оттяжка гафеля"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.02,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.gaff.brail",
+      "role": "brail",
+      "name": {
+        "en": "Brails",
+        "ru": "Гитовы гафельного паруса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff_sail"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.015,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.gaff.reef_pendant",
+      "role": "reef_pendant",
+      "name": {
+        "en": "Reef pendant",
+        "ru": "Риф-шкентель"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff_sail"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.02,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.gaff.reef_point",
+      "role": "reef_point",
+      "name": {
+        "en": "Reef point",
+        "ru": "Риф-сезень"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff_sail"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.01,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.boom.sheet_bridle",
+      "role": "sheet_bridle",
+      "name": {
+        "en": "Sheet bridle",
+        "ru": "Канатный шпрюйт шкота"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "boom"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.045,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.topsail.halyard",
+      "role": "halyard",
+      "name": {
+        "en": "halyard (topsail)",
+        "ru": "halyard (topsail)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "topsail"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.0175,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.topsail.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "sheet (topsail)",
+        "ru": "sheet (topsail)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "topsail"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.02,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.topsail.tack",
+      "role": "tack",
+      "name": {
+        "en": "tack (topsail)",
+        "ru": "tack (topsail)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "topsail"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.0175,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.topsail.downhaul",
+      "role": "downhaul",
+      "name": {
+        "en": "downhaul (topsail)",
+        "ru": "downhaul (topsail)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "topsail"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.0125,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.head_lower.halyard",
+      "role": "halyard",
+      "name": {
+        "en": "halyard (head_lower)",
+        "ru": "halyard (head_lower)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "head_lower"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.0225,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.head_lower.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "sheet (head_lower)",
+        "ru": "sheet (head_lower)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "head_lower"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.0325,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.head_lower.downhaul",
+      "role": "downhaul",
+      "name": {
+        "en": "downhaul (head_lower)",
+        "ru": "downhaul (head_lower)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "head_lower"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.0125,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.head_upper.halyard",
+      "role": "halyard",
+      "name": {
+        "en": "halyard (head_upper)",
+        "ru": "halyard (head_upper)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "head_upper"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.0175,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.head_upper.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "sheet (head_upper)",
+        "ru": "sheet (head_upper)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "head_upper"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.0225,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.head_upper.downhaul",
+      "role": "downhaul",
+      "name": {
+        "en": "downhaul (head_upper)",
+        "ru": "downhaul (head_upper)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "head_upper"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.01,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.staysail.halyard",
+      "role": "halyard",
+      "name": {
+        "en": "halyard (staysail)",
+        "ru": "halyard (staysail)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "staysail"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.02,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.staysail.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "sheet (staysail)",
+        "ru": "sheet (staysail)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "staysail"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.025,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.staysail.downhaul",
+      "role": "downhaul",
+      "name": {
+        "en": "downhaul (staysail)",
+        "ru": "downhaul (staysail)"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "staysail"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.0125,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.rn.flag.halyard",
+      "role": "halyard",
+      "name": {
+        "en": "Flag halyard",
+        "ru": "Фал флага"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "flag",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.0075,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.bow.bobstay",
+      "role": "bobstay",
+      "name": {
+        "en": "Bobstay",
+        "ru": "Нижняя поддержка бушприта"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "bowsprit"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.044,
+      "materials": [
+        "wire"
+      ],
+      "material": "wire",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.bow.guy",
+      "role": "guy",
+      "name": {
+        "en": "Bowsprit guy",
+        "ru": "Боковая поддержка бушприта"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "bowsprit"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.034,
+      "materials": [
+        "wire"
+      ],
+      "material": "wire",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ym.bow.backrope",
+      "role": "backrope",
+      "name": {
+        "en": "Bowsprit backrope",
+        "ru": "Обратная поддержка бушприта"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "bowsprit"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.03,
+      "materials": [
+        "wire"
+      ],
+      "material": "wire",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    }
+  ]
+}

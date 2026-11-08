@@ -31,6 +31,10 @@ const CSV_COLUMNS = [
     'diameterModelMm',
     'coefficientBasis',
     'calibrationStatus',
+    'material',
+    'measurementPointId',
+    'sourceIds',
+    'sourceLocator',
 ] as const;
 
 function csvCell(value: unknown): string {
@@ -44,6 +48,7 @@ function csvCell(value: unknown): string {
 
 function resultValue(result: RiggingResult, column: (typeof CSV_COLUMNS)[number]): unknown {
     if (column === 'missingInputIds') return result.missingInputIds.join('|');
+    if (column === 'sourceIds') return result.sourceIds.join('|');
     if (column === 'diameterPrototypeMm' || column === 'diameterModelMm') {
         const value = result[column];
         return value === null ? '' : String(value);

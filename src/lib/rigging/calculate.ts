@@ -1,47 +1,39 @@
 /**
- * Чистое расчётное ядро traditional_plant v1.0.0.
+ * Чистое расчётное ядро.
  *
- * Вычисления идут в миллиметрах прототипа. Диаметр модели получается делением
- * на знаменатель масштаба ровно один раз. Промежуточные значения не
- * округляются; округление — задача представления.
+ * Ядро интерпретирует версионированный документ профиля: правила, базы,
+ * коэффициенты, материалы и источники приходят из JSON. В коде нет ни одного
+ * коэффициента профиля. Вычисления идут в миллиметрах прототипа; диаметр
+ * модели получается делением на знаменатель масштаба ровно один раз.
+ * Промежуточные значения не округляются — округление задача представления.
  */
 
 import {
-    ANCHOR_ROLE_DEFS,
-    ANCHOR_WARNING,
-    BASE_FACTORS,
-    BASE_FACTOR_LABELS,
-    BOW_ROLE_DEFS,
-    BOWSPRIT_WARNING,
-    FORE_AND_AFT_FACTORS,
-    FORE_AND_AFT_ROLE_DEFS,
-    GAFF_ROLE_DEFS,
-    GUN_ROLE_DEFS,
-    GUN_WARNING,
-    GROUP_LABELS,
-    MAST_LABELS,
-    MAST_IDS,
+    MATERIAL_INVARIANCE_NOTE,
     MEASUREMENT_IDS,
     MEASUREMENT_LABELS,
-    PRELIMINARY_FIT_WARNING,
-    PROFILE_WARNINGS,
-    SPRITSAIL_ROLE_DEFS,
-    SPRITSAIL_UNSUPPORTED_ROLES,
-    SQUARE_ROLE_DEFS,
-    STANDING_ROLE_NAMES,
-    TIERS,
-    isSupportedGunMounting,
+    MAST_LABELS,
+    POINT_PROXY_WARNING,
 } from './profile.ts';
 import {
+    validateProfileDocument,
+    type ProfileDocument,
+    type ProfileRule,
+    type RuleBase,
+} from './document.ts';
+import {
     ALGORITHM_VERSION,
-    PROFILE_ID,
-    PROFILE_VERSION,
+    MAST_IDS,
     SCHEMA_VERSION,
     type Calculation,
+    type CalculationSource,
     type CoefficientBasis,
+    type MastId,
+    type Material,
     type Measurement,
     type MeasurementId,
-    type MastId,
+    type MeasurementPointId,
+    type NodeType,
     type NormalizedMeasurement,
     type ReasonCode,
     type RiggingInput,
@@ -58,53 +50,69 @@ const UNIT_TO_MM: Record<UnitId, number> = {
     in: 25.4,
 };
 
-const KNOWN_NODE_TYPES = new Set<RiggingNode['nodeType']>([
+const KNOWN_NODE_TYPES = new Set<NodeType>([
     'lower_mast',
     'topmast',
     'topgallant',
     'yard',
     'fore_and_aft_sail',
     'gaff',
+    'gaff_sail',
+    'boom',
+    'main_sail',
+    'topsail',
+    'head_lower',
+    'head_upper',
+    'staysail',
+    'flag',
+    'lateen_yard',
     'bowsprit',
     'jibboom',
     'flying_jibboom',
     'martingale',
     'spritsail_yard',
+    'hull_group',
     'anchor_group',
     'gun_group',
 ]);
 
-type BaseRef =
-    | { kind: 'mast'; mastId: MastId; label: string }
-    | { kind: 'bowsprit'; label: string }
-    | { kind: 'hullWidth'; label: string }
-    | { kind: 'gunBore'; label: string }
-    | { kind: 'result'; key: string; label: string };
+const MASTS_REQUIRING_SUPPORT = new Set<NodeType>([
+    'fore_and_aft_sail',
+    'gaff',
+    'gaff_sail',
+    'boom',
+    'main_sail',
+    'topsail',
+    'head_lower',
+    'head_upper',
+    'staysail',
+    'flag',
+    'lateen_yard',
+]);
 
-interface RuleSpec {
-    key: string;
-    node: RiggingNode;
-    ruleId: string;
-    ropeId: string;
-    role: string;
-    segmentType: 'rope';
-    nameEn: string;
-    nameRu: string;
-    group: RiggingResult['group'];
-    tier?: Tier;
-    factor: number | null;
-    factorLabel: string;
-    base: BaseRef;
-    coefficientBasis: CoefficientBasis;
-    calibrationStatus: 'not_calibrated' | 'training_set_only';
-    alternativeGroupId?: string;
-    variant?: 'compound' | 'simple';
-    sailRole?: boolean;
-    unsupportedReason?: ReasonCode;
-    notes: string[];
-    sortIndex: number;
-    referenceLabel: string;
-}
+const TIER_BY_NODE_TYPE: Partial<Record<NodeType, Tier>> = {
+    lower_mast: 'lower',
+    topmast: 'topmast',
+    topgallant: 'topgallant',
+};
+
+const SUPPORTED_GUN_MOUNTINGS: ReadonlyArray<{
+    gunType: string;
+    mountingType: string;
+}> = [
+    { gunType: 'carriage_gun', mountingType: 'wheeled' },
+    { gunType: 'carronade', mountingType: 'slide_pivot' },
+];
+
+type BaseRef =
+    | {
+          kind: 'measurement';
+          measurementId: MeasurementId;
+          label: string;
+          multiplier: number;
+          multiplierLabel: string;
+      }
+    | { kind: 'rule'; label: string };
 
 interface ResolvedRule {
     status: RiggingResult['status'];
@@ -112,9 +120,22 @@ interface ResolvedRule {
     missingInputIds: MeasurementId[];
     diameterPrototypeMm: number | null;
     diameterModelMm: number | null;
+    measurementPointId: MeasurementPointId | null;
     formula: string | null;
     trace: string[];
     warnings: string[];
+}
+
+interface RuleSpec {
+    key: string;
+    node: RiggingNode;
+    rule: ProfileRule;
+    base: BaseRef;
+    coefficientBasis: CoefficientBasis;
+    calibrationStatus: 'not_calibrated' | 'training_set_only';
+    material: Material;
+    factorLabel: string;
+    sortIndex: number;
 }
 
 const EMPTY_RESOLVED: ResolvedRule = {
@@ -123,6 +144,7 @@ const EMPTY_RESOLVED: ResolvedRule = {
     missingInputIds: [],
     diameterPrototypeMm: null,
     diameterModelMm: null,
+    measurementPointId: null,
     formula: null,
     trace: [],
     warnings: [],
@@ -133,8 +155,7 @@ function resultKey(nodeId: string, ruleId: string): string {
 }
 
 function fixed(value: number, digits = 3): string {
-    const rounded = Number(value.toFixed(digits));
-    return String(rounded);
+    return String(Number(value.toFixed(digits)));
 }
 
 function validPositive(value: unknown): value is number {
@@ -145,32 +166,68 @@ function unique<T>(values: T[]): T[] {
     return [...new Set(values)];
 }
 
-function measurementActive(input: RiggingInput, measurementId: MeasurementId): boolean {
-    const nodes = input.nodes;
+function mastIdOfNode(node: RiggingNode): MastId | null {
+    if (node.ownerType === 'mast' && (MAST_IDS as readonly string[]).includes(node.ownerId)) {
+        return node.ownerId as MastId;
+    }
+    if (node.supportingMastId) return node.supportingMastId;
+    return null;
+}
 
+function tierOfNode(node: RiggingNode): Tier | undefined {
+    return node.tier ?? TIER_BY_NODE_TYPE[node.nodeType];
+}
+
+function factorLabelOf(rule: ProfileRule): string {
+    if (rule.factor === null) return '—';
+    return rule.factorLabel ?? fixed(rule.factor, 4);
+}
+
+function isSupportedGunMounting(
+    gunType: string | undefined,
+    mountingType: string | undefined,
+): boolean {
+    if (!gunType || !mountingType) return false;
+    return SUPPORTED_GUN_MOUNTINGS.some(
+        (entry) => entry.gunType === gunType && entry.mountingType === mountingType,
+    );
+}
+
+function measurementActive(input: RiggingInput, measurementId: MeasurementId): boolean {
     if (measurementId.startsWith('mast.')) {
         const mastId = measurementId.split('.')[1] as MastId;
-        const lower = nodes.find(
+        const lower = input.nodes.find(
             (node) => node.nodeType === 'lower_mast' && node.ownerId === mastId,
         );
         return lower ? lower.present !== false : false;
     }
     if (measurementId === 'bowsprit.diameter') {
-        const node = nodes.find((entry) => entry.nodeType === 'bowsprit');
+        const node = input.nodes.find((entry) => entry.nodeType === 'bowsprit');
         return node ? node.present !== false : false;
     }
     if (measurementId === 'hull.width') {
-        const node = nodes.find((entry) => entry.nodeType === 'anchor_group');
+        const node = input.nodes.find((entry) => entry.nodeType === 'anchor_group');
         return node ? node.present !== false : false;
     }
     if (measurementId === 'gun.bore') {
-        const node = nodes.find((entry) => entry.nodeType === 'gun_group');
+        const node = input.nodes.find((entry) => entry.nodeType === 'gun_group');
         return node ? node.present !== false : false;
     }
     return false;
 }
 
-function validate(input: RiggingInput): ValidationIssue[] {
+function* allMeasurements(
+    input: RiggingInput,
+): Generator<[MeasurementId, Measurement | null | undefined]> {
+    yield [MEASUREMENT_IDS.mast('fore'), input.measurements.mastDiameter.fore];
+    yield [MEASUREMENT_IDS.mast('main'), input.measurements.mastDiameter.main];
+    yield [MEASUREMENT_IDS.mast('mizzen'), input.measurements.mastDiameter.mizzen];
+    yield [MEASUREMENT_IDS.bowsprit, input.measurements.bowspritDiameter];
+    yield [MEASUREMENT_IDS.hullWidth, input.measurements.hullWidth];
+    yield [MEASUREMENT_IDS.gunBore, input.measurements.gunBore];
+}
+
+function validate(input: RiggingInput, document: ProfileDocument): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
 
     if (!validPositive(input.scaleDenominator)) {
@@ -178,6 +235,36 @@ function validate(input: RiggingInput): ValidationIssue[] {
             code: 'INVALID_SCALE',
             field: 'scaleDenominator',
             message: 'Model scale must be a finite number greater than zero (1:S, S > 0).',
+        });
+    }
+
+    if (typeof input.profileId !== 'string' || input.profileId === '') {
+        issues.push({
+            code: 'PROFILE_REQUIRED',
+            field: 'profileId',
+            message: 'An explicit profileId is required; the profile is never substituted silently.',
+        });
+    } else if (input.profileId !== document.profile.profileId) {
+        issues.push({
+            code: 'PROFILE_MISMATCH',
+            field: 'profileId',
+            message: `Input profileId ${input.profileId} does not match the supplied document ${document.profile.profileId}.`,
+        });
+    }
+
+    if (input.profileVersion && input.profileVersion !== document.profile.profileVersion) {
+        issues.push({
+            code: 'PROFILE_VERSION_MISMATCH',
+            field: 'profileVersion',
+            message: `Requested profile version ${input.profileVersion} is not ${document.profile.profileVersion}.`,
+        });
+    }
+
+    for (const documentIssue of validateProfileDocument(document)) {
+        issues.push({
+            code: 'PROFILE_CONTRACT_VIOLATION',
+            field: 'profileDocument',
+            message: documentIssue,
         });
     }
 
@@ -263,7 +350,7 @@ function validate(input: RiggingInput): ValidationIssue[] {
 
     for (const node of input.nodes) {
         if (
-            (node.nodeType === 'fore_and_aft_sail' || node.nodeType === 'gaff') &&
+            MASTS_REQUIRING_SUPPORT.has(node.nodeType) &&
             node.present !== false &&
             !node.supportingMastId
         ) {
@@ -290,17 +377,6 @@ function validate(input: RiggingInput): ValidationIssue[] {
     return issues;
 }
 
-function* allMeasurements(
-    input: RiggingInput,
-): Generator<[MeasurementId, Measurement | null | undefined]> {
-    yield [MEASUREMENT_IDS.mast('fore'), input.measurements.mastDiameter.fore];
-    yield [MEASUREMENT_IDS.mast('main'), input.measurements.mastDiameter.main];
-    yield [MEASUREMENT_IDS.mast('mizzen'), input.measurements.mastDiameter.mizzen];
-    yield [MEASUREMENT_IDS.bowsprit, input.measurements.bowspritDiameter];
-    yield [MEASUREMENT_IDS.hullWidth, input.measurements.hullWidth];
-    yield [MEASUREMENT_IDS.gunBore, input.measurements.gunBore];
-}
-
 function normalizeMeasurement(
     measurementId: MeasurementId,
     measurement: Measurement,
@@ -320,61 +396,6 @@ function normalizeMeasurement(
     };
 }
 
-function baseMeasurementId(base: BaseRef): MeasurementId | null {
-    if (base.kind === 'mast') return MEASUREMENT_IDS.mast(base.mastId);
-    if (base.kind === 'bowsprit') return MEASUREMENT_IDS.bowsprit;
-    if (base.kind === 'hullWidth') return MEASUREMENT_IDS.hullWidth;
-    if (base.kind === 'gunBore') return MEASUREMENT_IDS.gunBore;
-    return null;
-}
-
-function baseLabel(base: BaseRef): string {
-    if (base.kind === 'mast') return `${base.label} (${MAST_LABELS[base.mastId].en})`;
-    if (base.kind === 'bowsprit') return base.label;
-    if (base.kind === 'hullWidth') return base.label;
-    if (base.kind === 'gunBore') return base.label;
-    return base.label;
-}
-
-function baseFormula(
-    base: BaseRef,
-    measurement: NormalizedMeasurement | null,
-): string | null {
-    if (!measurement) return null;
-
-    if (base.kind === 'mast') {
-        return `B_m = ${BASE_FACTOR_LABELS.mast} × D_m = ${fixed(measurement.modelMm * BASE_FACTORS.mast)} mm`;
-    }
-    if (base.kind === 'bowsprit') {
-        return `N = ${BASE_FACTOR_LABELS.bowsprit} × D_b = ${fixed(measurement.modelMm * BASE_FACTORS.bowsprit)} mm`;
-    }
-    if (base.kind === 'hullWidth') {
-        return `A = ${BASE_FACTOR_LABELS.anchor} × W = ${fixed(measurement.modelMm * BASE_FACTORS.anchor)} mm`;
-    }
-    if (base.kind === 'gunBore') {
-        return `K = ${fixed(measurement.modelMm)} mm`;
-    }
-    return null;
-}
-
-function baseModelMm(
-    base: BaseRef,
-    measurement: NormalizedMeasurement | null,
-): number | null {
-    if (!measurement) return null;
-    if (base.kind === 'mast') return measurement.modelMm * BASE_FACTORS.mast;
-    if (base.kind === 'bowsprit') return measurement.modelMm * BASE_FACTORS.bowsprit;
-    if (base.kind === 'hullWidth') return measurement.modelMm * BASE_FACTORS.anchor;
-    if (base.kind === 'gunBore') return measurement.modelMm;
-    return null;
-}
-
-function measurementTrace(measurement: NormalizedMeasurement): string {
-    const unit = measurement.unitId;
-    const basis = measurement.basis;
-    return `${MEASUREMENT_LABELS[measurement.measurementId] ?? measurement.measurementId} = ${fixed(measurement.rawValue)} ${unit} (${basis}) → ${fixed(measurement.realMm)} mm prototype`;
-}
-
 function reasonText(reasonCode: ReasonCode | undefined): string {
     switch (reasonCode) {
         case 'node_absent':
@@ -384,7 +405,7 @@ function reasonText(reasonCode: ReasonCode | undefined): string {
         case 'rule_not_supported':
             return 'No supported coefficient is defined for this role.';
         case 'material_not_supported':
-            return 'The requested chain or metal element is outside this estimation profile.';
+            return 'The requested material or element is outside this estimation profile.';
         case 'installation_not_supported':
             return 'This gun and mounting combination is not supported by the profile.';
         case 'configuration_required':
@@ -398,625 +419,173 @@ function reasonText(reasonCode: ReasonCode | undefined): string {
     }
 }
 
-function factorLabel(factor: number): string {
-    return fixed(factor, 4);
+/** Какие узлы попадают под правило. Порядок — порядок узлов во входе. */
+function selectNodes(nodes: RiggingNode[], rule: ProfileRule): RiggingNode[] {
+    return nodes.filter((node) => {
+        if (node.nodeType !== rule.select.nodeType) return false;
+        if (
+            rule.select.tier !== undefined &&
+            rule.select.tier !== null &&
+            node.tier !== rule.select.tier
+        ) {
+            return false;
+        }
+        if (
+            rule.select.sailClass !== undefined &&
+            rule.select.sailClass !== null &&
+            node.sailClass !== rule.select.sailClass
+        ) {
+            return false;
+        }
+        return true;
+    });
 }
 
-function makeSpec(
-    params: Omit<RuleSpec, 'key' | 'sortIndex' | 'factorLabel' | 'referenceLabel'> & {
-        key?: string;
-        sortIndex?: number;
-        factorLabel?: string;
-        referenceLabel?: string;
-    },
-    sortIndex: number,
-): RuleSpec {
-    return {
-        ...params,
-        key: params.key ?? resultKey(params.node.nodeId, params.ruleId),
-        factorLabel: params.factorLabel ?? (params.factor === null ? '—' : factorLabel(params.factor)),
-        referenceLabel: params.referenceLabel ?? baseLabel(params.base),
-        sortIndex,
-    };
-}
-
-function findMastNode(
+function thickestMastId(
     nodes: RiggingNode[],
-    mastId: MastId,
-    nodeType: 'lower_mast' | 'topmast' | 'topgallant',
-): RiggingNode | undefined {
-    return nodes.find((node) => node.nodeType === nodeType && node.ownerId === mastId);
-}
-
-function findYardNode(nodes: RiggingNode[], mastId: MastId, tier: Tier): RiggingNode | undefined {
-    return nodes.find(
-        (node) => node.nodeType === 'yard' && node.ownerId === mastId && node.tier === tier,
-    );
-}
-
-function buildMastSpecs(specs: RuleSpec[], input: RiggingInput): void {
-    let sortIndex = specs.length;
-
-    const addStanding = (
-        node: RiggingNode | undefined,
-        tier: Tier,
-        role: string,
-        factor: number,
-        base: BaseRef,
-        preliminary: boolean,
-    ): void => {
-        if (!node) return;
-        const names = STANDING_ROLE_NAMES[role] ?? { en: role, ru: role };
-
-        specs.push(
-            makeSpec(
-                {
-                    node,
-                    ruleId: role,
-                    ropeId: role,
-                    role,
-                    segmentType: 'rope',
-                    nameEn: names.en,
-                    nameRu: names.ru,
-                    group: 'standing',
-                    tier,
-                    factor,
-                    base,
-                    coefficientBasis: preliminary ? 'preliminary_fit' : 'engineering_assumption',
-                    calibrationStatus: preliminary ? 'training_set_only' : 'not_calibrated',
-                    notes: preliminary ? [PRELIMINARY_FIT_WARNING] : [],
-                },
-                sortIndex++,
-            ),
+    normalized: Map<MeasurementId, NormalizedMeasurement>,
+): MastId | null {
+    let best: { mastId: MastId; modelMm: number } | null = null;
+    for (const mastId of MAST_IDS) {
+        const lower = nodes.find(
+            (node) => node.nodeType === 'lower_mast' && node.ownerId === mastId,
         );
+        if (!lower || lower.present === false) continue;
+        const measurement = normalized.get(MEASUREMENT_IDS.mast(mastId));
+        if (!measurement) continue;
+        if (!best || measurement.modelMm > best.modelMm) {
+            best = { mastId, modelMm: measurement.modelMm };
+        }
+    }
+    return best?.mastId ?? null;
+}
+
+function mastForScope(
+    base: RuleBase,
+    node: RiggingNode,
+    nodes: RiggingNode[],
+    normalized: Map<MeasurementId, NormalizedMeasurement>,
+): MastId | null {
+    const scope = base.scope ?? 'own';
+    if (scope === 'fore') return 'fore';
+    if (scope === 'thickest') return thickestMastId(nodes, normalized);
+    if (scope === 'supporting') return node.supportingMastId ?? null;
+    return mastIdOfNode(node);
+}
+
+function baseForRule(
+    rule: ProfileRule,
+    node: RiggingNode,
+    document: ProfileDocument,
+    nodes: RiggingNode[],
+    normalized: Map<MeasurementId, NormalizedMeasurement>,
+): BaseRef {
+    const base = rule.base;
+    const labels = document.profile.baseLabels;
+    const factorLabels = document.profile.baseFactorLabels ?? {};
+
+    if (base.kind === 'rule') {
+        return { kind: 'rule', label: base.ruleId ?? '' };
+    }
+
+    const measurementBase = (
+        kind: 'mast' | 'thickestMast' | 'bowsprit' | 'hullWidth' | 'gunBore',
+    ): BaseRef => {
+        const multiplier = document.profile.bases[kind];
+        const multiplierLabel = factorLabels[kind] ?? fixed(multiplier, 4);
+
+        if (kind === 'mast' || kind === 'thickestMast') {
+            const mastId = mastForScope(base, node, nodes, normalized) ?? 'main';
+            const label =
+                kind === 'thickestMast'
+                    ? `${labels.thickestMast} (${MAST_LABELS[mastId].en})`
+                    : `${labels.mast} (${MAST_LABELS[mastId].en})`;
+            return {
+                kind: 'measurement',
+                measurementId: MEASUREMENT_IDS.mast(mastId),
+                label,
+                multiplier,
+                multiplierLabel,
+            };
+        }
+        if (kind === 'bowsprit') {
+            return {
+                kind: 'measurement',
+                measurementId: MEASUREMENT_IDS.bowsprit,
+                label: labels.bowsprit,
+                multiplier,
+                multiplierLabel,
+            };
+        }
+        if (kind === 'hullWidth') {
+            return {
+                kind: 'measurement',
+                measurementId: MEASUREMENT_IDS.hullWidth,
+                label: labels.hullWidth,
+                multiplier,
+                multiplierLabel,
+            };
+        }
+        return {
+            kind: 'measurement',
+            measurementId: MEASUREMENT_IDS.gunBore,
+            label: labels.gunBore,
+            multiplier,
+            multiplierLabel,
+        };
     };
 
-    for (const mastId of MAST_IDS) {
-        const lower = findMastNode(input.nodes, mastId, 'lower_mast');
-        const topmast = findMastNode(input.nodes, mastId, 'topmast');
-        const topgallant = findMastNode(input.nodes, mastId, 'topgallant');
-
-        const mastBase: BaseRef = {
-            kind: 'mast',
-            mastId,
-            label: 'B_m',
-        };
-
-        const preliminary =
-            mastId === 'fore' || mastId === 'main';
-
-        if (lower) {
-            const stayKey = resultKey(lower.nodeId, 'st.lower.stay');
-            const shroudKey = resultKey(lower.nodeId, 'st.lower.shroud');
-            const backstayKey = resultKey(lower.nodeId, 'st.lower.backstay');
-            const preventerKey = resultKey(lower.nodeId, 'st.lower.preventer');
-
-            addStanding(lower, 'lower', 'st.lower.stay', 1, mastBase, preliminary);
-            addStanding(
-                lower,
-                'lower',
-                'st.lower.shroud',
-                0.55,
-                { kind: 'result', key: stayKey, label: 'lower stay' },
-                preliminary,
-            );
-            addStanding(lower, 'lower', 'st.lower.backstay', 0.5, mastBase, false);
-            addStanding(
-                lower,
-                'lower',
-                'st.lower.preventer',
-                0.7,
-                { kind: 'result', key: stayKey, label: 'lower stay' },
-                false,
-            );
-            addStanding(
-                lower,
-                'lower',
-                'st.lower.shroud_lanyard',
-                0.5,
-                { kind: 'result', key: shroudKey, label: 'lower shrouds' },
-                false,
-            );
-            addStanding(
-                lower,
-                'lower',
-                'st.lower.backstay_lanyard',
-                0.5,
-                { kind: 'result', key: backstayKey, label: 'lower backstays' },
-                false,
-            );
-            addStanding(
-                lower,
-                'lower',
-                'st.lower.stay_lanyard',
-                0.35,
-                { kind: 'result', key: stayKey, label: 'lower stay' },
-                false,
-            );
-            addStanding(
-                lower,
-                'lower',
-                'st.lower.preventer_lanyard',
-                0.35,
-                { kind: 'result', key: preventerKey, label: 'lower preventer stay' },
-                false,
-            );
-            addStanding(
-                lower,
-                'lower',
-                'st.lower.ratline',
-                0.34,
-                { kind: 'result', key: shroudKey, label: 'lower shrouds' },
-                false,
-            );
-        }
-
-        if (topmast) {
-            const stayKey = resultKey(topmast.nodeId, 'st.topmast.stay');
-            const shroudKey = resultKey(topmast.nodeId, 'st.topmast.shroud');
-            const backstayKey = resultKey(topmast.nodeId, 'st.topmast.backstay');
-            const preventerKey = resultKey(topmast.nodeId, 'st.topmast.preventer');
-
-            addStanding(topmast, 'topmast', 'st.topmast.stay', 0.6, mastBase, false);
-            addStanding(topmast, 'topmast', 'st.topmast.shroud', 0.33, mastBase, false);
-            addStanding(topmast, 'topmast', 'st.topmast.backstay', 0.4, mastBase, false);
-            addStanding(
-                topmast,
-                'topmast',
-                'st.topmast.preventer',
-                0.7,
-                { kind: 'result', key: stayKey, label: 'topmast stay' },
-                false,
-            );
-            addStanding(
-                topmast,
-                'topmast',
-                'st.topmast.shroud_lanyard',
-                0.5,
-                { kind: 'result', key: shroudKey, label: 'topmast shrouds' },
-                false,
-            );
-            addStanding(
-                topmast,
-                'topmast',
-                'st.topmast.backstay_lanyard',
-                0.5,
-                { kind: 'result', key: backstayKey, label: 'topmast backstays' },
-                false,
-            );
-            addStanding(
-                topmast,
-                'topmast',
-                'st.topmast.stay_lanyard',
-                0.35,
-                { kind: 'result', key: stayKey, label: 'topmast stay' },
-                false,
-            );
-            addStanding(
-                topmast,
-                'topmast',
-                'st.topmast.preventer_lanyard',
-                0.35,
-                { kind: 'result', key: preventerKey, label: 'topmast preventer stay' },
-                false,
-            );
-            addStanding(
-                topmast,
-                'topmast',
-                'st.topmast.ratline',
-                0.34,
-                { kind: 'result', key: shroudKey, label: 'topmast shrouds' },
-                false,
-            );
-            if (lower) {
-                addStanding(
-                    topmast,
-                    'topmast',
-                    'st.futtock.lower',
-                    0.7,
-                    {
-                        kind: 'result',
-                        key: resultKey(lower.nodeId, 'st.lower.shroud'),
-                        label: 'lower shrouds',
-                    },
-                    false,
-                );
-            }
-        }
-
-        if (topgallant) {
-            const stayKey = resultKey(topgallant.nodeId, 'st.topgallant.stay');
-            const shroudKey = resultKey(topgallant.nodeId, 'st.topgallant.shroud');
-            const backstayKey = resultKey(topgallant.nodeId, 'st.topgallant.backstay');
-
-            addStanding(topgallant, 'topgallant', 'st.topgallant.stay', 0.35, mastBase, false);
-            addStanding(topgallant, 'topgallant', 'st.topgallant.shroud', 0.2, mastBase, false);
-            addStanding(topgallant, 'topgallant', 'st.topgallant.backstay', 0.25, mastBase, false);
-            addStanding(
-                topgallant,
-                'topgallant',
-                'st.topgallant.shroud_lanyard',
-                0.5,
-                { kind: 'result', key: shroudKey, label: 'topgallant shrouds' },
-                false,
-            );
-            addStanding(
-                topgallant,
-                'topgallant',
-                'st.topgallant.backstay_lanyard',
-                0.5,
-                { kind: 'result', key: backstayKey, label: 'topgallant backstays' },
-                false,
-            );
-            addStanding(
-                topgallant,
-                'topgallant',
-                'st.topgallant.stay_lanyard',
-                0.35,
-                { kind: 'result', key: stayKey, label: 'topgallant stay' },
-                false,
-            );
-            addStanding(
-                topgallant,
-                'topgallant',
-                'st.topgallant.ratline',
-                0.34,
-                { kind: 'result', key: shroudKey, label: 'topgallant shrouds' },
-                false,
-            );
-            if (topmast) {
-                addStanding(
-                    topgallant,
-                    'topgallant',
-                    'st.futtock.upper',
-                    0.7,
-                    {
-                        kind: 'result',
-                        key: resultKey(topmast.nodeId, 'st.topmast.shroud'),
-                        label: 'topmast shrouds',
-                    },
-                    false,
-                );
-            }
-        }
-    }
+    return measurementBase(base.kind as 'mast' | 'thickestMast' | 'bowsprit' | 'hullWidth' | 'gunBore');
 }
 
-function buildSquareSpecs(specs: RuleSpec[], input: RiggingInput): void {
-    let sortIndex = specs.length;
-
-    for (const mastId of MAST_IDS) {
-        for (const tier of TIERS) {
-            const yard = findYardNode(input.nodes, mastId, tier);
-            if (!yard) continue;
-
-            const mastBase: BaseRef = { kind: 'mast', mastId, label: 'B_m' };
-
-            for (const roleDef of SQUARE_ROLE_DEFS) {
-                const factor = roleDef.factors[tier];
-                specs.push(
-                    makeSpec(
-                        {
-                            node: yard,
-                            ruleId: `rn.square.${tier}.${roleDef.role}`,
-                            ropeId: `rn.square.${tier}.${roleDef.role}`,
-                            role: roleDef.role,
-                            segmentType: 'rope',
-                            nameEn: roleDef.nameEn,
-                            nameRu: roleDef.nameRu,
-                            group: 'running',
-                            tier,
-                            factor,
-                            base: mastBase,
-                            coefficientBasis: 'engineering_assumption',
-                            calibrationStatus: 'not_calibrated',
-                            alternativeGroupId: roleDef.alternativeGroupId,
-                            variant: roleDef.variant,
-                            sailRole: roleDef.sailRole,
-                            unsupportedReason: factor === null ? 'rule_not_supported' : undefined,
-                            notes: [],
-                        },
-                        sortIndex++,
-                    ),
-                );
-            }
-        }
-    }
-}
-
-function buildForeAndAftSpecs(specs: RuleSpec[], input: RiggingInput): void {
-    let sortIndex = specs.length;
-
-    for (const node of input.nodes) {
-        if (node.nodeType !== 'fore_and_aft_sail') continue;
-        const sailClass = node.sailClass;
-        if (!sailClass) continue;
-        const mastId = node.supportingMastId;
-        if (!mastId) continue;
-
-        const mastBase: BaseRef = { kind: 'mast', mastId, label: 'B_m' };
-
-        for (const roleDef of FORE_AND_AFT_ROLE_DEFS) {
-            const factor = FORE_AND_AFT_FACTORS[sailClass][roleDef.role];
-            specs.push(
-                makeSpec(
-                    {
-                        node,
-                        ruleId: `rn.foreandaft.${sailClass}.${roleDef.role}`,
-                        ropeId: `rn.foreandaft.${sailClass}.${roleDef.role}`,
-                        role: roleDef.role,
-                        segmentType: 'rope',
-                        nameEn: roleDef.nameEn,
-                        nameRu: roleDef.nameRu,
-                        group: 'running',
-                        factor,
-                        base: mastBase,
-                        coefficientBasis: 'engineering_assumption',
-                        calibrationStatus: 'not_calibrated',
-                        notes: [],
-                    },
-                    sortIndex++,
-                ),
-            );
-        }
-    }
-}
-
-function buildGaffSpecs(specs: RuleSpec[], input: RiggingInput): void {
-    let sortIndex = specs.length;
-
-    for (const node of input.nodes) {
-        if (node.nodeType !== 'gaff') continue;
-        const mastId = node.supportingMastId;
-        if (!mastId) continue;
-
-        const mastBase: BaseRef = { kind: 'mast', mastId, label: 'B_m' };
-
-        for (const roleDef of GAFF_ROLE_DEFS) {
-            specs.push(
-                makeSpec(
-                    {
-                        node,
-                        ruleId: `rn.gaff.${roleDef.role}`,
-                        ropeId: `rn.gaff.${roleDef.role}`,
-                        role: roleDef.role,
-                        segmentType: 'rope',
-                        nameEn: roleDef.nameEn,
-                        nameRu: roleDef.nameRu,
-                        group: 'running',
-                        factor: roleDef.factor,
-                        base: mastBase,
-                        coefficientBasis: 'engineering_assumption',
-                        calibrationStatus: 'not_calibrated',
-                        sailRole: roleDef.sailRole,
-                        notes: [],
-                    },
-                    sortIndex++,
-                ),
-            );
-        }
-    }
-}
-
-function buildBowspritSpecs(specs: RuleSpec[], input: RiggingInput): void {
-    let sortIndex = specs.length;
-    const bowBase: BaseRef = { kind: 'bowsprit', label: 'N' };
-
-    const nodeTypes: Array<'bowsprit' | 'jibboom' | 'flying_jibboom' | 'martingale'> = [
-        'bowsprit',
-        'jibboom',
-        'flying_jibboom',
-        'martingale',
-    ];
-
-    for (const nodeType of nodeTypes) {
-        for (const node of input.nodes) {
-            if (node.nodeType !== nodeType) continue;
-
-            for (const def of BOW_ROLE_DEFS[nodeType]) {
-                const parentKey = resultKey(node.nodeId, `bow.${def.role}`);
-                specs.push(
-                    makeSpec(
-                        {
-                            node,
-                            ruleId: `bow.${def.role}`,
-                            ropeId: `bow.${def.role}`,
-                            role: def.role,
-                            segmentType: 'rope',
-                            nameEn: def.nameEn,
-                            nameRu: def.nameRu,
-                            group: 'bowsprit',
-                            factor: def.factor,
-                            base: bowBase,
-                            coefficientBasis: 'engineering_assumption',
-                            calibrationStatus: 'not_calibrated',
-                            notes: [BOWSPRIT_WARNING],
-                        },
-                        sortIndex++,
-                    ),
-                );
-
-                if (def.lanyard) {
-                    specs.push(
-                        makeSpec(
-                            {
-                                node,
-                                ruleId: `bow.${def.role}.lanyard`,
-                                ropeId: `bow.${def.role}.lanyard`,
-                                role: `${def.role}_lanyard`,
-                                segmentType: 'rope',
-                                nameEn: `${def.nameEn} lanyard`,
-                                nameRu: `Ланьяр: ${def.nameRu.toLowerCase()}`,
-                                group: 'bowsprit',
-                                factor: 0.35,
-                                base: {
-                                    kind: 'result',
-                                    key: parentKey,
-                                    label: `${def.nameEn.toLowerCase()} diameter`,
-                                },
-                                coefficientBasis: 'engineering_assumption',
-                                calibrationStatus: 'not_calibrated',
-                                notes: [BOWSPRIT_WARNING],
-                            },
-                            sortIndex++,
-                        ),
-                    );
-                }
-            }
-        }
-    }
-}
-
-function buildSpritsailSpecs(specs: RuleSpec[], input: RiggingInput): void {
-    let sortIndex = specs.length;
-    const bowBase: BaseRef = { kind: 'bowsprit', label: 'N' };
-
-    for (const node of input.nodes) {
-        if (node.nodeType !== 'spritsail_yard') continue;
-
-        for (const roleDef of SPRITSAIL_ROLE_DEFS) {
-            specs.push(
-                makeSpec(
-                    {
-                        node,
-                        ruleId: `rn.spritsail.${roleDef.role}`,
-                        ropeId: `rn.spritsail.${roleDef.role}`,
-                        role: roleDef.role,
-                        segmentType: 'rope',
-                        nameEn: roleDef.nameEn,
-                        nameRu: roleDef.nameRu,
-                        group: 'bowsprit',
-                        factor: roleDef.factor,
-                        base: bowBase,
-                        coefficientBasis: 'engineering_assumption',
-                        calibrationStatus: 'not_calibrated',
-                        sailRole: roleDef.sailRole,
-                        notes: [BOWSPRIT_WARNING],
-                    },
-                    sortIndex++,
-                ),
-            );
-        }
-
-        const unsupportedNames: Record<
-            (typeof SPRITSAIL_UNSUPPORTED_ROLES)[number],
-            { en: string; ru: string }
-        > = {
-            tack: { en: 'Spritsail tack', ru: 'Галс блинда-паруса' },
-            bowline: { en: 'Spritsail bowline', ru: 'Булинь блинда-паруса' },
-            reef_fall: { en: 'Spritsail reef fall', ru: 'Риф-тали блинда-паруса' },
-        };
-
-        for (const role of SPRITSAIL_UNSUPPORTED_ROLES) {
-            specs.push(
-                makeSpec(
-                    {
-                        node,
-                        ruleId: `rn.spritsail.${role}`,
-                        ropeId: `rn.spritsail.${role}`,
-                        role,
-                        segmentType: 'rope',
-                        nameEn: unsupportedNames[role].en,
-                        nameRu: unsupportedNames[role].ru,
-                        group: 'bowsprit',
-                        factor: null,
-                        base: bowBase,
-                        coefficientBasis: 'engineering_assumption',
-                        calibrationStatus: 'not_calibrated',
-                        sailRole: true,
-                        unsupportedReason: 'rule_not_supported',
-                        notes: [BOWSPRIT_WARNING],
-                    },
-                    sortIndex++,
-                ),
-            );
-        }
-    }
-}
-
-function buildAnchorSpecs(specs: RuleSpec[], input: RiggingInput): void {
-    let sortIndex = specs.length;
-    const anchorBase: BaseRef = { kind: 'hullWidth', label: 'A' };
-
-    for (const node of input.nodes) {
-        if (node.nodeType !== 'anchor_group') continue;
-
-        for (const roleDef of ANCHOR_ROLE_DEFS) {
-            const chainCable =
-                node.anchorConnection === 'chain' &&
-                (roleDef.role === 'bower_cable' || roleDef.role === 'kedge_cable');
-
-            specs.push(
-                makeSpec(
-                    {
-                        node,
-                        ruleId: `anchor.${roleDef.role}`,
-                        ropeId: `anchor.${roleDef.role}`,
-                        role: roleDef.role,
-                        segmentType: 'rope',
-                        nameEn: roleDef.nameEn,
-                        nameRu: roleDef.nameRu,
-                        group: 'anchor',
-                        factor: roleDef.factor,
-                        base: anchorBase,
-                        coefficientBasis: 'engineering_assumption',
-                        calibrationStatus: 'not_calibrated',
-                        unsupportedReason: chainCable ? 'material_not_supported' : undefined,
-                        notes: [ANCHOR_WARNING],
-                    },
-                    sortIndex++,
-                ),
-            );
-        }
-    }
-}
-
-function buildGunSpecs(specs: RuleSpec[], input: RiggingInput): void {
-    let sortIndex = specs.length;
-    const gunBase: BaseRef = { kind: 'gunBore', label: 'K' };
-
-    for (const node of input.nodes) {
-        if (node.nodeType !== 'gun_group') continue;
-
-        const supported = isSupportedGunMounting(node.gunType, node.mountingType);
-
-        for (const roleDef of GUN_ROLE_DEFS) {
-            specs.push(
-                makeSpec(
-                    {
-                        node,
-                        ruleId: `gun.${roleDef.role}`,
-                        ropeId: `gun.${roleDef.role}`,
-                        role: roleDef.role,
-                        segmentType: 'rope',
-                        nameEn: roleDef.nameEn,
-                        nameRu: roleDef.nameRu,
-                        group: 'gun',
-                        factor: roleDef.factor,
-                        base: gunBase,
-                        coefficientBasis: 'engineering_assumption',
-                        calibrationStatus: 'not_calibrated',
-                        unsupportedReason: supported ? undefined : 'installation_not_supported',
-                        notes: [GUN_WARNING],
-                    },
-                    sortIndex++,
-                ),
-            );
-        }
-    }
-}
-
-function buildSpecs(input: RiggingInput): RuleSpec[] {
+function buildSpecs(
+    input: RiggingInput,
+    document: ProfileDocument,
+    normalized: Map<MeasurementId, NormalizedMeasurement>,
+): RuleSpec[] {
     const specs: RuleSpec[] = [];
-    buildMastSpecs(specs, input);
-    buildSquareSpecs(specs, input);
-    buildForeAndAftSpecs(specs, input);
-    buildGaffSpecs(specs, input);
-    buildBowspritSpecs(specs, input);
-    buildSpritsailSpecs(specs, input);
-    buildAnchorSpecs(specs, input);
-    buildGunSpecs(specs, input);
+    let sortIndex = 0;
+
+    for (const rule of document.rules) {
+        for (const node of selectNodes(input.nodes, rule)) {
+            const mastId = mastIdOfNode(node);
+            const override = mastId ? rule.perMastOverrides?.[mastId] : undefined;
+            const base = baseForRule(rule, node, document, input.nodes, normalized);
+
+            specs.push({
+                key: resultKey(node.nodeId, rule.ruleId),
+                node,
+                rule,
+                base,
+                coefficientBasis: override?.coefficientBasis ?? rule.coefficientBasis,
+                calibrationStatus: override?.calibrationStatus ?? rule.calibrationStatus,
+                material: rule.material ?? rule.materials[0] ?? 'unknown',
+                factorLabel: factorLabelOf(rule),
+                sortIndex: sortIndex++,
+            });
+        }
+    }
+
     return specs;
+}
+
+function measurementTrace(measurement: NormalizedMeasurement): string {
+    return `${MEASUREMENT_LABELS[measurement.measurementId] ?? measurement.measurementId} = ${fixed(measurement.rawValue)} ${measurement.unitId} (${measurement.basis}) → ${fixed(measurement.realMm)} mm prototype`;
+}
+
+function findParentSpec(
+    specs: RuleSpec[],
+    child: RuleSpec,
+    base: RuleBase,
+): RuleSpec | undefined {
+    const childMast = mastIdOfNode(child.node);
+    return specs.find((candidate) => {
+        if (candidate.rule.ruleId !== base.ruleId) return false;
+        if (base.nodeType && candidate.node.nodeType !== base.nodeType) return false;
+        if (base.tier && candidate.node.tier !== base.tier) return false;
+        if (!base.nodeType && candidate.node.nodeId !== child.node.nodeId) return false;
+        return mastIdOfNode(candidate.node) === childMast;
+    });
 }
 
 function resolveSpecs(
@@ -1024,7 +593,6 @@ function resolveSpecs(
     normalized: Map<MeasurementId, NormalizedMeasurement>,
     scaleDenominator: number,
 ): Map<string, ResolvedRule> {
-    const specMap = new Map(specs.map((spec) => [spec.key, spec]));
     const resolved = new Map<string, ResolvedRule>();
     const visiting = new Set<string>();
 
@@ -1034,13 +602,8 @@ function resolveSpecs(
 
         if (visiting.has(spec.key)) {
             const cycle: ResolvedRule = {
-                status: 'unsupported',
-                reasonCode: 'dependency_unavailable',
-                missingInputIds: [],
-                diameterPrototypeMm: null,
-                diameterModelMm: null,
-                formula: null,
-                trace: [`Rule graph cycle at ${spec.ruleId}.`],
+                ...EMPTY_RESOLVED,
+                trace: [`Rule graph cycle at ${spec.rule.ruleId}.`],
                 warnings: ['The profile rule graph contains a cycle; this row is not calculated.'],
             };
             resolved.set(spec.key, cycle);
@@ -1054,6 +617,8 @@ function resolveSpecs(
             return value;
         };
 
+        const rule = spec.rule;
+
         if (spec.node.present === false) {
             return finish({
                 ...EMPTY_RESOLVED,
@@ -1063,7 +628,33 @@ function resolveSpecs(
             });
         }
 
-        if (spec.sailRole && spec.node.sailPresent === false) {
+        for (const condition of rule.unsupportedWhen ?? []) {
+            const actual = (spec.node as unknown as Record<string, unknown>)[condition.field];
+            if (actual === condition.equals) {
+                return finish({
+                    ...EMPTY_RESOLVED,
+                    status: 'unsupported',
+                    reasonCode: condition.reason,
+                    trace: [reasonText(condition.reason)],
+                    warnings: [reasonText(condition.reason)],
+                });
+            }
+        }
+
+        if (
+            rule.requires?.supportedGunMounting &&
+            !isSupportedGunMounting(spec.node.gunType, spec.node.mountingType)
+        ) {
+            return finish({
+                ...EMPTY_RESOLVED,
+                status: 'unsupported',
+                reasonCode: 'installation_not_supported',
+                trace: [reasonText('installation_not_supported')],
+                warnings: [reasonText('installation_not_supported')],
+            });
+        }
+
+        if (rule.requires?.sailPresent && spec.node.sailPresent === false) {
             return finish({
                 ...EMPTY_RESOLVED,
                 status: 'not_applicable',
@@ -1072,17 +663,7 @@ function resolveSpecs(
             });
         }
 
-        if (spec.unsupportedReason) {
-            return finish({
-                ...EMPTY_RESOLVED,
-                status: 'unsupported',
-                reasonCode: spec.unsupportedReason,
-                trace: [reasonText(spec.unsupportedReason)],
-                warnings: [reasonText(spec.unsupportedReason)],
-            });
-        }
-
-        if (spec.factor === null) {
+        if (rule.factor === null) {
             return finish({
                 ...EMPTY_RESOLVED,
                 status: 'unsupported',
@@ -1097,13 +678,12 @@ function resolveSpecs(
                 ...EMPTY_RESOLVED,
                 status: 'needs_input',
                 reasonCode: 'configuration_required',
-                missingInputIds: [],
                 trace: [reasonText('configuration_required')],
                 warnings: [reasonText('configuration_required')],
             });
         }
 
-        if (spec.sailRole && spec.node.sailPresent === null) {
+        if (rule.requires?.sailPresent && spec.node.sailPresent === null) {
             return finish({
                 ...EMPTY_RESOLVED,
                 status: 'needs_input',
@@ -1113,19 +693,19 @@ function resolveSpecs(
             });
         }
 
-        if (spec.base.kind === 'result') {
-            const parent = specMap.get(spec.base.key);
-            if (!parent) {
+        if (spec.base.kind === 'rule') {
+            const parentSpec = findParentSpec(specs, spec, rule.base);
+            if (!parentSpec) {
                 return finish({
                     ...EMPTY_RESOLVED,
                     status: 'unsupported',
                     reasonCode: 'dependency_unavailable',
-                    trace: [`Missing dependency: ${spec.base.label}.`],
+                    trace: [`Missing dependency: ${rule.base.ruleId}.`],
                     warnings: ['A required parent role is missing from the profile.'],
                 });
             }
 
-            const parentResult = resolve(parent);
+            const parentResult = resolve(parentSpec);
             if (parentResult.status !== 'calculated') {
                 return finish({
                     ...EMPTY_RESOLVED,
@@ -1143,7 +723,7 @@ function resolveSpecs(
                                 : 'dependency_unavailable',
                     missingInputIds: [...parentResult.missingInputIds],
                     trace: [
-                        `Dependency ${parent.nameEn} is ${parentResult.status}.`,
+                        `Dependency ${parentSpec.rule.name.en} is ${parentResult.status}.`,
                         ...parentResult.trace,
                     ],
                     warnings:
@@ -1161,11 +741,11 @@ function resolveSpecs(
                     ...EMPTY_RESOLVED,
                     status: 'needs_input',
                     reasonCode: 'dependency_unavailable',
-                    trace: [`Dependency ${parent.nameEn} has no diameter.`],
+                    trace: [`Dependency ${parentSpec.rule.name.en} has no diameter.`],
                 });
             }
 
-            const prototypeMm = referencePrototypeMm * spec.factor;
+            const prototypeMm = referencePrototypeMm * rule.factor;
             const modelMm = prototypeMm / scaleDenominator;
 
             return finish({
@@ -1173,69 +753,74 @@ function resolveSpecs(
                 missingInputIds: [],
                 diameterPrototypeMm: prototypeMm,
                 diameterModelMm: modelMm,
+                measurementPointId: parentResult.measurementPointId,
                 formula: `${spec.factorLabel} × ${fixed(referenceModelMm)} = ${fixed(modelMm)} mm`,
                 trace: [
-                    `${parent.nameEn} = ${fixed(referenceModelMm)} mm model`,
+                    `${parentSpec.rule.name.en} = ${fixed(referenceModelMm)} mm model`,
                     `${spec.factorLabel} × ${fixed(referenceModelMm)} = ${fixed(modelMm)} mm model`,
                     `d_model = ${fixed(prototypeMm)} / ${fixed(scaleDenominator)} = ${fixed(modelMm)} mm`,
                 ],
-                warnings: [...spec.notes, ...parentResult.warnings],
+                warnings: [...(rule.warnings ?? []), ...parentResult.warnings],
             });
         }
 
-        const measurementId = baseMeasurementId(spec.base);
-        if (!measurementId) {
-            return finish({
-                ...EMPTY_RESOLVED,
-                status: 'unsupported',
-                reasonCode: 'dependency_unavailable',
-                trace: ['No base reference is defined for this rule.'],
-            });
-        }
-
-        const measurement = normalized.get(measurementId);
+        const measurement = normalized.get(spec.base.measurementId);
         if (!measurement) {
             return finish({
                 ...EMPTY_RESOLVED,
                 status: 'needs_input',
                 reasonCode: 'measurement_required',
-                missingInputIds: [measurementId],
-                trace: [`Missing required dimension: ${MEASUREMENT_LABELS[measurementId] ?? measurementId}.`],
+                missingInputIds: [spec.base.measurementId],
+                trace: [
+                    `Missing required dimension: ${MEASUREMENT_LABELS[spec.base.measurementId] ?? spec.base.measurementId}.`,
+                ],
             });
         }
 
-        const baseMm = baseModelMm(spec.base, measurement);
-        if (baseMm === null) {
-            return finish({
-                ...EMPTY_RESOLVED,
-                status: 'unsupported',
-                reasonCode: 'dependency_unavailable',
-                trace: ['The base reference has no value.'],
-            });
-        }
-
-        const prototypeMm = measurement.realMm * baseFactorFor(spec.base) * spec.factor;
+        const factor = rule.factor;
+        const baseMm = measurement.modelMm * spec.base.multiplier;
+        const prototypeMm = measurement.realMm * spec.base.multiplier * factor;
         const modelMm = prototypeMm / scaleDenominator;
-        const baseFormulaText = baseFormula(spec.base, measurement);
+
+        const baseFormulaText =
+            spec.base.multiplier === 1
+                ? `${spec.base.label} = ${fixed(baseMm)} mm`
+                : `${spec.base.label} = ${spec.base.multiplierLabel} × ${fixed(measurement.modelMm)} = ${fixed(baseMm)} mm`;
 
         const formula =
-            spec.factor === 1
+            factor === 1
                 ? baseFormulaText
                 : `${spec.factorLabel} × ${fixed(baseMm)} = ${fixed(modelMm)} mm`;
+
+        const proxyWarnings: string[] = [];
+        if (measurement.measurementPointId === 'step') {
+            proxyWarnings.push(POINT_PROXY_WARNING);
+        }
 
         return finish({
             status: 'calculated',
             missingInputIds: [],
             diameterPrototypeMm: prototypeMm,
             diameterModelMm: modelMm,
+            measurementPointId: measurement.measurementPointId,
             formula,
             trace: [
                 measurementTrace(measurement),
-                baseFormulaText ?? 'Base value is defined by the profile.',
-                `${spec.factorLabel} × ${fixed(baseMm)} = ${fixed(modelMm)} mm model`,
-                `d_model = ${fixed(prototypeMm)} / ${fixed(scaleDenominator)} = ${fixed(modelMm)} mm`,
+                spec.base.multiplier === 1
+                    ? `${spec.base.label} = ${fixed(baseMm)} mm model`
+                    : `${spec.base.label} = ${spec.base.multiplierLabel} × ${fixed(measurement.modelMm)} = ${fixed(baseMm)} mm model`,
+                ...(factor === 1
+                    ? [`d_model = ${fixed(prototypeMm)} / ${fixed(scaleDenominator)} = ${fixed(modelMm)} mm`]
+                    : [
+                          `${spec.factorLabel} × ${fixed(baseMm)} = ${fixed(modelMm)} mm model`,
+                          `d_model = ${fixed(prototypeMm)} / ${fixed(scaleDenominator)} = ${fixed(modelMm)} mm`,
+                      ]),
             ],
-            warnings: [...spec.notes],
+            warnings: [
+                ...(rule.warnings ?? []),
+                ...proxyWarnings,
+                ...(rule.materialInvariance ? [MATERIAL_INVARIANCE_NOTE] : []),
+            ],
         });
     };
 
@@ -1246,31 +831,64 @@ function resolveSpecs(
     return resolved;
 }
 
-function baseFactorFor(base: BaseRef): number {
-    if (base.kind === 'mast') return BASE_FACTORS.mast;
-    if (base.kind === 'bowsprit') return BASE_FACTORS.bowsprit;
-    if (base.kind === 'hullWidth') return BASE_FACTORS.anchor;
-    if (base.kind === 'gunBore') return 1;
-    return 1;
+function sourcesOf(
+    document: ProfileDocument,
+    rule: ProfileRule,
+): { sourceIds: string[]; sourceLocator: string | null } {
+    const ids = rule.sources ?? [];
+    const locators = ids
+        .map((sourceId) => document.profile.sources.find((source) => source.id === sourceId))
+        .filter((source): source is NonNullable<typeof source> => Boolean(source))
+        .map((source) => `${source.id}: ${source.locator}`);
+    return {
+        sourceIds: [...ids],
+        sourceLocator: locators.length > 0 ? locators.join(' · ') : null,
+    };
 }
 
-function nodeStatusReason(result: ResolvedRule): string {
-    return result.reasonCode ? reasonText(result.reasonCode) : '';
-}
-
-export function calculate(input: RiggingInput): Calculation {
-    const validationErrors = validate(input);
-
-    if (validationErrors.length > 0) {
+/**
+ * Расчёт по явно переданному документу профиля.
+ *
+ * @param input входные размеры и узлы
+ * @param document версионированный документ профиля (уже разрешённый по id)
+ */
+export function calculate(input: RiggingInput, document: ProfileDocument): Calculation {
+    if (!document || typeof document !== 'object' || !document.profile) {
         return {
-            profileId: PROFILE_ID,
-            profileVersion: PROFILE_VERSION,
+            profileId: input.profileId ?? '',
+            profileVersion: input.profileVersion ?? '',
+            profileStatus: 'unknown',
             schemaVersion: SCHEMA_VERSION,
             algorithmVersion: ALGORITHM_VERSION,
             scaleDenominator: input.scaleDenominator,
             normalizedMeasurements: [],
             results: [],
-            warnings: [...PROFILE_WARNINGS],
+            sources: [],
+            warnings: [],
+            validationErrors: [
+                {
+                    code: 'PROFILE_DOCUMENT_MISSING',
+                    field: 'profileDocument',
+                    message: 'A profile document is required to calculate diameters.',
+                },
+            ],
+        };
+    }
+
+    const validationErrors = validate(input, document);
+
+    if (validationErrors.length > 0) {
+        return {
+            profileId: document.profile.profileId,
+            profileVersion: document.profile.profileVersion,
+            profileStatus: document.profile.status,
+            schemaVersion: document.profile.schemaVersion,
+            algorithmVersion: ALGORITHM_VERSION,
+            scaleDenominator: input.scaleDenominator,
+            normalizedMeasurements: [],
+            results: [],
+            sources: document.profile.sources.map((source) => ({ ...source })),
+            warnings: [...document.profile.warnings],
             validationErrors,
         };
     }
@@ -1284,24 +902,29 @@ export function calculate(input: RiggingInput): Calculation {
         );
     }
 
-    const specs = buildSpecs(input);
+    const specs = buildSpecs(input, document, normalized);
     const resolved = resolveSpecs(specs, normalized, input.scaleDenominator);
 
     const results: RiggingResult[] = specs.map((spec) => {
         const value = resolved.get(spec.key) ?? EMPTY_RESOLVED;
+        const rule = spec.rule;
+        const sources = sourcesOf(document, rule);
+        const parentRule = rule.base.kind === 'rule'
+            ? document.rules.find((entry) => entry.ruleId === rule.base.ruleId)
+            : undefined;
 
         return {
             ownerType: spec.node.ownerType,
             ownerId: spec.node.ownerId,
             nodeId: spec.node.nodeId,
-            ruleId: spec.ruleId,
-            ropeId: spec.ropeId,
-            role: spec.role,
-            segmentType: spec.segmentType,
-            nameEn: spec.nameEn,
-            nameRu: spec.nameRu,
-            group: spec.group,
-            tier: spec.tier,
+            ruleId: rule.ruleId,
+            ropeId: rule.ropeId ?? rule.ruleId,
+            role: rule.role,
+            segmentType: 'rope',
+            nameEn: rule.name.en,
+            nameRu: rule.name.ru,
+            group: rule.group,
+            tier: tierOfNode(spec.node),
             status: value.status,
             reasonCode: value.reasonCode,
             missingInputIds: unique(value.missingInputIds),
@@ -1309,38 +932,48 @@ export function calculate(input: RiggingInput): Calculation {
             diameterModelMm: value.diameterModelMm,
             method: 'proportional',
             calculationKind: 'estimate',
+            material: spec.material,
             coefficientBasis: spec.coefficientBasis,
             calibrationStatus: spec.calibrationStatus,
-            profileId: PROFILE_ID,
-            profileVersion: PROFILE_VERSION,
-            schemaVersion: SCHEMA_VERSION,
+            profileId: document.profile.profileId,
+            profileVersion: document.profile.profileVersion,
+            schemaVersion: document.profile.schemaVersion,
+            sourceIds: sources.sourceIds,
+            sourceLocator: sources.sourceLocator,
+            measurementPointId: value.measurementPointId,
             formula: value.formula,
-            referenceLabel: spec.referenceLabel,
+            referenceLabel:
+                spec.base.kind === 'rule'
+                    ? `${parentRule?.name.en ?? rule.base.ruleId} diameter`
+                    : spec.base.label,
             factorLabel: spec.factorLabel,
             trace: value.trace,
             warnings: unique([
-                ...spec.notes,
+                ...(rule.warnings ?? []),
                 ...value.warnings,
-                ...(value.status === 'calculated' ? [] : [nodeStatusReason(value)]),
+                ...(value.status === 'calculated' ? [] : [reasonText(value.reasonCode)]),
             ]).filter(Boolean),
-            alternativeGroupId: spec.alternativeGroupId,
-            variant: spec.variant,
+            alternativeGroupId: rule.alternativeGroupId,
+            variant: rule.variant,
             sortIndex: spec.sortIndex,
         };
     });
 
+    const sources: CalculationSource[] = document.profile.sources.map((source) => ({
+        ...source,
+    }));
+
     return {
-        profileId: PROFILE_ID,
-        profileVersion: PROFILE_VERSION,
-        schemaVersion: SCHEMA_VERSION,
+        profileId: document.profile.profileId,
+        profileVersion: document.profile.profileVersion,
+        profileStatus: document.profile.status,
+        schemaVersion: document.profile.schemaVersion,
         algorithmVersion: ALGORITHM_VERSION,
         scaleDenominator: input.scaleDenominator,
         normalizedMeasurements: [...normalized.values()],
         results,
-        warnings: [...PROFILE_WARNINGS],
+        sources,
+        warnings: [...document.profile.warnings],
         validationErrors: [],
     };
 }
-
-/** Экспорт для UI: подпись группы без обращения к внутренним таблицам. */
-export { GROUP_LABELS };

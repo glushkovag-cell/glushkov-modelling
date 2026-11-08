@@ -1,0 +1,248 @@
+{
+  "documentVersion": "1.0.0",
+  "profile": {
+    "profileId": "yacht_metal_yacht",
+    "profileVersion": "1.0.0",
+    "schemaVersion": "1.0.0",
+    "family": "yacht_metal",
+    "status": "draft",
+    "name": "Yacht metal rigging — racing yachts",
+    "yearFrom": null,
+    "yearTo": null,
+    "bases": {
+      "mast": 1,
+      "bowsprit": 1,
+      "hullWidth": 1,
+      "gunBore": 1,
+      "thickestMast": 1
+    },
+    "baseLabels": {
+      "mast": "D_m",
+      "bowsprit": "D_b",
+      "hullWidth": "W",
+      "gunBore": "K",
+      "thickestMast": "G"
+    },
+    "baseFactorLabels": {
+      "mast": "1",
+      "bowsprit": "1",
+      "hullWidth": "1",
+      "gunBore": "1",
+      "thickestMast": "1"
+    },
+    "materialConditions": [
+      "wire",
+      "rod",
+      "fiber"
+    ],
+    "sources": [
+      {
+        "id": "R-EB",
+        "title": "Rigging report — Endeavour / Bluenose",
+        "locator": "p. 1, table 1"
+      },
+      {
+        "id": "R-R",
+        "title": "Rigging report — Reliance",
+        "locator": "p. 1, dimension table"
+      }
+    ],
+    "warnings": [
+      "Estimates for a static model, not a strength calculation.",
+      "Draft profile: the calibration targets are user-accepted secondary reports; primary archival sheets were not independently verified.",
+      "Geometry-only material invariance applies to the lower shrouds and headstay only. It is not equal strength."
+    ],
+    "ui": {
+      "masts": true,
+      "tiers": [
+        "lower"
+      ],
+      "yards": false,
+      "squareSails": false,
+      "foreAndAft": [],
+      "lateenYard": false,
+      "gaff": false,
+      "gaffSail": false,
+      "boom": false,
+      "mainSail": true,
+      "topsail": false,
+      "headSails": false,
+      "staysail": false,
+      "flag": false,
+      "bowsprit": false,
+      "spritsaill": false,
+      "jibboom": false,
+      "martingale": false,
+      "anchor": false,
+      "hullGroup": false,
+      "gun": false,
+      "mastPoint": "partner",
+      "bowspritPoint": "unknown",
+      "defaults": {
+        "scaleDenominator": 48,
+        "mastDiameterMm": {
+          "fore": 9.5,
+          "main": 10.05,
+          "mizzen": 7
+        }
+      }
+    },
+    "metrics": {
+      "fittedRoles": 4,
+      "mapePercent": 5.41,
+      "maxDeviationPercent": 8.47,
+      "crossTransferMapePercent": 10.86,
+      "crossTransferMaxPercent": 18.5,
+      "note": "Four FIT2 control roles: MAPE 5.41%, maximum 8.47%; worst cross-reference transfer 18.5%. FIT1 backstays and engineering rows are not in this aggregate.",
+      "cardNote": "Four FIT2 control roles: MAPE 5.41%, maximum 8.47%; worst cross-reference transfer 18.5%. FIT1 backstays and engineering rows are not in this aggregate."
+    }
+  },
+  "rules": [
+    {
+      "ruleId": "ym.st.lower.shroud",
+      "role": "lower_shroud",
+      "name": {
+        "en": "Lower shrouds",
+        "ru": "Нижние ванты"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.067004,
+      "materials": [
+        "rod",
+        "wire"
+      ],
+      "material": "wire",
+      "materialInvariance": true,
+      "sources": [
+        "R-EB",
+        "R-R"
+      ],
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only"
+    },
+    {
+      "ruleId": "ym.st.lower.stay",
+      "role": "headstay",
+      "name": {
+        "en": "Headstay (main lower stay)",
+        "ru": "Основной нижний штаг"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.077131,
+      "materials": [
+        "rod",
+        "wire"
+      ],
+      "material": "wire",
+      "materialInvariance": true,
+      "sources": [
+        "R-EB",
+        "R-R"
+      ],
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only"
+    },
+    {
+      "ruleId": "ym.st.backstay",
+      "role": "backstay",
+      "name": {
+        "en": "Backstays (category)",
+        "ru": "Бакштаги (категория)"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.047659,
+      "materials": [
+        "wire"
+      ],
+      "material": "wire",
+      "sources": [
+        "R-EB"
+      ],
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only"
+    },
+    {
+      "ruleId": "ym.rn.main.halyard.wire",
+      "role": "halyard_wire",
+      "name": {
+        "en": "Mainsail halyard, wire segment",
+        "ru": "Wire-сегмент грот-фала"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "main_sail"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.02845,
+      "materials": [
+        "wire"
+      ],
+      "material": "wire",
+      "sources": [
+        "R-EB",
+        "R-R"
+      ],
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only"
+    },
+    {
+      "ruleId": "ym.rn.main.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Mainsail sheet",
+        "ru": "Грот-шкот"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "main_sail"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.062906,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EB",
+        "R-R"
+      ],
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only"
+    }
+  ]
+}

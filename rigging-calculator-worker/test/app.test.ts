@@ -2,8 +2,20 @@ import { describe, expect, it } from 'vitest';
 
 import { handleRequest } from '../src/http/app';
 import { buildInput, defaultSettings } from '../../src/lib/rigging/settings.ts';
+import type { ProfileDocument, ProfileManifest } from '../../src/lib/rigging/document.ts';
+import traditionalJson from '../../data/rigging/profiles/traditional_plant/1.0.0.json';
+import earlyJson from '../../data/rigging/profiles/early_plant/1.2.1.json';
+import manifestJson from '../../data/rigging/index.json';
 
 const API = 'https://rigging.example.test';
+
+const ENV = {
+  PROFILE_MANIFEST: manifestJson as unknown as ProfileManifest,
+  PROFILE_DOCUMENTS: {
+    'traditional_plant@1.0.0': traditionalJson as unknown as ProfileDocument,
+    'early_plant@1.2.1': earlyJson as unknown as ProfileDocument,
+  },
+};
 
 function get(path: string, headers: Record<string, string> = {}): Request {
   return new Request(`${API}${path}`, { headers });
@@ -41,7 +53,7 @@ function mainMastOnly() {
 
 describe('rigging API', () => {
   it('health не требует данных', async () => {
-    const response = await handleRequest(get('/api/rigging/v1/health'));
+    const response = await handleRequest(get('/api/rigging/v1/health'), ENV);
     expect(response.status).toBe(200);
     expect(await json(response)).toEqual({
       ok: true,
@@ -50,23 +62,25 @@ describe('rigging API', () => {
     });
   });
 
-  it('profiles отдаёт опубликованный traditional_plant', async () => {
-    const response = await handleRequest(get('/api/rigging/v1/profiles'));
+  it('profiles отдаёт манифест из четырёх профилей', async () => {
+    const response = await handleRequest(get('/api/rigging/v1/profiles'), ENV);
     expect(response.status).toBe(200);
     const data = await json(response);
-    expect(data.profiles).toHaveLength(1);
-    expect(data.profiles[0]).toMatchObject({
-      profileId: 'traditional_plant',
-      status: 'published',
-      yearFrom: 1625,
-      yearTo: 1860,
-    });
-    expect(data.profiles[0].sources[0]).toContain('Lees');
+    expect(data.apiVersion).toBe('1');
+    expect(data.profiles).toHaveLength(4);
+    expect(data.profiles.map((entry: { profileId: string }) => entry.profileId)).toEqual([
+      'traditional_plant',
+      'yacht_metal_yacht',
+      'yacht_metal_schooner',
+      'early_plant',
+    ]);
+    expect(data.profiles[3].latest).toBe('1.2.1');
   });
 
   it('calculate возвращает диаметры по общему ядру', async () => {
     const response = await handleRequest(
       post('/api/rigging/v1/calculate', mainMastOnly()),
+      ENV,
     );
     expect(response.status).toBe(200);
 
@@ -97,7 +111,7 @@ describe('rigging API', () => {
       basis: 'prototype',
       measurementPointId: 'partner',
     };
-    const response = await handleRequest(post('/api/rigging/v1/calculate', input));
+    const response = await handleRequest(post('/api/rigging/v1/calculate', input), ENV);
     const data = await json(response);
     const stay = data.results.find(
       (result: { ruleId: string }) => result.ruleId === 'st.lower.stay',
@@ -108,13 +122,14 @@ describe('rigging API', () => {
   it('невалидный JSON даёт 400', async () => {
     const response = await handleRequest(
       post('/api/rigging/v1/calculate', '{"broken":'),
+      ENV,
     );
     expect(response.status).toBe(400);
     expect((await json(response)).error.code).toBe('BAD_JSON');
   });
 
   it('невалидная форма тела даёт 422 с полями', async () => {
-    const response = await handleRequest(post('/api/rigging/v1/calculate', {}));
+    const response = await handleRequest(post('/api/rigging/v1/calculate', {}), ENV);
     expect(response.status).toBe(422);
     const data = await json(response);
     expect(data.error.code).toBe('INVALID_PARAMS');
@@ -126,20 +141,20 @@ describe('rigging API', () => {
   it('доменная валидация возвращается в validationErrors', async () => {
     const input = mainMastOnly();
     input.scaleDenominator = 0;
-    const response = await handleRequest(post('/api/rigging/v1/calculate', input));
+    const response = await handleRequest(post('/api/rigging/v1/calculate', input), ENV);
     expect(response.status).toBe(200);
     const data = await json(response);
     expect(data.validationErrors[0].code).toBe('INVALID_SCALE');
   });
 
   it('неизвестный маршрут даёт 404', async () => {
-    const response = await handleRequest(get('/api/rigging/v1/unknown'));
+    const response = await handleRequest(get('/api/rigging/v1/unknown'), ENV);
     expect(response.status).toBe(404);
     expect((await json(response)).error.code).toBe('NOT_FOUND');
   });
 
   it('неподдерживаемый метод даёт 405', async () => {
-    const response = await handleRequest(get('/api/rigging/v1/calculate'));
+    const response = await handleRequest(get('/api/rigging/v1/calculate'), ENV);
     expect(response.status).toBe(405);
     expect((await json(response)).error.code).toBe('METHOD_NOT_ALLOWED');
   });
@@ -153,6 +168,7 @@ describe('rigging API', () => {
           'access-control-request-method': 'POST',
         },
       }),
+      ENV,
     );
     expect(response.status).toBe(204);
     expect(response.headers.get('access-control-allow-origin')).toBe(
@@ -161,9 +177,51 @@ describe('rigging API', () => {
     expect(response.headers.get('vary')).toBe('Origin');
   });
 
+  it('неизвестный профиль даёт 422 и не подменяется', async () => {
+    const input = mainMastOnly();
+    input.profileId = 'unknown_profile';
+    const response = await handleRequest(post('/api/rigging/v1/calculate', input), ENV);
+    expect(response.status).toBe(422);
+    const data = await json(response);
+    expect(data.error.code).toBe('PROFILE_NOT_FOUND');
+    expect(data.error.fields).toContain('profileId');
+  });
+
+  it('запрошенная версия профиля фиксируется в расчёте', async () => {
+    const input = mainMastOnly();
+    input.profileVersion = '1.0.0';
+    const response = await handleRequest(post('/api/rigging/v1/calculate', input), ENV);
+    expect(response.status).toBe(200);
+    expect((await json(response)).profileVersion).toBe('1.0.0');
+  });
+
+  it('early_plant считается тем же ядром по документу профиля', async () => {
+    const input = mainMastOnly();
+    input.profileId = 'early_plant';
+    input.profileVersion = '1.2.1';
+    input.measurements.mastDiameter.main = {
+      value: 8,
+      unitId: 'mm',
+      basis: 'model',
+      measurementPointId: 'unknown',
+    };
+    const response = await handleRequest(post('/api/rigging/v1/calculate', input), ENV);
+    expect(response.status).toBe(200);
+    const data = await json(response);
+    expect(data.profileId).toBe('early_plant');
+    expect(data.profileVersion).toBe('1.2.1');
+    const shroud = data.results.find(
+      (result: { ruleId: string; ownerId: string }) =>
+        result.ruleId === 'ep.st.lower.shroud' && result.ownerId === 'main',
+    );
+    expect(shroud.diameterModelMm).toBeCloseTo(3 / 28 * 8, 12);
+    expect(shroud.coefficientBasis).toBe('preliminary_fit');
+  });
+
   it('слишком большое тело даёт 413', async () => {
     const response = await handleRequest(
       post('/api/rigging/v1/calculate', 'x'.repeat(70 * 1024)),
+      ENV,
     );
     expect(response.status).toBe(413);
     expect((await json(response)).error.code).toBe('BODY_TOO_LARGE');

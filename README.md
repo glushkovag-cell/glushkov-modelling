@@ -44,3 +44,12 @@ All commands are run from the root of the project, from a terminal:
 ## 👀 Want to learn more?
 
 Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+
+## Rigging diameter calculator
+
+- Tool page: `/tools/rigging-diameters`
+- Profile data, contract and delivery: [`docs/rigging-profiles.md`](docs/rigging-profiles.md)
+- Clean core: `src/lib/rigging` — profiles are versioned JSON in `data/rigging`
+- Worker API: `rigging-calculator-worker`
+
+Checks: `npm run check && npm test`; worker: `cd rigging-calculator-worker && npm run typecheck && npm test`.

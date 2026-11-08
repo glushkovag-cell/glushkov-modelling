@@ -17,5 +17,6 @@
     "src/**/*.ts",
     "test/**/*.ts",
     "../src/lib/rigging/**/*.ts"
-  ]
+  ],
+  "exclude": ["../src/lib/rigging/profileStore.ts"]
 }

@@ -1,0 +1,67 @@
+{
+  "manifestVersion": "1.0.0",
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-11-08T00:00:00.000Z",
+  "profiles": [
+    {
+      "profileId": "traditional_plant",
+      "family": "traditional_plant",
+      "name": "Traditional plant rigging",
+      "status": "published",
+      "latest": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "status": "published",
+          "document": "profiles/traditional_plant/1.0.0.json",
+          "sha256": "3376f3da12fb0bfd0ca796f9d274e326d4797ba5324e2339a158c383b87f2123"
+        }
+      ]
+    },
+    {
+      "profileId": "yacht_metal_yacht",
+      "family": "yacht_metal",
+      "name": "Yacht metal rigging — racing yachts",
+      "status": "draft",
+      "latest": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "status": "draft",
+          "document": "profiles/yacht_metal_yacht/1.0.0.json",
+          "sha256": "95734584d75cecfe1039e51ef9cf1ad58164216a95fda66a9318e5df9c6c1705"
+        }
+      ]
+    },
+    {
+      "profileId": "yacht_metal_schooner",
+      "family": "yacht_metal",
+      "name": "Yacht metal rigging — gaff schooners",
+      "status": "draft",
+      "latest": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "status": "draft",
+          "document": "profiles/yacht_metal_schooner/1.0.0.json",
+          "sha256": "207b1422e834204c04ad99535df01beb74dbac95fc0835108fbef00256b76f37"
+        }
+      ]
+    },
+    {
+      "profileId": "early_plant",
+      "family": "early_plant",
+      "name": "Early plant rigging — Columbus-era reconstructions",
+      "status": "draft",
+      "latest": "1.2.1",
+      "versions": [
+        {
+          "version": "1.2.1",
+          "status": "draft",
+          "document": "profiles/early_plant/1.2.1.json",
+          "sha256": "198150c29502c8a5da6cbd86b6b867c6c3e35071a438d4c7559195cbd8cfdf98"
+        }
+      ]
+    }
+  ]
+}

@@ -1,8 +1,13 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/tools.css';
-import { defaultSettings } from '../../lib/rigging/settings.ts';
-import { PROFILE_REGISTRY } from '../../lib/rigging/profiles.ts';
+import {
+    SAIL_NODE_KINDS,
+    defaultSettingsForProfile,
+    type SailNodeKind,
+} from '../../lib/rigging/settings.ts';
+import { summariseProfile } from '../../lib/rigging/profiles.ts';
+import { listProfileDocuments } from '../../lib/rigging/profileStore.ts';
 import {
     MAST_IDS,
     MAST_LABELS,
@@ -12,7 +17,15 @@ import {
     TIER_LABELS,
 } from '../../lib/rigging/profile.ts';
 
-const defaults = defaultSettings();
+const documents = listProfileDocuments();
+const entries = documents.map((document) => ({
+    document,
+    summary: summariseProfile(document),
+    defaults: defaultSettingsForProfile(document),
+}));
+
+const initial = entries[0]!;
+const defaults = initial.defaults;
 
 const unitOptions = [
     { value: 'mm', label: 'mm' },
@@ -28,6 +41,7 @@ const basisOptions = [
 const pointOptions = [
     { value: 'partner', label: 'At the partner' },
     { value: 'maximum', label: 'Maximum diameter' },
+    { value: 'step', label: 'At the step (proxy)' },
 ];
 
 const mastOptions = MAST_IDS.map((mastId) => ({
@@ -35,13 +49,25 @@ const mastOptions = MAST_IDS.map((mastId) => ({
     label: MAST_LABELS[mastId].en,
 }));
 
+const SAIL_NODE_LABELS: Record<SailNodeKind, string> = {
+    main_sail: 'Mainsail',
+    gaff: 'Gaff',
+    gaff_sail: 'Gaff sail',
+    boom: 'Boom',
+    topsail: 'Topsail',
+    head_lower: 'Lower headsail',
+    head_upper: 'Upper headsail',
+    staysail: 'Staysail',
+    flag: 'Flag halyard',
+};
+
 function valueOrEmpty(value: number | null | undefined): string {
     return value === null || value === undefined ? '' : String(value);
 }
 
 const title = 'Rigging diameter calculator — Glushkov Modelling';
 const description =
-    'Estimate scale-model diameters of standing and running rigging, spars, anchor gear and gun gear from your model\u2019s key dimensions.';
+    'Estimate scale-model diameters of standing and running rigging from your model\u2019s key dimensions and an explicitly chosen rigging profile.';
 ---
 
 <BaseLayout title={title} description={description} noindex>
@@ -59,14 +85,15 @@ const description =
         <span class="eyebrow">Workshop tools</span>
         <h1>Rigging diameter calculator</h1>
         <p class="tools-lede">
-          Estimated diameters for the main standing and running rigging, spars,
-          anchor gear and gun gear of a static scale model.
+          Estimated diameters for the main standing and running rigging of a
+          static scale model, calculated only for the nodes supported by the
+          chosen profile.
         </p>
       </header>
 
       <div class="rig-disclaimer" role="note">
-        <strong>Estimates only — not historical data.</strong>
-        Every value this calculator produces is an <strong>engineering estimate</strong>
+        <strong>Estimates only — not historical data.</strong>{' '}
+        Every value this calculator produces is an <strong>engineering estimate</strong>{' '}
         or a <strong>preliminary fit</strong>. None are documented historical
         dimensions: if you already have a source document with rigging sizes, use
         it directly. These figures are for a static model and must not be used for
@@ -77,107 +104,76 @@ const description =
         <form class="rig-form" id="rigging-form" novalidate>
           <p class="rig-form__hint">
             Example values are prefilled — replace them with your model&rsquo;s
-            dimensions. Results update only when you press
+            dimensions. Results update only when you press{' '}
             <strong>Calculate diameters</strong>.
           </p>
 
           <div class="rig-form__errors" id="form-errors" role="alert" hidden></div>
 
           <fieldset class="rig-section">
-            <legend class="rig-section__title">1 · Period &amp; profile</legend>
+            <legend class="rig-section__title">1 · Rigging profile</legend>
 
-            <div class="rig-field">
-              <span class="rig-label" id="context-mode-label">When is your vessel from?</span>
-              <div class="rig-segmented" role="radiogroup" aria-labelledby="context-mode-label">
-                <label class="rig-segmented__item">
-                  <input type="radio" name="context-mode" value="year" checked />
-                  <span>Historical year</span>
-                </label>
-                <label class="rig-segmented__item">
-                  <input type="radio" name="context-mode" value="period" />
-                  <span>Historical period</span>
-                </label>
-              </div>
-            </div>
+            <p class="rig-profile__context">
+              The profile is chosen explicitly. The historical year or period does
+              not select a profile; hover or select a card to read the full
+              description.
+            </p>
 
-            <div class="rig-field" id="context-year-field">
-              <label class="rig-label" for="context-year">Historical year</label>
-              <input
-                class="rig-input"
-                id="context-year"
-                name="context-year"
-                type="number"
-                min="1000"
-                max="2100"
-                step="1"
-                inputmode="numeric"
-                placeholder="e.g. 1787"
-              />
-            </div>
-
-            <div class="rig-field" id="context-period-field" hidden>
-              <div class="rig-context-period">
-                <div>
-                  <label class="rig-label" for="context-period-from">From</label>
-                  <input
-                    class="rig-input"
-                    id="context-period-from"
-                    name="context-period-from"
-                    type="number"
-                    min="1000"
-                    max="2100"
-                    step="1"
-                    inputmode="numeric"
-                  />
-                </div>
-                <div>
-                  <label class="rig-label" for="context-period-to">To</label>
-                  <input
-                    class="rig-input"
-                    id="context-period-to"
-                    name="context-period-to"
-                    type="number"
-                    min="1000"
-                    max="2100"
-                    step="1"
-                    inputmode="numeric"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div class="rig-actions">
-              <button class="rig-button rig-button--ghost" type="button" id="find-profiles">Find suitable profiles</button>
-            </div>
-
-            <div class="rig-profiles" role="radiogroup" aria-label="Suitable profiles">
-              {PROFILE_REGISTRY.map((profile, index) => (
-                <label class="rig-profile">
+            <div class="rig-profiles" role="radiogroup" aria-label="Rigging profile">
+              {entries.map((entry, index) => (
+                <div
+                  class="rig-profile"
+                  data-profile-card
+                  data-version={entry.summary.profileVersion}
+                  data-ui={JSON.stringify(entry.summary.ui)}
+                  data-defaults={JSON.stringify(entry.defaults)}
+                >
                   <input
                     class="rig-profile__radio"
+                    id={`profile-${entry.summary.profileId}`}
                     type="radio"
                     name="profile"
-                    value={profile.profileId}
+                    value={entry.summary.profileId}
                     checked={index === 0}
                   />
-                  <span class="rig-profile__body">
+                  <label class="rig-profile__body" for={`profile-${entry.summary.profileId}`}>
                     <span class="rig-profile__head">
-                      <strong>{profile.name}</strong>
-                      <span class="rig-profile__range">{profile.yearFrom}–{profile.yearTo}</span>
-                      <span class="rig-profile__status">{profile.status}</span>
+                      <strong>{entry.summary.name}</strong>
+                      <span class="rig-profile__range">{entry.summary.family} · v{entry.summary.profileVersion}</span>
+                      <span class="rig-profile__status">{entry.summary.status}</span>
                     </span>
-                    <span class="rig-profile__desc">{profile.description}</span>
-                    <span class="rig-profile__note">{profile.applicabilityNotes}</span>
-                    {profile.sources.length > 0 && (
-                      <span class="rig-profile__source">Source: {profile.sources.join(' · ')}</span>
-                    )}
-                  </span>
-                </label>
+                    <span class="rig-profile__details">
+                      <span class="rig-profile__desc">{entry.summary.explanation.summary}</span>
+                      <span class="rig-profile__note">{entry.summary.explanation.disclaimer}</span>
+                      <span class="rig-profile__note">{entry.summary.explanation.taxonomy}</span>
+                      {entry.summary.explanation.calibration && (
+                        <span class="rig-profile__note">{entry.summary.explanation.calibration}</span>
+                      )}
+                      {entry.summary.explanation.accuracy && (
+                        <span class="rig-profile__note">{entry.summary.explanation.accuracy}</span>
+                      )}
+                      {entry.summary.explanation.caveat && (
+                        <span class="rig-profile__note">{entry.summary.explanation.caveat}</span>
+                      )}
+                    </span>
+                  </label>
+                  <details class="rig-profile__more">
+                    <summary>Sources &amp; full caveats</summary>
+                    <ul class="rig-profile__caveats">
+                      {entry.summary.warnings.map((warning) => (
+                        <li>{warning}</li>
+                      ))}
+                    </ul>
+                    <p class="rig-profile__source">
+                      Sources: {entry.document.profile.sources.map((source) => source.title).join(' · ')}
+                    </p>
+                  </details>
+                </div>
               ))}
             </div>
 
             <p class="rig-profile__context" id="profile-context-note" role="status" aria-live="polite">
-              Enter a year or period. The profile covers 1625–1860 (James Lees).
+              Selected: {initial.summary.name} v{initial.summary.profileVersion} — {initial.summary.ruleCount} rule definitions. Draft profiles are not historical verification.
             </p>
           </fieldset>
 
@@ -338,7 +334,7 @@ const description =
             </div>
           </fieldset>
 
-          <fieldset class="rig-section">
+          <fieldset class="rig-section" data-ui-block="masts">
             <legend class="rig-section__title">3 · Masts &amp; sails</legend>
 
             <p class="rig-subtitle">Masts</p>
@@ -347,8 +343,8 @@ const description =
                 <tr>
                   <th scope="col">Mast</th>
                   <th scope="col">Present</th>
-                  <th scope="col">Topmast</th>
-                  <th scope="col">Topgallant</th>
+                  <th scope="col" data-mast-tier="topmast">Topmast</th>
+                  <th scope="col" data-mast-tier="topgallant">Topgallant</th>
                 </tr>
               </thead>
               <tbody>
@@ -365,7 +361,7 @@ const description =
                         aria-label={`${MAST_LABELS[mastId].en} present`}
                       />
                     </td>
-                    <td>
+                    <td data-mast-tier="topmast">
                       <input
                         class="rig-checkbox"
                         type="checkbox"
@@ -375,7 +371,7 @@ const description =
                         aria-label={`${MAST_LABELS[mastId].en} topmast`}
                       />
                     </td>
-                    <td>
+                    <td data-mast-tier="topgallant">
                       <input
                         class="rig-checkbox"
                         type="checkbox"
@@ -389,7 +385,9 @@ const description =
                 ))}
               </tbody>
             </table>
+          </fieldset>
 
+          <div class="rig-section-group" data-ui-block="square">
             <p class="rig-subtitle">Square yards &amp; sails</p>
             <table class="rig-matrix">
               <thead>
@@ -403,7 +401,7 @@ const description =
               <tbody>
                 {MAST_IDS.map((mastId) =>
                   TIERS.map((tier) => (
-                    <tr>
+                    <tr data-tier-row={tier}>
                       <th scope="row">{MAST_LABELS[mastId].en}</th>
                       <td>{TIER_LABELS[tier].en}</td>
                       <td>
@@ -431,7 +429,9 @@ const description =
                 )}
               </tbody>
             </table>
+          </div>
 
+          <div class="rig-section-group" data-ui-block="foreaft">
             <p class="rig-subtitle">Fore-and-aft sails</p>
             <table class="rig-matrix">
               <thead>
@@ -443,7 +443,7 @@ const description =
               </thead>
               <tbody>
                 {SAIL_CLASSES.map((sailClass) => (
-                  <tr>
+                  <tr data-sail-class={sailClass}>
                     <th scope="row">{SAIL_CLASS_LABELS[sailClass].en}</th>
                     <td>
                       <input
@@ -468,7 +468,9 @@ const description =
                 ))}
               </tbody>
             </table>
+          </div>
 
+          <div class="rig-section-group" data-ui-block="gaff">
             <p class="rig-subtitle">Gaff</p>
             <div class="rig-inline">
               <label class="rig-check">
@@ -490,42 +492,109 @@ const description =
                 </select>
               </label>
             </div>
-          </fieldset>
+          </div>
 
-          <fieldset class="rig-section">
+          <div class="rig-section-group" data-ui-block="lateen">
+            <p class="rig-subtitle">Lateen mizzen</p>
+            <div class="rig-inline">
+              <label class="rig-check">
+                <input class="rig-checkbox" type="checkbox" id="lateen-present" name="lateen-present" checked={defaults.lateenYard.present} />
+                <span>Lateen yard</span>
+              </label>
+              <label class="rig-check">
+                <input class="rig-checkbox" type="checkbox" id="lateen-sail" name="lateen-sail" checked={defaults.lateenYard.sailPresent} />
+                <span>Sail set</span>
+              </label>
+              <label class="rig-check rig-check--select">
+                <span>Supporting mast</span>
+                <select class="rig-select" id="lateen-mast" name="lateen-mast">
+                  {mastOptions.map((option) => (
+                    <option value={option.value} selected={defaults.lateenYard.supportingMastId === option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="rig-section-group" data-ui-block="sailnodes">
+            <p class="rig-subtitle">Yacht &amp; gaff sails</p>
+            <table class="rig-matrix">
+              <thead>
+                <tr>
+                  <th scope="col">Sail / spar</th>
+                  {MAST_IDS.map((mastId) => (
+                    <th scope="col">{MAST_LABELS[mastId].en}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {SAIL_NODE_KINDS.map((kind) => (
+                  <tr data-sailnode-row={kind}>
+                    <th scope="row">{SAIL_NODE_LABELS[kind]}</th>
+                    {MAST_IDS.map((mastId) => (
+                      <td>
+                        <input
+                          class="rig-checkbox"
+                          type="checkbox"
+                          id={`sailnode-${kind}-${mastId}`}
+                          name={`sailnode-${kind}-${mastId}`}
+                          checked={defaults.sailNodes[kind][mastId]}
+                          aria-label={`${SAIL_NODE_LABELS[kind]} on ${MAST_LABELS[mastId].en}`}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <fieldset class="rig-section" data-spars-fieldset>
             <legend class="rig-section__title">4 · Spars &amp; auxiliary gear</legend>
 
-            <div class="rig-block">
+            <div class="rig-block" data-ui-block="bowsprit">
               <p class="rig-subtitle">Bowsprit &amp; spars</p>
               <div class="rig-inline">
                 <label class="rig-check">
                   <input class="rig-checkbox" type="checkbox" id="bowsprit-present" name="bowsprit-present" checked={defaults.bowsprit.present} />
                   <span>Bowsprit</span>
                 </label>
-                <label class="rig-check">
+                <label class="rig-check" data-ui-flag="jibboom">
                   <input class="rig-checkbox" type="checkbox" id="jibboom-present" name="jibboom-present" checked={defaults.bowsprit.jibboom} />
                   <span>Jibboom</span>
                 </label>
-                <label class="rig-check">
+                <label class="rig-check" data-ui-flag="jibboom">
                   <input class="rig-checkbox" type="checkbox" id="flying-jibboom-present" name="flying-jibboom-present" checked={defaults.bowsprit.flyingJibboom} />
                   <span>Flying jibboom</span>
                 </label>
-                <label class="rig-check">
+                <label class="rig-check" data-ui-flag="martingale">
                   <input class="rig-checkbox" type="checkbox" id="martingale-present" name="martingale-present" checked={defaults.bowsprit.martingale} />
                   <span>Martingale</span>
                 </label>
-                <label class="rig-check">
+                <label class="rig-check" data-ui-flag="spritsaill">
                   <input class="rig-checkbox" type="checkbox" id="spritsail-yard-present" name="spritsail-yard-present" checked={defaults.bowsprit.spritsailYard} />
                   <span>Spritsail yard</span>
                 </label>
-                <label class="rig-check">
+                <label class="rig-check" data-ui-flag="spritsaill">
                   <input class="rig-checkbox" type="checkbox" id="spritsail-sail" name="spritsail-sail" checked={defaults.bowsprit.spritsailSail} />
                   <span>Spritsail sail</span>
                 </label>
               </div>
             </div>
 
-            <div class="rig-block">
+            <div class="rig-block" data-ui-block="hull">
+              <p class="rig-subtitle">Hull &amp; general</p>
+              <div class="rig-inline">
+                <label class="rig-check">
+                  <input class="rig-checkbox" type="checkbox" id="hull-group-present" name="hull-group-present" checked={defaults.hullGroup} />
+                  <span>Hull &amp; general rigging (boltrope, sail-to-yard lashing)</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="rig-block" data-ui-block="anchor">
               <p class="rig-subtitle">Anchor gear</p>
               <div class="rig-inline">
                 <label class="rig-check">
@@ -542,7 +611,7 @@ const description =
               </div>
             </div>
 
-            <div class="rig-block">
+            <div class="rig-block" data-ui-block="gun">
               <p class="rig-subtitle">Gun gear</p>
               <div class="rig-inline">
                 <label class="rig-check">
@@ -570,16 +639,22 @@ const description =
           <div class="rig-actions">
             <button class="rig-button" type="submit" id="calculate">Calculate diameters</button>
             <button class="rig-button rig-button--ghost" type="reset" id="reset">Reset to example</button>
+            <button class="rig-button rig-button--ghost" type="button" id="load-preset">Load preset</button>
+            <input class="rig-file-input" type="file" id="preset-file" accept="application/json,.json" hidden />
           </div>
         </form>
 
         <aside class="tools-aside">
           <div class="tools-aside-card">
             <h2>What this covers</h2>
+            <p>
+              Only the nodes supported by the selected profile are shown. A row in
+              the results does not assert that a rope was historically fitted.
+            </p>
             <ul>
-              <li>Standing rigging: stays, shrouds, backstays, ratlines, lanyards.</li>
-              <li>Running rigging: halyards, lifts, braces, sheets, tacks, buntlines.</li>
-              <li>Bowsprit &amp; spars, anchor gear, gun gear.</li>
+              <li>Standing: stays, shrouds, backstays, ratlines, lanyards.</li>
+              <li>Running: halyards, lifts, braces, sheets, tacks, clewlines.</li>
+              <li>Bowsprit, anchor and gun gear where the profile defines them.</li>
             </ul>
           </div>
 
@@ -587,12 +662,13 @@ const description =
             <h2>Measurement points</h2>
             <p>
               Lower-mast diameter is taken <strong>at the partner</strong>. The
-              maximum diameter is only an explicitly marked substitute.
+              maximum diameter or the diameter at the step is only an explicitly
+              marked proxy and is flagged in the results.
             </p>
             <p>
               Bowsprit diameter is the <strong>maximum working section</strong>;
-              hull width is the greatest moulded width at the waterline; gun bore
-              is the nominal <strong>bore</strong>, not the outside diameter.
+              hull width is the greatest moulded width; gun bore is the nominal{' '}
+              <strong>bore</strong>, not the outside diameter.
             </p>
           </div>
 
@@ -601,12 +677,11 @@ const description =
             <p>
               These are <strong>engineering estimates</strong> for a static model,
               not a strength calculation and not a reconstruction of a specific
-              vessel. The profile has no verified historical range.
+              vessel. FIT and ENG rows are shown separately.
             </p>
             <p>
-              Counts, lengths and thread consumption are outside this tool. A row
-              in the results does not assert that the rope was historically
-              present.
+              Counts, lengths and thread consumption are outside this tool. Presets
+              can be exported and loaded from JSON.
             </p>
           </div>
 
@@ -617,7 +692,7 @@ const description =
         </aside>
       </div>
 
-      <section class="rig-results" id="rig-results">
+      <section class="rig-results" id="rig-results" tabindex="-1">
         <div class="rig-results__header">
           <div>
             <span class="eyebrow">Results</span>
@@ -738,41 +813,10 @@ const description =
         margin-top: 0.35rem;
     }
 
-    .rig-segmented {
-        display: inline-flex;
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-full);
-        overflow: hidden;
-    }
 
-    .rig-segmented__item {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 9px 16px;
-        font-size: 0.88rem;
-        font-weight: 600;
-        cursor: pointer;
-        color: var(--color-text-muted);
-        transition: background var(--transition), color var(--transition);
-    }
 
-    .rig-segmented__item:has(input:checked) {
-        background: var(--color-primary);
-        color: var(--color-text-inverse);
-    }
 
-    .rig-segmented__item input {
-        position: absolute;
-        opacity: 0;
-        pointer-events: none;
-    }
 
-    .rig-context-period {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-    }
 
     .rig-profiles {
         display: grid;
@@ -782,6 +826,7 @@ const description =
 
     .rig-profile {
         display: flex;
+        flex-wrap: wrap;
         min-width: 0;
         gap: 12px;
         align-items: flex-start;
@@ -808,9 +853,11 @@ const description =
 
     .rig-profile__body {
         display: flex;
+        flex: 1 1 280px;
         flex-direction: column;
         gap: 6px;
         min-width: 0;
+        cursor: pointer;
     }
 
     .rig-profile__head {
@@ -846,6 +893,11 @@ const description =
         font-weight: 600;
     }
 
+    .rig-profile__details > span {
+        display: block;
+        margin-top: 5px;
+    }
+
     .rig-profile__desc {
         font-size: 0.88rem;
         line-height: 1.55;
@@ -865,6 +917,36 @@ const description =
 
     .rig-profile__context {
         margin-top: 0.75rem;
+    }
+
+    .rig-profile__more {
+        display: none;
+        flex: 1 1 100%;
+        margin-left: 30px;
+        font-size: 0.8rem;
+        color: var(--color-text-muted);
+    }
+
+    .rig-profile:hover .rig-profile__more,
+    .rig-profile:focus-within .rig-profile__more,
+    .rig-profile:has(input:checked) .rig-profile__more {
+        display: block;
+    }
+
+    .rig-profile__more summary {
+        cursor: pointer;
+        color: var(--color-primary);
+        font-weight: 600;
+    }
+
+    .rig-profile__caveats {
+        margin: 6px 0;
+        padding-left: 18px;
+    }
+
+    .rig-profile__caveats li {
+        margin: 2px 0;
+        line-height: 1.5;
     }
 
     .rig-section {
@@ -1324,23 +1406,14 @@ const description =
     }
 
     .rig-row__meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 8px;
         color: var(--color-text-muted);
         font-size: 0.85rem;
     }
 
-    .rig-row__estimate {
-        display: inline-block;
-        margin-left: 8px;
-        padding: 2px 8px;
-        border-radius: var(--radius-full);
-        background: var(--color-surface-offset);
-        color: var(--color-text-muted);
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        vertical-align: middle;
-    }
 
     .rig-row__diameter {
         font-variant-numeric: tabular-nums;
@@ -1523,19 +1596,6 @@ const description =
             padding: 18px;
         }
 
-        .rig-segmented {
-            display: flex;
-            width: 100%;
-        }
-
-        .rig-segmented__item {
-            flex: 1 1 0;
-            justify-content: center;
-            min-width: 0;
-            padding: 9px 10px;
-            text-align: center;
-        }
-
         .rig-dims,
         .rig-dim,
         .rig-dim > *,
@@ -1593,5 +1653,81 @@ const description =
         .rig-details__term {
             margin-top: 8px;
         }
+    }
+</style>
+
+<style is:global>
+    /* Компактный выбор профиля: полная карточка — по наведению, фокусу или выбору. */
+    .rig-profile {
+        cursor: pointer;
+    }
+
+    .rig-profile__details {
+        display: none;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed var(--color-border);
+    }
+
+    .rig-profile:hover .rig-profile__details,
+    .rig-profile:focus-within .rig-profile__details,
+    .rig-profile:has(input:checked) .rig-profile__details {
+        display: block;
+    }
+
+    .rig-section-group {
+        min-width: 0;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-sm);
+        padding: 18px 22px;
+        margin-top: 16px;
+    }
+
+    .rig-file-input {
+        display: none;
+    }
+
+    .rig-results {
+        scroll-margin-top: 88px;
+    }
+
+    .rig-results:focus {
+        outline: none;
+    }
+
+    .rig-results.is-highlighted {
+        animation: rig-results-flash 1.2s ease-out;
+    }
+
+    @keyframes rig-results-flash {
+        from { box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 45%, transparent); }
+        to { box-shadow: none; }
+    }
+
+    [hidden] {
+        display: none !important;
+    }
+
+    .rig-row__material {
+        opacity: 0.72;
+    }
+
+    .rig-row__basis {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        padding: 1px 5px;
+        border: 1px solid currentColor;
+        border-radius: 4px;
+    }
+
+    .rig-row__basis--preliminary_fit {
+        color: #8a5a00;
+    }
+
+    .rig-row__basis--engineering_assumption {
+        color: #5a6470;
     }
 </style>

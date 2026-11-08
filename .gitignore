@@ -8,3 +8,8 @@ public/gallery/**/*.webp
 gallery/**/*.webp
 # local integration tooling (binaries, MCP bridge, OAuth token caches)
 .tools/
+
+# local tooling
+.tmp/
+.npm-cache/
+.wrangler/

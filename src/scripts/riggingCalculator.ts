@@ -3,50 +3,58 @@
  *
  * Читает форму, собирает компактную конфигурацию, отправляет её в Worker и
  * рисует ведомость. Формул и коэффициентов здесь нет: расчёт выполняет
- * https://rigging-api.glushkov-modelling.com.
+ * https://rigging-api.glushkov-modelling.com по выбранному документу профиля.
  */
 
 import {
+    SAIL_NODE_KINDS,
     buildInput,
+    sailNodeKindsForUi,
     type RiggingSettings,
+    type SailNodeKind,
 } from '../lib/rigging/settings.ts';
-import { findSuitableProfiles } from '../lib/rigging/profiles.ts';
 import { toCsv, toProjectJson } from '../lib/rigging/export.ts';
 import { formatDiameter } from '../lib/rigging/format.ts';
+import { sailSelectable, tierAvailability } from '../lib/rigging/formRules.ts';
+import { parsePresetJson } from '../lib/rigging/preset.ts';
 import {
     CALIBRATION_LABELS,
     GROUP_LABELS,
     MAST_IDS,
+    MATERIAL_LABELS,
     MEASUREMENT_LABELS,
+    MEASUREMENT_POINT_LABELS,
     ORIGIN_LABELS,
+    ORIGIN_SHORT_LABELS,
     OWNER_LABELS,
+    OWNER_ORDER,
     REASON_LABELS,
     SAIL_CLASSES,
     STATUS_LABELS,
     TIER_LABELS,
 } from '../lib/rigging/profile.ts';
+import type { ProfileUi } from '../lib/rigging/document.ts';
 import type {
     AnchorConnection,
     Basis,
     Calculation,
     GunType,
-    HistoricalContext,
     MastId,
     Measurement,
     MeasurementPointId,
     MountingType,
     ResultGroup,
     ResultStatus,
-    RiggingInput,
     RiggingResult,
     SailClass,
     Tier,
     UnitId,
 } from '../lib/rigging/types.ts';
-import { PROFILE_ID } from '../lib/rigging/types.ts';
+import { DEFAULT_PROFILE_ID } from '../lib/rigging/types.ts';
 
 const MAST_IDS_LIST = MAST_IDS as readonly MastId[];
 const SAIL_CLASSES_LIST = SAIL_CLASSES as readonly SailClass[];
+const SAIL_NODE_KINDS_LIST = SAIL_NODE_KINDS as readonly SailNodeKind[];
 
 const DEFAULT_API_BASE = 'https://rigging-api.glushkov-modelling.com';
 
@@ -61,7 +69,18 @@ const API_BASE = (() => {
 
 type GroupFilter = 'all' | ResultGroup;
 
-async function postCalculate(input: RiggingInput, signal: AbortSignal): Promise<Calculation> {
+interface ProfileCardData {
+    profileId: string;
+    version: string;
+    ui: ProfileUi;
+    defaults: RiggingSettings;
+    name: string;
+}
+
+async function postCalculate(
+    input: ReturnType<typeof buildInput>,
+    signal: AbortSignal,
+): Promise<Calculation> {
     const response = await fetch(`${API_BASE}/api/rigging/v1/calculate`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -100,11 +119,11 @@ function select(id: string): HTMLSelectElement {
 }
 
 function checked(id: string): boolean {
-    return input(id).checked;
+    const element = document.getElementById(id) as HTMLInputElement | null;
+    return element ? element.checked : false;
 }
 
 function isRussianLocale(): boolean {
-    // Русские подписи показываются, если язык браузера пользователя русский.
     const navigatorLang = (navigator.language || '').toLowerCase();
     return navigatorLang.startsWith('ru');
 }
@@ -138,7 +157,6 @@ type DimPrefix = (typeof DIM_PREFIXES)[number];
 interface DimState {
     unit: UnitId;
     basis: Basis;
-    /** Полная точность в текущих единицах и режиме; округляется только в UI. */
     value: number | null;
 }
 
@@ -175,10 +193,7 @@ function initDimState(): void {
 
 /**
  * При смене единиц или режима «model / full-size vessel» физический размер
- * сохраняется, а число пересчитывается с полной точностью. Округление до двух
- * знаков выполняется только при записи в поле; внутреннее значение в dimState
- * остаётся точным, поэтому при многократных переключениях ошибка не
- * накапливается.
+ * сохраняется, а число пересчитывается с полной точностью.
  */
 function onDimensionUnitOrBasisChange(prefix: DimPrefix): void {
     const previous = dimState.get(prefix);
@@ -189,9 +204,7 @@ function onDimensionUnitOrBasisChange(prefix: DimPrefix): void {
         return;
     }
 
-    if (previous.unit === next.unit && previous.basis === next.basis) {
-        return;
-    }
+    if (previous.unit === next.unit && previous.basis === next.basis) return;
 
     if (previous.value === null) {
         dimState.set(prefix, { ...next, value: null });
@@ -223,78 +236,85 @@ function readMeasurement(prefix: string, point: MeasurementPointId): Measurement
     };
 }
 
+/* ------------------------------ profile state ----------------------------- */
+
+const PROFILE_DATA = new Map<string, ProfileCardData>();
+
+document.querySelectorAll<HTMLElement>('[data-profile-card]').forEach((card) => {
+    const radio = card.querySelector<HTMLInputElement>('input[name="profile"]');
+    if (!radio) return;
+    const ui = JSON.parse(card.dataset.ui ?? '{}') as ProfileUi;
+    const defaults = JSON.parse(card.dataset.defaults ?? '{}') as RiggingSettings;
+    const name = card.querySelector('strong')?.textContent?.trim() ?? radio.value;
+    PROFILE_DATA.set(radio.value, {
+        profileId: radio.value,
+        version: card.dataset.version ?? '',
+        ui,
+        defaults,
+        name,
+    });
+});
+
+const PROFILE_VERSIONS = new Map(
+    [...PROFILE_DATA.values()].map((profile) => [profile.profileId, profile.version]),
+);
+
+function selectedProfileId(): string {
+    const element = document.querySelector<HTMLInputElement>('input[name="profile"]:checked');
+    return element?.value ?? DEFAULT_PROFILE_ID;
+}
+
+function selectedProfile(): ProfileCardData | null {
+    return PROFILE_DATA.get(selectedProfileId()) ?? null;
+}
+
+/* -------------------------------- settings -------------------------------- */
+
 function readMast(mastId: MastId): RiggingSettings['masts'][MastId] {
+    const present = checked(`mast-${mastId}-present`);
     return {
-        present: checked(`mast-${mastId}-present`),
+        present,
         diameter: readMeasurement(
             `mast-${mastId}`,
             select(`mast-${mastId}-point`).value as MeasurementPointId,
         ),
-        topmast: checked(`mast-${mastId}-topmast`),
-        topgallant: checked(`mast-${mastId}-topgallant`),
+        topmast: present && checked(`mast-${mastId}-topmast`),
+        topgallant: present && checked(`mast-${mastId}-topgallant`),
         yards: {
-            lower: checked(`mast-${mastId}-yard-lower`),
-            topmast: checked(`mast-${mastId}-yard-topmast`),
-            topgallant: checked(`mast-${mastId}-yard-topgallant`),
+            lower: present && checked(`mast-${mastId}-yard-lower`),
+            topmast: present && checked(`mast-${mastId}-yard-topmast`),
+            topgallant: present && checked(`mast-${mastId}-yard-topgallant`),
         },
         sails: {
-            lower: checked(`mast-${mastId}-sail-lower`),
-            topmast: checked(`mast-${mastId}-sail-topmast`),
-            topgallant: checked(`mast-${mastId}-sail-topgallant`),
+            lower: present && checked(`mast-${mastId}-sail-lower`),
+            topmast: present && checked(`mast-${mastId}-sail-topmast`),
+            topgallant: present && checked(`mast-${mastId}-sail-topgallant`),
         },
-    };
-}
-
-function readContextMode(): 'year' | 'period' {
-    const checked = document.querySelector<HTMLInputElement>(
-        'input[name="context-mode"]:checked',
-    );
-    return checked && checked.value === 'period' ? 'period' : 'year';
-}
-
-function readProfileId(): string {
-    const checked = document.querySelector<HTMLInputElement>(
-        'input[name="profile"]:checked',
-    );
-    return checked ? checked.value : PROFILE_ID;
-}
-
-function readHistoricalContext(): HistoricalContext {
-    const mode = readContextMode();
-    const parseYear = (id: string): number | null => {
-        const raw = input(id).value.trim();
-        if (raw === '') return null;
-        const value = Number(raw);
-        return Number.isFinite(value) ? value : null;
-    };
-
-    if (mode === 'year') {
-        return {
-            mode: 'year',
-            year: parseYear('context-year'),
-            periodFrom: null,
-            periodTo: null,
-        };
-    }
-
-    return {
-        mode: 'period',
-        year: null,
-        periodFrom: parseYear('context-period-from'),
-        periodTo: parseYear('context-period-to'),
     };
 }
 
 function readSettings(): RiggingSettings {
+    const profile = selectedProfile();
+    const masts = {
+        fore: readMast('fore'),
+        main: readMast('main'),
+        mizzen: readMast('mizzen'),
+    } as RiggingSettings['masts'];
+
+    const sailNodes = {} as RiggingSettings['sailNodes'];
+    for (const kind of SAIL_NODE_KINDS_LIST) {
+        sailNodes[kind] = { fore: false, main: false, mizzen: false };
+        for (const mastId of MAST_IDS_LIST) {
+            sailNodes[kind][mastId] =
+                masts[mastId].present && checked(`sailnode-${kind}-${mastId}`);
+        }
+    }
+
     return {
-        profileId: readProfileId(),
-        historicalContext: readHistoricalContext(),
+        profileId: selectedProfileId(),
+        profileVersion: profile?.version ?? null,
         scaleDenominator: Number(input('scale').value.trim().replace(',', '.')),
-        masts: {
-            fore: readMast('fore'),
-            main: readMast('main'),
-            mizzen: readMast('mizzen'),
-        },
+        masts,
         bowsprit: {
             present: checked('bowsprit-present'),
             diameter: readMeasurement('bowsprit', 'working_section'),
@@ -338,33 +358,163 @@ function readSettings(): RiggingSettings {
             sailPresent: checked('gaff-sail'),
             supportingMastId: select('gaff-mast').value as MastId,
         },
+        sailNodes,
+        lateenYard: {
+            present: checked('lateen-present'),
+            sailPresent: checked('lateen-sail'),
+            supportingMastId: select('lateen-mast').value as MastId,
+        },
+        hullGroup: checked('hull-group-present'),
     };
 }
 
-const state = {
-    calculation: null as Calculation | null,
-    settings: null as RiggingSettings | null,
-    activeGroup: 'all' as GroupFilter,
-    showNotApplicable: false,
-    dirty: false,
-    formVersion: 0,
-    requestSeq: 0,
-    abort: undefined as AbortController | undefined,
-};
+/* -------------------------- apply settings to form ------------------------ */
 
-const form = byId<HTMLFormElement>('rigging-form');
-const errorsBox = byId('form-errors');
-const resultsStatus = byId('results-status');
-const resultsSection = byId('rig-results');
-const summary = byId('summary');
-const resultsList = byId('results-list');
-const calculationError = byId('calculation-error');
-const showNaInput = input('show-na');
-const exportCsv = byId<HTMLButtonElement>('export-csv');
-const exportJson = byId<HTMLButtonElement>('export-json');
-const calculateButton = byId<HTMLButtonElement>('calculate');
-const ropeModal = byId('rope-modal');
-const ropeModalTarget = byId('rope-modal-target');
+function setCheck(id: string, value: boolean): void {
+    const element = document.getElementById(id) as HTMLInputElement | null;
+    if (element) element.checked = value;
+}
+
+function setValue(id: string, value: number | null): void {
+    const element = document.getElementById(id) as HTMLInputElement | null;
+    if (element) element.value = value === null ? '' : String(value);
+}
+
+function setSelect(id: string, value: string): void {
+    const element = document.getElementById(id) as HTMLSelectElement | null;
+    if (element) element.value = value;
+}
+
+function applyMeasurement(prefix: string, measurement: Measurement): void {
+    setValue(`${prefix}-value`, measurement.value);
+    setSelect(`${prefix}-unit`, measurement.unitId);
+    setSelect(`${prefix}-basis`, measurement.basis);
+}
+
+function applySettingsToForm(settings: RiggingSettings): void {
+    const radio = document.querySelector<HTMLInputElement>(
+        `input[name="profile"][value="${settings.profileId}"]`,
+    );
+    if (radio) radio.checked = true;
+
+    setValue('scale', settings.scaleDenominator);
+
+    for (const mastId of MAST_IDS_LIST) {
+        const mast = settings.masts[mastId];
+        applyMeasurement(`mast-${mastId}`, mast.diameter);
+        setSelect(`mast-${mastId}-point`, mast.diameter.measurementPointId);
+        setCheck(`mast-${mastId}-present`, mast.present);
+        setCheck(`mast-${mastId}-topmast`, mast.topmast);
+        setCheck(`mast-${mastId}-topgallant`, mast.topgallant);
+        for (const tier of ['lower', 'topmast', 'topgallant'] as Tier[]) {
+            setCheck(`mast-${mastId}-yard-${tier}`, mast.yards[tier]);
+            setCheck(`mast-${mastId}-sail-${tier}`, mast.sails[tier]);
+        }
+    }
+
+    applyMeasurement('bowsprit', settings.bowsprit.diameter);
+    setCheck('bowsprit-present', settings.bowsprit.present);
+    setCheck('jibboom-present', settings.bowsprit.jibboom);
+    setCheck('flying-jibboom-present', settings.bowsprit.flyingJibboom);
+    setCheck('martingale-present', settings.bowsprit.martingale);
+    setCheck('spritsail-yard-present', settings.bowsprit.spritsailYard);
+    setCheck('spritsail-sail', settings.bowsprit.spritsailSail);
+
+    applyMeasurement('hull-width', settings.hullWidth);
+    applyMeasurement('gun-bore', settings.gun.bore);
+
+    setCheck('anchor-present', settings.anchor.present);
+    setSelect('anchor-connection', settings.anchor.connection);
+    setCheck('gun-present', settings.gun.present);
+    setSelect('gun-type', settings.gun.gunType);
+    setSelect('gun-mounting', settings.gun.mountingType);
+
+    for (const sailClass of SAIL_CLASSES_LIST) {
+        setCheck(`foreaft-${sailClass}-present`, settings.foreAndAft[sailClass].present);
+        setSelect(`foreaft-${sailClass}-mast`, settings.foreAndAft[sailClass].supportingMastId);
+    }
+
+    setCheck('gaff-present', settings.gaff.present);
+    setCheck('gaff-sail', settings.gaff.sailPresent);
+    setSelect('gaff-mast', settings.gaff.supportingMastId);
+
+    setCheck('lateen-present', settings.lateenYard.present);
+    setCheck('lateen-sail', settings.lateenYard.sailPresent);
+    setSelect('lateen-mast', settings.lateenYard.supportingMastId);
+
+    for (const kind of SAIL_NODE_KINDS_LIST) {
+        for (const mastId of MAST_IDS_LIST) {
+            setCheck(`sailnode-${kind}-${mastId}`, settings.sailNodes[kind][mastId]);
+        }
+    }
+
+    setCheck('hull-group-present', settings.hullGroup);
+}
+
+/* ------------------------------- profile UI ------------------------------- */
+
+function applyProfileUi(ui: ProfileUi): void {
+    const sailKinds = new Set(sailNodeKindsForUi(ui));
+    const blocks: Record<string, boolean> = {
+        masts: ui.masts,
+        square: ui.yards || ui.squareSails,
+        foreaft: ui.foreAndAft.length > 0,
+        gaff: ui.gaff && !ui.gaffSail,
+        lateen: ui.lateenYard,
+        sailnodes: sailKinds.size > 0,
+        bowsprit: ui.bowsprit,
+        hull: ui.hullGroup,
+        anchor: ui.anchor,
+        gun: ui.gun,
+    };
+
+    document.querySelectorAll<HTMLElement>('[data-ui-block]').forEach((element) => {
+        const key = element.dataset.uiBlock ?? '';
+        element.hidden = !blocks[key];
+    });
+
+    const sparsFieldset = document.querySelector<HTMLElement>('[data-spars-fieldset]');
+    if (sparsFieldset) {
+        sparsFieldset.hidden = !(ui.bowsprit || ui.hullGroup || ui.anchor || ui.gun);
+    }
+
+    document.querySelectorAll<HTMLElement>('[data-mast-tier]').forEach((cell) => {
+        const tier = cell.dataset.mastTier as Tier;
+        cell.hidden = !ui.tiers.includes(tier);
+    });
+    document.querySelectorAll<HTMLElement>('[data-tier-row]').forEach((row) => {
+        const tier = row.dataset.tierRow as Tier;
+        row.hidden = !ui.tiers.includes(tier);
+    });
+    document.querySelectorAll<HTMLElement>('[data-sail-class]').forEach((row) => {
+        const sailClass = row.dataset.sailClass as SailClass;
+        row.hidden = !ui.foreAndAft.includes(sailClass);
+    });
+    document.querySelectorAll<HTMLElement>('[data-sailnode-row]').forEach((row) => {
+        const kind = row.dataset.sailnodeRow as SailNodeKind;
+        row.hidden = !sailKinds.has(kind);
+    });
+    document.querySelectorAll<HTMLElement>('[data-ui-flag]').forEach((element) => {
+        const flag = element.dataset.uiFlag;
+        const visible =
+            (flag === 'jibboom' && ui.jibboom) ||
+            (flag === 'martingale' && ui.martingale) ||
+            (flag === 'spritsaill' && ui.spritsaill);
+        element.hidden = !visible;
+    });
+
+    const dimensionVisibility: Record<string, boolean> = {
+        bowsprit: ui.bowsprit,
+        'hull-width': ui.anchor,
+        'gun-bore': ui.gun,
+    };
+    for (const [key, visible] of Object.entries(dimensionVisibility)) {
+        const element = document.querySelector<HTMLElement>(`[data-dim="${key}"]`);
+        if (element) element.hidden = !visible;
+    }
+}
+
+/* ----------------------------- form dependencies -------------------------- */
 
 function setDisabled(id: string, disabled: boolean): void {
     const element = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
@@ -375,7 +525,12 @@ function syncDisabled(): void {
     for (const mastId of MAST_IDS_LIST) {
         const present = checked(`mast-${mastId}-present`);
         const topmast = present && checked(`mast-${mastId}-topmast`);
-        const topgallant = topmast && checked(`mast-${mastId}-topgallant`);
+        const mastState = {
+            present,
+            topmast,
+            topgallant: topmast && checked(`mast-${mastId}-topgallant`),
+        };
+        const available = tierAvailability(mastState);
 
         for (const suffix of ['-value', '-unit', '-basis', '-point']) {
             setDisabled(`mast-${mastId}${suffix}`, !present);
@@ -383,13 +538,17 @@ function syncDisabled(): void {
         setDisabled(`mast-${mastId}-topmast`, !present);
         setDisabled(`mast-${mastId}-topgallant`, !topmast);
 
-        setDisabled(`mast-${mastId}-yard-lower`, !present);
-        setDisabled(`mast-${mastId}-yard-topmast`, !topmast);
-        setDisabled(`mast-${mastId}-yard-topgallant`, !topgallant);
+        for (const tier of ['lower', 'topmast', 'topgallant'] as Tier[]) {
+            setDisabled(`mast-${mastId}-yard-${tier}`, !available[tier]);
+            setDisabled(
+                `mast-${mastId}-sail-${tier}`,
+                !sailSelectable(mastState, tier, checked(`mast-${mastId}-yard-${tier}`)),
+            );
+        }
 
-        setDisabled(`mast-${mastId}-sail-lower`, !checked(`mast-${mastId}-yard-lower`));
-        setDisabled(`mast-${mastId}-sail-topmast`, !checked(`mast-${mastId}-yard-topmast`));
-        setDisabled(`mast-${mastId}-sail-topgallant`, !checked(`mast-${mastId}-yard-topgallant`));
+        for (const kind of SAIL_NODE_KINDS_LIST) {
+            setDisabled(`sailnode-${kind}-${mastId}`, !present);
+        }
     }
 
     const bowsprit = checked('bowsprit-present');
@@ -427,7 +586,42 @@ function syncDisabled(): void {
     setDisabled('gaff-present', !checked(`mast-${gaffMast}-present`));
     setDisabled('gaff-mast', !gaff);
     setDisabled('gaff-sail', !gaff);
+
+    const lateen = checked('lateen-present');
+    const lateenMast = select('lateen-mast').value as MastId;
+    setDisabled('lateen-present', !checked(`mast-${lateenMast}-present`));
+    setDisabled('lateen-mast', !lateen);
+    setDisabled('lateen-sail', !lateen);
 }
+
+/* --------------------------------- state ---------------------------------- */
+
+const state = {
+    calculation: null as Calculation | null,
+    settings: null as RiggingSettings | null,
+    activeGroup: 'all' as GroupFilter,
+    showNotApplicable: false,
+    dirty: false,
+    formVersion: 0,
+    requestSeq: 0,
+    abort: undefined as AbortController | undefined,
+};
+
+const form = byId<HTMLFormElement>('rigging-form');
+const errorsBox = byId('form-errors');
+const resultsStatus = byId('results-status');
+const resultsSection = byId('rig-results');
+const summary = byId('summary');
+const resultsList = byId('results-list');
+const calculationError = byId('calculation-error');
+const showNaInput = input('show-na');
+const exportCsv = byId<HTMLButtonElement>('export-csv');
+const exportJson = byId<HTMLButtonElement>('export-json');
+const calculateButton = byId<HTMLButtonElement>('calculate');
+const loadPresetButton = byId<HTMLButtonElement>('load-preset');
+const presetFile = byId<HTMLInputElement>('preset-file');
+const ropeModal = byId('rope-modal');
+const ropeModalTarget = byId('rope-modal-target');
 
 const FIELD_TO_ID: Record<string, string> = {
     scaleDenominator: 'scale',
@@ -512,7 +706,22 @@ function buildDetailsBody(result: RiggingResult): HTMLDListElement {
         'Origin',
         `${ORIGIN_LABELS[result.coefficientBasis]} · ${CALIBRATION_LABELS[result.calibrationStatus]}`,
     );
+    definitionText(dl, 'Material', MATERIAL_LABELS[result.material]);
+    definitionText(
+        dl,
+        'Measurement point',
+        result.measurementPointId
+            ? (MEASUREMENT_POINT_LABELS[result.measurementPointId] ?? result.measurementPointId)
+            : null,
+    );
     definitionText(dl, 'Profile', `${result.profileId} v${result.profileVersion}`);
+    definitionText(
+        dl,
+        'Sources',
+        result.sourceIds.length > 0
+            ? `${result.sourceIds.join(', ')}${result.sourceLocator ? ` · ${result.sourceLocator}` : ''}`
+            : null,
+    );
 
     if (result.status !== 'calculated' && result.reasonCode) {
         definitionText(dl, 'Status', REASON_LABELS[result.reasonCode]);
@@ -566,7 +775,7 @@ function createRow(result: RiggingResult): HTMLElement {
     details.dataset.status = result.status;
     details.dataset.group = result.group;
 
-    const summary = el('summary', 'rig-row__summary');
+    const summaryEl = el('summary', 'rig-row__summary');
 
     const identity = el('span', 'rig-row__identity');
     const name = el('span', 'rig-row__name');
@@ -581,10 +790,14 @@ function createRow(result: RiggingResult): HTMLElement {
 
     const meta = el('span', 'rig-row__meta');
     meta.textContent = metaLabel(result);
+    const material = el('span', 'rig-row__material');
+    material.textContent = MATERIAL_LABELS[result.material];
+    meta.appendChild(material);
     if (result.status === 'calculated') {
-        const estimate = el('span', 'rig-row__estimate');
-        estimate.textContent = 'Estimate';
-        meta.appendChild(estimate);
+        const basis = el('span', `rig-row__basis rig-row__basis--${result.coefficientBasis}`);
+        basis.textContent = ORIGIN_SHORT_LABELS[result.coefficientBasis];
+        basis.title = ORIGIN_LABELS[result.coefficientBasis];
+        meta.appendChild(basis);
     }
 
     const diameter = el('span', 'rig-row__diameter');
@@ -593,12 +806,12 @@ function createRow(result: RiggingResult): HTMLElement {
     const badge = el('span', `rig-row__badge rig-row__badge--${result.status}`);
     badge.textContent = STATUS_LABELS[result.status];
 
-    summary.append(identity, meta, diameter, badge);
+    summaryEl.append(identity, meta, diameter, badge);
 
     const body = el('div', 'rig-row__body');
     body.appendChild(buildDetailsBody(result));
 
-    details.append(summary, body);
+    details.append(summaryEl, body);
     return details;
 }
 
@@ -628,16 +841,19 @@ function renderResults(calc: Calculation): void {
         return;
     }
 
-    const ownerOrder = ['fore', 'main', 'mizzen', 'bowsprit', 'anchor_group', 'gun_group'];
     const byOwner = new Map<string, RiggingResult[]>();
-
     for (const result of visible) {
         const list = byOwner.get(result.ownerId) ?? [];
         list.push(result);
         byOwner.set(result.ownerId, list);
     }
 
-    for (const ownerId of ownerOrder) {
+    const owners = [
+        ...OWNER_ORDER.filter((ownerId) => byOwner.has(ownerId)),
+        ...[...byOwner.keys()].filter((ownerId) => !OWNER_ORDER.includes(ownerId)),
+    ];
+
+    for (const ownerId of owners) {
         const rows = byOwner.get(ownerId);
         if (!rows || rows.length === 0) continue;
 
@@ -678,6 +894,21 @@ function renderSummary(calc: Calculation): void {
         item.append(labelEl, valueEl);
         summary.appendChild(item);
     }
+
+    const calculated = calc.results.filter((result) => result.status === 'calculated');
+    for (const basis of ['preliminary_fit', 'engineering_assumption'] as const) {
+        const count = calculated.filter((result) => result.coefficientBasis === basis).length;
+        const item = el('div', 'rig-summary__item');
+        item.dataset.status = 'basis';
+
+        const labelEl = el('span', 'rig-summary__label');
+        labelEl.textContent = `${ORIGIN_SHORT_LABELS[basis]} rows`;
+        const valueEl = el('span', 'rig-summary__value');
+        valueEl.textContent = String(count);
+
+        item.append(labelEl, valueEl);
+        summary.appendChild(item);
+    }
 }
 
 function calculationErrorMessage(error: unknown): string {
@@ -685,7 +916,17 @@ function calculationErrorMessage(error: unknown): string {
     return `Calculation service is unavailable.${detail} Press "Calculate diameters" to retry.`;
 }
 
-async function calculateAndRender(): Promise<void> {
+function scrollToResults(): void {
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    resultsSection.focus({ preventScroll: true });
+    resultsSection.classList.add('is-highlighted');
+    window.setTimeout(() => resultsSection.classList.remove('is-highlighted'), 1400);
+    if (window.location.hash !== '#rig-results') {
+        window.history.replaceState(null, '', '#rig-results');
+    }
+}
+
+async function calculateAndRender(scrollOnSuccess: boolean): Promise<void> {
     const settings = readSettings();
     const input = buildInput(settings);
     const versionAtStart = state.formVersion;
@@ -724,6 +965,8 @@ async function calculateAndRender(): Promise<void> {
             resultsSection.classList.add('is-stale');
             calculateButton.classList.add('rig-button--attention');
         }
+
+        if (scrollOnSuccess) scrollToResults();
     } catch (error) {
         if (controller.signal.aborted || seq !== state.requestSeq) return;
 
@@ -782,9 +1025,37 @@ function timestamp(): string {
     );
 }
 
+function updateProfileNote(): void {
+    const profile = selectedProfile();
+    const note = byId('profile-context-note');
+    if (!profile) {
+        note.textContent = 'No profile selected.';
+        return;
+    }
+    note.textContent = `Selected: ${profile.name} v${profile.version} — tiers: ${profile.ui.tiers.join(', ')}. A draft profile is not historical verification.`;
+}
+
+function onProfileChange(): void {
+    const profile = selectedProfile();
+    if (!profile) return;
+    applySettingsToForm(profile.defaults);
+    applyProfileUi(profile.ui);
+    initDimState();
+    syncDisabled();
+    updateProfileNote();
+    markDirty();
+    void calculateAndRender(true);
+}
+
+/* -------------------------------- events ---------------------------------- */
+
 exportCsv.addEventListener('click', () => {
     if (!state.calculation) return;
-    download(`rigging-diameters-${timestamp()}.csv`, toCsv(state.calculation), 'text/csv;charset=utf-8');
+    download(
+        `rigging-diameters-${timestamp()}.csv`,
+        toCsv(state.calculation),
+        'text/csv;charset=utf-8',
+    );
 });
 
 exportJson.addEventListener('click', () => {
@@ -796,26 +1067,63 @@ exportJson.addEventListener('click', () => {
     );
 });
 
+loadPresetButton.addEventListener('click', () => presetFile.click());
+
+presetFile.addEventListener('change', async () => {
+    const file = presetFile.files?.[0];
+    if (!file) return;
+    try {
+        const settings = parsePresetJson(await file.text(), PROFILE_VERSIONS);
+        applySettingsToForm(settings);
+        applyProfileUi(PROFILE_DATA.get(settings.profileId)!.ui);
+        initDimState();
+        syncDisabled();
+        updateProfileNote();
+        markDirty();
+        await calculateAndRender(true);
+    } catch (error) {
+        calculationError.textContent = `Could not load preset. ${error instanceof Error ? error.message : ''}`;
+        calculationError.hidden = false;
+    } finally {
+        presetFile.value = '';
+    }
+});
+
 form.addEventListener('submit', (event) => {
     event.preventDefault();
     syncDisabled();
-    calculateAndRender();
+    void calculateAndRender(true);
 });
 
 form.addEventListener('reset', () => {
     window.setTimeout(() => {
+        const profile = selectedProfile();
+        if (profile) {
+            applySettingsToForm(profile.defaults);
+            applyProfileUi(profile.ui);
+        }
         initDimState();
         syncDisabled();
-        calculateAndRender();
+        updateProfileNote();
+        void calculateAndRender(false);
     }, 0);
 });
 
-form.addEventListener('input', markDirty);
+form.addEventListener('input', (event) => {
+    const target = event.target as HTMLElement;
+    if (target.id === 'profile' || (target as HTMLInputElement).name === 'profile') return;
+    markDirty();
+});
+
 form.addEventListener('change', (event) => {
     const target = event.target as HTMLElement;
     if (target.id === 'show-na') return;
-    // Пересчитываем доступность зависимых полей сразу: иначе, например,
-    // supporting mast у Upper headsail остаётся disabled до нажатия Calculate.
+    if ((target as HTMLInputElement).name === 'profile') {
+        onProfileChange();
+        return;
+    }
+    // Пересчитываем доступность зависимых полей сразу: иначе sail остаётся
+    // доступным после снятия мачты.
     syncDisabled();
     markDirty();
 });
@@ -833,47 +1141,7 @@ showNaInput.addEventListener('change', () => {
     if (state.calculation) renderResults(state.calculation);
 });
 
-function syncContextModeFields(): void {
-    const isPeriod = readContextMode() === 'period';
-    byId('context-year-field').hidden = isPeriod;
-    byId('context-period-field').hidden = !isPeriod;
-}
-
-function updateProfileContextNote(): void {
-    const context = readHistoricalContext();
-    const matches = findSuitableProfiles(context);
-    const note = byId('profile-context-note');
-
-    const inRange = matches.filter((match) => match.match === 'in_range').length;
-    const partial = matches.filter((match) => match.match === 'partial_overlap').length;
-    const drafts = matches.filter((match) => match.match === 'draft_unconfirmed').length;
-
-    const publishedPart = `Published profiles: ${inRange} in range${partial ? `, ${partial} partial` : ''}.`;
-    const draftPart = drafts ? ` ${drafts} draft profile(s) shown for explicit selection.` : '';
-
-    if (context.mode === 'year' && context.year !== null) {
-        note.textContent = `Context: ${context.year} (year). ${publishedPart}${draftPart}`;
-        return;
-    }
-    if (context.mode === 'period' && context.periodFrom !== null && context.periodTo !== null) {
-        note.textContent =
-            `Context: ${context.periodFrom}–${context.periodTo} (period). ${publishedPart}${draftPart}`;
-        return;
-    }
-    note.textContent = 'Enter a year or period. The profile covers 1625–1860 (James Lees).';
-}
-
-document.querySelectorAll<HTMLInputElement>('input[name="context-mode"]').forEach((radio) => {
-    radio.addEventListener('change', () => {
-        syncContextModeFields();
-        updateProfileContextNote();
-    });
-});
-
-byId('find-profiles').addEventListener('click', updateProfileContextNote);
-
-syncContextModeFields();
-updateProfileContextNote();
+/* -------------------------------- rope modal ------------------------------ */
 
 function setRopeTarget(targetMm: number): void {
     const element = ropeModal.querySelector('gm-rope-calculator') as HTMLElement | null;
@@ -924,10 +1192,16 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+/* --------------------------------- init ----------------------------------- */
+
 initDimState();
 for (const prefix of DIM_PREFIXES) {
-    select(`${prefix}-unit`).addEventListener('change', () => onDimensionUnitOrBasisChange(prefix));
-    select(`${prefix}-basis`).addEventListener('change', () => onDimensionUnitOrBasisChange(prefix));
+    select(`${prefix}-unit`).addEventListener('change', () =>
+        onDimensionUnitOrBasisChange(prefix),
+    );
+    select(`${prefix}-basis`).addEventListener('change', () =>
+        onDimensionUnitOrBasisChange(prefix),
+    );
 
     input(`${prefix}-value`).addEventListener('input', () => {
         const current = dimState.get(prefix);
@@ -937,5 +1211,12 @@ for (const prefix of DIM_PREFIXES) {
     });
 }
 
+const initialProfile = selectedProfile();
+if (initialProfile) {
+    applySettingsToForm(initialProfile.defaults);
+    applyProfileUi(initialProfile.ui);
+    initDimState();
+}
+updateProfileNote();
 syncDisabled();
-calculateAndRender();
+void calculateAndRender(false);

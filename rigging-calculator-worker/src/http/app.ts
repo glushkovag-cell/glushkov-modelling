@@ -1,13 +1,15 @@
 import { API_VERSION, MAX_BODY_BYTES } from '../constants';
 import { RiggingError, invalidParams } from '../core/errors';
+import { ALGORITHM_VERSION, calculate } from '../core/rigging';
 import {
-  ALGORITHM_VERSION,
-  PROFILE_REGISTRY,
-  calculate,
-  type RiggingInput,
-} from '../core/rigging';
+  ProfileUnavailableError,
+  loadManifest,
+  loadProfileDocument,
+  type ProfileEnv,
+} from '../profiles/client';
 import { corsHeaders } from './cors';
 import { errorResponse, jsonResponse } from './responses';
+import type { RiggingInput } from '../core/rigging';
 
 const ROUTES = {
   health: '/api/rigging/v1/health',
@@ -68,6 +70,9 @@ function ensureRiggingInput(value: unknown): RiggingInput {
   const input = value as Partial<RiggingInput>;
   const fields: string[] = [];
 
+  if (typeof input.profileId !== 'string' || input.profileId.trim() === '') {
+    fields.push('profileId');
+  }
   if (typeof input.scaleDenominator !== 'number') fields.push('scaleDenominator');
   if (!Array.isArray(input.nodes)) fields.push('nodes');
   if (typeof input.measurements !== 'object' || input.measurements === null) {
@@ -76,7 +81,7 @@ function ensureRiggingInput(value: unknown): RiggingInput {
 
   if (fields.length > 0) {
     throw invalidParams(
-      'Request body must contain scaleDenominator, measurements and nodes.',
+      'Request body must contain profileId, scaleDenominator, measurements and nodes.',
       fields,
     );
   }
@@ -85,7 +90,10 @@ function ensureRiggingInput(value: unknown): RiggingInput {
 }
 
 /** Обработчик всех маршрутов Worker. Вынесен из index.ts ради тестов. */
-export async function handleRequest(request: Request): Promise<Response> {
+export async function handleRequest(
+  request: Request,
+  env: ProfileEnv = {},
+): Promise<Response> {
   const { pathname } = new URL(request.url);
   const cors = corsHeaders(request.headers.get('origin'));
   const requestId = requestIdOf(request);
@@ -121,12 +129,9 @@ export async function handleRequest(request: Request): Promise<Response> {
 
       case ROUTES.profiles: {
         if (request.method !== 'GET') return methodNotAllowed('GET');
+        const manifest = await loadManifest(env);
         return jsonResponse(
-          {
-            apiVersion: API_VERSION,
-            algorithmVersion: ALGORITHM_VERSION,
-            profiles: PROFILE_REGISTRY,
-          },
+          { apiVersion: API_VERSION, algorithmVersion: ALGORITHM_VERSION, ...manifest },
           200,
           cors,
         );
@@ -135,12 +140,22 @@ export async function handleRequest(request: Request): Promise<Response> {
       case ROUTES.calculate: {
         if (request.method !== 'POST') return methodNotAllowed('POST');
         const input = ensureRiggingInput(await readJsonBody(request));
-        const calculation = calculate(input);
-        return jsonResponse(
-          { apiVersion: API_VERSION, ...calculation },
-          200,
-          cors,
+        const document = await loadProfileDocument(
+          input.profileId,
+          input.profileVersion,
+          env,
         );
+
+        if (!document) {
+          throw new RiggingError(
+            'PROFILE_NOT_FOUND',
+            `Unknown profile: ${input.profileId}. The profile is never substituted silently.`,
+            ['profileId'],
+          );
+        }
+
+        const calculation = calculate(input, document);
+        return jsonResponse({ apiVersion: API_VERSION, ...calculation }, 200, cors);
       }
 
       default:
@@ -160,6 +175,21 @@ export async function handleRequest(request: Request): Promise<Response> {
   } catch (error) {
     if (error instanceof RiggingError) {
       return errorResponse(error, requestId, cors);
+    }
+
+    if (error instanceof ProfileUnavailableError) {
+      return jsonResponse(
+        {
+          error: {
+            code: 'PROFILE_UNAVAILABLE',
+            message: error.message,
+            fields: [],
+          },
+          requestId,
+        },
+        503,
+        cors,
+      );
     }
 
     return jsonResponse(
