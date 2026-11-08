@@ -930,13 +930,18 @@ async function calculateAndRender(scrollOnSuccess: boolean): Promise<void> {
     const settings = readSettings();
     const input = buildInput(settings);
     const versionAtStart = state.formVersion;
+    // Пока идёт пересчёт, старые результаты относятся к прежним входам или
+    // профилю, поэтому оставляем их затемнёнными до успешного ответа. Это
+    // особенно важно при переключении профиля: расчёт стартует сразу, и без
+    // этого флага затемнение снималось бы в том же кадре.
+    const keepStale = state.dirty;
 
     state.abort?.abort();
     const controller = new AbortController();
     state.abort = controller;
     const seq = ++state.requestSeq;
 
-    resultsSection.classList.remove('is-stale');
+    if (!keepStale) resultsSection.classList.remove('is-stale');
     calculateButton.classList.remove('rig-button--attention');
     resultsSection.classList.add('is-calculating');
     resultsSection.setAttribute('aria-busy', 'true');
@@ -964,6 +969,10 @@ async function calculateAndRender(scrollOnSuccess: boolean): Promise<void> {
         if (inputsChanged) {
             resultsSection.classList.add('is-stale');
             calculateButton.classList.add('rig-button--attention');
+        } else {
+            // Ответ соответствует текущим входам: снимаем затемнение.
+            resultsSection.classList.remove('is-stale');
+            calculateButton.classList.remove('rig-button--attention');
         }
 
         if (scrollOnSuccess) scrollToResults();
