@@ -14,7 +14,7 @@
           "version": "1.0.0",
           "status": "published",
           "document": "profiles/traditional_plant/1.0.0.json",
-          "sha256": "3376f3da12fb0bfd0ca796f9d274e326d4797ba5324e2339a158c383b87f2123"
+          "sha256": "4f56637098f4b8a0d472843d0d43eb7b686270e72ecd4edbb0d1420a86e221b1"
         }
       ]
     },
@@ -59,7 +59,7 @@
           "version": "1.2.1",
           "status": "draft",
           "document": "profiles/early_plant/1.2.1.json",
-          "sha256": "198150c29502c8a5da6cbd86b6b867c6c3e35071a438d4c7559195cbd8cfdf98"
+          "sha256": "3b7fa4c5090f9513e3d0db5ed1345e9d4eeef9e22019c3d679b1cfb18bae6ec2"
         }
       ]
     }
