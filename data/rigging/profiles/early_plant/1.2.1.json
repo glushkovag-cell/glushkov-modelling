@@ -50,23 +50,13 @@
         "locator": "Part list p. 15; §V(b), §VI(b), §X(b)"
       },
       {
-        "id": "R-EXT",
-        "title": "Отчет по такелажу и рангоуту кораблей Эпохи великих географических открытий",
-        "locator": "Table 1 p. 2; Table 2 p. 3"
-      },
-      {
         "id": "M-H",
         "title": "José María Martínez-Hidalgo, Columbus' Ships (English ed., H. I. Chapelle)",
         "locator": "Rigging chapter"
       },
       {
-        "id": "TP",
-        "title": "traditional_plant — спецификация диаметров MVP v1.0",
-        "locator": "§§5–8"
-      },
-      {
         "id": "MEAS",
-        "title": "Обмеры моделей — Santa Maria, 1:65",
+        "title": "Model measurement — Santa Maria, 1:65",
         "locator": "Mast and bowsprit measurements"
       }
     ],

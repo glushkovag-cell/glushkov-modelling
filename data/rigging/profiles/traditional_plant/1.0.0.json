@@ -35,11 +35,6 @@
     ],
     "sources": [
       {
-        "id": "TP",
-        "title": "traditional_plant — спецификация диаметров MVP v1.0",
-        "locator": "§§5–8"
-      },
-      {
         "id": "FIT",
         "title": "Model kit rigging instructions (Bounty/Mercury calibration set)",
         "locator": "Part lists and rigging sections"
