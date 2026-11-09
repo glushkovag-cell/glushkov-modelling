@@ -18,6 +18,11 @@ import { formatDiameter } from '../lib/rigging/format.ts';
 import { sailSelectable, tierAvailability } from '../lib/rigging/formRules.ts';
 import { parsePresetJson } from '../lib/rigging/preset.ts';
 import {
+    switchProfileSettings,
+    type DimensionKey,
+} from '../lib/rigging/profileSwitch.ts';
+import type { ProfileRequirements } from '../lib/rigging/profiles.ts';
+import {
     CALIBRATION_LABELS,
     GROUP_LABELS,
     MAST_IDS,
@@ -73,6 +78,7 @@ interface ProfileCardData {
     profileId: string;
     version: string;
     ui: ProfileUi;
+    requirements: ProfileRequirements;
     defaults: RiggingSettings;
     name: string;
 }
@@ -236,6 +242,127 @@ function readMeasurement(prefix: string, point: MeasurementPointId): Measurement
     };
 }
 
+const DIMENSION_KEYS: Record<DimPrefix, DimensionKey> = {
+    'mast-fore': 'mast.fore',
+    'mast-main': 'mast.main',
+    'mast-mizzen': 'mast.mizzen',
+    bowsprit: 'bowsprit',
+    'hull-width': 'hullWidth',
+    'gun-bore': 'gunBore',
+};
+
+function dimensionPoint(prefix: DimPrefix): MeasurementPointId {
+    if (prefix.startsWith('mast-')) {
+        return select(`${prefix}-point`).value as MeasurementPointId;
+    }
+    if (prefix === 'hull-width') return 'unknown';
+    return 'working_section';
+}
+
+function readDimension(prefix: DimPrefix): Measurement {
+    return readMeasurement(prefix, dimensionPoint(prefix));
+}
+
+/**
+ * Сохраняет размеры, которые сейчас видны в форме, в черновик. Черновик
+ * переживает переключение профиля и позволяет вернуть значение, даже если
+ * новый профиль это поле временно скрывает.
+ */
+function captureDimensionDraft(profile: ProfileCardData | null): void {
+    if (!profile) return;
+    for (const prefix of DIM_PREFIXES) {
+        const row = document.querySelector<HTMLElement>(`[data-dim="${prefix}"]`);
+        if (!row || row.hidden) continue;
+        state.dimensionDraft[DIMENSION_KEYS[prefix]] = readDimension(prefix);
+    }
+}
+
+function dimensionActive(prefix: DimPrefix): boolean {
+    if (prefix.startsWith('mast-')) {
+        return checked(`mast-${prefix.slice('mast-'.length)}-present`);
+    }
+    if (prefix === 'bowsprit') return checked('bowsprit-present');
+    if (prefix === 'hull-width') return checked('anchor-present');
+    return checked('gun-present');
+}
+
+function dimensionUsed(prefix: DimPrefix, requirements: ProfileRequirements): boolean {
+    if (prefix.startsWith('mast-')) return requirements.mast;
+    if (prefix === 'bowsprit') return requirements.bowsprit;
+    if (prefix === 'hull-width') return requirements.hullWidth;
+    return requirements.gunBore;
+}
+
+function setDimensionRequired(prefix: DimPrefix, required: boolean): void {
+    const row = document.querySelector<HTMLElement>(`[data-dim="${prefix}"]`);
+    const valueInput = document.getElementById(`${prefix}-value`) as HTMLInputElement | null;
+    if (!row || !valueInput) return;
+
+    row.classList.toggle('is-required', required);
+    if (required) {
+        valueInput.setAttribute('aria-required', 'true');
+    } else {
+        valueInput.removeAttribute('aria-required');
+    }
+
+    const label = row.querySelector<HTMLElement>('.rig-label');
+    const existing = label?.querySelector<HTMLElement>('.rig-dim__required');
+    if (required && label && !existing) {
+        const badge = document.createElement('span');
+        badge.className = 'rig-dim__required';
+        badge.textContent = 'Input required';
+        label.appendChild(badge);
+    } else if (!required) {
+        existing?.remove();
+    }
+}
+
+/**
+ * Помечает видимые и активные размеры, которые профиль реально использует,
+ * но значение которых пустое. Так новое поле после смены профиля явно
+ * требует ввода, а не подставляет пример незаметно.
+ */
+function syncRequiredDimensions(): void {
+    const profile = state.activeProfile;
+    if (!profile) return;
+    for (const prefix of DIM_PREFIXES) {
+        const row = document.querySelector<HTMLElement>(`[data-dim="${prefix}"]`);
+        const visible = Boolean(row && !row.hidden);
+        const required =
+            visible &&
+            dimensionUsed(prefix, profile.requirements) &&
+            dimensionActive(prefix) &&
+            parseValueInput(prefix) === null;
+        setDimensionRequired(prefix, required);
+    }
+}
+
+function dimensionKeyForTarget(target: HTMLElement): DimensionKey | null {
+    const match = target.id.match(
+        /^(mast-fore|mast-main|mast-mizzen|bowsprit|hull-width|gun-bore)-(value|unit|basis|point)$/,
+    );
+    if (!match) return null;
+    return DIMENSION_KEYS[match[1] as DimPrefix] ?? null;
+}
+
+function requiredDimensionRows(): HTMLElement[] {
+    return [...document.querySelectorAll<HTMLElement>('.rig-dim.is-required')].filter(
+        (row) => !row.hidden,
+    );
+}
+
+function requiredDimensionLabels(): string[] {
+    return requiredDimensionRows()
+        .map(
+            (row) =>
+                row
+                    .querySelector('.rig-label')
+                    ?.textContent?.replace('Input required', '')
+                    .trim() ?? 'dimension',
+        )
+        .filter(Boolean);
+}
+
 /* ------------------------------ profile state ----------------------------- */
 
 const PROFILE_DATA = new Map<string, ProfileCardData>();
@@ -244,12 +371,17 @@ document.querySelectorAll<HTMLElement>('[data-profile-card]').forEach((card) => 
     const radio = card.querySelector<HTMLInputElement>('input[name="profile"]');
     if (!radio) return;
     const ui = JSON.parse(card.dataset.ui ?? '{}') as ProfileUi;
+    const requirements = JSON.parse(
+        card.dataset.requirements ??
+            '{"mast":true,"bowsprit":true,"hullWidth":true,"gunBore":true}',
+    ) as ProfileRequirements;
     const defaults = JSON.parse(card.dataset.defaults ?? '{}') as RiggingSettings;
     const name = card.querySelector('strong')?.textContent?.trim() ?? radio.value;
     PROFILE_DATA.set(radio.value, {
         profileId: radio.value,
         version: card.dataset.version ?? '',
         ui,
+        requirements,
         defaults,
         name,
     });
@@ -453,7 +585,9 @@ function applySettingsToForm(settings: RiggingSettings): void {
 
 /* ------------------------------- profile UI ------------------------------- */
 
-function applyProfileUi(ui: ProfileUi): void {
+function applyProfileUi(profile: ProfileCardData): void {
+    const ui = profile.ui;
+    const requirements = profile.requirements;
     const sailKinds = new Set(sailNodeKindsForUi(ui));
     const blocks: Record<string, boolean> = {
         masts: ui.masts,
@@ -504,13 +638,19 @@ function applyProfileUi(ui: ProfileUi): void {
     });
 
     const dimensionVisibility: Record<string, boolean> = {
-        bowsprit: ui.bowsprit,
-        'hull-width': ui.anchor,
-        'gun-bore': ui.gun,
+        // Показываем только те размеры, которые профиль действительно
+        // использует в правилах, а не просто упоминает в блоке формы.
+        bowsprit: ui.bowsprit && requirements.bowsprit,
+        'hull-width': ui.anchor && requirements.hullWidth,
+        'gun-bore': ui.gun && requirements.gunBore,
     };
     for (const [key, visible] of Object.entries(dimensionVisibility)) {
         const element = document.querySelector<HTMLElement>(`[data-dim="${key}"]`);
         if (element) element.hidden = !visible;
+    }
+    for (const mastId of MAST_IDS_LIST) {
+        const element = document.querySelector<HTMLElement>(`[data-dim="mast-${mastId}"]`);
+        if (element) element.hidden = !(ui.masts && requirements.mast);
     }
 }
 
@@ -605,6 +745,9 @@ const state = {
     formVersion: 0,
     requestSeq: 0,
     abort: undefined as AbortController | undefined,
+    activeProfile: null as ProfileCardData | null,
+    dimensionDraft: {} as Partial<Record<DimensionKey, Measurement>>,
+    editedDimensions: new Set<DimensionKey>(),
 };
 
 const form = byId<HTMLFormElement>('rigging-form');
@@ -927,6 +1070,20 @@ function scrollToResults(): void {
 }
 
 async function calculateAndRender(scrollOnSuccess: boolean): Promise<void> {
+    const missingDimensions = requiredDimensionRows();
+    if (missingDimensions.length > 0) {
+        renderErrors([
+            {
+                code: 'REQUIRED_INPUT',
+                message: `Enter the required dimensions: ${requiredDimensionLabels().join(', ')}.`,
+            },
+        ]);
+        const firstInput = missingDimensions[0]?.querySelector('input');
+        if (firstInput) firstInput.focus();
+        resultsSection.classList.add('is-stale');
+        return;
+    }
+
     const settings = readSettings();
     const input = buildInput(settings);
     const versionAtStart = state.formVersion;
@@ -1047,11 +1204,28 @@ function updateProfileNote(): void {
 function onProfileChange(): void {
     const profile = selectedProfile();
     if (!profile) return;
-    applySettingsToForm(profile.defaults);
-    applyProfileUi(profile.ui);
+
+    const previous = state.activeProfile;
+    captureDimensionDraft(previous);
+    const current = readSettings();
+    const merged = switchProfileSettings({
+        current,
+        previous: previous
+            ? { ui: previous.ui, requirements: previous.requirements }
+            : null,
+        nextDefaults: profile.defaults,
+        next: { ui: profile.ui, requirements: profile.requirements },
+        draft: state.dimensionDraft,
+        editedDimensions: state.editedDimensions,
+    });
+
+    applySettingsToForm(merged.settings);
+    applyProfileUi(profile);
     initDimState();
     syncDisabled();
     updateProfileNote();
+    state.activeProfile = profile;
+    syncRequiredDimensions();
     // Переключение профиля — такое же изменение входных данных: старые
     // результаты затемняются и остаются некликабельными до нажатия
     // «Calculate diameters». Автоматический пересчёт здесь не запускается.
@@ -1085,10 +1259,19 @@ presetFile.addEventListener('change', async () => {
     if (!file) return;
     try {
         const settings = parsePresetJson(await file.text(), PROFILE_VERSIONS);
+        const profile = PROFILE_DATA.get(settings.profileId)!;
         applySettingsToForm(settings);
-        applyProfileUi(PROFILE_DATA.get(settings.profileId)!.ui);
+        applyProfileUi(profile);
         initDimState();
         syncDisabled();
+        state.activeProfile = profile;
+        for (const prefix of DIM_PREFIXES) {
+            if (parseValueInput(prefix) !== null) {
+                state.editedDimensions.add(DIMENSION_KEYS[prefix]);
+            }
+        }
+        captureDimensionDraft(profile);
+        syncRequiredDimensions();
         updateProfileNote();
         markDirty();
         await calculateAndRender(true);
@@ -1109,11 +1292,16 @@ form.addEventListener('submit', (event) => {
 form.addEventListener('reset', () => {
     window.setTimeout(() => {
         const profile = selectedProfile();
+        state.editedDimensions.clear();
+        state.dimensionDraft = {};
         if (profile) {
             applySettingsToForm(profile.defaults);
-            applyProfileUi(profile.ui);
+            applyProfileUi(profile);
+            state.activeProfile = profile;
+            initDimState();
+            captureDimensionDraft(profile);
+            syncRequiredDimensions();
         }
-        initDimState();
         syncDisabled();
         updateProfileNote();
         void calculateAndRender(false);
@@ -1123,6 +1311,10 @@ form.addEventListener('reset', () => {
 form.addEventListener('input', (event) => {
     const target = event.target as HTMLElement;
     if (target.id === 'profile' || (target as HTMLInputElement).name === 'profile') return;
+    const key = dimensionKeyForTarget(target);
+    if (key) state.editedDimensions.add(key);
+    captureDimensionDraft(state.activeProfile);
+    syncRequiredDimensions();
     markDirty();
 });
 
@@ -1133,9 +1325,13 @@ form.addEventListener('change', (event) => {
         onProfileChange();
         return;
     }
+    const key = dimensionKeyForTarget(target);
+    if (key) state.editedDimensions.add(key);
     // Пересчитываем доступность зависимых полей сразу: иначе sail остаётся
     // доступным после снятия мачты.
     syncDisabled();
+    captureDimensionDraft(state.activeProfile);
+    syncRequiredDimensions();
     markDirty();
 });
 
@@ -1225,9 +1421,12 @@ for (const prefix of DIM_PREFIXES) {
 const initialProfile = selectedProfile();
 if (initialProfile) {
     applySettingsToForm(initialProfile.defaults);
-    applyProfileUi(initialProfile.ui);
+    applyProfileUi(initialProfile);
+    state.activeProfile = initialProfile;
     initDimState();
+    captureDimensionDraft(initialProfile);
 }
+syncRequiredDimensions();
 updateProfileNote();
 syncDisabled();
 void calculateAndRender(false);

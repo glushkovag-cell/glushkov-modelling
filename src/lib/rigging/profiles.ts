@@ -32,6 +32,18 @@ export interface ProfileExplanation {
     caveat: string | null;
 }
 
+/**
+ * Какие размерные базы реально использует профиль. Это не то же самое, что
+ * видимость блока формы: например, early_plant показывает якорный блок, но
+ * якорный канат считает от самой толстой мачты G, а не от ширины корпуса.
+ */
+export interface ProfileRequirements {
+    mast: boolean;
+    bowsprit: boolean;
+    hullWidth: boolean;
+    gunBore: boolean;
+}
+
 export interface ProfileSummary {
     profileId: string;
     profileVersion: string;
@@ -47,10 +59,21 @@ export interface ProfileSummary {
     warnings: string[];
     metrics: ProfileMetrics | null;
     explanation: ProfileExplanation;
+    requirements: ProfileRequirements;
     ui: ProfileDocument['profile']['ui'];
 }
 
 const GROUP_ORDER = ['standing', 'running', 'bowsprit', 'anchor', 'gun'];
+
+export function profileRequirements(document: ProfileDocument): ProfileRequirements {
+    const kinds = new Set(document.rules.map((rule) => rule.base.kind));
+    return {
+        mast: kinds.has('mast') || kinds.has('thickestMast'),
+        bowsprit: kinds.has('bowsprit'),
+        hullWidth: kinds.has('hullWidth'),
+        gunBore: kinds.has('gunBore'),
+    };
+}
 
 const DISCLAIMER =
     'A row in the results does not assert that a rope was historically fitted.';
@@ -104,6 +127,7 @@ export function summariseProfile(document: ProfileDocument): ProfileSummary {
         materialConditions: [...document.profile.materialConditions],
         warnings,
         metrics,
+        requirements: profileRequirements(document),
         explanation: {
             summary:
                 `${document.rules.length} rule definitions: ` +

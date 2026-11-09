@@ -126,6 +126,7 @@ const description =
                   data-profile-card
                   data-version={entry.summary.profileVersion}
                   data-ui={JSON.stringify(entry.summary.ui)}
+                  data-requirements={JSON.stringify(entry.summary.requirements)}
                   data-defaults={JSON.stringify(entry.defaults)}
                 >
                   <input
@@ -1729,5 +1730,43 @@ const description =
 
     .rig-row__basis--engineering_assumption {
         color: #5a6470;
+    }
+
+    /* Размер, который новый профиль требует ввести заново. */
+    .rig-dim.is-required {
+        --rig-required: #b45309;
+    }
+
+    [data-theme="dark"] .rig-dim.is-required {
+        --rig-required: #fbbf24;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root:not([data-theme]) .rig-dim.is-required {
+            --rig-required: #fbbf24;
+        }
+    }
+
+    .rig-dim.is-required .rig-label {
+        color: var(--rig-required);
+    }
+
+    .rig-dim.is-required .rig-input,
+    .rig-dim.is-required .rig-select {
+        border-color: var(--rig-required);
+    }
+
+    .rig-dim__required {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 1px 6px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--rig-required) 16%, transparent);
+        color: var(--rig-required);
+        font-size: 0.64rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        vertical-align: middle;
     }
 </style>
