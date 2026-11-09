@@ -132,7 +132,7 @@ const template = `
     </fieldset>
 
     <p class="rc-hint">
-      The calculator checks 1, 2 and 3 threads per strand for each selected
+      The calculator checks 1-5 threads per strand for each selected
       thread. Results are sorted by absolute percentage deviation from the target.
     </p>
 
