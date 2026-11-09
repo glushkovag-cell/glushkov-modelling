@@ -1052,8 +1052,10 @@ function onProfileChange(): void {
     initDimState();
     syncDisabled();
     updateProfileNote();
+    // Переключение профиля — такое же изменение входных данных: старые
+    // результаты затемняются и остаются некликабельными до нажатия
+    // «Calculate diameters». Автоматический пересчёт здесь не запускается.
     markDirty();
-    void calculateAndRender(true);
 }
 
 /* -------------------------------- events ---------------------------------- */
