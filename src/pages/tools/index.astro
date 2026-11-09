@@ -1,18 +1,27 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeoHead from '../../components/seo/SeoHead.astro';
 import '../../styles/tools.css';
 
 /*
- * Скрытый раздел Tools. Пункта в основной навигации пока нет: страницы
- * доступны только по прямым ссылкам, поэтому noindex, а /tools исключён из
- * sitemap. Когда раздел войдёт в меню, noindex и фильтр sitemap убираются.
+ * Раздел Tools входит в основную навигацию и индексируется. Страницы
+ * доступны по прямым ссылкам, включены в sitemap и не закрыты noindex.
  */
 const title = 'Tools — Glushkov Modelling';
 const description =
     'Workshop tools for model ship builders: rope diameter calculator and rigging diameter calculator.';
 ---
 
-<BaseLayout title={title} description={description} noindex>
+<BaseLayout title={title} description={description}>
+  <SeoHead
+      slot="head"
+      pageType="default"
+      title={title}
+      description={description}
+      canonicalPath="/tools"
+      breadcrumbs={[{ name: 'Tools', url: '/tools' }]}
+  />
+
   <section class="tools-page">
     <div class="container">
       <nav class="tools-breadcrumbs" aria-label="Breadcrumb">

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeoHead from '../../components/seo/SeoHead.astro';
 import '../../styles/tools.css';
 import {
     SAIL_NODE_KINDS,
@@ -70,7 +71,19 @@ const description =
     'Estimate scale-model diameters of standing and running rigging from your model\u2019s key dimensions and an explicitly chosen rigging profile.';
 ---
 
-<BaseLayout title={title} description={description} noindex>
+<BaseLayout title={title} description={description}>
+  <SeoHead
+      slot="head"
+      pageType="default"
+      title={title}
+      description={description}
+      canonicalPath="/tools/rigging-diameters"
+      breadcrumbs={[
+          { name: 'Tools', url: '/tools' },
+          { name: 'Rigging diameter calculator', url: '/tools/rigging-diameters' },
+      ]}
+  />
+
   <section class="tools-page">
     <div class="container">
       <nav class="tools-breadcrumbs" aria-label="Breadcrumb">

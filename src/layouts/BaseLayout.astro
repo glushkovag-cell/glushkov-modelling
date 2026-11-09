@@ -87,6 +87,10 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
         <span>Tutorials</span>
       </a>
 
+      <a href="/tools" class:list={['nav-link', { 'nav-link--active': isActive('/tools') }]}>
+        <span>Tools</span>
+      </a>
+
       <a href="/ai-hub" class:list={['nav-link', { 'nav-link--active': isActive('/ai-hub') }]}>
         <span>AI Hub</span>
       </a>
@@ -158,6 +162,10 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
       <span>Tutorials</span>
     </a>
 
+    <a href="/tools" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/tools') }]}>
+      <span>Tools</span>
+    </a>
+
     <a href="/ai-hub" class:list={['mobile-nav__link', { 'mobile-nav__link--active': isActive('/ai-hub') }]}>
       <span>AI Hub</span>
     </a>
@@ -179,6 +187,7 @@ const wpRestUrl = import.meta.env.PUBLIC_WP_REST_URL;
       <a href="/builds">Builds</a>
       <a href="/gallery">Gallery</a>
       <a href="/tutorials">Tutorials</a>
+      <a href="/tools">Tools</a>
       <a href="/ai-hub">AI Hub</a>
     </nav>
   </div>

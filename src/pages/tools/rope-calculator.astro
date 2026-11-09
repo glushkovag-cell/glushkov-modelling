@@ -1,18 +1,31 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeoHead from '../../components/seo/SeoHead.astro';
 import '../../styles/tools.css';
 
 /*
  * Production-страница калькулятора канатов в разделе Tools. Использует тот же
  * Web Component, что и статья, и обращается к production Worker по умолчанию
- * (https://api.glushkov-modelling.com). Пункт меню пока не добавлен.
+ * (https://api.glushkov-modelling.com). Раздел входит в меню и индексируется.
  */
 const title = 'Rope diameter calculator — Glushkov Modelling';
 const description =
     'Estimate the diameter of a three-strand model rope from a thread or dTex, or find threads that match a target diameter.';
 ---
 
-<BaseLayout title={title} description={description} noindex>
+<BaseLayout title={title} description={description}>
+  <SeoHead
+      slot="head"
+      pageType="default"
+      title={title}
+      description={description}
+      canonicalPath="/tools/rope-calculator"
+      breadcrumbs={[
+          { name: 'Tools', url: '/tools' },
+          { name: 'Rope diameter calculator', url: '/tools/rope-calculator' },
+      ]}
+  />
+
   <section class="tools-page">
     <div class="container">
       <nav class="tools-breadcrumbs" aria-label="Breadcrumb">
