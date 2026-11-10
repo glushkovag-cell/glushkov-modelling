@@ -1,0 +1,5 @@
+# Манифест профилей хранит sha256 байтов файла, поэтому переводы строк
+# должны быть одинаковыми в рабочей копии и в CI.
+data/rigging/index.json text eol=lf
+data/rigging/profiles/**/*.json text eol=lf
+data/rigging/schema/**/*.json text eol=lf

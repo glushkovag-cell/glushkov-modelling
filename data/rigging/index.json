@@ -20,7 +20,7 @@
           "version": "1.1.0",
           "status": "draft",
           "document": "profiles/traditional_plant/1.1.0.json",
-          "sha256": "a4f40c1f4a9e13096ff3640bc995c90f7bd2c0f418b63ca0dbd114e1a8d78372"
+          "sha256": "bd804fc9268d967a790cf8b51cc6a70f61763c6d50df6152e5be4c048ea66457"
         }
       ]
     },
@@ -56,7 +56,7 @@
           "version": "1.1.0",
           "status": "draft",
           "document": "profiles/yacht_metal_schooner/1.1.0.json",
-          "sha256": "dcba28ee22ad32995eca51e545ca01cc9f9ca8139ecf5d16fe529e23a9cd9924"
+          "sha256": "ac89bca7f368cf26d42d5229ceb46863eb6615ebc6dc2cd764584db6536edbde"
         }
       ]
     },
@@ -77,7 +77,7 @@
           "version": "1.2.2",
           "status": "draft",
           "document": "profiles/early_plant/1.2.2.json",
-          "sha256": "f246b04d7d1ea055da1e370258cacea125fc072f90e1eee8f9dc56acaa243ac9"
+          "sha256": "fac409747f57a3bd48f0c39adbb1d9794ff4af759bc7a7b1c65179dc7dc62ff4"
         }
       ]
     }

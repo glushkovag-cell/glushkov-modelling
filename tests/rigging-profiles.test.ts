@@ -90,7 +90,11 @@ test('manifest matches the profile documents and their hashes', () => {
             const path = join(ROOT, 'data', 'rigging', version.document);
             const serialized = readFileSync(path, 'utf8');
             const hash = createHash('sha256').update(serialized).digest('hex');
-            assert.equal(hash, version.sha256, `${entry.profileId}@${version.version} hash`);
+            assert.equal(
+                hash,
+                version.sha256,
+                `${entry.profileId}@${version.version} hash — после правки профиля выполните npm run rigging:manifest`,
+            );
             const parsed = JSON.parse(serialized) as ProfileDocument;
             assert.equal(parsed.profile.profileId, entry.profileId);
             assert.equal(parsed.profile.profileVersion, version.version);

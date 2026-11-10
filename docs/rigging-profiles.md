@@ -155,6 +155,52 @@ profile_unavailable`.
 - Версия HTTP-контракта остаётся `1`.
 - MCP-инструмент такелажа в этот цикл не входит.
 
+## Редактирование профиля
+
+Профиль — обычный JSON, но `data/rigging/index.json` хранит `sha256` его байтов.
+Любая правка файла (значение, форматирование, перевод строки) делает хеш
+недействительным, и `tests/rigging-profiles.test.ts` падает с сообщением
+`... hash`. Это не ошибка теста: манифест нужно пересобрать.
+
+Правильный порядок:
+
+1. Отредактируйте `data/rigging/profiles/<profileId>/<version>.json`.
+2. Сначала отформатируйте JSON в WebStorm (`Ctrl+Alt+L` / `Cmd+Option+L`).
+   Форматирование после пересборки манифеста снова изменит байты.
+3. Пересоберите манифест: `npm run rigging:manifest`.
+   Скрипт проверяет контракт через `validateProfileDocument`, сам считает
+   `sha256`, обновляет `latest` и `status` и печатает изменённые версии.
+4. Проверьте: `npm run rigging:manifest:check` и `npm test`.
+
+`index.json` вручную не редактируется. Если файл опубликованной версии уже
+существует, не меняйте его: добавьте новый файл `<semver>.json` в папку
+профиля и выполните `npm run rigging:manifest` — скрипт добавит версию,
+пересчитает хеш и сделает её `latest`.
+
+### WebStorm
+
+Самый простой вариант — Run Configuration:
+
+1. `Run → Edit Configurations… → + → npm`.
+2. Name: `Rigging: refresh manifest`.
+3. Package.json: `package.json`; Command: `run`; Script: `rigging:manifest`.
+4. После правки профиля: форматирование → запуск этой конфигурации → `npm test`.
+
+Либо External Tool: `Settings → Tools → External Tools → +`, Program: `node`,
+Arguments: `--experimental-strip-types scripts/refresh-rigging-manifest.ts`,
+Working directory: `$ProjectFileDir$`.
+
+Для автоматизации можно повесить File Watcher
+(`Settings → Tools → File Watchers → + → Custom`): File type `JSON`, Scope
+`data/rigging/profiles`, Program `node`, те же Arguments и Working directory.
+Watcher срабатывает после сохранения; убедитесь, что автоформатирование
+выполняется до него, а не после.
+
+Переводы строк для этих файлов зафиксированы в `.gitattributes` (`eol=lf`).
+В WebStorm также удобно выставить `Settings → Editor → Code Style → Line
+separator → LF`, чтобы локальный хеш совпадал с CI.
+
+
 ## Сравнение Bounty
 
 Отчёт о разнице `traditional_plant` 1.0.0 → 1.1.0 на обмерах HMS Bounty:
