@@ -45,4 +45,46 @@ describe("MCP server tools", () => {
         await client.close();
         await server.close();
     });
+
+    it("registers the rigging diameter calculator tools", async () => {
+        const server = createMcpServer();
+        const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+        const client = new Client({ name: "rigging-tools-test", version: "1.0.0" });
+
+        await Promise.all([
+            server.connect(serverTransport),
+            client.connect(clientTransport),
+        ]);
+
+        const { tools } = await client.listTools();
+        const byName = new Map(tools.map((tool) => [tool.name, tool]));
+
+        expect(byName.get("list_rigging_profiles")?.inputSchema.required).toBeUndefined();
+        expect(byName.get("get_rigging_profile")?.inputSchema.required).toEqual(["profileId"]);
+        expect(byName.get("get_rigging_profile")?.description).toContain("exampleConfiguration");
+
+        const calculate = byName.get("calculate_rigging_diameters");
+        expect(calculate?.description).toContain("/tools/rigging-diameters");
+        expect(calculate?.inputSchema.required).toEqual(
+            expect.arrayContaining(["profileId", "scaleDenominator"]),
+        );
+
+        // Ошибка конфигурации отклоняется до обращения к Worker'у.
+        const result = await client.callTool({
+            name: "calculate_rigging_diameters",
+            arguments: {
+                profileId: "traditional_plant",
+                scaleDenominator: 64,
+                masts: { fore: { diameter: { value: 9 } } },
+                foreAndAftSails: [
+                    { sailClass: "head_lower", supportingMastId: "fore" },
+                    { sailClass: "head_lower", supportingMastId: "fore" },
+                ],
+            },
+        });
+        expect(result.isError).toBe(true);
+
+        await client.close();
+        await server.close();
+    });
 });

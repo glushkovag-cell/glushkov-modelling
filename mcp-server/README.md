@@ -1,7 +1,7 @@
 # Glushkov Modelling MCP
 
 MCP access to the Glushkov Modelling ship-model archive: build logs,
-tutorials, photo galleries, content search, and a rigging calculators.
+tutorials, photo galleries, content search, and rigging calculators.
 
 The server connects compatible AI assistants to the published content
 of Glushkov Modelling, helping users explore ship-modelling projects
@@ -35,6 +35,9 @@ on the AI Hub.
 - Photo galleries documenting modelling projects.
 - Relevant published content through search.
 - Rope diameter calculations for scale modelling.
+- Rigging diameter estimates for a whole model — standing and running
+  rigging, bowsprit, anchor and gun ropes — using the same calculation
+  core as the [rigging diameters tool](https://www.glushkov-modelling.com/tools/rigging-diameters).
 
 ## Example questions
 
@@ -45,6 +48,7 @@ Once connected, try asking your assistant:
 - “Find tutorials about rigging.”
 - “Show me photographs from a modelling project.”
 - “Help me calculate a rope diameter for my model’s scale.”
+- “Estimate the rigging diameters for my 1:65 Santa Maria with an 8 mm mainmast.”
 
 These are example requests, not tool names. The assistant determines
 which available tools to use.
