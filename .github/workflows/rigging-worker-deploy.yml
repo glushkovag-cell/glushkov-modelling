@@ -83,13 +83,13 @@ jobs:
         run: |
           curl --fail --silent --show-error \
             https://rigging-api.glushkov-modelling.com/api/rigging/v1/profiles -o profiles.json
-          node -e "const d=require('./profiles.json');const ids=(d.profiles||[]).map(p=>p.profileId);if(ids.length!==4)process.exit(1);for(const id of ['traditional_plant','yacht_metal_yacht','yacht_metal_schooner','early_plant'])if(!ids.includes(id))process.exit(1);const e=d.profiles.find(p=>p.profileId==='early_plant');if(e.latest!=='1.2.1')process.exit(1);console.log('profiles',ids.join(','))"
+          node -e "const d=require('./profiles.json');const ids=(d.profiles||[]).map(p=>p.profileId);if(ids.length!==4)process.exit(1);for(const id of ['traditional_plant','yacht_metal_yacht','yacht_metal_schooner','early_plant'])if(!ids.includes(id))process.exit(1);const e=d.profiles.find(p=>p.profileId==='early_plant');if(e.latest!=='1.2.2')process.exit(1);const t=d.profiles.find(p=>p.profileId==='traditional_plant');if(t.latest!=='1.1.0')process.exit(1);console.log('profiles',ids.join(','))"
 
       - name: Smoke test pinned profile version
         run: |
           curl --fail --silent --show-error \
-            https://www.glushkov-modelling.com/api/rigging/profiles/early_plant/1.2.1 -o early.json
-          node -e "const d=require('./early.json');if(d.profile.profileVersion!=='1.2.1')process.exit(1);if(d.rules.length!==48)process.exit(1);console.log('early_plant rules',d.rules.length)"
+            https://www.glushkov-modelling.com/api/rigging/profiles/early_plant/1.2.2 -o early.json
+          node -e "const d=require('./early.json');if(d.profile.profileVersion!=='1.2.2')process.exit(1);if(d.rules.length!==48)process.exit(1);console.log('early_plant rules',d.rules.length)"
 
       - name: Smoke test calculate
         run: |
@@ -127,14 +127,14 @@ jobs:
             -X POST https://rigging-api.glushkov-modelling.com/api/rigging/v1/calculate \
             -H 'content-type: application/json' \
             --data @input.json -o calculate.json
-          node -e "const d=require('./calculate.json');if(d.profileId!=='traditional_plant')process.exit(1);const s=d.results&&d.results.find(x=>x.ruleId==='st.lower.stay');if(!s)process.exit(1);if(Math.abs(s.diameterModelMm-1.2)>1e-9)process.exit(1);if(s.material!=='fiber')process.exit(1);if(!Array.isArray(s.sourceIds)||s.sourceIds.length===0)process.exit(1);console.log('stay',s.diameterModelMm,'rows',d.results.length)"
+          node -e "const d=require('./calculate.json');if(d.profileId!=='traditional_plant')process.exit(1);if(d.profileVersion!=='1.1.0')process.exit(1);const s=d.results&&d.results.find(x=>x.ruleId==='st.lower.stay');if(!s)process.exit(1);if(Math.abs(s.diameterModelMm-1.411382301150188)>1e-9)process.exit(1);if(s.coefficientBasis!=='engineering_assumption')process.exit(1);if(s.material!=='fiber')process.exit(1);if(!Array.isArray(s.sourceIds)||s.sourceIds.length===0)process.exit(1);console.log('stay',s.diameterModelMm,'rows',d.results.length)"
 
       - name: Smoke test early_plant through the same core
         run: |
           cat > early-input.json <<'JSON'
           {
             "profileId": "early_plant",
-            "profileVersion": "1.2.1",
+            "profileVersion": "1.2.2",
             "scaleDenominator": 65,
             "measurements": {
               "mastDiameter": {
@@ -162,7 +162,7 @@ jobs:
             -X POST https://rigging-api.glushkov-modelling.com/api/rigging/v1/calculate \
             -H 'content-type: application/json' \
             --data @early-input.json -o early-calculate.json
-          node -e "const d=require('./early-calculate.json');if(d.profileVersion!=='1.2.1')process.exit(1);const s=d.results.find(x=>x.ruleId==='ep.st.lower.shroud');if(!s)process.exit(1);if(Math.abs(s.diameterModelMm-3/28*8)>1e-12)process.exit(1);if(s.coefficientBasis!=='preliminary_fit')process.exit(1);console.log('early shroud',s.diameterModelMm)"
+          node -e "const d=require('./early-calculate.json');if(d.profileVersion!=='1.2.2')process.exit(1);const s=d.results.find(x=>x.ruleId==='ep.st.lower.shroud');if(!s)process.exit(1);if(Math.abs(s.diameterModelMm-3/28*8)>1e-12)process.exit(1);if(s.coefficientBasis!=='preliminary_fit')process.exit(1);console.log('early shroud',s.diameterModelMm)"
 
       - name: Smoke test unknown profile is rejected
         run: |
