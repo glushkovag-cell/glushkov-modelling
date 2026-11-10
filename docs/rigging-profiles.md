@@ -196,9 +196,10 @@ Working directory: `$ProjectFileDir$`.
 Watcher срабатывает после сохранения; убедитесь, что автоформатирование
 выполняется до него, а не после.
 
-Переводы строк для этих файлов зафиксированы в `.gitattributes` (`eol=lf`).
-В WebStorm также удобно выставить `Settings → Editor → Code Style → Line
-separator → LF`, чтобы локальный хеш совпадал с CI.
+Переводы строк для этих файлов зафиксированы в `.gitattributes` (`eol=lf`),
+а `.editorconfig` задаёт `end_of_line = lf` для всего проекта — WebStorm
+подхватывает это автоматически. Дополнительно можно выставить
+`Settings → Editor → Code Style → Line separator → LF`.
 
 
 ## Сравнение Bounty
