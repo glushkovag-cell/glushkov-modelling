@@ -1,0 +1,1991 @@
+{
+  "documentVersion": "1.2.2",
+  "profile": {
+    "profileId": "early_plant",
+    "profileVersion": "1.2.2",
+    "schemaVersion": "1.0.0",
+    "family": "early_plant",
+    "status": "draft",
+    "name": "Early plant rigging — Columbus-era reconstructions",
+    "yearFrom": null,
+    "yearTo": null,
+    "bases": {
+      "mast": 1,
+      "bowsprit": 1,
+      "hullWidth": 1,
+      "gunBore": 1,
+      "thickestMast": 1
+    },
+    "baseLabels": {
+      "mast": "D",
+      "bowsprit": "D_b",
+      "hullWidth": "W",
+      "gunBore": "K",
+      "thickestMast": "G"
+    },
+    "baseFactorLabels": {
+      "mast": "1",
+      "bowsprit": "1",
+      "hullWidth": "1",
+      "gunBore": "1",
+      "thickestMast": "1"
+    },
+    "materialConditions": [
+      "fiber"
+    ],
+    "sources": [
+      {
+        "id": "N",
+        "title": "Niña 1:72 model kit instruction",
+        "locator": "Part list; §§V(b), VI(b), VIII(a), X(b–c)"
+      },
+      {
+        "id": "SM",
+        "title": "Santa Maria 1:72 model kit instruction",
+        "locator": "Part list p. 22; §VI(f), §VII(a), §VIII(b–c)"
+      },
+      {
+        "id": "P",
+        "title": "Pinta 1:72 model kit instruction",
+        "locator": "Part list p. 15; §V(b), §VI(b), §X(b)"
+      },
+      {
+        "id": "R-EXT",
+        "title": "Rigging and spars report — Age of Great Geographical Discoveries",
+        "locator": "Table 1 p. 2; Table 2 p. 3"
+      },
+      {
+        "id": "M-H",
+        "title": "José María Martínez-Hidalgo, Columbus' Ships (English ed., H. I. Chapelle)",
+        "locator": "Rigging chapter"
+      },
+      {
+        "id": "TP",
+        "title": "traditional_plant specification, MVP v1.0",
+        "locator": "§§5–8"
+      },
+      {
+        "id": "MEAS",
+        "title": "Model measurement — Santa Maria, 1:65",
+        "locator": "Mast and bowsprit measurements"
+      },
+      {
+        "id": "HIS-MONDFELD",
+        "title": "Wolfram zu Mondfeld — Historic Ship Models, through HiSModel implementation",
+        "locator": "https://www.hismodel.com/en/instructions/rigging-calculator/ ; user CSV exports, 2026-11-10. Ratios reference a common main-stay basis; q0=0.166 reconstructed from exports."
+      }
+    ],
+    "warnings": [
+      "Estimates for a static model, not a strength calculation.",
+      "Research draft: 48 definitions, not 48 verified historical ropes. The late-row audited exclusions of the research document still apply.",
+      "The upper direct tier (topgallant), separate topmast standing rigging, preventer stays and bowsprit shrouds/bobstay are excluded from this scope.",
+      "Numerical factors unchanged. HiSModel 16th/17th-century data are comparator-only for the Santa Maria reconstruction; no validated finished mast diameter is available for normalizing independent kit targets.",
+      "No validated historical accuracy estimate is provided. Previous fitting metrics are not transferred to this revision."
+    ],
+    "ui": {
+      "masts": true,
+      "tiers": [
+        "lower",
+        "topmast"
+      ],
+      "yards": true,
+      "squareSails": true,
+      "foreAndAft": [],
+      "lateenYard": true,
+      "gaff": false,
+      "gaffSail": false,
+      "boom": false,
+      "mainSail": false,
+      "topsail": false,
+      "headSails": false,
+      "staysail": false,
+      "flag": false,
+      "bowsprit": true,
+      "spritsaill": true,
+      "jibboom": false,
+      "martingale": false,
+      "anchor": true,
+      "hullGroup": true,
+      "gun": false,
+      "mastPoint": "unknown",
+      "bowspritPoint": "unknown",
+      "defaults": {
+        "scaleDenominator": 65,
+        "mastDiameterMm": {
+          "fore": 6,
+          "main": 8,
+          "mizzen": 6
+        },
+        "bowspritDiameterMm": 4,
+        "anchor": true,
+        "spritsaill": true
+      }
+    },
+    "metrics": {
+      "fittedRoles": null,
+      "mapePercent": null,
+      "maxDeviationPercent": null,
+      "crossTransferMapePercent": null,
+      "crossTransferMaxPercent": null,
+      "note": "Historical accuracy not established. B+ source-agreement estimates belong to the accompanying assessment, not historical error.",
+      "cardNote": "Experimental engineering estimate; historical accuracy not established."
+    }
+  },
+  "rules": [
+    {
+      "ruleId": "ep.st.lower.shroud",
+      "role": "lower_shroud",
+      "name": {
+        "en": "Lower shrouds",
+        "ru": "Нижние ванты"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.10714285714285714,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "N"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "Calibration covers the mainmast. Transfer to the foremast and mizzenmast is an engineering extension and is not calibrated."
+      ],
+      "factorLabel": "3/28",
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.st.lower.shroud_lanyard",
+      "role": "lower_shroud_lanyard",
+      "name": {
+        "en": "Lower shroud lanyards",
+        "ru": "Натяжные канаты нижних вант"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.08333333333333333,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "N"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "Calibration covers the mainmast. Transfer to the foremast and mizzenmast is an engineering extension and is not calibrated."
+      ],
+      "factorLabel": "1/12",
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.st.lower.ratline",
+      "role": "lower_ratline",
+      "name": {
+        "en": "Lower ratlines",
+        "ru": "Выбленки нижних вант"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "ep.st.lower.shroud"
+      },
+      "factor": 0.34,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "N"
+      ],
+      "warnings": [
+        "Ratlines are recalculated from the new lower shroud; the dependency is unchanged."
+      ],
+      "factorLabel": "0.34",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.st.lower.stay",
+      "role": "lower_stay",
+      "name": {
+        "en": "Lower stay",
+        "ru": "Нижний штаг"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.13,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EXT"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "Calibration covers the mainmast. Transfer to the foremast and mizzenmast is an engineering extension and is not calibrated."
+      ],
+      "factorLabel": "0.13",
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.st.lower.stay_lanyard",
+      "role": "lower_stay_lanyard",
+      "name": {
+        "en": "Lower stay lanyard",
+        "ru": "Ланьяр нижнего штага"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "ep.st.lower.stay"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "N"
+      ],
+      "warnings": [],
+      "factorLabel": "0.35",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.mast.woolding",
+      "role": "woolding",
+      "name": {
+        "en": "Mast woolding",
+        "ru": "Обмотка мачты"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.1,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "SM"
+      ],
+      "warnings": [
+        "One calibration point only. The zero error on that point does not confirm transferability."
+      ],
+      "factorLabel": "1/10",
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.anchor.bower_cable",
+      "role": "bower_cable",
+      "name": {
+        "en": "Bower cable",
+        "ru": "Становой якорный канат"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "thickestMast"
+      },
+      "factor": 0.208955223880597,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "SM",
+        "P",
+        "N"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "factorLabel": "14/67",
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only"
+    },
+    {
+      "ruleId": "ep.anchor.anchor_stow_lashing",
+      "role": "anchor_stow_lashing",
+      "name": {
+        "en": "Anchor stow lashing",
+        "ru": "Крепление якоря по-походному"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "thickestMast"
+      },
+      "factor": 0.0625,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "P",
+        "N"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "factorLabel": "1/16",
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only"
+    },
+    {
+      "ruleId": "ep.sail.boltrope",
+      "role": "boltrope",
+      "name": {
+        "en": "Boltrope",
+        "ru": "Ликтрос"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "hull_group"
+      },
+      "base": {
+        "kind": "thickestMast"
+      },
+      "factor": 0.0967741935483871,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "SM",
+        "P",
+        "N"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "factorLabel": "3/31",
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only"
+    },
+    {
+      "ruleId": "ep.sail.yard_lashing",
+      "role": "yard_lashing",
+      "name": {
+        "en": "Sail-to-yard lashing",
+        "ru": "Крепление паруса к рею"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "hull_group"
+      },
+      "base": {
+        "kind": "thickestMast"
+      },
+      "factor": 0.03571428571428571,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "SM",
+        "N"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "factorLabel": "1/28",
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only"
+    },
+    {
+      "ruleId": "ep.bow.gammoning",
+      "role": "gammoning",
+      "name": {
+        "en": "Bowsprit gammoning",
+        "ru": "Канатное крепление бушприта"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "bowsprit"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.08424153166421208,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "R-EXT"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "factorLabel": "286/3395",
+      "coefficientBasis": "preliminary_fit",
+      "calibrationStatus": "training_set_only"
+    },
+    {
+      "ruleId": "ep.rn.square.lower.tie",
+      "role": "tie",
+      "name": {
+        "en": "Yard tie",
+        "ru": "Шкентель рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.06,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "compound",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.topmast.tie",
+      "role": "tie",
+      "name": {
+        "en": "Yard tie",
+        "ru": "Шкентель рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.048,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "compound",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.lower.halyard_fall",
+      "role": "halyard_fall",
+      "name": {
+        "en": "Halyard fall",
+        "ru": "Ходовой конец фала"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.036,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "compound",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.topmast.halyard_fall",
+      "role": "halyard_fall",
+      "name": {
+        "en": "Halyard fall",
+        "ru": "Ходовой конец фала"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "compound",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.lower.simple_halyard",
+      "role": "simple_halyard",
+      "name": {
+        "en": "Simple halyard",
+        "ru": "Простой фал"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.036,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "simple",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.topmast.simple_halyard",
+      "role": "simple_halyard",
+      "name": {
+        "en": "Simple halyard",
+        "ru": "Простой фал"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "simple",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.lower.lift",
+      "role": "lift",
+      "name": {
+        "en": "Yard lift",
+        "ru": "Топенант"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.036,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.topmast.lift",
+      "role": "lift",
+      "name": {
+        "en": "Yard lift",
+        "ru": "Топенант"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.lower.brace_pendant",
+      "role": "brace_pendant",
+      "name": {
+        "en": "Brace pendant",
+        "ru": "Шкентель браса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.042,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.topmast.brace_pendant",
+      "role": "brace_pendant",
+      "name": {
+        "en": "Brace pendant",
+        "ru": "Шкентель браса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.lower.brace_fall",
+      "role": "brace_fall",
+      "name": {
+        "en": "Brace fall",
+        "ru": "Ходовой конец браса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.topmast.brace_fall",
+      "role": "brace_fall",
+      "name": {
+        "en": "Brace fall",
+        "ru": "Ходовой конец браса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.024,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.lower.sling",
+      "role": "sling",
+      "name": {
+        "en": "Yard sling",
+        "ru": "Строп рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.054,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.topmast.sling",
+      "role": "sling",
+      "name": {
+        "en": "Yard sling",
+        "ru": "Строп рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.036,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.lower.parrel_rope",
+      "role": "parrel_rope",
+      "name": {
+        "en": "Parrel rope",
+        "ru": "Бейфут"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.036,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.topmast.parrel_rope",
+      "role": "parrel_rope",
+      "name": {
+        "en": "Parrel rope",
+        "ru": "Бейфут"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": false
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.lower.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Sheet",
+        "ru": "Шкот"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.054,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.topmast.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Sheet",
+        "ru": "Шкот"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.048,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.lower.tack",
+      "role": "tack",
+      "name": {
+        "en": "Tack",
+        "ru": "Галс"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.054,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.lower.clewline",
+      "role": "clewline",
+      "name": {
+        "en": "Clewline",
+        "ru": "Гитов"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.topmast.clewline",
+      "role": "clewline",
+      "name": {
+        "en": "Clewline",
+        "ru": "Гитов"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.024,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.lower.bowline",
+      "role": "bowline",
+      "name": {
+        "en": "Bowline",
+        "ru": "Булинь"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.024,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.square.topmast.bowline",
+      "role": "bowline",
+      "name": {
+        "en": "Bowline",
+        "ru": "Булинь"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.018,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel.",
+        "The combined 48 rules mix FIT, TP and ANALOG origins. The 48 count is definitions, not physical ropes."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "ep.rn.lateen.tie",
+      "role": "tie",
+      "name": {
+        "en": "Lateen yard tie",
+        "ru": "Шкентель латинского рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "lateen_yard"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.06,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Explicit functional analogy (ANALOG), not a documented lateen diameter."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.lateen.halyard_fall",
+      "role": "halyard_fall",
+      "name": {
+        "en": "Lateen halyard fall",
+        "ru": "Ходовой конец латинского фала"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "lateen_yard"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.036,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Explicit functional analogy (ANALOG), not a documented lateen diameter."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.lateen.parrel_rope",
+      "role": "parrel_rope",
+      "name": {
+        "en": "Lateen parrel",
+        "ru": "Бейфут латинского рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "lateen_yard"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.036,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Explicit functional analogy (ANALOG), not a documented lateen diameter."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.lateen.yard_control",
+      "role": "yard_control",
+      "name": {
+        "en": "Lateen yard control",
+        "ru": "Управляющая оттяжка латинского рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "lateen_yard"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Explicit functional analogy (ANALOG), not a documented lateen diameter."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.lateen.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Lateen sheet",
+        "ru": "Шкот латинского паруса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "lateen_yard"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.036,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Explicit functional analogy (ANALOG), not a documented lateen diameter."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.lateen.tack",
+      "role": "tack",
+      "name": {
+        "en": "Lateen tack",
+        "ru": "Галс латинского паруса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "lateen_yard"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.054,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Explicit functional analogy (ANALOG), not a documented lateen diameter."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.spritsail.sling",
+      "role": "sling",
+      "name": {
+        "en": "Spritsail yard sling",
+        "ru": "Строп блинда-рея"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.042,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.spritsail.simple_halyard",
+      "role": "simple_halyard",
+      "name": {
+        "en": "Spritsail yard halyard",
+        "ru": "Фал блинда-рея"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.spritsail.lift",
+      "role": "lift",
+      "name": {
+        "en": "Spritsail yard lift",
+        "ru": "Топенант блинда-рея"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.spritsail.brace_pendant",
+      "role": "brace_pendant",
+      "name": {
+        "en": "Spritsail brace pendant",
+        "ru": "Шкентель блинда-браса"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.spritsail.brace_fall",
+      "role": "brace_fall",
+      "name": {
+        "en": "Spritsail brace fall",
+        "ru": "Ходовой конец блинда-браса"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.024,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.spritsail.parrel_rope",
+      "role": "parrel_rope",
+      "name": {
+        "en": "Spritsail yard parrel",
+        "ru": "Бейфут блинда-рея"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.03,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.spritsail.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Spritsail sheet",
+        "ru": "Шкот блинда-паруса"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.036,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "ep.rn.spritsail.clewline",
+      "role": "clewline",
+      "name": {
+        "en": "Spritsail clewline",
+        "ru": "Гитов блинда-паруса"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.0216,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Research draft: the coefficients are a preliminary fit to a user-supplied secondary report and model instructions. They are not an archival diameter of a specific vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    }
+  ]
+}

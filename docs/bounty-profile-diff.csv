@@ -1,0 +1,276 @@
+﻿ownerId,group,tier,nodeId,ruleId,nameEn,statusOld,statusNew,diameterOldMm,diameterNewMm,deltaMm,deltaPercent,coefficientBasisOld,coefficientBasisNew
+fore,standing,lower,mast.fore.lower,st.lower.stay,Lower stay,calculated,calculated,0.9599999999999999,1.1291058409201504,0.16910584092015057,17.615191762515686,preliminary_fit,engineering_assumption
+main,standing,lower,mast.main.lower,st.lower.stay,Lower stay,calculated,calculated,0.9599999999999999,1.1291058409201504,0.16910584092015057,17.615191762515686,preliminary_fit,engineering_assumption
+mizzen,standing,lower,mast.mizzen.lower,st.lower.stay,Lower stay,calculated,calculated,0.72,0.8468293806901127,0.12682938069011274,17.615191762515657,engineering_assumption,engineering_assumption
+fore,standing,lower,mast.fore.lower,st.lower.shroud,Lower shrouds,calculated,calculated,0.528,0.6593436736634394,0.13134367366343935,24.875695769590784,preliminary_fit,engineering_assumption
+main,standing,lower,mast.main.lower,st.lower.shroud,Lower shrouds,calculated,calculated,0.528,0.6593436736634394,0.13134367366343935,24.875695769590784,preliminary_fit,engineering_assumption
+mizzen,standing,lower,mast.mizzen.lower,st.lower.shroud,Lower shrouds,calculated,calculated,0.39599999999999996,0.49450775524757945,0.09850775524757949,24.875695769590784,engineering_assumption,engineering_assumption
+fore,standing,lower,mast.fore.lower,st.lower.backstay,Lower backstays,calculated,calculated,0.4799999999999999,0.4799999999999999,0,0,engineering_assumption,engineering_assumption
+main,standing,lower,mast.main.lower,st.lower.backstay,Lower backstays,calculated,calculated,0.4799999999999999,0.4799999999999999,0,0,engineering_assumption,engineering_assumption
+mizzen,standing,lower,mast.mizzen.lower,st.lower.backstay,Lower backstays,calculated,calculated,0.36,0.36,0,0,engineering_assumption,engineering_assumption
+fore,standing,lower,mast.fore.lower,st.lower.preventer,Lower preventer stay,calculated,calculated,0.6719999999999999,0.7903740886441053,0.11837408864410537,17.615191762515682,engineering_assumption,engineering_assumption
+main,standing,lower,mast.main.lower,st.lower.preventer,Lower preventer stay,calculated,calculated,0.6719999999999999,0.7903740886441053,0.11837408864410537,17.615191762515682,engineering_assumption,engineering_assumption
+mizzen,standing,lower,mast.mizzen.lower,st.lower.preventer,Lower preventer stay,calculated,calculated,0.5039999999999999,0.5927805664830789,0.08878056648307897,17.61519176251567,engineering_assumption,engineering_assumption
+fore,standing,lower,mast.fore.lower,st.lower.shroud_lanyard,Lower shroud lanyards,calculated,calculated,0.264,0.3296718368317197,0.06567183683171968,24.875695769590784,engineering_assumption,engineering_assumption
+main,standing,lower,mast.main.lower,st.lower.shroud_lanyard,Lower shroud lanyards,calculated,calculated,0.264,0.3296718368317197,0.06567183683171968,24.875695769590784,engineering_assumption,engineering_assumption
+mizzen,standing,lower,mast.mizzen.lower,st.lower.shroud_lanyard,Lower shroud lanyards,calculated,calculated,0.19799999999999998,0.24725387762378973,0.049253877623789744,24.875695769590784,engineering_assumption,engineering_assumption
+fore,standing,lower,mast.fore.lower,st.lower.backstay_lanyard,Lower backstay lanyards,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+main,standing,lower,mast.main.lower,st.lower.backstay_lanyard,Lower backstay lanyards,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+mizzen,standing,lower,mast.mizzen.lower,st.lower.backstay_lanyard,Lower backstay lanyards,calculated,calculated,0.18,0.18,0,0,engineering_assumption,engineering_assumption
+fore,standing,lower,mast.fore.lower,st.lower.stay_lanyard,Lower stay lanyard,calculated,calculated,0.33599999999999997,0.39518704432205265,0.059187044322052684,17.615191762515682,engineering_assumption,engineering_assumption
+main,standing,lower,mast.main.lower,st.lower.stay_lanyard,Lower stay lanyard,calculated,calculated,0.33599999999999997,0.39518704432205265,0.059187044322052684,17.615191762515682,engineering_assumption,engineering_assumption
+mizzen,standing,lower,mast.mizzen.lower,st.lower.stay_lanyard,Lower stay lanyard,calculated,calculated,0.25199999999999995,0.29639028324153943,0.044390283241539485,17.61519176251567,engineering_assumption,engineering_assumption
+fore,standing,lower,mast.fore.lower,st.lower.preventer_lanyard,Lower preventer lanyard,calculated,calculated,0.23519999999999994,0.28950429357783286,0.054304293577832924,23.088560194656864,engineering_assumption,engineering_assumption
+main,standing,lower,mast.main.lower,st.lower.preventer_lanyard,Lower preventer lanyard,calculated,calculated,0.23519999999999994,0.28950429357783286,0.054304293577832924,23.088560194656864,engineering_assumption,engineering_assumption
+mizzen,standing,lower,mast.mizzen.lower,st.lower.preventer_lanyard,Lower preventer lanyard,calculated,calculated,0.17639999999999997,0.21712822018337458,0.0407282201833746,23.088560194656807,engineering_assumption,engineering_assumption
+fore,standing,lower,mast.fore.lower,st.lower.ratline,Lower ratlines,calculated,calculated,0.17952,0.2241768490455694,0.04465684904556938,24.875695769590784,engineering_assumption,engineering_assumption
+main,standing,lower,mast.main.lower,st.lower.ratline,Lower ratlines,calculated,calculated,0.17952,0.2241768490455694,0.04465684904556938,24.875695769590784,engineering_assumption,engineering_assumption
+mizzen,standing,lower,mast.mizzen.lower,st.lower.ratline,Lower ratlines,calculated,calculated,0.13464,0.168132636784177,0.03349263678417699,24.875695769590752,engineering_assumption,engineering_assumption
+fore,standing,topmast,mast.fore.topmast,st.topmast.stay,Topmast stay,calculated,calculated,0.576,0.6245904898411437,0.04859048984114378,8.43584893075413,engineering_assumption,engineering_assumption
+main,standing,topmast,mast.main.topmast,st.topmast.stay,Topmast stay,calculated,calculated,0.576,0.6245904898411437,0.04859048984114378,8.43584893075413,engineering_assumption,engineering_assumption
+mizzen,standing,topmast,mast.mizzen.topmast,st.topmast.stay,Topmast stay,calculated,calculated,0.432,0.4684428673808579,0.03644286738085789,8.435848930754142,engineering_assumption,engineering_assumption
+fore,standing,topmast,mast.fore.topmast,st.topmast.shroud,Topmast shrouds,calculated,calculated,0.31679999999999997,0.3726049275036496,0.055804927503649626,17.615191762515668,engineering_assumption,engineering_assumption
+main,standing,topmast,mast.main.topmast,st.topmast.shroud,Topmast shrouds,calculated,calculated,0.31679999999999997,0.3726049275036496,0.055804927503649626,17.615191762515668,engineering_assumption,engineering_assumption
+mizzen,standing,topmast,mast.mizzen.topmast,st.topmast.shroud,Topmast shrouds,calculated,calculated,0.23759999999999998,0.2794536956277372,0.04185369562773722,17.615191762515668,engineering_assumption,engineering_assumption
+fore,standing,topmast,mast.fore.topmast,st.topmast.backstay,Topmast backstays,calculated,calculated,0.384,0.4627956784586476,0.0787956784586476,20.51970793193948,engineering_assumption,engineering_assumption
+main,standing,topmast,mast.main.topmast,st.topmast.backstay,Topmast backstays,calculated,calculated,0.384,0.4627956784586476,0.0787956784586476,20.51970793193948,engineering_assumption,engineering_assumption
+mizzen,standing,topmast,mast.mizzen.topmast,st.topmast.backstay,Topmast backstays,calculated,calculated,0.288,0.3470967588439857,0.05909675884398574,20.519707931939497,engineering_assumption,engineering_assumption
+fore,standing,topmast,mast.fore.topmast,st.topmast.preventer,Topmast preventer stay,calculated,calculated,0.40319999999999995,0.4451026308616923,0.04190263086169238,10.3925175748245,engineering_assumption,engineering_assumption
+main,standing,topmast,mast.main.topmast,st.topmast.preventer,Topmast preventer stay,calculated,calculated,0.40319999999999995,0.4451026308616923,0.04190263086169238,10.3925175748245,engineering_assumption,engineering_assumption
+mizzen,standing,topmast,mast.mizzen.topmast,st.topmast.preventer,Topmast preventer stay,calculated,calculated,0.30239999999999995,0.3338269731462693,0.031426973146269355,10.392517574824524,engineering_assumption,engineering_assumption
+fore,standing,topmast,mast.fore.topmast,st.topmast.shroud_lanyard,Topmast shroud lanyards,calculated,calculated,0.15839999999999999,0.18910416177334646,0.030704161773346478,19.383940513476315,engineering_assumption,engineering_assumption
+main,standing,topmast,mast.main.topmast,st.topmast.shroud_lanyard,Topmast shroud lanyards,calculated,calculated,0.15839999999999999,0.18910416177334646,0.030704161773346478,19.383940513476315,engineering_assumption,engineering_assumption
+mizzen,standing,topmast,mast.mizzen.topmast,st.topmast.shroud_lanyard,Topmast shroud lanyards,calculated,calculated,0.11879999999999999,0.14182812133000985,0.023028121330009865,19.38394051347632,engineering_assumption,engineering_assumption
+fore,standing,topmast,mast.fore.topmast,st.topmast.backstay_lanyard,Topmast backstay lanyards,calculated,calculated,0.192,0.2313978392293238,0.0393978392293238,20.51970793193948,engineering_assumption,engineering_assumption
+main,standing,topmast,mast.main.topmast,st.topmast.backstay_lanyard,Topmast backstay lanyards,calculated,calculated,0.192,0.2313978392293238,0.0393978392293238,20.51970793193948,engineering_assumption,engineering_assumption
+mizzen,standing,topmast,mast.mizzen.topmast,st.topmast.backstay_lanyard,Topmast backstay lanyards,calculated,calculated,0.144,0.17354837942199286,0.02954837942199287,20.519707931939497,engineering_assumption,engineering_assumption
+fore,standing,topmast,mast.fore.topmast,st.topmast.stay_lanyard,Topmast stay lanyard,calculated,calculated,0.20159999999999997,0.21860667144440032,0.01700667144440035,8.435848930754144,engineering_assumption,engineering_assumption
+main,standing,topmast,mast.main.topmast,st.topmast.stay_lanyard,Topmast stay lanyard,calculated,calculated,0.20159999999999997,0.21860667144440032,0.01700667144440035,8.435848930754144,engineering_assumption,engineering_assumption
+mizzen,standing,topmast,mast.mizzen.topmast,st.topmast.stay_lanyard,Topmast stay lanyard,calculated,calculated,0.15119999999999997,0.16395500358330026,0.012755003583300284,8.435848930754156,engineering_assumption,engineering_assumption
+fore,standing,topmast,mast.fore.topmast,st.topmast.preventer_lanyard,Topmast preventer lanyard,calculated,calculated,0.14111999999999997,0.1557859208015923,0.01466592080159232,10.392517574824492,engineering_assumption,engineering_assumption
+main,standing,topmast,mast.main.topmast,st.topmast.preventer_lanyard,Topmast preventer lanyard,calculated,calculated,0.14111999999999997,0.1557859208015923,0.01466592080159232,10.392517574824492,engineering_assumption,engineering_assumption
+mizzen,standing,topmast,mast.mizzen.topmast,st.topmast.preventer_lanyard,Topmast preventer lanyard,calculated,calculated,0.10583999999999998,0.11683944060119425,0.010999440601194274,10.392517574824524,engineering_assumption,engineering_assumption
+fore,standing,topmast,mast.fore.topmast,st.topmast.ratline,Topmast ratlines,calculated,calculated,0.107712,0.12668567535124087,0.018973675351240865,17.615191762515657,engineering_assumption,engineering_assumption
+main,standing,topmast,mast.main.topmast,st.topmast.ratline,Topmast ratlines,calculated,calculated,0.107712,0.12668567535124087,0.018973675351240865,17.615191762515657,engineering_assumption,engineering_assumption
+mizzen,standing,topmast,mast.mizzen.topmast,st.topmast.ratline,Topmast ratlines,calculated,calculated,0.080784,0.09501425651343066,0.01423025651343067,17.615191762515682,engineering_assumption,engineering_assumption
+fore,standing,topmast,mast.fore.topmast,st.futtock.lower,Lower futtock shrouds,calculated,calculated,0.3696,0.46154057156440753,0.09194057156440755,24.875695769590788,engineering_assumption,engineering_assumption
+main,standing,topmast,mast.main.topmast,st.futtock.lower,Lower futtock shrouds,calculated,calculated,0.3696,0.46154057156440753,0.09194057156440755,24.875695769590788,engineering_assumption,engineering_assumption
+mizzen,standing,topmast,mast.mizzen.topmast,st.futtock.lower,Lower futtock shrouds,calculated,calculated,0.27719999999999995,0.34615542867330557,0.06895542867330562,24.875695769590777,engineering_assumption,engineering_assumption
+fore,standing,topgallant,mast.fore.topgallant,st.topgallant.stay,Topgallant stay,calculated,calculated,0.33599999999999997,0.33599999999999997,0,0,engineering_assumption,engineering_assumption
+main,standing,topgallant,mast.main.topgallant,st.topgallant.stay,Topgallant stay,calculated,calculated,0.33599999999999997,0.33599999999999997,0,0,engineering_assumption,engineering_assumption
+mizzen,standing,topgallant,mast.mizzen.topgallant,st.topgallant.stay,Topgallant stay,calculated,calculated,0.25199999999999995,0.25199999999999995,0,0,engineering_assumption,engineering_assumption
+fore,standing,topgallant,mast.fore.topgallant,st.topgallant.shroud,Topgallant shrouds,calculated,calculated,0.192,0.20198059312716157,0.009980593127161569,5.198225587063317,engineering_assumption,engineering_assumption
+main,standing,topgallant,mast.main.topgallant,st.topgallant.shroud,Topgallant shrouds,calculated,calculated,0.192,0.20198059312716157,0.009980593127161569,5.198225587063317,engineering_assumption,engineering_assumption
+mizzen,standing,topgallant,mast.mizzen.topgallant,st.topgallant.shroud,Topgallant shrouds,calculated,calculated,0.144,0.1514854448453712,0.0074854448453711975,5.198225587063332,engineering_assumption,engineering_assumption
+fore,standing,topgallant,mast.fore.topgallant,st.topgallant.backstay,Topgallant backstays,calculated,calculated,0.23999999999999996,0.2587106491816678,0.018710649181667843,7.796103825694936,engineering_assumption,engineering_assumption
+main,standing,topgallant,mast.main.topgallant,st.topgallant.backstay,Topgallant backstays,calculated,calculated,0.23999999999999996,0.2587106491816678,0.018710649181667843,7.796103825694936,engineering_assumption,engineering_assumption
+mizzen,standing,topgallant,mast.mizzen.topgallant,st.topgallant.backstay,Topgallant backstays,calculated,calculated,0.18,0.19403298688625087,0.014032986886250876,7.796103825694931,engineering_assumption,engineering_assumption
+fore,standing,topgallant,mast.fore.topgallant,st.topgallant.shroud_lanyard,Topgallant shroud lanyards,calculated,calculated,0.096,0.10099029656358079,0.0049902965635807844,5.198225587063317,engineering_assumption,engineering_assumption
+main,standing,topgallant,mast.main.topgallant,st.topgallant.shroud_lanyard,Topgallant shroud lanyards,calculated,calculated,0.096,0.10099029656358079,0.0049902965635807844,5.198225587063317,engineering_assumption,engineering_assumption
+mizzen,standing,topgallant,mast.mizzen.topgallant,st.topgallant.shroud_lanyard,Topgallant shroud lanyards,calculated,calculated,0.072,0.0757427224226856,0.0037427224226855987,5.198225587063332,engineering_assumption,engineering_assumption
+fore,standing,topgallant,mast.fore.topgallant,st.topgallant.backstay_lanyard,Topgallant backstay lanyards,calculated,calculated,0.11999999999999998,0.1293553245908339,0.009355324590833922,7.796103825694936,engineering_assumption,engineering_assumption
+main,standing,topgallant,mast.main.topgallant,st.topgallant.backstay_lanyard,Topgallant backstay lanyards,calculated,calculated,0.11999999999999998,0.1293553245908339,0.009355324590833922,7.796103825694936,engineering_assumption,engineering_assumption
+mizzen,standing,topgallant,mast.mizzen.topgallant,st.topgallant.backstay_lanyard,Topgallant backstay lanyards,calculated,calculated,0.09,0.09701649344312543,0.007016493443125438,7.796103825694931,engineering_assumption,engineering_assumption
+fore,standing,topgallant,mast.fore.topgallant,st.topgallant.stay_lanyard,Topgallant stay lanyard,calculated,calculated,0.11759999999999997,0.11759999999999997,0,0,engineering_assumption,engineering_assumption
+main,standing,topgallant,mast.main.topgallant,st.topgallant.stay_lanyard,Topgallant stay lanyard,calculated,calculated,0.11759999999999997,0.11759999999999997,0,0,engineering_assumption,engineering_assumption
+mizzen,standing,topgallant,mast.mizzen.topgallant,st.topgallant.stay_lanyard,Topgallant stay lanyard,calculated,calculated,0.08819999999999999,0.08819999999999999,0,0,engineering_assumption,engineering_assumption
+fore,standing,topgallant,mast.fore.topgallant,st.topgallant.ratline,Topgallant ratlines,calculated,calculated,0.06528,0.06867340166323493,0.0033934016632349295,5.198225587063311,engineering_assumption,engineering_assumption
+main,standing,topgallant,mast.main.topgallant,st.topgallant.ratline,Topgallant ratlines,calculated,calculated,0.06528,0.06867340166323493,0.0033934016632349295,5.198225587063311,engineering_assumption,engineering_assumption
+mizzen,standing,topgallant,mast.mizzen.topgallant,st.topgallant.ratline,Topgallant ratlines,calculated,calculated,0.04896,0.05150505124742621,0.002545051247426211,5.19822558706334,engineering_assumption,engineering_assumption
+fore,standing,topgallant,mast.fore.topgallant,st.futtock.upper,Upper futtock shrouds,calculated,calculated,0.22175999999999998,0.2608234492525547,0.0390634492525547,17.615191762515646,engineering_assumption,engineering_assumption
+main,standing,topgallant,mast.main.topgallant,st.futtock.upper,Upper futtock shrouds,calculated,calculated,0.22175999999999998,0.2608234492525547,0.0390634492525547,17.615191762515646,engineering_assumption,engineering_assumption
+mizzen,standing,topgallant,mast.mizzen.topgallant,st.futtock.upper,Upper futtock shrouds,calculated,calculated,0.16631999999999997,0.19561758693941605,0.029297586939416087,17.61519176251569,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.tie,Yard tie,calculated,calculated,0.4799999999999999,0.4799999999999999,0,0,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.tie,Yard tie,calculated,calculated,0.4799999999999999,0.4799999999999999,0,0,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.tie,Yard tie,calculated,calculated,0.36,0.36,0,0,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.tie,Yard tie,calculated,calculated,0.384,0.41022452388905273,0.02622452388905272,6.82930309610748,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.tie,Yard tie,calculated,calculated,0.384,0.41022452388905273,0.02622452388905272,6.82930309610748,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.tie,Yard tie,calculated,calculated,0.288,0.30766839291678955,0.019668392916789568,6.829303096107489,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.tie,Yard tie,calculated,calculated,0.23999999999999996,0.2707500692520686,0.030750069252068662,12.812528855028612,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.tie,Yard tie,calculated,calculated,0.23999999999999996,0.2707500692520686,0.030750069252068662,12.812528855028612,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.tie,Yard tie,calculated,calculated,0.18,0.20306255193905148,0.02306255193905149,12.812528855028607,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.halyard_fall,Halyard fall,calculated,calculated,0.288,0.2900725426509721,0.00207254265097212,0.7196328649208751,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.halyard_fall,Halyard fall,calculated,calculated,0.288,0.2900725426509721,0.00207254265097212,0.7196328649208751,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.halyard_fall,Halyard fall,calculated,calculated,0.216,0.21755440698822903,0.0015544069882290346,0.7196328649208493,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.halyard_fall,Halyard fall,calculated,calculated,0.23999999999999996,0.264798791538028,0.024798791538028025,10.33282980751168,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.halyard_fall,Halyard fall,calculated,calculated,0.23999999999999996,0.264798791538028,0.024798791538028025,10.33282980751168,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.halyard_fall,Halyard fall,calculated,calculated,0.18,0.198599093653521,0.018599093653521,10.332829807511667,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.halyard_fall,Halyard fall,calculated,calculated,0.192,0.22582116818403006,0.033821168184030054,17.615191762515654,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.halyard_fall,Halyard fall,calculated,calculated,0.192,0.22582116818403006,0.033821168184030054,17.615191762515654,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.halyard_fall,Halyard fall,calculated,calculated,0.144,0.16936587613802254,0.025365876138022547,17.615191762515657,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.simple_halyard,Simple halyard,calculated,calculated,0.288,0.288,0,0,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.simple_halyard,Simple halyard,calculated,calculated,0.288,0.288,0,0,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.simple_halyard,Simple halyard,calculated,calculated,0.216,0.216,0,0,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.simple_halyard,Simple halyard,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.simple_halyard,Simple halyard,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.simple_halyard,Simple halyard,calculated,calculated,0.18,0.18,0,0,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.simple_halyard,Simple halyard,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.simple_halyard,Simple halyard,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.simple_halyard,Simple halyard,calculated,calculated,0.144,0.144,0,0,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.lift,Yard lift,calculated,calculated,0.288,0.2900725426509721,0.00207254265097212,0.7196328649208751,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.lift,Yard lift,calculated,calculated,0.288,0.2900725426509721,0.00207254265097212,0.7196328649208751,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.lift,Yard lift,calculated,calculated,0.216,0.21755440698822903,0.0015544069882290346,0.7196328649208493,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.lift,Yard lift,calculated,calculated,0.23999999999999996,0.264798791538028,0.024798791538028025,10.33282980751168,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.lift,Yard lift,calculated,calculated,0.23999999999999996,0.264798791538028,0.024798791538028025,10.33282980751168,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.lift,Yard lift,calculated,calculated,0.18,0.198599093653521,0.018599093653521,10.332829807511667,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.lift,Yard lift,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.lift,Yard lift,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.lift,Yard lift,calculated,calculated,0.144,0.144,0,0,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.brace_pendant,Brace pendant,calculated,calculated,0.33599999999999997,0.33599999999999997,0,0,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.brace_pendant,Brace pendant,calculated,calculated,0.33599999999999997,0.33599999999999997,0,0,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.brace_pendant,Brace pendant,calculated,calculated,0.25199999999999995,0.25199999999999995,0,0,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.brace_pendant,Brace pendant,calculated,calculated,0.23999999999999996,0.264798791538028,0.024798791538028025,10.33282980751168,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.brace_pendant,Brace pendant,calculated,calculated,0.23999999999999996,0.264798791538028,0.024798791538028025,10.33282980751168,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.brace_pendant,Brace pendant,calculated,calculated,0.18,0.198599093653521,0.018599093653521,10.332829807511667,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.brace_pendant,Brace pendant,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.brace_pendant,Brace pendant,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.brace_pendant,Brace pendant,calculated,calculated,0.144,0.144,0,0,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.brace_fall,Brace fall,calculated,calculated,0.23999999999999996,0.319359358716791,0.07935935871679103,33.0663994653296,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.brace_fall,Brace fall,calculated,calculated,0.23999999999999996,0.319359358716791,0.07935935871679103,33.0663994653296,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.brace_fall,Brace fall,calculated,calculated,0.18,0.23951951903759325,0.059519519037593255,33.06639946532959,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.brace_fall,Brace fall,calculated,calculated,0.192,0.2944347805542001,0.10243478055420008,53.351448205312536,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.brace_fall,Brace fall,calculated,calculated,0.192,0.2944347805542001,0.10243478055420008,53.351448205312536,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.brace_fall,Brace fall,calculated,calculated,0.144,0.2208260854156501,0.07682608541565011,53.35144820531258,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.brace_fall,Brace fall,calculated,calculated,0.144,0.19061500465598188,0.046615004655981895,32.37153101109854,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.brace_fall,Brace fall,calculated,calculated,0.144,0.19061500465598188,0.046615004655981895,32.37153101109854,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.brace_fall,Brace fall,calculated,calculated,0.108,0.14296125349198638,0.03496125349198638,32.3715310110985,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.sling,Yard sling,calculated,calculated,0.432,0.5668066336944195,0.13480663369441953,31.20523928111563,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.sling,Yard sling,calculated,calculated,0.432,0.5668066336944195,0.13480663369441953,31.20523928111563,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.sling,Yard sling,calculated,calculated,0.32399999999999995,0.42510497527081464,0.10110497527081469,31.20523928111565,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.sling,Yard sling,calculated,calculated,0.288,0.288,0,0,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.sling,Yard sling,calculated,calculated,0.288,0.288,0,0,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.sling,Yard sling,calculated,calculated,0.216,0.216,0,0,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.sling,Yard sling,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.sling,Yard sling,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.sling,Yard sling,calculated,calculated,0.144,0.144,0,0,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.parrel_rope,Parrel rope,calculated,calculated,0.288,0.288,0,0,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.parrel_rope,Parrel rope,calculated,calculated,0.288,0.288,0,0,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.parrel_rope,Parrel rope,calculated,calculated,0.216,0.216,0,0,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.parrel_rope,Parrel rope,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.parrel_rope,Parrel rope,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.parrel_rope,Parrel rope,calculated,calculated,0.18,0.18,0,0,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.parrel_rope,Parrel rope,calculated,calculated,0.17279999999999998,0.17279999999999998,0,0,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.parrel_rope,Parrel rope,calculated,calculated,0.17279999999999998,0.17279999999999998,0,0,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.parrel_rope,Parrel rope,calculated,calculated,0.1296,0.1296,0,0,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.sheet,Sheet,calculated,calculated,0.432,0.47903903807518644,0.047039038075186446,10.888666221107973,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.sheet,Sheet,calculated,calculated,0.432,0.47903903807518644,0.047039038075186446,10.888666221107973,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.sheet,Sheet,calculated,calculated,0.32399999999999995,0.3592792785563898,0.03527927855638985,10.888666221107979,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.sheet,Sheet,calculated,calculated,0.384,0.504951482817904,0.12095148281790402,31.49778198382917,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.sheet,Sheet,calculated,calculated,0.384,0.504951482817904,0.12095148281790402,31.49778198382917,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.sheet,Sheet,calculated,calculated,0.288,0.378713612113428,0.09071361211342804,31.49778198382918,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.sheet,Sheet,calculated,calculated,0.23999999999999996,0.264798791538028,0.024798791538028025,10.33282980751168,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.sheet,Sheet,calculated,calculated,0.23999999999999996,0.264798791538028,0.024798791538028025,10.33282980751168,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.sheet,Sheet,calculated,calculated,0.18,0.198599093653521,0.018599093653521,10.332829807511667,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.tack,Tack,calculated,calculated,0.432,0.432,0,0,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.tack,Tack,calculated,calculated,0.432,0.432,0,0,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.tack,Tack,calculated,calculated,0.32399999999999995,0.32399999999999995,0,0,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.tack,Tack,unsupported,unsupported,,,,,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.tack,Tack,unsupported,unsupported,,,,,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.tack,Tack,unsupported,unsupported,,,,,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.tack,Tack,unsupported,unsupported,,,,,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.tack,Tack,unsupported,unsupported,,,,,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.tack,Tack,unsupported,unsupported,,,,,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.clewline,Clewline,calculated,calculated,0.23999999999999996,0.2707500692520686,0.030750069252068662,12.812528855028612,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.clewline,Clewline,calculated,calculated,0.23999999999999996,0.2707500692520686,0.030750069252068662,12.812528855028612,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.clewline,Clewline,calculated,calculated,0.18,0.20306255193905148,0.02306255193905149,12.812528855028607,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.clewline,Clewline,calculated,calculated,0.192,0.2368432392955306,0.04484323929553061,23.355853799755526,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.clewline,Clewline,calculated,calculated,0.192,0.2368432392955306,0.04484323929553061,23.355853799755526,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.clewline,Clewline,calculated,calculated,0.144,0.17763242947164798,0.03363242947164799,23.35585379975555,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.clewline,Clewline,calculated,calculated,0.144,0.1514854448453712,0.0074854448453711975,5.198225587063332,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.clewline,Clewline,calculated,calculated,0.144,0.1514854448453712,0.0074854448453711975,5.198225587063332,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.clewline,Clewline,calculated,calculated,0.108,0.11361408363402838,0.005614083634028377,5.1982255870633125,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.buntline,Buntline,calculated,calculated,0.144,0.144,0,0,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.buntline,Buntline,calculated,calculated,0.144,0.144,0,0,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.buntline,Buntline,calculated,calculated,0.108,0.108,0,0,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.buntline,Buntline,calculated,calculated,0.11519999999999998,0.11519999999999998,0,0,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.buntline,Buntline,calculated,calculated,0.11519999999999998,0.11519999999999998,0,0,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.buntline,Buntline,calculated,calculated,0.08639999999999999,0.08639999999999999,0,0,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.buntline,Buntline,calculated,calculated,0.096,0.096,0,0,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.buntline,Buntline,calculated,calculated,0.096,0.096,0,0,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.buntline,Buntline,calculated,calculated,0.072,0.072,0,0,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.leechline,Leechline,calculated,calculated,0.144,0.144,0,0,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.leechline,Leechline,calculated,calculated,0.144,0.144,0,0,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.leechline,Leechline,calculated,calculated,0.108,0.108,0,0,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.leechline,Leechline,calculated,calculated,0.11519999999999998,0.11519999999999998,0,0,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.leechline,Leechline,calculated,calculated,0.11519999999999998,0.11519999999999998,0,0,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.leechline,Leechline,calculated,calculated,0.08639999999999999,0.08639999999999999,0,0,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.leechline,Leechline,calculated,calculated,0.096,0.096,0,0,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.leechline,Leechline,calculated,calculated,0.096,0.096,0,0,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.leechline,Leechline,calculated,calculated,0.072,0.072,0,0,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.bowline,Bowline,calculated,calculated,0.192,0.26719520953789566,0.07519520953789566,39.16417163432065,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.bowline,Bowline,calculated,calculated,0.192,0.26719520953789566,0.07519520953789566,39.16417163432065,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.bowline,Bowline,calculated,calculated,0.144,0.20039640715342175,0.05639640715342176,39.16417163432067,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.bowline,Bowline,calculated,calculated,0.144,0.21865040589946316,0.07465040589946317,51.840559652404984,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.bowline,Bowline,calculated,calculated,0.144,0.21865040589946316,0.07465040589946317,51.840559652404984,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.bowline,Bowline,calculated,calculated,0.108,0.16398780442459737,0.05598780442459737,51.84055965240497,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.bowline,Bowline,calculated,calculated,0.11519999999999998,0.12368734777656121,0.008487347776561224,7.367489389376064,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.bowline,Bowline,calculated,calculated,0.11519999999999998,0.12368734777656121,0.008487347776561224,7.367489389376064,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.bowline,Bowline,calculated,calculated,0.08639999999999999,0.09276551083242089,0.006365510832420901,7.367489389376043,engineering_assumption,engineering_assumption
+fore,running,lower,yard.fore.lower,rn.square.lower.reef_fall,Reef fall,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+main,running,lower,yard.main.lower,rn.square.lower.reef_fall,Reef fall,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+mizzen,running,lower,yard.mizzen.lower,rn.square.lower.reef_fall,Reef fall,calculated,calculated,0.144,0.144,0,0,engineering_assumption,engineering_assumption
+fore,running,topmast,yard.fore.topmast,rn.square.topmast.reef_fall,Reef fall,calculated,calculated,0.192,0.19556686835964826,0.0035668683596482564,1.8577439373168,engineering_assumption,engineering_assumption
+main,running,topmast,yard.main.topmast,rn.square.topmast.reef_fall,Reef fall,calculated,calculated,0.192,0.19556686835964826,0.0035668683596482564,1.8577439373168,engineering_assumption,engineering_assumption
+mizzen,running,topmast,yard.mizzen.topmast,rn.square.topmast.reef_fall,Reef fall,calculated,calculated,0.144,0.1466751512697362,0.00267515126973622,1.8577439373168196,engineering_assumption,engineering_assumption
+fore,running,topgallant,yard.fore.topgallant,rn.square.topgallant.reef_fall,Reef fall,unsupported,unsupported,,,,,engineering_assumption,engineering_assumption
+main,running,topgallant,yard.main.topgallant,rn.square.topgallant.reef_fall,Reef fall,unsupported,unsupported,,,,,engineering_assumption,engineering_assumption
+mizzen,running,topgallant,yard.mizzen.topgallant,rn.square.topgallant.reef_fall,Reef fall,unsupported,unsupported,,,,,engineering_assumption,engineering_assumption
+fore,running,,sail.head_lower.fore,rn.foreandaft.head_lower.halyard,Lower headsail halyard,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+fore,running,,sail.head_lower.fore,rn.foreandaft.head_lower.sheet,Lower headsail sheet,calculated,calculated,0.288,0.288,0,0,engineering_assumption,engineering_assumption
+fore,running,,sail.head_lower.fore,rn.foreandaft.head_lower.downhaul,Lower headsail downhaul,calculated,calculated,0.11519999999999998,0.11519999999999998,0,0,engineering_assumption,engineering_assumption
+fore,running,,sail.head_upper.fore,rn.foreandaft.head_upper.halyard,Upper headsail halyard,calculated,calculated,0.144,0.144,0,0,engineering_assumption,engineering_assumption
+fore,running,,sail.head_upper.fore,rn.foreandaft.head_upper.sheet,Upper headsail sheet,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+fore,running,,sail.head_upper.fore,rn.foreandaft.head_upper.downhaul,Upper headsail downhaul,calculated,calculated,0.096,0.096,0,0,engineering_assumption,engineering_assumption
+fore,running,,sail.staysail_lower.fore,rn.foreandaft.staysail_lower.halyard,Lower staysail halyard,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+fore,running,,sail.staysail_lower.fore,rn.foreandaft.staysail_lower.sheet,Lower staysail sheet,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+fore,running,,sail.staysail_lower.fore,rn.foreandaft.staysail_lower.downhaul,Lower staysail downhaul,calculated,calculated,0.11519999999999998,0.11519999999999998,0,0,engineering_assumption,engineering_assumption
+fore,running,,sail.staysail_upper.fore,rn.foreandaft.staysail_upper.halyard,Upper staysail halyard,calculated,calculated,0.144,0.144,0,0,engineering_assumption,engineering_assumption
+fore,running,,sail.staysail_upper.fore,rn.foreandaft.staysail_upper.sheet,Upper staysail sheet,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+fore,running,,sail.staysail_upper.fore,rn.foreandaft.staysail_upper.downhaul,Upper staysail downhaul,calculated,calculated,0.096,0.096,0,0,engineering_assumption,engineering_assumption
+mizzen,running,,gaff.mizzen,rn.gaff.throat_halyard,Throat halyard,calculated,calculated,0.18,0.18,0,0,engineering_assumption,engineering_assumption
+mizzen,running,,gaff.mizzen,rn.gaff.peak_halyard,Peak halyard,calculated,calculated,0.18,0.18,0,0,engineering_assumption,engineering_assumption
+mizzen,running,,gaff.mizzen,rn.gaff.boom_sheet,Boom sheet,calculated,calculated,0.25199999999999995,0.25199999999999995,0,0,engineering_assumption,engineering_assumption
+mizzen,running,,gaff.mizzen,rn.gaff.boom_lift,Boom lift,calculated,calculated,0.18,0.18,0,0,engineering_assumption,engineering_assumption
+mizzen,running,,gaff.mizzen,rn.gaff.gaff_vang,Gaff vang,calculated,calculated,0.144,0.144,0,0,engineering_assumption,engineering_assumption
+mizzen,running,,gaff.mizzen,rn.gaff.brail,Brail,calculated,calculated,0.108,0.108,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,bowsprit,bow.bobstay,Bobstay,calculated,calculated,0.528,0.528,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,bowsprit,bow.bobstay.lanyard,Bobstay lanyard,calculated,calculated,0.1848,0.1848,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,bowsprit,bow.shroud,Bowsprit shrouds,calculated,calculated,0.432,0.432,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,bowsprit,bow.shroud.lanyard,Bowsprit shrouds lanyard,calculated,calculated,0.15119999999999997,0.15119999999999997,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,bowsprit,bow.gammoning,Gammoning,calculated,calculated,0.528,0.528,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,jibboom,bow.jibboom_lower,Jibboom lower support,calculated,calculated,0.288,0.288,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,jibboom,bow.jibboom_lower.lanyard,Jibboom lower support lanyard,calculated,calculated,0.10079999999999999,0.10079999999999999,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,jibboom,bow.jibboom_side,Jibboom side support,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,jibboom,bow.jibboom_side.lanyard,Jibboom side support lanyard,calculated,calculated,0.08399999999999999,0.08399999999999999,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,flying_jibboom,bow.flyingjibboom_lower,Flying jibboom lower support,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,flying_jibboom,bow.flyingjibboom_lower.lanyard,Flying jibboom lower support lanyard,calculated,calculated,0.0672,0.0672,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,flying_jibboom,bow.flyingjibboom_side,Flying jibboom side support,calculated,calculated,0.17279999999999998,0.17279999999999998,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,flying_jibboom,bow.flyingjibboom_side.lanyard,Flying jibboom side support lanyard,calculated,calculated,0.060479999999999985,0.060479999999999985,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,martingale,bow.martingale_backstay,Martingale backstay,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,martingale,bow.martingale_backstay.lanyard,Martingale backstay lanyard,calculated,calculated,0.08399999999999999,0.08399999999999999,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,spritsail_yard,rn.spritsail.sling,Spritsail yard sling,calculated,calculated,0.33599999999999997,0.33599999999999997,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,spritsail_yard,rn.spritsail.simple_halyard,Spritsail yard halyard,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,spritsail_yard,rn.spritsail.lift,Spritsail yard lift,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,spritsail_yard,rn.spritsail.brace_pendant,Spritsail brace pendant,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,spritsail_yard,rn.spritsail.brace_fall,Spritsail brace fall,calculated,calculated,0.192,0.192,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,spritsail_yard,rn.spritsail.parrel_rope,Spritsail yard parrel,calculated,calculated,0.23999999999999996,0.23999999999999996,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,spritsail_yard,rn.spritsail.sheet,Spritsail sheet,calculated,calculated,0.288,0.288,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,spritsail_yard,rn.spritsail.clewline,Spritsail clewline,calculated,calculated,0.17279999999999998,0.17279999999999998,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,spritsail_yard,rn.spritsail.buntline,Spritsail buntline,calculated,calculated,0.11519999999999998,0.11519999999999998,0,0,engineering_assumption,engineering_assumption
+bowsprit,bowsprit,,spritsail_yard,rn.spritsail.leechline,Spritsail leechline,calculated,calculated,0.11519999999999998,0.11519999999999998,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.bower_cable,Bower cable,calculated,calculated,1.656,1.656,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.kedge_cable,Kedge cable,calculated,calculated,0.7452000000000001,0.7452000000000001,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.messenger,Messenger,calculated,calculated,1.1591999999999998,1.1591999999999998,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.bitter_rope,Bitter rope,calculated,calculated,0.6127199999999999,0.6127199999999999,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.bower_buoy_rope,Bower buoy rope,calculated,calculated,0.6127199999999999,0.6127199999999999,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.kedge_buoy_rope,Kedge buoy rope,calculated,calculated,0.43056,0.43056,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.cable_light,"Cable-laid rope, light",calculated,calculated,0.7452000000000001,0.7452000000000001,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.cable_medium,"Cable-laid rope, medium",calculated,calculated,0.86112,0.86112,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.cable_heavy,"Cable-laid rope, heavy",calculated,calculated,0.97704,0.97704,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.hawser_light,"Hawser, light",calculated,calculated,0.4968,0.4968,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.hawser_medium,"Hawser, medium",calculated,calculated,0.6127199999999999,0.6127199999999999,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.hawser_heavy,"Hawser, heavy",calculated,calculated,0.67896,0.67896,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.cat_fall,Cat fall,calculated,calculated,0.4968,0.4968,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.fish_fall,Fish fall,calculated,calculated,0.414,0.414,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.cable_stopper,Cable stopper,calculated,calculated,0.4968,0.4968,0,0,engineering_assumption,engineering_assumption
+anchor_group,anchor,,anchor_group,anchor.anchor_stow_lashing,Anchor stow lashing,calculated,calculated,0.414,0.414,0,0,engineering_assumption,engineering_assumption

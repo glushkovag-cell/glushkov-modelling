@@ -1,0 +1,4924 @@
+{
+  "documentVersion": "1.1.0",
+  "profile": {
+    "profileId": "traditional_plant",
+    "profileVersion": "1.1.0",
+    "schemaVersion": "1.0.0",
+    "family": "traditional_plant",
+    "status": "draft",
+    "name": "Traditional plant rigging",
+    "yearFrom": 1625,
+    "yearTo": 1860,
+    "bases": {
+      "mast": 0.12,
+      "bowsprit": 0.12,
+      "hullWidth": 0.0115,
+      "gunBore": 1,
+      "thickestMast": 1
+    },
+    "baseLabels": {
+      "mast": "B_m",
+      "bowsprit": "N",
+      "hullWidth": "A",
+      "gunBore": "K",
+      "thickestMast": "G"
+    },
+    "baseFactorLabels": {
+      "mast": "3/25",
+      "bowsprit": "3/25",
+      "hullWidth": "23/2000",
+      "gunBore": "1",
+      "thickestMast": "1"
+    },
+    "materialConditions": [
+      "fiber"
+    ],
+    "sources": [
+      {
+        "id": "TP",
+        "title": "traditional_plant specification, MVP v1.0",
+        "locator": "§§5–8"
+      },
+      {
+        "id": "FIT",
+        "title": "Model kit rigging instructions (Bounty/Mercury calibration set)",
+        "locator": "Part lists and rigging sections"
+      },
+      {
+        "id": "HIS-MONDFELD",
+        "title": "Wolfram zu Mondfeld — Historic Ship Models, through HiSModel implementation",
+        "locator": "https://www.hismodel.com/en/instructions/rigging-calculator/ ; user CSV exports, 2026-11-10. Ratios reference a common main-stay basis; q0=0.166 reconstructed from exports."
+      }
+    ],
+    "warnings": [
+      "These are estimated diameters for a static scale model. They are not a strength calculation and must not be used for a full-size vessel.",
+      "All published rows are engineering estimates or a preliminary fit. The profile has no verified historical range and is not a reconstruction of a specific vessel.",
+      "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced.",
+      "No validated historical accuracy estimate is provided. Previous fitting metrics are not transferred to this revision."
+    ],
+    "ui": {
+      "masts": true,
+      "tiers": [
+        "lower",
+        "topmast",
+        "topgallant"
+      ],
+      "yards": true,
+      "squareSails": true,
+      "foreAndAft": [
+        "head_lower",
+        "head_upper",
+        "staysail_lower",
+        "staysail_upper"
+      ],
+      "lateenYard": false,
+      "gaff": true,
+      "gaffSail": false,
+      "boom": false,
+      "mainSail": false,
+      "topsail": false,
+      "headSails": false,
+      "staysail": false,
+      "flag": false,
+      "bowsprit": true,
+      "spritsaill": true,
+      "jibboom": true,
+      "martingale": true,
+      "anchor": true,
+      "hullGroup": false,
+      "gun": true,
+      "mastPoint": "partner",
+      "bowspritPoint": "working_section",
+      "defaults": {
+        "scaleDenominator": 64,
+        "mastDiameterMm": {
+          "fore": 9,
+          "main": 10,
+          "mizzen": 7
+        },
+        "bowspritDiameterMm": 8,
+        "hullWidthMm": 150,
+        "gunBoreMm": 2
+      }
+    },
+    "metrics": {
+      "fittedRoles": null,
+      "mapePercent": null,
+      "maxDeviationPercent": null,
+      "crossTransferMapePercent": null,
+      "crossTransferMaxPercent": null,
+      "note": "Historical accuracy not established. B+ source-agreement estimates belong to the accompanying assessment, not historical error.",
+      "cardNote": "Experimental engineering estimate; historical accuracy not established."
+    }
+  },
+  "rules": [
+    {
+      "ruleId": "st.lower.stay",
+      "role": "stay",
+      "name": {
+        "en": "Lower stay",
+        "ru": "Нижний штаг"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 1.1761519176251567,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "perMastOverrides": {
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      },
+      "sources": [
+        "FIT",
+        "HIS-MONDFELD"
+      ],
+      "factorLabel": "1.17615191763"
+    },
+    {
+      "ruleId": "st.lower.shroud",
+      "role": "shroud",
+      "name": {
+        "en": "Lower shrouds",
+        "ru": "Нижние ванты"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.lower.stay"
+      },
+      "factor": 0.5839520528262573,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "perMastOverrides": {
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      },
+      "sources": [
+        "FIT",
+        "HIS-MONDFELD"
+      ],
+      "factorLabel": "0.583952052826"
+    },
+    {
+      "ruleId": "st.lower.backstay",
+      "role": "backstay",
+      "name": {
+        "en": "Lower backstays",
+        "ru": "Нижние бакштаги"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.5,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP"
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.lower.preventer",
+      "role": "preventer",
+      "name": {
+        "en": "Lower preventer stay",
+        "ru": "Нижний лось-штаг"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.lower.stay"
+      },
+      "factor": 0.7,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.lower.shroud_lanyard",
+      "role": "shroud_lanyard",
+      "name": {
+        "en": "Lower shroud lanyards",
+        "ru": "Талрепы нижних вант"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.lower.shroud"
+      },
+      "factor": 0.5,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.lower.backstay_lanyard",
+      "role": "backstay_lanyard",
+      "name": {
+        "en": "Lower backstay lanyards",
+        "ru": "Талрепы нижних бакштагов"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.lower.backstay"
+      },
+      "factor": 0.5,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP"
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.lower.stay_lanyard",
+      "role": "stay_lanyard",
+      "name": {
+        "en": "Lower stay lanyard",
+        "ru": "Ланьяр нижнего штага"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.lower.stay"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.lower.preventer_lanyard",
+      "role": "preventer_lanyard",
+      "name": {
+        "en": "Lower preventer lanyard",
+        "ru": "Ланьяр нижнего лось-штага"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.lower.preventer"
+      },
+      "factor": 0.36628768293059855,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "factorLabel": "0.366287682931",
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.lower.ratline",
+      "role": "ratline",
+      "name": {
+        "en": "Lower ratlines",
+        "ru": "Выбленки нижних вант"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "lower_mast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.lower.shroud"
+      },
+      "factor": 0.34,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topmast.stay",
+      "role": "stay",
+      "name": {
+        "en": "Topmast stay",
+        "ru": "Стень-штаг"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.6506150935845249,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "factorLabel": "0.650615093585",
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topmast.shroud",
+      "role": "shroud",
+      "name": {
+        "en": "Topmast shrouds",
+        "ru": "Стень-ванты"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.3881301328163017,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "factorLabel": "0.388130132816",
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topmast.backstay",
+      "role": "backstay",
+      "name": {
+        "en": "Topmast backstays",
+        "ru": "Стень-фордуны"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.482078831727758,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "factorLabel": "0.482078831728",
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topmast.preventer",
+      "role": "preventer",
+      "name": {
+        "en": "Topmast preventer stay",
+        "ru": "Стень-лось-штаг"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.topmast.stay"
+      },
+      "factor": 0.712631136882821,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "factorLabel": "0.712631136883",
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topmast.shroud_lanyard",
+      "role": "shroud_lanyard",
+      "name": {
+        "en": "Topmast shroud lanyards",
+        "ru": "Талрепы стень-вант"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.topmast.shroud"
+      },
+      "factor": 0.5075192189225523,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "factorLabel": "0.507519218923",
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topmast.backstay_lanyard",
+      "role": "backstay_lanyard",
+      "name": {
+        "en": "Topmast backstay lanyards",
+        "ru": "Талрепы стень-фордунов"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.topmast.backstay"
+      },
+      "factor": 0.5,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topmast.stay_lanyard",
+      "role": "stay_lanyard",
+      "name": {
+        "en": "Topmast stay lanyard",
+        "ru": "Ланьяр стень-штага"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.topmast.stay"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topmast.preventer_lanyard",
+      "role": "preventer_lanyard",
+      "name": {
+        "en": "Topmast preventer lanyard",
+        "ru": "Ланьяр стень-лось-штага"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.topmast.preventer"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topmast.ratline",
+      "role": "ratline",
+      "name": {
+        "en": "Topmast ratlines",
+        "ru": "Выбленки стень-вант"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.topmast.shroud"
+      },
+      "factor": 0.34,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.futtock.lower",
+      "role": "lower",
+      "name": {
+        "en": "Lower futtock shrouds",
+        "ru": "Нижние путенс-ванты"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.lower.shroud",
+        "nodeType": "lower_mast"
+      },
+      "factor": 0.7,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topgallant.stay",
+      "role": "stay",
+      "name": {
+        "en": "Topgallant stay",
+        "ru": "Брам-штаг"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP"
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topgallant.shroud",
+      "role": "shroud",
+      "name": {
+        "en": "Topgallant shrouds",
+        "ru": "Брам-ванты"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.21039645117412667,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "factorLabel": "0.210396451174",
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topgallant.backstay",
+      "role": "backstay",
+      "name": {
+        "en": "Topgallant backstays",
+        "ru": "Брам-фордуны"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.26949025956423733,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "factorLabel": "0.269490259564",
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topgallant.shroud_lanyard",
+      "role": "shroud_lanyard",
+      "name": {
+        "en": "Topgallant shroud lanyards",
+        "ru": "Талрепы брам-вант"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.topgallant.shroud"
+      },
+      "factor": 0.5,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topgallant.backstay_lanyard",
+      "role": "backstay_lanyard",
+      "name": {
+        "en": "Topgallant backstay lanyards",
+        "ru": "Талрепы брам-фордунов"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.topgallant.backstay"
+      },
+      "factor": 0.5,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topgallant.stay_lanyard",
+      "role": "stay_lanyard",
+      "name": {
+        "en": "Topgallant stay lanyard",
+        "ru": "Ланьяр брам-штага"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.topgallant.stay"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP"
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.topgallant.ratline",
+      "role": "ratline",
+      "name": {
+        "en": "Topgallant ratlines",
+        "ru": "Выбленки брам-вант"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.topgallant.shroud"
+      },
+      "factor": 0.34,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "st.futtock.upper",
+      "role": "upper",
+      "name": {
+        "en": "Upper futtock shrouds",
+        "ru": "Верхние путенс-ванты"
+      },
+      "group": "standing",
+      "select": {
+        "nodeType": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "st.topmast.shroud",
+        "nodeType": "topmast"
+      },
+      "factor": 0.7,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Own factor retained; diameter increases only through an updated parent rule. Not independently calibrated."
+      ],
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.tie",
+      "role": "tie",
+      "name": {
+        "en": "Yard tie",
+        "ru": "Шкентель рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.5,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "compound",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.tie",
+      "role": "tie",
+      "name": {
+        "en": "Yard tie",
+        "ru": "Шкентель рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.42731721238443,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "compound",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.427317212384",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.tie",
+      "role": "tie",
+      "name": {
+        "en": "Yard tie",
+        "ru": "Шкентель рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.28203132213757154,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "compound",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.282031322138",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.halyard_fall",
+      "role": "halyard_fall",
+      "name": {
+        "en": "Halyard fall",
+        "ru": "Ходовой конец фала"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.3021588985947626,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "compound",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.302158898595",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.halyard_fall",
+      "role": "halyard_fall",
+      "name": {
+        "en": "Halyard fall",
+        "ru": "Ходовой конец фала"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.27583207451877917,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "compound",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.275832074519",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.halyard_fall",
+      "role": "halyard_fall",
+      "name": {
+        "en": "Halyard fall",
+        "ru": "Ходовой конец фала"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.23523038352503134,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "compound",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.235230383525",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.simple_halyard",
+      "role": "simple_halyard",
+      "name": {
+        "en": "Simple halyard",
+        "ru": "Простой фал"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.3,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "simple",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.simple_halyard",
+      "role": "simple_halyard",
+      "name": {
+        "en": "Simple halyard",
+        "ru": "Простой фал"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "simple",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.simple_halyard",
+      "role": "simple_halyard",
+      "name": {
+        "en": "Simple halyard",
+        "ru": "Простой фал"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.2,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "alternativeGroupId": "yard_hoist",
+      "variant": "simple",
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.lift",
+      "role": "lift",
+      "name": {
+        "en": "Yard lift",
+        "ru": "Топенант"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.3021588985947626,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.302158898595",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.lift",
+      "role": "lift",
+      "name": {
+        "en": "Yard lift",
+        "ru": "Топенант"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.27583207451877917,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.275832074519",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.lift",
+      "role": "lift",
+      "name": {
+        "en": "Yard lift",
+        "ru": "Топенант"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.2,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.brace_pendant",
+      "role": "brace_pendant",
+      "name": {
+        "en": "Brace pendant",
+        "ru": "Шкентель браса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.brace_pendant",
+      "role": "brace_pendant",
+      "name": {
+        "en": "Brace pendant",
+        "ru": "Шкентель браса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.27583207451877917,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.275832074519",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.brace_pendant",
+      "role": "brace_pendant",
+      "name": {
+        "en": "Brace pendant",
+        "ru": "Шкентель браса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.2,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.brace_fall",
+      "role": "brace_fall",
+      "name": {
+        "en": "Brace fall",
+        "ru": "Ходовой конец браса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.33266599866332397,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.332665998663",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.brace_fall",
+      "role": "brace_fall",
+      "name": {
+        "en": "Brace fall",
+        "ru": "Ходовой конец браса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.30670289641062515,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.306702896411",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.brace_fall",
+      "role": "brace_fall",
+      "name": {
+        "en": "Brace fall",
+        "ru": "Ходовой конец браса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.1985572965166478,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.198557296517",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.sling",
+      "role": "sling",
+      "name": {
+        "en": "Yard sling",
+        "ru": "Строп рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.5904235767650204,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.590423576765",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.sling",
+      "role": "sling",
+      "name": {
+        "en": "Yard sling",
+        "ru": "Строп рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.3,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.sling",
+      "role": "sling",
+      "name": {
+        "en": "Yard sling",
+        "ru": "Строп рея"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.2,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.parrel_rope",
+      "role": "parrel_rope",
+      "name": {
+        "en": "Parrel rope",
+        "ru": "Бейфут"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.3,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.parrel_rope",
+      "role": "parrel_rope",
+      "name": {
+        "en": "Parrel rope",
+        "ru": "Бейфут"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.parrel_rope",
+      "role": "parrel_rope",
+      "name": {
+        "en": "Parrel rope",
+        "ru": "Бейфут"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.18,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Sheet",
+        "ru": "Шкот"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.4989989979949859,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.498998997995",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Sheet",
+        "ru": "Шкот"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.5259911279353168,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.525991127935",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Sheet",
+        "ru": "Шкот"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.27583207451877917,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.275832074519",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.tack",
+      "role": "tack",
+      "name": {
+        "en": "Tack",
+        "ru": "Галс"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.45,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.tack",
+      "role": "tack",
+      "name": {
+        "en": "Tack",
+        "ru": "Галс"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": null,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.tack",
+      "role": "tack",
+      "name": {
+        "en": "Tack",
+        "ru": "Галс"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": null,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.clewline",
+      "role": "clewline",
+      "name": {
+        "en": "Clewline",
+        "ru": "Гитов"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.28203132213757154,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.282031322138",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.clewline",
+      "role": "clewline",
+      "name": {
+        "en": "Clewline",
+        "ru": "Гитов"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.24671170759951108,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.2467117076",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.clewline",
+      "role": "clewline",
+      "name": {
+        "en": "Clewline",
+        "ru": "Гитов"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.15779733838059498,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.157797338381",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.buntline",
+      "role": "buntline",
+      "name": {
+        "en": "Buntline",
+        "ru": "Бык-гордень"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.15,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.buntline",
+      "role": "buntline",
+      "name": {
+        "en": "Buntline",
+        "ru": "Бык-гордень"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.12,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.buntline",
+      "role": "buntline",
+      "name": {
+        "en": "Buntline",
+        "ru": "Бык-гордень"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.1,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.leechline",
+      "role": "leechline",
+      "name": {
+        "en": "Leechline",
+        "ru": "Нок-гордень"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.15,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.leechline",
+      "role": "leechline",
+      "name": {
+        "en": "Leechline",
+        "ru": "Нок-гордень"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.12,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.leechline",
+      "role": "leechline",
+      "name": {
+        "en": "Leechline",
+        "ru": "Нок-гордень"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.1,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.bowline",
+      "role": "bowline",
+      "name": {
+        "en": "Bowline",
+        "ru": "Булинь"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.27832834326864136,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.278328343269",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.bowline",
+      "role": "bowline",
+      "name": {
+        "en": "Bowline",
+        "ru": "Булинь"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.22776083947860748,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.227760839479",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.bowline",
+      "role": "bowline",
+      "name": {
+        "en": "Bowline",
+        "ru": "Булинь"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.12884098726725127,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.128840987267",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.lower.reef_fall",
+      "role": "reef_fall",
+      "name": {
+        "en": "Reef fall",
+        "ru": "Риф-тали"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "lower",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.2,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topmast.reef_fall",
+      "role": "reef_fall",
+      "name": {
+        "en": "Reef fall",
+        "ru": "Риф-тали"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topmast",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": 0.20371548787463364,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP",
+        "HIS-MONDFELD"
+      ],
+      "warnings": [
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "factorLabel": "0.203715487875",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.square.topgallant.reef_fall",
+      "role": "reef_fall",
+      "name": {
+        "en": "Reef fall",
+        "ru": "Риф-тали"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "yard",
+        "tier": "topgallant",
+        "perMast": true
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast"
+      },
+      "factor": null,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated",
+      "perMastOverrides": {
+        "fore": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        },
+        "mizzen": {
+          "coefficientBasis": "engineering_assumption",
+          "calibrationStatus": "not_calibrated"
+        }
+      }
+    },
+    {
+      "ruleId": "rn.foreandaft.head_lower.halyard",
+      "role": "halyard",
+      "name": {
+        "en": "Lower headsail halyard",
+        "ru": "Фал: lower headsail"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "fore_and_aft_sail",
+        "sailClass": "head_lower"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.2,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.foreandaft.head_lower.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Lower headsail sheet",
+        "ru": "Шкот: lower headsail"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "fore_and_aft_sail",
+        "sailClass": "head_lower"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.3,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.foreandaft.head_lower.downhaul",
+      "role": "downhaul",
+      "name": {
+        "en": "Lower headsail downhaul",
+        "ru": "Нирал: lower headsail"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "fore_and_aft_sail",
+        "sailClass": "head_lower"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.12,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.foreandaft.head_upper.halyard",
+      "role": "halyard",
+      "name": {
+        "en": "Upper headsail halyard",
+        "ru": "Фал: upper headsail"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "fore_and_aft_sail",
+        "sailClass": "head_upper"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.15,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.foreandaft.head_upper.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Upper headsail sheet",
+        "ru": "Шкот: upper headsail"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "fore_and_aft_sail",
+        "sailClass": "head_upper"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.2,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.foreandaft.head_upper.downhaul",
+      "role": "downhaul",
+      "name": {
+        "en": "Upper headsail downhaul",
+        "ru": "Нирал: upper headsail"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "fore_and_aft_sail",
+        "sailClass": "head_upper"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.1,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.foreandaft.staysail_lower.halyard",
+      "role": "halyard",
+      "name": {
+        "en": "Lower staysail halyard",
+        "ru": "Фал: lower staysail"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "fore_and_aft_sail",
+        "sailClass": "staysail_lower"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.2,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.foreandaft.staysail_lower.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Lower staysail sheet",
+        "ru": "Шкот: lower staysail"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "fore_and_aft_sail",
+        "sailClass": "staysail_lower"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.foreandaft.staysail_lower.downhaul",
+      "role": "downhaul",
+      "name": {
+        "en": "Lower staysail downhaul",
+        "ru": "Нирал: lower staysail"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "fore_and_aft_sail",
+        "sailClass": "staysail_lower"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.12,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.foreandaft.staysail_upper.halyard",
+      "role": "halyard",
+      "name": {
+        "en": "Upper staysail halyard",
+        "ru": "Фал: upper staysail"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "fore_and_aft_sail",
+        "sailClass": "staysail_upper"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.15,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.foreandaft.staysail_upper.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Upper staysail sheet",
+        "ru": "Шкот: upper staysail"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "fore_and_aft_sail",
+        "sailClass": "staysail_upper"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.2,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.foreandaft.staysail_upper.downhaul",
+      "role": "downhaul",
+      "name": {
+        "en": "Upper staysail downhaul",
+        "ru": "Нирал: upper staysail"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "fore_and_aft_sail",
+        "sailClass": "staysail_upper"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.1,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.gaff.throat_halyard",
+      "role": "throat_halyard",
+      "name": {
+        "en": "Throat halyard",
+        "ru": "Гафель-гардель"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.gaff.peak_halyard",
+      "role": "peak_halyard",
+      "name": {
+        "en": "Peak halyard",
+        "ru": "Дирик-фал"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.gaff.boom_sheet",
+      "role": "boom_sheet",
+      "name": {
+        "en": "Boom sheet",
+        "ru": "Гика-шкот"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.gaff.boom_lift",
+      "role": "boom_lift",
+      "name": {
+        "en": "Boom lift",
+        "ru": "Гика-топенант"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff"
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.gaff.gaff_vang",
+      "role": "gaff_vang",
+      "name": {
+        "en": "Gaff vang",
+        "ru": "Оттяжка гафеля"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.2,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.gaff.brail",
+      "role": "brail",
+      "name": {
+        "en": "Brail",
+        "ru": "Гитов гафельного паруса"
+      },
+      "group": "running",
+      "select": {
+        "nodeType": "gaff"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "mast",
+        "scope": "supporting"
+      },
+      "factor": 0.15,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.bobstay",
+      "role": "bobstay",
+      "name": {
+        "en": "Bobstay",
+        "ru": "Ватер-штаг"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "bowsprit"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.55,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.bobstay.lanyard",
+      "role": "bobstay_lanyard",
+      "name": {
+        "en": "Bobstay lanyard",
+        "ru": "Ланьяр: ватер-штаг"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "bowsprit"
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "bow.bobstay"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.shroud",
+      "role": "shroud",
+      "name": {
+        "en": "Bowsprit shrouds",
+        "ru": "Ватер-бакштаги"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "bowsprit"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.45,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.shroud.lanyard",
+      "role": "shroud_lanyard",
+      "name": {
+        "en": "Bowsprit shrouds lanyard",
+        "ru": "Ланьяр: ватер-бакштаги"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "bowsprit"
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "bow.shroud"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.gammoning",
+      "role": "gammoning",
+      "name": {
+        "en": "Gammoning",
+        "ru": "Ватер-вулинг"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "bowsprit"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.55,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.jibboom_lower",
+      "role": "jibboom_lower",
+      "name": {
+        "en": "Jibboom lower support",
+        "ru": "Нижняя поддержка утлегаря"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "jibboom"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.3,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.jibboom_lower.lanyard",
+      "role": "jibboom_lower_lanyard",
+      "name": {
+        "en": "Jibboom lower support lanyard",
+        "ru": "Ланьяр: нижняя поддержка утлегаря"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "jibboom"
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "bow.jibboom_lower"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.jibboom_side",
+      "role": "jibboom_side",
+      "name": {
+        "en": "Jibboom side support",
+        "ru": "Боковая поддержка утлегаря"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "jibboom"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.jibboom_side.lanyard",
+      "role": "jibboom_side_lanyard",
+      "name": {
+        "en": "Jibboom side support lanyard",
+        "ru": "Ланьяр: боковая поддержка утлегаря"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "jibboom"
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "bow.jibboom_side"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.flyingjibboom_lower",
+      "role": "flyingjibboom_lower",
+      "name": {
+        "en": "Flying jibboom lower support",
+        "ru": "Нижняя поддержка бом-утлегаря"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "flying_jibboom"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.2,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.flyingjibboom_lower.lanyard",
+      "role": "flyingjibboom_lower_lanyard",
+      "name": {
+        "en": "Flying jibboom lower support lanyard",
+        "ru": "Ланьяр: нижняя поддержка бом-утлегаря"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "flying_jibboom"
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "bow.flyingjibboom_lower"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.flyingjibboom_side",
+      "role": "flyingjibboom_side",
+      "name": {
+        "en": "Flying jibboom side support",
+        "ru": "Боковая поддержка бом-утлегаря"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "flying_jibboom"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.18,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.flyingjibboom_side.lanyard",
+      "role": "flyingjibboom_side_lanyard",
+      "name": {
+        "en": "Flying jibboom side support lanyard",
+        "ru": "Ланьяр: боковая поддержка бом-утлегаря"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "flying_jibboom"
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "bow.flyingjibboom_side"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.martingale_backstay",
+      "role": "martingale_backstay",
+      "name": {
+        "en": "Martingale backstay",
+        "ru": "Бакштаг мартин-гика"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "martingale"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "bow.martingale_backstay.lanyard",
+      "role": "martingale_backstay_lanyard",
+      "name": {
+        "en": "Martingale backstay lanyard",
+        "ru": "Ланьяр: бакштаг мартин-гика"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "martingale"
+      },
+      "base": {
+        "kind": "rule",
+        "ruleId": "bow.martingale_backstay"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.spritsail.sling",
+      "role": "sling",
+      "name": {
+        "en": "Spritsail yard sling",
+        "ru": "Строп блинда-рея"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.35,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.spritsail.simple_halyard",
+      "role": "simple_halyard",
+      "name": {
+        "en": "Spritsail yard halyard",
+        "ru": "Фал блинда-рея"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.spritsail.lift",
+      "role": "lift",
+      "name": {
+        "en": "Spritsail yard lift",
+        "ru": "Топенант блинда-рея"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.spritsail.brace_pendant",
+      "role": "brace_pendant",
+      "name": {
+        "en": "Spritsail brace pendant",
+        "ru": "Шкентель блинда-браса"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.spritsail.brace_fall",
+      "role": "brace_fall",
+      "name": {
+        "en": "Spritsail brace fall",
+        "ru": "Ходовой конец блинда-браса"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.2,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.spritsail.parrel_rope",
+      "role": "parrel_rope",
+      "name": {
+        "en": "Spritsail yard parrel",
+        "ru": "Бейфут блинда-рея"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.spritsail.sheet",
+      "role": "sheet",
+      "name": {
+        "en": "Spritsail sheet",
+        "ru": "Шкот блинда-паруса"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.3,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.spritsail.clewline",
+      "role": "clewline",
+      "name": {
+        "en": "Spritsail clewline",
+        "ru": "Гитов блинда-паруса"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.18,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.spritsail.buntline",
+      "role": "buntline",
+      "name": {
+        "en": "Spritsail buntline",
+        "ru": "Бык-гордень блинда-паруса"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.12,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "rn.spritsail.leechline",
+      "role": "leechline",
+      "name": {
+        "en": "Spritsail leechline",
+        "ru": "Нок-гордень блинда-паруса"
+      },
+      "group": "bowsprit",
+      "select": {
+        "nodeType": "spritsail_yard"
+      },
+      "requires": {
+        "present": true,
+        "sailPresent": true
+      },
+      "base": {
+        "kind": "bowsprit"
+      },
+      "factor": 0.12,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Bowsprit and spar ratios are engineering estimates. One continuous rope is not duplicated when it passes a spar."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.bower_cable",
+      "role": "bower_cable",
+      "name": {
+        "en": "Bower cable",
+        "ru": "Становой якорный канат"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 1,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "unsupportedWhen": [
+        {
+          "field": "anchorConnection",
+          "equals": "chain",
+          "reason": "material_not_supported"
+        }
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.kedge_cable",
+      "role": "kedge_cable",
+      "name": {
+        "en": "Kedge cable",
+        "ru": "Верп-канат"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.45,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "unsupportedWhen": [
+        {
+          "field": "anchorConnection",
+          "equals": "chain",
+          "reason": "material_not_supported"
+        }
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.messenger",
+      "role": "messenger",
+      "name": {
+        "en": "Messenger",
+        "ru": "Кабаляринг"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.7,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.bitter_rope",
+      "role": "bitter_rope",
+      "name": {
+        "en": "Bitter rope",
+        "ru": "Жвака-галс"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.37,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.bower_buoy_rope",
+      "role": "bower_buoy_rope",
+      "name": {
+        "en": "Bower buoy rope",
+        "ru": "Буйреп станового якоря"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.37,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.kedge_buoy_rope",
+      "role": "kedge_buoy_rope",
+      "name": {
+        "en": "Kedge buoy rope",
+        "ru": "Буйреп верпа"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.26,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.cable_light",
+      "role": "cable_light",
+      "name": {
+        "en": "Cable-laid rope, light",
+        "ru": "Кабельтов, лёгкий"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.45,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.cable_medium",
+      "role": "cable_medium",
+      "name": {
+        "en": "Cable-laid rope, medium",
+        "ru": "Кабельтов, средний"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.52,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.cable_heavy",
+      "role": "cable_heavy",
+      "name": {
+        "en": "Cable-laid rope, heavy",
+        "ru": "Кабельтов, тяжёлый"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.59,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.hawser_light",
+      "role": "hawser_light",
+      "name": {
+        "en": "Hawser, light",
+        "ru": "Перлинь, лёгкий"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.3,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.hawser_medium",
+      "role": "hawser_medium",
+      "name": {
+        "en": "Hawser, medium",
+        "ru": "Перлинь, средний"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.37,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.hawser_heavy",
+      "role": "hawser_heavy",
+      "name": {
+        "en": "Hawser, heavy",
+        "ru": "Перлинь, тяжёлый"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.41,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.cat_fall",
+      "role": "cat_fall",
+      "name": {
+        "en": "Cat fall",
+        "ru": "Ходовой конец кат-талей"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.3,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.fish_fall",
+      "role": "fish_fall",
+      "name": {
+        "en": "Fish fall",
+        "ru": "Ходовой конец фиш-талей"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.cable_stopper",
+      "role": "cable_stopper",
+      "name": {
+        "en": "Cable stopper",
+        "ru": "Стоппер каната"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.3,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "anchor.anchor_stow_lashing",
+      "role": "anchor_stow_lashing",
+      "name": {
+        "en": "Anchor stow lashing",
+        "ru": "Крепление якоря по-походному"
+      },
+      "group": "anchor",
+      "select": {
+        "nodeType": "anchor_group"
+      },
+      "base": {
+        "kind": "hullWidth"
+      },
+      "factor": 0.25,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Anchor ratios follow a presented 1819 list. The base A = 0.0115 × W is a rounded assumption derived from one vessel."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "gun.breeching",
+      "role": "breeching",
+      "name": {
+        "en": "Breeching",
+        "ru": "Брюки"
+      },
+      "group": "gun",
+      "select": {
+        "nodeType": "gun_group"
+      },
+      "requires": {
+        "present": true,
+        "supportedGunMounting": true
+      },
+      "base": {
+        "kind": "gunBore"
+      },
+      "factor": 0.3,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Gun-gear ratios are engineering estimates. They are not a historical calibration and do not assert that a particular fitting was carried."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "gun.side_fall",
+      "role": "side_fall",
+      "name": {
+        "en": "Side fall",
+        "ru": "Боковая таль"
+      },
+      "group": "gun",
+      "select": {
+        "nodeType": "gun_group"
+      },
+      "requires": {
+        "present": true,
+        "supportedGunMounting": true
+      },
+      "base": {
+        "kind": "gunBore"
+      },
+      "factor": 0.1,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Gun-gear ratios are engineering estimates. They are not a historical calibration and do not assert that a particular fitting was carried."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "gun.train_fall",
+      "role": "train_fall",
+      "name": {
+        "en": "Train fall",
+        "ru": "Задняя таль"
+      },
+      "group": "gun",
+      "select": {
+        "nodeType": "gun_group"
+      },
+      "requires": {
+        "present": true,
+        "supportedGunMounting": true
+      },
+      "base": {
+        "kind": "gunBore"
+      },
+      "factor": 0.1,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Gun-gear ratios are engineering estimates. They are not a historical calibration and do not assert that a particular fitting was carried."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    },
+    {
+      "ruleId": "gun.stow_lashing",
+      "role": "stow_lashing",
+      "name": {
+        "en": "Stow lashing",
+        "ru": "Походное крепление"
+      },
+      "group": "gun",
+      "select": {
+        "nodeType": "gun_group"
+      },
+      "requires": {
+        "present": true,
+        "supportedGunMounting": true
+      },
+      "base": {
+        "kind": "gunBore"
+      },
+      "factor": 0.12,
+      "materials": [
+        "fiber"
+      ],
+      "material": "fiber",
+      "sources": [
+        "TP"
+      ],
+      "warnings": [
+        "Gun-gear ratios are engineering estimates. They are not a historical calibration and do not assert that a particular fitting was carried."
+      ],
+      "coefficientBasis": "engineering_assumption",
+      "calibrationStatus": "not_calibrated"
+    }
+  ]
+}

@@ -63,13 +63,29 @@ test('manifest matches the profile documents and their hashes', () => {
     const documents = loadAllDocuments();
 
     assert.equal(manifest.schemaVersion, '1.0.0');
-    assert.equal(manifest.profiles.length, documents.length);
+    const manifestVersions = manifest.profiles.flatMap((entry) => entry.versions);
+    assert.equal(manifestVersions.length, documents.length);
     assert.deepEqual(
         manifest.profiles.map((entry) => entry.profileId),
         ['traditional_plant', 'yacht_metal_yacht', 'yacht_metal_schooner', 'early_plant'],
     );
 
     for (const entry of manifest.profiles) {
+        const versions = entry.versions.map((version) => version.version);
+        assert.equal(
+            entry.latest,
+            versions.sort((a, b) => {
+                const left = a.split('.').map(Number);
+                const right = b.split('.').map(Number);
+                for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+                    const difference = (left[index] ?? 0) - (right[index] ?? 0);
+                    if (difference !== 0) return difference;
+                }
+                return 0;
+            })[versions.length - 1],
+            `${entry.profileId} latest`,
+        );
+
         for (const version of entry.versions) {
             const path = join(ROOT, 'data', 'rigging', version.document);
             const serialized = readFileSync(path, 'utf8');
@@ -122,6 +138,13 @@ test('profile rule counts match the published specifications', () => {
     assert.equal(EARLY().profile.profileVersion, '1.2.1');
     assert.equal(EARLY().profile.status, 'draft');
     assert.equal(TRADITIONAL().profile.status, 'published');
+
+    // Новые экспериментальные редакции сохраняют состав определений.
+    assert.equal(loadDocument('traditional_plant', '1.1.0').rules.length, 135);
+    assert.equal(loadDocument('yacht_metal_schooner', '1.1.0').rules.length, 35);
+    assert.equal(loadDocument('early_plant', '1.2.2').rules.length, 48);
+    assert.equal(loadDocument('traditional_plant', '1.1.0').profile.status, 'draft');
+    assert.equal(loadDocument('early_plant', '1.2.2').profile.status, 'draft');
 });
 
 test('profile summaries expose counts, groups, metrics and draft status', () => {
@@ -138,6 +161,15 @@ test('profile summaries expose counts, groups, metrics and draft status', () => 
     assert.equal(schooner.ruleCount, 35);
     assert.equal(schooner.family, 'yacht_metal');
     assert.equal(schooner.metrics?.crossTransferMaxPercent, 16.42);
+
+    // Экспериментальные редакции не заявляют числовую точность: строка
+    // Calibration не показывается, остаётся явная оговорка.
+    const latestEarly = summariseProfile(loadDocument('early_plant', '1.2.2'));
+    assert.equal(latestEarly.explanation.calibration, null);
+    assert.equal(
+        latestEarly.explanation.accuracy,
+        'Experimental engineering estimate; historical accuracy not established.',
+    );
 });
 
 test('profile card explanations follow the prescribed wording', () => {
@@ -458,8 +490,12 @@ test('profile versions are independent in the manifest', () => {
     const early = manifest.profiles.find((entry) => entry.profileId === 'early_plant');
     const yacht = manifest.profiles.find((entry) => entry.profileId === 'yacht_metal_yacht');
 
-    assert.equal(early?.latest, '1.2.1');
+    assert.equal(early?.latest, '1.2.2');
     assert.equal(yacht?.latest, '1.0.0');
+    assert.equal(
+        manifest.profiles.find((entry) => entry.profileId === 'traditional_plant')?.latest,
+        '1.1.0',
+    );
     assert.notEqual(early?.latest, yacht?.latest);
 });
 

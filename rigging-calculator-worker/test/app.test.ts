@@ -74,7 +74,7 @@ describe('rigging API', () => {
       'yacht_metal_schooner',
       'early_plant',
     ]);
-    expect(data.profiles[3].latest).toBe('1.2.1');
+    expect(data.profiles[3].latest).toBe('1.2.2');
   });
 
   it('calculate возвращает диаметры по общему ядру', async () => {

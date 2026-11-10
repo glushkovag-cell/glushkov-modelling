@@ -12,14 +12,32 @@ data/rigging/
   schema/profile-document.schema.json      JSON Schema (draft 2020-12)
   profiles/
     traditional_plant/1.0.0.json
+    traditional_plant/1.1.0.json
     yacht_metal_yacht/1.0.0.json
     yacht_metal_schooner/1.0.0.json
+    yacht_metal_schooner/1.1.0.json
     early_plant/1.2.1.json
+    early_plant/1.2.2.json
 ```
 
 Файл версии только добавляется: проекты ссылаются на конкретную версию.
 `index.json` — единственный файл, который меняется при выпуске версии; его
 `sha256` проверяется тестом `tests/rigging-profiles.test.ts`.
+
+Актуальные latest-версии:
+
+| profileId | latest | status |
+| --- | --- | --- |
+| `traditional_plant` | 1.1.0 | draft |
+| `yacht_metal_yacht` | 1.0.0 | draft |
+| `yacht_metal_schooner` | 1.1.0 | draft |
+| `early_plant` | 1.2.2 | draft |
+
+Редакции `traditional_plant` 1.1.0, `yacht_metal_schooner` 1.1.0 и
+`early_plant` 1.2.2 — экспериментальная B+ регуляризация. Числовые факторы
+`early_plant` не менялись; изменены источники и предупреждения. Историческая
+точность в этих редакциях не заявлена, поэтому `metrics` числовых значений не
+содержит.
 
 ## Документ профиля
 
@@ -28,7 +46,7 @@ data/rigging/
   "documentVersion": "1.0.0",
   "profile": {
     "profileId": "early_plant",
-    "profileVersion": "1.2.1",
+    "profileVersion": "1.2.2",
     "schemaVersion": "1.0.0",
     "status": "draft",
     "bases": { "mast": 1, "bowsprit": 1, "hullWidth": 1, "gunBore": 1, "thickestMast": 1 },
@@ -136,3 +154,9 @@ profile_unavailable`.
   подмены `traditional_plant`.
 - Версия HTTP-контракта остаётся `1`.
 - MCP-инструмент такелажа в этот цикл не входит.
+
+## Сравнение Bounty
+
+Отчёт о разнице `traditional_plant` 1.0.0 → 1.1.0 на обмерах HMS Bounty:
+[bounty-profile-diff.md](bounty-profile-diff.md) и полная таблица
+[bounty-profile-diff.csv](bounty-profile-diff.csv).

@@ -94,6 +94,12 @@ function firstSentence(text: string): string {
 
 function calibrationLine(metrics: ProfileMetrics | null): string | null {
     if (!metrics) return null;
+    const hasNumbers =
+        metrics.fittedRoles !== null ||
+        metrics.mapePercent !== null ||
+        metrics.maxDeviationPercent !== null ||
+        metrics.crossTransferMaxPercent !== null;
+    if (!hasNumbers) return null;
     const transfer =
         metrics.crossTransferMaxPercent === null || metrics.crossTransferMaxPercent === undefined
             ? ''

@@ -24,8 +24,9 @@ export function loadDocument(profileId: string, version: string): ProfileDocumen
 
 export function loadAllDocuments(): ProfileDocument[] {
     const documents: ProfileDocument[] = [];
-    for (const profileId of readdirSync(PROFILES_DIR)) {
-        const directory = join(PROFILES_DIR, profileId);
+    for (const entry of readdirSync(PROFILES_DIR, { withFileTypes: true })) {
+        if (!entry.isDirectory()) continue;
+        const directory = join(PROFILES_DIR, entry.name);
         for (const file of readdirSync(directory)) {
             if (!file.endsWith('.json')) continue;
             documents.push(
