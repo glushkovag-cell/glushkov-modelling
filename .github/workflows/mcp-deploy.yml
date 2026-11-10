@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'mcp-server/**'
+      # Тест паритета MCP (mcp-server/test) сверяет узлы с формой сайта.
+      - 'src/lib/rigging/**'
       - '.github/workflows/mcp-deploy.yml'
   workflow_dispatch:
 
@@ -49,6 +51,9 @@ jobs:
 
       # Base URL of the rope calculator Worker (Cloudflare).
       ROPE_API_BASE_URL: https://api.glushkov-modelling.com
+
+      # Base URL of the rigging-diameter calculator Worker (Cloudflare).
+      RIGGING_API_BASE_URL: https://rigging-api.glushkov-modelling.com
 
     steps:
       - name: Checkout repository
@@ -142,6 +147,7 @@ jobs:
           check_value OAUTH_REQUIRED_SCOPE "$OAUTH_REQUIRED_SCOPE"
           check_value OAUTH_RESOURCE_METADATA_URI "$OAUTH_RESOURCE_METADATA_URI"
           check_value ROPE_API_BASE_URL "$ROPE_API_BASE_URL"
+          check_value RIGGING_API_BASE_URL "$RIGGING_API_BASE_URL"
 
           ssh -p "${DEPLOY_PORT}" \
             -i ~/.ssh/github_actions_deploy \
@@ -174,6 +180,7 @@ jobs:
           OAUTH_REQUIRED_SCOPE=${OAUTH_REQUIRED_SCOPE}
           OAUTH_RESOURCE_METADATA_URI=${OAUTH_RESOURCE_METADATA_URI}
           ROPE_API_BASE_URL=${ROPE_API_BASE_URL}
+          RIGGING_API_BASE_URL=${RIGGING_API_BASE_URL}
           EOF
 
       - name: Install production dependencies on VPS

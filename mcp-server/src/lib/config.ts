@@ -61,6 +61,14 @@ export const config = {
     "https://api.glushkov-modelling.com",
   ).replace(/\/$/, ""),
 
+  // Базовый URL JSON API калькулятора толщин такелажа (Cloudflare Worker
+  // rigging-calculator-worker). Тот же Worker вызывает страница
+  // /tools/rigging-diameters, поэтому расчёты в MCP и на сайте совпадают.
+  riggingApiBaseUrl: optionalEnv(
+    "RIGGING_API_BASE_URL",
+    "https://rigging-api.glushkov-modelling.com",
+  ).replace(/\/$/, ""),
+
   // Лимиты по умолчанию для read-only инструментов
   defaultResponseLimit: 50,
   requestTimeoutMs: 8000,
