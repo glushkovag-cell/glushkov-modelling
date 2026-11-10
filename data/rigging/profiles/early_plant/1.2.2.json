@@ -71,15 +71,15 @@
       },
       {
         "id": "HIS-MONDFELD",
-        "title": "Wolfram zu Mondfeld — Historic Ship Models, through HiSModel implementation",
-        "locator": "https://www.hismodel.com/en/instructions/rigging-calculator/ ; user CSV exports, 2026-11-10. Ratios reference a common main-stay basis; q0=0.166 reconstructed from exports."
+        "title": "Wolfram zu Mondfeld — Historic Ship Models",
+        "locator": "CSV exports, 2026-11-10. Ratios reference a common main-stay basis; q0=0.166 reconstructed from exports."
       }
     ],
     "warnings": [
       "Estimates for a static model, not a strength calculation.",
       "Research draft: 48 definitions, not 48 verified historical ropes. The late-row audited exclusions of the research document still apply.",
       "The upper direct tier (topgallant), separate topmast standing rigging, preventer stays and bowsprit shrouds/bobstay are excluded from this scope.",
-      "Numerical factors unchanged. HiSModel 16th/17th-century data are comparator-only for the Santa Maria reconstruction; no validated finished mast diameter is available for normalizing independent kit targets.",
+      "Numerical factors unchanged. Wolfram zu Mondfeld 16th/17th-century data are comparator-only for the Santa Maria reconstruction; no validated finished mast diameter is available for normalizing independent kit targets.",
       "No validated historical accuracy estimate is provided. Previous fitting metrics are not transferred to this revision."
     ],
     "ui": {

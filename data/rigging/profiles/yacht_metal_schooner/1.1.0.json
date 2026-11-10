@@ -47,15 +47,15 @@
       },
       {
         "id": "HIS-MONDFELD",
-        "title": "Wolfram zu Mondfeld — Historic Ship Models, through HiSModel implementation",
-        "locator": "https://www.hismodel.com/en/instructions/rigging-calculator/ ; user CSV exports, 2026-11-10. Ratios reference a common main-stay basis; q0=0.166 reconstructed from exports."
+        "title": "Wolfram zu Mondfeld — Historic Ship Models",
+        "locator": "CSV exports, 2026-11-10. Ratios reference a common main-stay basis; q0=0.166 reconstructed from exports."
       }
     ],
     "warnings": [
       "Estimates for a static model, not a strength calculation.",
       "Draft profile: the calibration targets are user-accepted secondary reports; primary archival sheets were not independently verified.",
       "The FIT coefficients cover four control roles only; the engineering rows are project assumptions and are not calibrated.",
-      "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced.",
+      "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). Wolfram zu Mondfeld is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced.",
       "No validated historical accuracy estimate is provided. Previous fitting metrics are not transferred to this revision."
     ],
     "ui": {
@@ -136,7 +136,7 @@
       "calibrationStatus": "not_calibrated",
       "factorLabel": "0.0649977433454",
       "warnings": [
-        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). Wolfram zu Mondfeld is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
       ],
       "perMastOverrides": {
         "fore": {
@@ -216,7 +216,7 @@
       "calibrationStatus": "not_calibrated",
       "factorLabel": "0.0365781355457",
       "warnings": [
-        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). Wolfram zu Mondfeld is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
       ],
       "perMastOverrides": {
         "fore": {
@@ -257,7 +257,7 @@
       "calibrationStatus": "not_calibrated",
       "factorLabel": "0.0420266582064",
       "warnings": [
-        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). HiSModel is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
+        "Experimental B+ engineering regularization: alpha=0.5 in effective-coefficient log space; each JSON factor is then clamped to max(original factor, unconstrained B factor). Wolfram zu Mondfeld is an additional secondary input, not historical ground truth. Mainmast coefficients transfer to other masts through existing bases; no numerical per-mast overrides are introduced."
       ],
       "perMastOverrides": {
         "fore": {
