@@ -7,7 +7,7 @@
       "profileId": "traditional_plant",
       "family": "traditional_plant",
       "name": "Traditional plant rigging",
-      "status": "draft",
+      "status": "published",
       "latest": "1.1.0",
       "versions": [
         {
@@ -18,9 +18,9 @@
         },
         {
           "version": "1.1.0",
-          "status": "draft",
+          "status": "published",
           "document": "profiles/traditional_plant/1.1.0.json",
-          "sha256": "bd804fc9268d967a790cf8b51cc6a70f61763c6d50df6152e5be4c048ea66457"
+          "sha256": "b6776574482bd92f4cd9fe1ca531eba64e8bd29e03997144f0ab35f7ba150c05"
         }
       ]
     },
@@ -43,7 +43,7 @@
       "profileId": "yacht_metal_schooner",
       "family": "yacht_metal",
       "name": "Yacht metal rigging — gaff schooners",
-      "status": "draft",
+      "status": "published",
       "latest": "1.1.0",
       "versions": [
         {
@@ -54,9 +54,9 @@
         },
         {
           "version": "1.1.0",
-          "status": "draft",
+          "status": "published",
           "document": "profiles/yacht_metal_schooner/1.1.0.json",
-          "sha256": "ac89bca7f368cf26d42d5229ceb46863eb6615ebc6dc2cd764584db6536edbde"
+          "sha256": "7868ad4ba8c6adc81a732da6d8b704455c7a501be569c78f4d88440ac115b12b"
         }
       ]
     },
@@ -64,7 +64,7 @@
       "profileId": "early_plant",
       "family": "early_plant",
       "name": "Early plant rigging — Columbus-era reconstructions",
-      "status": "draft",
+      "status": "published",
       "latest": "1.2.2",
       "versions": [
         {
@@ -75,9 +75,9 @@
         },
         {
           "version": "1.2.2",
-          "status": "draft",
+          "status": "published",
           "document": "profiles/early_plant/1.2.2.json",
-          "sha256": "fac409747f57a3bd48f0c39adbb1d9794ff4af759bc7a7b1c65179dc7dc62ff4"
+          "sha256": "660bfab725a64d2fc0bcd8822fe6e447166576e944e25f1ef0016ba6777a29a1"
         }
       ]
     }

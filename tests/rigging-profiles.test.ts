@@ -147,8 +147,8 @@ test('profile rule counts match the published specifications', () => {
     assert.equal(loadDocument('traditional_plant', '1.1.0').rules.length, 135);
     assert.equal(loadDocument('yacht_metal_schooner', '1.1.0').rules.length, 35);
     assert.equal(loadDocument('early_plant', '1.2.2').rules.length, 48);
-    assert.equal(loadDocument('traditional_plant', '1.1.0').profile.status, 'draft');
-    assert.equal(loadDocument('early_plant', '1.2.2').profile.status, 'draft');
+    assert.equal(loadDocument('traditional_plant', '1.1.0').profile.status, 'published');
+    assert.equal(loadDocument('early_plant', '1.2.2').profile.status, 'published');
 });
 
 test('profile summaries expose counts, groups, metrics and draft status', () => {
