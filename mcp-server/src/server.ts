@@ -12,6 +12,9 @@ import { registerListTutorialTaxonomy } from "./tools/list-tutorial-taxonomy.js"
 import { registerCalculateRopeDiameter } from "./tools/calculate-rope-diameter.js";
 import { registerFindRopeThreads } from "./tools/find-rope-threads.js";
 import { registerListRopeThreads } from "./tools/list-rope-threads.js";
+import { registerListRiggingProfiles } from "./tools/list-rigging-profiles.js";
+import { registerGetRiggingProfile } from "./tools/get-rigging-profile.js";
+import { registerCalculateRiggingDiameters } from "./tools/calculate-rigging-diameters.js";
 
 /**
  * Создаёт новый экземпляр McpServer с зарегистрированными read-only
@@ -24,7 +27,7 @@ export function createMcpServer(): McpServer {
   const server = new McpServer(
     {
       name: "glushkov-modelling-mcp-server",
-      version: "0.4.0",
+      version: "0.5.0",
     },
     { capabilities: { tools: {} } },
   );
@@ -42,6 +45,9 @@ export function createMcpServer(): McpServer {
   registerCalculateRopeDiameter(server);
   registerFindRopeThreads(server);
   registerListRopeThreads(server);
+  registerListRiggingProfiles(server);
+  registerGetRiggingProfile(server);
+  registerCalculateRiggingDiameters(server);
 
   return server;
 }
