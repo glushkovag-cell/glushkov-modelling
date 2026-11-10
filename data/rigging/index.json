@@ -28,14 +28,14 @@
       "profileId": "yacht_metal_yacht",
       "family": "yacht_metal",
       "name": "Yacht metal rigging — racing yachts",
-      "status": "draft",
+      "status": "published",
       "latest": "1.0.0",
       "versions": [
         {
           "version": "1.0.0",
-          "status": "draft",
+          "status": "published",
           "document": "profiles/yacht_metal_yacht/1.0.0.json",
-          "sha256": "95734584d75cecfe1039e51ef9cf1ad58164216a95fda66a9318e5df9c6c1705"
+          "sha256": "52de22e4b94c6871f3253e3307e2b5a79e29b4f2bfc4f18b645d96b48c9b2a26"
         }
       ]
     },
