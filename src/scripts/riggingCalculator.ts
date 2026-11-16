@@ -49,6 +49,7 @@ import {
     selectLedgerRows,
     sortLedgerRows,
     type LedgerFacets,
+    type LedgerMode,
     type LedgerNodeSection,
     type LedgerRow,
     type LedgerSelection,
@@ -851,9 +852,15 @@ if (ROPE_API_OVERRIDE && ropeWidget) {
 }
 
 const ledgerSearch = input('ledger-search');
+const ledgerControls = byId('ledger-controls');
 const ledgerCount = byId('ledger-count');
 const filtersToggle = byId<HTMLButtonElement>('ledger-filters-toggle');
 const filtersPanel = byId('ledger-filters');
+const filterSummary = byId('ledger-filter-summary');
+const sortMeta = byId('ledger-sort-meta');
+const groupingMeta = byId('ledger-grouping-meta');
+const groupedToolbar = byId('ledger-grouped-toolbar');
+const groupedMeta = byId('ledger-grouped-meta');
 const filterNode = select('filter-node');
 const filterTier = select('filter-tier');
 const filterType = select('filter-type');
@@ -868,7 +875,6 @@ const modeFlat = byId<HTMLButtonElement>('ledger-mode-flat');
 const sortSelect = select('ledger-sort');
 const expandAllButton = byId<HTMLButtonElement>('expand-all');
 const collapseAllButton = byId<HTMLButtonElement>('collapse-all');
-const ledgerExpand = byId('ledger-expand');
 const recalculateButton = byId<HTMLButtonElement>('recalculate');
 const undoProfileButton = byId<HTMLButtonElement>('undo-profile');
 
@@ -1675,6 +1681,24 @@ function renderActiveConditions(): void {
     ledgerNotice.hidden = !state.notice;
 }
 
+function filterSummaryText(): string {
+    const parts: string[] = [];
+    if (state.ledger.filters.node !== 'all') {
+        parts.push(nodeLabel(state.ledger.filters.node));
+    }
+    if (state.ledger.filters.tier !== 'all') {
+        parts.push(TIER_LABELS[state.ledger.filters.tier].en);
+    }
+    if (state.ledger.filters.type !== 'all') {
+        parts.push(state.ledger.filters.type === 'standing' ? 'Standing' : 'Running');
+    }
+    if (state.ledger.filters.status !== 'all') {
+        parts.push(STATUS_LABELS[state.ledger.filters.status]);
+    }
+    if (state.ledger.showNotApplicable) parts.push('+ Not applicable');
+    return parts.length > 0 ? parts.join(' · ') : 'All rows';
+}
+
 function renderLedgerToolbar(
     calc: Calculation,
     selection: LedgerSelection,
@@ -1695,8 +1719,15 @@ function renderLedgerToolbar(
         ledgerSearch.value = state.ledger.query;
     }
 
+    const filterText = filterSummaryText();
+    filterSummary.textContent = filterText;
+    filterSummary.title = filterText;
+    sortMeta.textContent =
+        state.ledger.mode === 'grouped' ? 'Within each group' : 'Whole table';
+    groupingMeta.textContent =
+        state.ledger.mode === 'grouped' ? 'Node → tier → type' : 'One table';
+
     const queryActive = state.ledger.query.trim() !== '';
-    ledgerExpand.hidden = state.ledger.mode === 'flat';
     expandAllButton.disabled = queryActive;
     collapseAllButton.disabled = queryActive;
     expandAllButton.title = queryActive ? 'Collapse and expand are paused while search is active.' : '';
@@ -1734,6 +1765,7 @@ function renderResults(calc: Calculation): void {
 
     renderLedgerToolbar(calc, selection, facets);
     resultsList.replaceChildren();
+    groupedToolbar.hidden = true;
 
     if (rows.length === 0 || selection.visible.length === 0) {
         renderEmpty(calc, selection);
@@ -1747,6 +1779,11 @@ function renderResults(calc: Calculation): void {
         return;
     }
 
+    const sections = groupedLedger(selection.visible, state.ledger.sort);
+    groupedToolbar.hidden = false;
+    groupedMeta.textContent =
+        `Grouped by node · ${sections.length} ${sections.length === 1 ? 'section' : 'sections'}`;
+
     const head = el('div', 'rig-ledger__head');
     for (const label of ['Rope', 'Model Ø', 'Material', 'Status', 'Thread']) {
         const cell = el('span');
@@ -1756,7 +1793,7 @@ function renderResults(calc: Calculation): void {
     head.setAttribute('aria-hidden', 'true');
     resultsList.appendChild(head);
 
-    for (const section of groupedLedger(selection.visible, state.ledger.sort)) {
+    for (const section of sections) {
         resultsList.appendChild(createGroupedSection(section, selection.tokens, selection));
     }
 
@@ -1765,52 +1802,37 @@ function renderResults(calc: Calculation): void {
 
 function renderSummary(calc: Calculation): void {
     const counts: Array<{ status: ResultStatus; label: string }> = [
-        { status: 'calculated', label: 'Calculated' },
-        { status: 'needs_input', label: 'Needs input' },
-        { status: 'unsupported', label: 'Unsupported' },
-        { status: 'not_applicable', label: 'Not applicable' },
+        { status: 'calculated', label: 'calculated' },
+        { status: 'needs_input', label: 'needs input' },
+        { status: 'unsupported', label: 'unsupported' },
+        { status: 'not_applicable', label: 'not applicable' },
     ];
 
-    summary.replaceChildren();
+    const strip = el('div', 'rig-summary__strip');
 
-    const scope = el('div', 'rig-summary__scope');
-    const scopeTitle = el('strong');
-    scopeTitle.textContent = 'Calculation totals';
-    scope.append(
-        scopeTitle,
-        document.createTextNode(` — all ${calc.results.length} rows before filters.`),
-    );
-    summary.appendChild(scope);
+    const title = el('span', 'rig-summary__title');
+    title.textContent = 'Calculation totals';
+    strip.append(title, document.createTextNode(' '));
+
+    const total = el('span', 'rig-summary__total');
+    const totalValue = el('strong');
+    totalValue.textContent = `All ${calc.results.length} rows`;
+    total.append(totalValue, document.createTextNode(' before filters'));
+    strip.append(total, document.createTextNode(' '));
 
     for (const { status, label } of counts) {
         const count = calc.results.filter((result) => result.status === status).length;
-        const item = el('div', 'rig-summary__item');
+        const item = el('span', `rig-summary__stat rig-summary__stat--${status}`);
         item.dataset.status = status;
+        if (count === 0) item.classList.add('is-zero');
 
-        const labelEl = el('span', 'rig-summary__label');
-        labelEl.textContent = label;
-        const valueEl = el('span', 'rig-summary__value');
-        valueEl.textContent = String(count);
-
-        item.append(labelEl, valueEl);
-        summary.appendChild(item);
+        const value = el('strong');
+        value.textContent = String(count);
+        item.append(value, document.createTextNode(` ${label}`));
+        strip.append(item, document.createTextNode(' '));
     }
 
-    const calculated = calc.results.filter((result) => result.status === 'calculated');
-    for (const basis of ['preliminary_fit', 'engineering_assumption'] as const) {
-        const count = calculated.filter((result) => result.coefficientBasis === basis).length;
-        const item = el('div', 'rig-summary__item');
-        item.dataset.status = 'basis';
-        item.title = `${ORIGIN_LABELS[basis]} among calculated rows.`;
-
-        const labelEl = el('span', 'rig-summary__label');
-        labelEl.textContent = `${ORIGIN_SHORT_LABELS[basis]} rows`;
-        const valueEl = el('span', 'rig-summary__value');
-        valueEl.textContent = String(count);
-
-        item.append(labelEl, valueEl);
-        summary.appendChild(item);
-    }
+    summary.replaceChildren(strip);
 }
 
 function calculationErrorMessage(error: unknown): string {
@@ -2235,17 +2257,28 @@ showNaInput.addEventListener('change', () => {
     rerender();
 });
 
-modeGrouped.addEventListener('click', () => {
-    state.notice = null;
-    state.ledger = setMode(state.ledger, 'grouped');
-    rerender();
-});
+function switchLedgerMode(mode: LedgerMode): void {
+    if (state.ledger.mode === mode) return;
 
-modeFlat.addEventListener('click', () => {
+    const before = ledgerControls.getBoundingClientRect().top;
     state.notice = null;
-    state.ledger = setMode(state.ledger, 'flat');
+    state.ledger = setMode(state.ledger, mode);
     rerender();
-});
+    const delta = ledgerControls.getBoundingClientRect().top - before;
+
+    // Дерево и таблица разной высоты; сохраняем позицию панели управления,
+    // чтобы переключение режима не бросало страницу вверх или вниз.
+    if (Math.abs(delta) > 1) {
+        const root = document.documentElement;
+        const previous = root.style.scrollBehavior;
+        root.style.scrollBehavior = 'auto';
+        window.scrollBy(0, delta);
+        root.style.scrollBehavior = previous;
+    }
+}
+
+modeGrouped.addEventListener('click', () => switchLedgerMode('grouped'));
+modeFlat.addEventListener('click', () => switchLedgerMode('flat'));
 
 sortSelect.addEventListener('change', () => {
     state.notice = null;

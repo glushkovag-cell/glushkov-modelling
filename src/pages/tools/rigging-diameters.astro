@@ -762,99 +762,109 @@ const description =
         <div class="rig-summary" id="summary" aria-live="polite"></div>
 
         <div class="rig-ledger" id="rig-ledger">
-          <div class="rig-ledger__toolbar">
-            <div class="rig-ledger__search">
-              <label class="rig-sr-only" for="ledger-search">Search rigging by name</label>
+          <div
+            class="rig-ledger__controls"
+            id="ledger-controls"
+            role="group"
+            aria-label="Ledger search, filters, sorting and grouping"
+          >
+            <div class="rig-control-block">
+              <label class="rig-control-label" for="ledger-search">Search</label>
               <input
-                class="rig-input rig-ledger__search-input"
+                class="rig-input rig-control"
                 id="ledger-search"
                 type="search"
                 placeholder="Search by name"
                 autocomplete="off"
                 spellcheck="false"
               />
-              <span class="rig-ledger__count" id="ledger-count">
-                No calculation yet.
-              </span>
+              <span class="rig-control-meta" id="ledger-count">No calculation yet.</span>
             </div>
 
-            <div class="rig-ledger__controls">
+            <div class="rig-control-block">
+              <span class="rig-control-label" id="ledger-filter-label">Filter</span>
               <button
-                class="rig-button rig-button--ghost rig-ledger__filters-toggle"
+                class="rig-button rig-button--ghost rig-control rig-ledger__filters-toggle"
                 type="button"
                 id="ledger-filters-toggle"
                 aria-expanded="false"
                 aria-controls="ledger-filters"
+                aria-describedby="ledger-filter-summary"
               >
-                Filters
+                <span>Filters</span>
                 <span class="rig-ledger__badge" id="ledger-filter-badge" hidden></span>
               </button>
+              <span class="rig-control-meta" id="ledger-filter-summary">All rows</span>
+            </div>
 
-              <div class="rig-segmented" role="group" aria-label="Ledger view mode">
+            <div class="rig-control-block">
+              <label class="rig-control-label" for="ledger-sort">Sort</label>
+              <select class="rig-select rig-control" id="ledger-sort">
+                <option value="profile">Profile order</option>
+                <option value="name-asc">Name A–Z</option>
+                <option value="name-desc">Name Z–A</option>
+                <option value="diameter-asc">Ø ascending</option>
+                <option value="diameter-desc">Ø descending</option>
+              </select>
+              <span class="rig-control-meta" id="ledger-sort-meta">Within each group</span>
+            </div>
+
+            <div class="rig-control-block">
+              <span class="rig-control-label" id="ledger-grouping-label">Grouping</span>
+              <div class="rig-segmented" role="group" aria-labelledby="ledger-grouping-label">
                 <button class="rig-segmented__button" type="button" id="ledger-mode-grouped" data-mode="grouped" aria-pressed="true">Grouped</button>
                 <button class="rig-segmented__button" type="button" id="ledger-mode-flat" data-mode="flat" aria-pressed="false">Flat table</button>
               </div>
-
-              <label class="rig-ledger__control">
-                <span>Sort</span>
-                <select class="rig-select rig-ledger__select" id="ledger-sort">
-                  <option value="profile">Profile order</option>
-                  <option value="name-asc">Name A–Z</option>
-                  <option value="name-desc">Name Z–A</option>
-                  <option value="diameter-asc">Ø ascending</option>
-                  <option value="diameter-desc">Ø descending</option>
-                </select>
-              </label>
-
-              <div class="rig-ledger__expand" id="ledger-expand">
-                <button class="rig-button rig-button--ghost" type="button" id="expand-all">Expand all</button>
-                <button class="rig-button rig-button--ghost" type="button" id="collapse-all">Collapse all</button>
-              </div>
+              <span class="rig-control-meta" id="ledger-grouping-meta">Node → tier → type</span>
             </div>
           </div>
 
           <div class="rig-ledger__filters" id="ledger-filters" hidden>
-            <label class="rig-ledger__control">
-              <span>Node</span>
-              <select class="rig-select" id="filter-node">
-                <option value="all">All nodes</option>
-              </select>
-            </label>
+            <div class="rig-filter-grid">
+              <label class="rig-filter-field">
+                <span class="rig-label">Node</span>
+                <select class="rig-select" id="filter-node">
+                  <option value="all">All nodes</option>
+                </select>
+              </label>
 
-            <label class="rig-ledger__control">
-              <span>Tier</span>
-              <select class="rig-select" id="filter-tier">
-                <option value="all">All tiers</option>
-              </select>
-            </label>
+              <label class="rig-filter-field">
+                <span class="rig-label">Tier</span>
+                <select class="rig-select" id="filter-tier">
+                  <option value="all">All tiers</option>
+                </select>
+              </label>
 
-            <label class="rig-ledger__control">
-              <span>Rigging type</span>
-              <select class="rig-select" id="filter-type">
-                <option value="all">All</option>
-                <option value="standing">Standing</option>
-                <option value="running">Running</option>
-              </select>
-            </label>
+              <label class="rig-filter-field">
+                <span class="rig-label">Rigging type</span>
+                <select class="rig-select" id="filter-type">
+                  <option value="all">All</option>
+                  <option value="standing">Standing</option>
+                  <option value="running">Running</option>
+                </select>
+              </label>
 
-            <label class="rig-ledger__control">
-              <span>Status</span>
-              <select class="rig-select" id="filter-status">
-                <option value="all">All</option>
-              </select>
-            </label>
+              <label class="rig-filter-field">
+                <span class="rig-label">Status</span>
+                <select class="rig-select" id="filter-status">
+                  <option value="all">All</option>
+                </select>
+              </label>
+            </div>
 
-            <label class="rig-check rig-ledger__check">
-              <input class="rig-checkbox" type="checkbox" id="show-na" />
-              <span>Show not applicable</span>
-            </label>
+            <div class="rig-filter-footer">
+              <label class="rig-check">
+                <input class="rig-checkbox" type="checkbox" id="show-na" />
+                <span>Show not applicable</span>
+              </label>
 
-            <button class="rig-button rig-button--ghost rig-ledger__clear" type="button" id="clear-filters">
-              Clear all
-            </button>
+              <button class="rig-button rig-button--ghost" type="button" id="clear-filters">
+                Clear all
+              </button>
+            </div>
 
-            <p class="rig-ledger__note rig-ledger__note--tier" id="tier-disabled-note" hidden></p>
-            <p class="rig-ledger__note rig-ledger__note--type">
+            <p class="rig-control-note" id="tier-disabled-note" hidden></p>
+            <p class="rig-control-note">
               Standing or Running shows only rows with a confirmed classification.
               Bowsprit, anchor and gun gear stay visible under All.
             </p>
@@ -863,6 +873,14 @@ const description =
           <div class="rig-ledger__active" id="ledger-active" role="list" aria-label="Active conditions"></div>
 
           <p class="rig-ledger__notice" id="ledger-notice" role="status" aria-live="polite" hidden></p>
+
+          <div class="rig-grouped-toolbar" id="ledger-grouped-toolbar" hidden>
+            <span class="rig-grouped-toolbar__meta" id="ledger-grouped-meta">Grouped by node</span>
+            <div class="rig-grouped-toolbar__actions">
+              <button class="rig-button rig-button--ghost" type="button" id="expand-all">Expand all</button>
+              <button class="rig-button rig-button--ghost" type="button" id="collapse-all">Collapse all</button>
+            </div>
+          </div>
 
           <div class="rig-results__list" id="results-list"></div>
         </div>
@@ -894,13 +912,26 @@ const description =
 </BaseLayout>
 
 <style is:global>
+    html {
+        scrollbar-gutter: stable;
+    }
+
+    .rig-form,
+    .rig-results {
+        --rig-control-h: 44px;
+        --rig-control-radius: var(--radius-sm);
+        --rig-label-size: 0.78rem;
+        --rig-label-weight: 600;
+        --rig-control-font: 0.94rem;
+    }
+
     .rig-form {
         min-width: 0;
         background: var(--color-surface);
         border: 1px solid var(--color-border);
         border-radius: var(--radius);
         box-shadow: var(--shadow-sm);
-        padding: 26px;
+        padding: 24px;
     }
 
     .rig-disclaimer {
@@ -962,7 +993,7 @@ const description =
         min-width: 0;
         gap: 12px;
         align-items: flex-start;
-        padding: 14px 16px;
+        padding: 16px;
         border: 1px solid var(--color-border);
         border-radius: var(--radius-md);
         background: var(--color-surface-2);
@@ -1003,7 +1034,7 @@ const description =
     .rig-profile__head strong {
         min-width: 0;
         font-family: 'Cormorant Garamond', Georgia, serif;
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         overflow-wrap: anywhere;
     }
 
@@ -1133,9 +1164,9 @@ const description =
 
     .rig-subtitle {
         margin: 1.1rem 0 0.5rem;
-        font-size: 0.78rem;
+        font-size: 0.72rem;
         font-weight: 700;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--color-text-muted);
     }
@@ -1146,9 +1177,11 @@ const description =
 
     .rig-label {
         display: block;
-        margin-bottom: 6px;
-        font-weight: 600;
-        font-size: 0.9rem;
+        margin-bottom: 4px;
+        color: var(--color-text-muted);
+        font-size: var(--rig-label-size);
+        font-weight: var(--rig-label-weight);
+        letter-spacing: 0.01em;
     }
 
     .rig-input,
@@ -1157,13 +1190,14 @@ const description =
         width: 100%;
         min-width: 0;
         max-width: 100%;
-        min-height: 42px;
-        padding: 8px 11px;
+        min-height: var(--rig-control-h);
+        padding: 10px 12px;
         border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm);
+        border-radius: var(--rig-control-radius);
         background: var(--color-bg);
         color: inherit;
         font: inherit;
+        font-size: var(--rig-control-font);
     }
 
     .rig-input:focus-visible,
@@ -1215,7 +1249,7 @@ const description =
 
     .rig-dim .rig-label {
         margin-bottom: 0;
-        font-weight: 500;
+        font-weight: var(--rig-label-weight);
         padding-bottom: 9px;
     }
 
@@ -1228,7 +1262,7 @@ const description =
     .rig-matrix {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.9rem;
+        font-size: 0.92rem;
     }
 
     .rig-matrix th,
@@ -1240,7 +1274,8 @@ const description =
     }
 
     .rig-matrix thead th {
-        font-size: 0.74rem;
+        font-size: 0.72rem;
+        font-weight: 700;
         letter-spacing: 0.05em;
         text-transform: uppercase;
         color: var(--color-text-muted);
@@ -1279,7 +1314,7 @@ const description =
     .rig-check--select .rig-select {
         width: auto;
         min-width: 150px;
-        min-height: 36px;
+        min-height: var(--rig-control-h);
     }
 
     .rig-block {
@@ -1300,14 +1335,14 @@ const description =
     }
 
     .rig-button {
-        min-height: 46px;
-        padding: 0 22px;
+        min-height: var(--rig-control-h);
+        padding: 0 18px;
         border: 1px solid var(--color-primary);
-        border-radius: var(--radius-sm);
+        border-radius: var(--rig-control-radius);
         background: var(--color-primary);
         color: var(--color-text-inverse);
         font: inherit;
-        font-size: 1rem;
+        font-size: 0.9rem;
         font-weight: 700;
         cursor: pointer;
         transition: background var(--transition), border-color var(--transition),
@@ -1320,9 +1355,9 @@ const description =
     }
 
     .rig-button--attention {
-        min-height: 50px;
-        padding: 0 28px;
-        font-size: 1.06rem;
+        min-height: var(--rig-control-h);
+        padding: 0 20px;
+        font-size: 0.95rem;
         box-shadow: 0 6px 18px color-mix(in srgb, var(--color-primary) 32%, transparent);
     }
 
@@ -1338,9 +1373,9 @@ const description =
         color: var(--color-primary);
         border-color: var(--color-border);
         box-shadow: none;
-        min-height: 44px;
-        padding: 0 18px;
-        font-size: 0.95rem;
+        min-height: var(--rig-control-h);
+        padding: 0 14px;
+        font-size: 0.9rem;
     }
 
     .rig-button--ghost:hover:not(:disabled) {
@@ -1441,17 +1476,15 @@ const description =
         flex-direction: column;
         gap: 4px;
         color: var(--color-text-muted);
-        font-size: 0.7rem;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
+        font-size: var(--rig-label-size);
+        font-weight: var(--rig-label-weight);
+        letter-spacing: 0.01em;
     }
 
     .rig-export-scope .rig-select {
         min-width: 156px;
-        min-height: 44px;
-        text-transform: none;
-        letter-spacing: normal;
+        min-height: var(--rig-control-h);
+        font-size: var(--rig-control-font);
         font-weight: 500;
     }
 
@@ -1513,53 +1546,55 @@ const description =
     }
 
     .rig-summary {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
-        margin: 1.25rem 0;
+        margin: 1rem 0;
     }
 
-    .rig-summary__scope {
-        grid-column: 1 / -1;
+    .rig-summary__strip {
         display: flex;
         flex-wrap: wrap;
         align-items: baseline;
-        gap: 6px 10px;
-        color: var(--color-text-muted);
-        font-size: 0.84rem;
-    }
-
-    .rig-summary__scope strong {
-        color: var(--color-text);
-    }
-
-    .rig-summary__item {
-        padding: 14px 16px;
+        gap: 4px 0;
+        padding: 9px 14px;
         border: 1px solid var(--color-border);
         border-radius: var(--radius-md);
         background: var(--color-surface);
+        color: var(--color-text-muted);
+        font-size: 0.84rem;
+        line-height: 1.5;
     }
 
-    .rig-summary__label {
-        display: block;
-        font-size: 0.74rem;
+    .rig-summary__title {
+        padding-right: 12px;
+        margin-right: 12px;
+        border-right: 1px solid var(--color-divider);
+        color: var(--color-text-faint);
+        font-size: 0.7rem;
         font-weight: 700;
         letter-spacing: 0.06em;
         text-transform: uppercase;
-        color: var(--color-text-muted);
     }
 
-    .rig-summary__value {
-        display: block;
-        margin-top: 4px;
-        font-size: 1.5rem;
-        font-weight: 700;
+    .rig-summary__total strong {
         color: var(--color-text);
     }
 
-    .rig-summary__item[data-status="calculated"] .rig-summary__value { color: var(--color-primary); }
-    .rig-summary__item[data-status="needs_input"] .rig-summary__value { color: #b54708; }
-    .rig-summary__item[data-status="unsupported"] .rig-summary__value { color: #b42318; }
+    .rig-summary__stat {
+        margin-left: 12px;
+        padding-left: 12px;
+        border-left: 1px solid var(--color-divider);
+        white-space: nowrap;
+    }
+
+    .rig-summary__stat strong {
+        color: var(--color-text);
+        font-variant-numeric: tabular-nums;
+    }
+
+    .rig-summary__stat[data-status="calculated"] strong { color: var(--color-primary); }
+    .rig-summary__stat[data-status="needs_input"] strong { color: #b54708; }
+    .rig-summary__stat[data-status="unsupported"] strong { color: #b42318; }
+    .rig-summary__stat.is-zero,
+    .rig-summary__stat.is-zero strong { color: var(--color-text-faint); }
 
     .rig-sr-only {
         position: absolute;
@@ -1579,66 +1614,66 @@ const description =
         margin-top: 1rem;
     }
 
-    .rig-ledger__toolbar {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 12px;
+    .rig-ledger__controls {
+        display: grid;
+        grid-template-columns:
+            minmax(220px, 1.5fr)
+            minmax(170px, 1fr)
+            minmax(170px, 1fr)
+            minmax(220px, 1.15fr);
+        align-items: stretch;
+        overflow: hidden;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-surface);
     }
 
-    .rig-ledger__search {
-        display: flex;
-        flex: 1 1 300px;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px 12px;
+    .rig-control-block {
+        display: grid;
+        grid-template-rows: auto var(--rig-control-h) auto;
+        gap: 4px;
+        align-content: start;
         min-width: 0;
+        padding: 12px 14px;
     }
 
-    .rig-ledger__search-input {
-        flex: 1 1 220px;
-        min-width: 0;
-        min-height: 44px;
+    .rig-control-block + .rig-control-block {
+        border-left: 1px solid var(--color-divider);
     }
 
-    .rig-ledger__count {
+    .rig-control-label {
         color: var(--color-text-muted);
-        font-size: 0.85rem;
+        font-size: var(--rig-label-size);
+        font-weight: var(--rig-label-weight);
+        letter-spacing: 0.01em;
+    }
+
+    .rig-control-meta {
+        min-height: 1.3em;
+        color: var(--color-text-muted);
+        font-size: 0.8rem;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    .rig-ledger__controls {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: flex-end;
-        gap: 8px;
+    .rig-control {
+        width: 100%;
+        min-width: 0;
     }
 
-    .rig-ledger__control {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        color: var(--color-text-muted);
-        font-size: 0.74rem;
-        font-weight: 700;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-    }
-
-    .rig-ledger__select {
-        width: auto;
-        min-width: 156px;
-        min-height: 40px;
-        text-transform: none;
-        letter-spacing: normal;
-        font-weight: 500;
+    .rig-ledger__controls .rig-button,
+    .rig-ledger__controls .rig-select,
+    .rig-ledger__controls .rig-input {
+        width: 100%;
     }
 
     .rig-ledger__filters-toggle {
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 6px;
+        justify-content: space-between;
+        gap: 8px;
     }
 
     .rig-ledger__badge {
@@ -1653,43 +1688,74 @@ const description =
         text-align: center;
     }
 
-    .rig-ledger__expand {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-
     .rig-ledger__filters {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-        gap: 12px 14px;
-        align-items: end;
-        padding: 14px;
+        gap: 12px;
+        padding: 16px;
         border: 1px solid var(--color-border);
         border-radius: var(--radius-md);
-        background: var(--color-surface-offset);
+        background: var(--color-surface);
     }
 
-    .rig-ledger__check {
-        align-self: center;
-        min-height: 40px;
+    .rig-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
     }
 
-    .rig-ledger__clear {
-        justify-self: start;
+    .rig-filter-field {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
     }
 
-    .rig-ledger__note {
-        grid-column: 1 / -1;
+    .rig-filter-footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 16px;
+    }
+
+    .rig-filter-footer .rig-button {
+        margin-left: auto;
+    }
+
+    .rig-control-note {
         margin: 0;
         color: var(--color-text-muted);
         font-size: 0.8rem;
         line-height: 1.5;
     }
 
-    .rig-ledger__note--type {
+    .rig-control-note + .rig-control-note {
         padding-top: 8px;
         border-top: 1px solid var(--color-divider);
+    }
+
+    .rig-grouped-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 14px;
+        padding: 10px 14px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-surface);
+    }
+
+    .rig-grouped-toolbar__meta {
+        color: var(--color-text-muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .rig-grouped-toolbar__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
     }
 
     .rig-ledger__active {
@@ -1748,20 +1814,24 @@ const description =
     }
 
     .rig-segmented {
-        display: inline-flex;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 100%;
+        min-height: var(--rig-control-h);
         overflow: hidden;
         border: 1px solid var(--color-border);
-        border-radius: var(--radius-sm);
+        border-radius: var(--rig-control-radius);
         background: var(--color-surface);
     }
 
     .rig-segmented__button {
-        padding: 8px 12px;
+        flex: 1 1 auto;
+        padding: 0 14px;
         border: none;
         background: transparent;
         color: var(--color-text-muted);
         font: inherit;
-        font-size: 0.85rem;
+        font-size: 0.88rem;
         font-weight: 600;
         cursor: pointer;
     }
@@ -1857,7 +1927,7 @@ const description =
 
     .rig-node__title {
         font-family: 'Cormorant Garamond', Georgia, serif;
-        font-size: 1.45rem;
+        font-size: 1.35rem;
         font-weight: 700;
         line-height: 1.15;
     }
@@ -1995,7 +2065,7 @@ const description =
     .rig-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.9rem;
+        font-size: 0.92rem;
     }
 
     .rig-table th,
@@ -2098,6 +2168,7 @@ const description =
         gap: 8px 12px;
         align-items: center;
         padding: 12px 16px;
+        font-size: 0.92rem;
         list-style: none;
         cursor: pointer;
     }
@@ -2331,15 +2402,24 @@ const description =
         }
 
         .rig-ledger__controls {
-            width: 100%;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
-        .rig-ledger__control {
-            flex: 1 1 150px;
+        .rig-control-block + .rig-control-block {
+            border-left: 1px solid var(--color-divider);
         }
 
-        .rig-ledger__select {
-            width: 100%;
+        .rig-control-block:nth-child(3) {
+            border-left: 0;
+            border-top: 1px solid var(--color-divider);
+        }
+
+        .rig-control-block:nth-child(4) {
+            border-top: 1px solid var(--color-divider);
+        }
+
+        .rig-filter-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .rig-row__summary {
@@ -2477,10 +2557,6 @@ const description =
             white-space: nowrap;
         }
 
-        .rig-summary {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
         .rig-results__actions {
             width: 100%;
         }
@@ -2493,49 +2569,25 @@ const description =
             width: 100%;
         }
 
-        .rig-ledger__toolbar {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .rig-ledger__search {
-            flex: 1 1 auto;
-        }
-
-        .rig-ledger__search-input {
-            flex-basis: 100%;
-        }
-
-        .rig-ledger__count {
-            white-space: normal;
-        }
-
         .rig-ledger__controls {
-            display: grid;
             grid-template-columns: 1fr;
-            gap: 8px;
         }
 
-        .rig-ledger__control {
-            flex: 1 1 auto;
+        .rig-control-block + .rig-control-block {
+            border-left: 0;
+            border-top: 1px solid var(--color-divider);
         }
 
-        .rig-ledger__filters-toggle {
-            justify-content: space-between;
-        }
-
-        .rig-segmented {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .rig-ledger__expand {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-        }
-
-        .rig-ledger__filters {
+        .rig-filter-grid {
             grid-template-columns: 1fr;
+        }
+
+        .rig-filter-footer .rig-button {
+            margin-left: 0;
+        }
+
+        .rig-grouped-toolbar {
+            align-items: flex-start;
         }
 
         .rig-node__summary {
@@ -2579,7 +2631,7 @@ const description =
         border: 1px solid var(--color-border);
         border-radius: var(--radius);
         box-shadow: var(--shadow-sm);
-        padding: 18px 22px;
+        padding: 16px 18px;
         margin-top: 16px;
     }
 
