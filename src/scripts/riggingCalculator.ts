@@ -87,8 +87,10 @@ import type {
     GunType,
     MastId,
     Measurement,
+    MeasurementId,
     MeasurementPointId,
     MountingType,
+    NormalizedMeasurement,
     ResultStatus,
     RiggingResult,
     SailClass,
@@ -784,6 +786,7 @@ const state = {
     requestSeq: 0,
     abort: undefined as AbortController | undefined,
     activeProfile: null as ProfileCardData | null,
+    profileUndo: null as RiggingSettings | null,
     dimensionDraft: {} as Partial<Record<DimensionKey, Measurement>>,
     editedDimensions: new Set<DimensionKey>(),
 };
@@ -792,9 +795,15 @@ const form = byId<HTMLFormElement>('rigging-form');
 const errorsBox = byId('form-errors');
 const resultsStatus = byId('results-status');
 const resultsSection = byId('rig-results');
+const resultsState = byId('results-state');
 const summary = byId('summary');
 const resultsList = byId('results-list');
 const calculationError = byId('calculation-error');
+const calculationErrorText = byId('calculation-error-text');
+const staleNotice = byId('stale-notice');
+const staleText = byId('stale-text');
+const staleRecalculate = byId<HTMLButtonElement>('stale-recalculate');
+const calculationRetry = byId<HTMLButtonElement>('calculation-retry');
 const showNaInput = input('show-na');
 const exportCsv = byId<HTMLButtonElement>('export-csv');
 const exportJson = byId<HTMLButtonElement>('export-json');
@@ -837,6 +846,7 @@ const expandAllButton = byId<HTMLButtonElement>('expand-all');
 const collapseAllButton = byId<HTMLButtonElement>('collapse-all');
 const ledgerExpand = byId('ledger-expand');
 const recalculateButton = byId<HTMLButtonElement>('recalculate');
+const undoProfileButton = byId<HTMLButtonElement>('undo-profile');
 
 const FIELD_TO_ID: Record<string, string> = {
     scaleDenominator: 'scale',
@@ -847,6 +857,41 @@ const FIELD_TO_ID: Record<string, string> = {
     'hull.width': 'hull-width-value',
     'gun.bore': 'gun-bore-value',
 };
+
+type ResultsState = 'idle' | 'calculating' | 'ready' | 'stale' | 'error';
+
+const RESULTS_STATE_LABELS: Record<ResultsState, string> = {
+    idle: 'Not calculated',
+    calculating: 'Calculating…',
+    ready: 'Current',
+    stale: 'Out of date',
+    error: 'Error',
+};
+
+/**
+ * Явное состояние результатов: не рассчитано, идёт расчёт, актуально,
+ * устарело или ошибка. Отдельный ярлык рядом с заголовком не даёт спутать
+ * старую ведомость с новой.
+ */
+function setResultsState(next: ResultsState): void {
+    resultsSection.dataset.state = next;
+    resultsState.dataset.state = next;
+    resultsState.textContent = RESULTS_STATE_LABELS[next];
+}
+
+const STALE_MESSAGE =
+    'Inputs changed. The ledger below is from the previous calculation.';
+const FAILED_RECALC_MESSAGE =
+    'The latest calculation failed. The ledger below is from the previous successful calculation.';
+
+function showStale(message: string = STALE_MESSAGE): void {
+    staleText.textContent = message;
+    staleNotice.hidden = false;
+}
+
+function hideStale(): void {
+    staleNotice.hidden = true;
+}
 
 function renderErrors(errors: Calculation['validationErrors']): void {
     if (errors.length === 0) {
@@ -947,6 +992,19 @@ function statusBadge(status: ResultStatus, withLabel = true): HTMLElement {
     return badge;
 }
 
+/** FIT / ENG видимы в строке, а не только в резюме. */
+function originBadge(result: RiggingResult): HTMLElement | null {
+    if (result.status !== 'calculated') return null;
+    const badge = el('span', `rig-row__basis rig-row__basis--${result.coefficientBasis}`);
+    badge.textContent = ORIGIN_SHORT_LABELS[result.coefficientBasis];
+    badge.title = ORIGIN_LABELS[result.coefficientBasis];
+    badge.setAttribute(
+        'aria-label',
+        `Coefficient origin: ${ORIGIN_LABELS[result.coefficientBasis]}`,
+    );
+    return badge;
+}
+
 function threadControl(row: LedgerRow): HTMLElement {
     const pick = state.threadPicks.get(row.key);
     const button = el('button', 'rig-thread');
@@ -976,6 +1034,54 @@ function threadControl(row: LedgerRow): HTMLElement {
     return button;
 }
 
+function measurementsForResult(result: RiggingResult): NormalizedMeasurement[] {
+    const all = state.calculation?.normalizedMeasurements ?? [];
+    if (all.length === 0) return [];
+
+    let measurementId: MeasurementId | null = null;
+    if (result.ownerType === 'mast') {
+        measurementId = `mast.${result.ownerId}.diameter` as MeasurementId;
+    } else if (result.ownerType === 'bowsprit') {
+        measurementId = 'bowsprit.diameter';
+    } else if (result.ownerType === 'hull') {
+        measurementId = 'hull.width';
+    } else if (result.ownerType === 'gun_group') {
+        measurementId = 'gun.bore';
+    }
+
+    // Якорная группа может опираться на ширину корпуса или самую толстую
+    // мачту; показываем все размеры, которые реально вошли в расчёт.
+    if (measurementId === null) return all;
+    return all.filter((measurement) => measurement.measurementId === measurementId);
+}
+
+function measurementLine(measurement: NormalizedMeasurement): string {
+    const basis = measurement.basis === 'model' ? 'the model' : 'full-size';
+    return (
+        `${measurement.rawValue} ${measurement.unitId} (${basis}) → ` +
+        `${measurement.modelMm.toFixed(3)} mm model · ` +
+        `${measurement.realMm.toFixed(1)} mm prototype`
+    );
+}
+
+/** Переход из строки к исходному полю формы; подсвечивает строку размера. */
+function focusMeasurementFields(ids: readonly string[]): void {
+    for (const id of ids) {
+        const fieldId = FIELD_TO_ID[id];
+        const element = fieldId ? document.getElementById(fieldId) : null;
+        if (!element) continue;
+
+        const row = element.closest<HTMLElement>('.rig-dim, .rig-field');
+        row?.classList.add('is-highlighted');
+        window.setTimeout(() => row?.classList.remove('is-highlighted'), 1600);
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        (element as HTMLInputElement).focus({ preventScroll: true });
+        return;
+    }
+
+    form.querySelector<HTMLInputElement>('input')?.focus();
+}
+
 function buildDetailsBody(result: RiggingResult, row: LedgerRow): HTMLDListElement {
     const dl = el('dl', 'rig-details');
     const pick = state.threadPicks.get(row.key);
@@ -987,6 +1093,32 @@ function buildDetailsBody(result: RiggingResult, row: LedgerRow): HTMLDListEleme
         result.tier ? TIER_LABELS[result.tier].en : row.nodeKind === 'mast' ? 'No tier' : '—',
     );
     definitionText(dl, 'Rigging type', row.type ? GROUP_LABELS[row.type] : '—');
+
+    const baseMeasurements = measurementsForResult(result);
+    if (baseMeasurements.length > 0) {
+        definitionTerm(dl, 'Base dimensions');
+        const dd = el('dd', 'rig-details__def');
+        const list = el('ul', 'rig-details__list');
+        for (const measurement of baseMeasurements) {
+            const item = el('li');
+            item.textContent =
+                `${MEASUREMENT_LABELS[measurement.measurementId] ?? measurement.measurementId}: ` +
+                measurementLine(measurement);
+            list.appendChild(item);
+        }
+        dd.appendChild(list);
+
+        const edit = el('button', 'rig-link');
+        edit.type = 'button';
+        edit.textContent =
+            baseMeasurements.length === 1 ? 'Edit base dimension' : 'Edit base dimensions';
+        edit.addEventListener('click', () =>
+            focusMeasurementFields(baseMeasurements.map((measurement) => measurement.measurementId)),
+        );
+        dd.appendChild(edit);
+        dl.appendChild(dd);
+    }
+
     definitionText(dl, 'Formula', result.formula);
     definitionText(dl, 'Base reference', result.referenceLabel);
     definitionText(dl, 'Coefficient', result.factorLabel);
@@ -1053,6 +1185,13 @@ function buildDetailsBody(result: RiggingResult, row: LedgerRow): HTMLDListEleme
             (measurementId) => MEASUREMENT_LABELS[measurementId] ?? measurementId,
         );
         dd.textContent = items.join('; ');
+        const goToInput = el('button', 'rig-link');
+        goToInput.type = 'button';
+        goToInput.textContent = 'Go to the required input';
+        goToInput.addEventListener('click', () =>
+            focusMeasurementFields(result.missingInputIds),
+        );
+        dd.append(el('br'), goToInput);
         dl.appendChild(dd);
     }
 
@@ -1090,6 +1229,8 @@ function createRow(row: LedgerRow, tokens: string[], showContext: boolean): HTML
     const nameRu = el('span', 'rig-row__ru');
     appendHighlighted(nameRu, result.nameRu, tokens);
     identity.append(name, nameRu);
+    const origin = originBadge(result);
+    if (origin) identity.appendChild(origin);
     if (showContext) {
         const context = el('span', 'rig-row__context');
         context.textContent = rowContext(row);
@@ -1231,6 +1372,8 @@ function createFlatTable(selection: LedgerSelection): HTMLElement {
         const nameRu = el('span', 'rig-table__ru');
         appendHighlighted(nameRu, result.nameRu, tokens);
         ropeCell.append(name, nameRu);
+        const origin = originBadge(result);
+        if (origin) ropeCell.appendChild(origin);
 
         const nodeCell = el('td', 'rig-table__node');
         nodeCell.dataset.label = 'Node';
@@ -1523,6 +1666,15 @@ function renderSummary(calc: Calculation): void {
 
     summary.replaceChildren();
 
+    const scope = el('div', 'rig-summary__scope');
+    const scopeTitle = el('strong');
+    scopeTitle.textContent = 'Calculation totals';
+    scope.append(
+        scopeTitle,
+        document.createTextNode(` — all ${calc.results.length} rows before filters.`),
+    );
+    summary.appendChild(scope);
+
     for (const { status, label } of counts) {
         const count = calc.results.filter((result) => result.status === status).length;
         const item = el('div', 'rig-summary__item');
@@ -1542,6 +1694,7 @@ function renderSummary(calc: Calculation): void {
         const count = calculated.filter((result) => result.coefficientBasis === basis).length;
         const item = el('div', 'rig-summary__item');
         item.dataset.status = 'basis';
+        item.title = `${ORIGIN_LABELS[basis]} among calculated rows.`;
 
         const labelEl = el('span', 'rig-summary__label');
         labelEl.textContent = `${ORIGIN_SHORT_LABELS[basis]} rows`;
@@ -1554,8 +1707,9 @@ function renderSummary(calc: Calculation): void {
 }
 
 function calculationErrorMessage(error: unknown): string {
-    const detail = error instanceof Error && error.message ? ` ${error.message}` : '';
-    return `Calculation service is unavailable.${detail} Press "Calculate diameters" to retry.`;
+    const message = error instanceof Error ? error.message.replace(/\.$/, '') : '';
+    const detail = message ? ` ${message}.` : '';
+    return `Calculation service is unavailable.${detail} Check your connection and retry.`;
 }
 
 function scrollToResults(): void {
@@ -1579,7 +1733,11 @@ async function calculateAndRender(scrollOnSuccess: boolean): Promise<void> {
         ]);
         const firstInput = missingDimensions[0]?.querySelector('input');
         if (firstInput) firstInput.focus();
-        resultsSection.classList.add('is-stale');
+        if (state.calculation) {
+            resultsSection.classList.add('is-stale');
+            setResultsState('stale');
+            showStale();
+        }
         return;
     }
 
@@ -1601,8 +1759,11 @@ async function calculateAndRender(scrollOnSuccess: boolean): Promise<void> {
     calculateButton.classList.remove('rig-button--attention');
     resultsSection.classList.add('is-calculating');
     resultsSection.setAttribute('aria-busy', 'true');
+    setResultsState('calculating');
+    hideStale();
+    resultsStatus.textContent = 'Calculating diameters…';
     calculationError.hidden = true;
-    calculationError.textContent = '';
+    calculationErrorText.textContent = '';
 
     try {
         const calc = await postCalculate(input, controller.signal);
@@ -1629,25 +1790,37 @@ async function calculateAndRender(scrollOnSuccess: boolean): Promise<void> {
         if (inputsChanged) {
             resultsSection.classList.add('is-stale');
             calculateButton.classList.add('rig-button--attention');
+            setResultsState('stale');
+            showStale();
         } else {
             // Ответ соответствует текущим входам: снимаем затемнение.
             resultsSection.classList.remove('is-stale');
             calculateButton.classList.remove('rig-button--attention');
+            setResultsState('ready');
+            hideStale();
         }
 
         if (scrollOnSuccess) scrollToResults();
     } catch (error) {
         if (controller.signal.aborted || seq !== state.requestSeq) return;
 
+        const failedAfterInputChange = state.formVersion !== versionAtStart;
         state.dirty = true;
         resultsSection.classList.add('is-stale');
         calculateButton.classList.add('rig-button--attention');
-        calculationError.textContent = calculationErrorMessage(error);
-        calculationError.hidden = false;
-
-        if (!state.calculation) {
-            resultsStatus.textContent = 'Calculation unavailable.';
+        setResultsState('error');
+        if (state.calculation) {
+            showStale(failedAfterInputChange ? STALE_MESSAGE : FAILED_RECALC_MESSAGE);
+        } else {
+            hideStale();
         }
+        calculationErrorText.textContent = calculationErrorMessage(error);
+        calculationError.hidden = false;
+        exportCsv.disabled = true;
+        exportJson.disabled = true;
+        resultsStatus.textContent = state.calculation
+            ? 'Calculation failed. Showing previous results.'
+            : 'Calculation unavailable.';
     } finally {
         if (seq === state.requestSeq) {
             resultsSection.classList.remove('is-calculating');
@@ -1658,10 +1831,14 @@ async function calculateAndRender(scrollOnSuccess: boolean): Promise<void> {
 
 function markDirty(): void {
     state.formVersion += 1;
+    calculationError.hidden = true;
+    calculationErrorText.textContent = '';
     if (!state.calculation) return;
     state.dirty = true;
     resultsSection.classList.add('is-stale');
     calculateButton.classList.add('rig-button--attention');
+    setResultsState('stale');
+    showStale();
     exportCsv.disabled = true;
     exportJson.disabled = true;
 }
@@ -1690,6 +1867,7 @@ function timestamp(): string {
 function updateProfileNote(): void {
     const profile = selectedProfile();
     const note = byId('profile-context-note');
+    undoProfileButton.hidden = state.profileUndo === null;
     if (!profile) {
         note.textContent = 'No profile selected.';
         return;
@@ -1704,6 +1882,15 @@ function onProfileChange(): void {
     const previous = state.activeProfile;
     captureDimensionDraft(previous);
     const current = readSettings();
+    if (previous) {
+        // Снимок конфигурации до переключения: отмена вернёт значения полей,
+        // а не только название профиля.
+        state.profileUndo = {
+            ...current,
+            profileId: previous.profileId,
+            profileVersion: previous.version,
+        };
+    }
     const merged = switchProfileSettings({
         current,
         previous: previous
@@ -1756,6 +1943,7 @@ presetFile.addEventListener('change', async () => {
     try {
         const settings = parsePresetJson(await file.text(), PROFILE_VERSIONS);
         const profile = PROFILE_DATA.get(settings.profileId)!;
+        state.profileUndo = null;
         applySettingsToForm(settings);
         applyProfileUi(profile);
         initDimState();
@@ -1772,8 +1960,14 @@ presetFile.addEventListener('change', async () => {
         markDirty();
         await calculateAndRender(true);
     } catch (error) {
-        calculationError.textContent = `Could not load preset. ${error instanceof Error ? error.message : ''}`;
-        calculationError.hidden = false;
+        renderErrors([
+            {
+                code: 'PRESET',
+                message: `Could not load preset. ${
+                    error instanceof Error ? error.message : ''
+                }`,
+            },
+        ]);
     } finally {
         presetFile.value = '';
     }
@@ -1790,6 +1984,7 @@ form.addEventListener('reset', () => {
         const profile = selectedProfile();
         state.editedDimensions.clear();
         state.dimensionDraft = {};
+        state.profileUndo = null;
         if (profile) {
             applySettingsToForm(profile.defaults);
             applyProfileUi(profile);
@@ -1927,6 +2122,38 @@ recalculateButton.addEventListener('click', () => {
     void calculateAndRender(true);
 });
 
+staleRecalculate.addEventListener('click', () => {
+    syncDisabled();
+    void calculateAndRender(true);
+});
+
+undoProfileButton.addEventListener('click', () => {
+    const settings = state.profileUndo;
+    if (!settings) return;
+    const profile = PROFILE_DATA.get(settings.profileId);
+    if (!profile) return;
+
+    state.profileUndo = null;
+    state.dimensionDraft = {};
+    applySettingsToForm(settings);
+    applyProfileUi(profile);
+    state.activeProfile = profile;
+    initDimState();
+    captureDimensionDraft(profile);
+    syncDisabled();
+    syncRequiredDimensions();
+    updateProfileNote();
+    markDirty();
+    document
+        .querySelector<HTMLInputElement>('input[name="profile"]:checked')
+        ?.focus();
+});
+
+calculationRetry.addEventListener('click', () => {
+    syncDisabled();
+    void calculateAndRender(true);
+});
+
 function clearAll(focusSearch: boolean): void {
     state.notice = null;
     state.ledger = clearFilters(state.ledger);
@@ -2016,7 +2243,7 @@ resultsList.addEventListener('click', (event) => {
         event.preventDefault();
         const key = actionEl.dataset.key;
         const row = key ? state.rowsByKey.get(key) : undefined;
-        if (row) openRopeModal(row);
+        if (row) openRopeModal(row, actionEl);
         return;
     }
 
@@ -2125,13 +2352,14 @@ function setRopeTarget(targetMm: number): void {
     apply();
 }
 
-function openRopeModal(row: LedgerRow): void {
+function openRopeModal(row: LedgerRow, invoker?: HTMLElement): void {
     const targetMm = row.result.diameterModelMm;
     if (targetMm === null) return;
 
     state.modalRowKey = row.key;
     state.lastFocused =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        invoker ??
+        (document.activeElement instanceof HTMLElement ? document.activeElement : null);
     ropeModalTarget.textContent =
         `Target diameter: Ø ${targetMm.toFixed(3)} mm · ` +
         `${row.result.nameEn} (${rowContext(row)})`;
@@ -2169,15 +2397,58 @@ ropeWidget?.addEventListener('thread-select', (event) => {
     focusThreadButton(key);
 });
 
+function modalFocusables(): HTMLElement[] {
+    const dialog = ropeModal.querySelector('.rig-modal__dialog');
+    if (!dialog) return [];
+
+    const selector =
+        'button:not([disabled]), [href], input:not([disabled]), ' +
+        'select:not([disabled]), textarea:not([disabled]), summary, ' +
+        '[tabindex]:not([tabindex="-1"])';
+
+    const items = [...dialog.querySelectorAll<HTMLElement>(selector)];
+    if (ropeWidget?.shadowRoot) {
+        items.push(...ropeWidget.shadowRoot.querySelectorAll<HTMLElement>(selector));
+    }
+    return items.filter((element) => element.getClientRects().length > 0);
+}
+
 document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !ropeModal.hidden) {
+    if (ropeModal.hidden) return;
+
+    if (event.key === 'Escape') {
         closeRopeModal();
+        return;
+    }
+
+    if (event.key !== 'Tab') return;
+
+    const items = modalFocusables();
+    if (items.length === 0) return;
+
+    const activeInShadow = ropeWidget?.shadowRoot?.activeElement as HTMLElement | null;
+    const active = activeInShadow ?? (document.activeElement as HTMLElement | null);
+    const index = active ? items.indexOf(active) : -1;
+
+    if (event.shiftKey) {
+        if (index <= 0) {
+            event.preventDefault();
+            items.at(-1)?.focus();
+        }
+        return;
+    }
+
+    if (index === -1 || index === items.length - 1) {
+        event.preventDefault();
+        items[0]?.focus();
     }
 });
 
 /* --------------------------------- init ----------------------------------- */
 
 initDimState();
+setResultsState('idle');
+hideStale();
 for (const prefix of DIM_PREFIXES) {
     select(`${prefix}-unit`).addEventListener('change', () =>
         onDimensionUnitOrBasisChange(prefix),

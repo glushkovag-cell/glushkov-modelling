@@ -20,6 +20,8 @@ import type {
 export interface ProfileExplanation {
     /** «135 rule definitions: 27 standing, 63 running.» */
     summary: string;
+    /** Короткое назначение профиля для первого уровня карточки. */
+    purpose: string;
     /** «A row in the results does not assert that a rope was historically fitted.» */
     disclaimer: string;
     /** «Groups: … · Materials: …» */
@@ -139,6 +141,7 @@ export function summariseProfile(document: ProfileDocument): ProfileSummary {
                 `${document.rules.length} rule definitions: ` +
                 `${countGroup(document, 'standing')} standing, ` +
                 `${countGroup(document, 'running')} running.`,
+            purpose: purposeLine(document.profile),
             disclaimer: DISCLAIMER,
             taxonomy:
                 `Groups: ${groups.join(', ')} · ` +
@@ -149,6 +152,25 @@ export function summariseProfile(document: ProfileDocument): ProfileSummary {
         },
         ui: document.profile.ui,
     };
+}
+
+function purposeLine(profile: ProfileDocument['profile']): string {
+    const years =
+        profile.yearFrom !== null && profile.yearTo !== null
+            ? `, ${profile.yearFrom}–${profile.yearTo}`
+            : '';
+    if (profile.family === 'traditional_plant') {
+        return `Traditional square-rigged plant${years}.`;
+    }
+    if (profile.family === 'early_plant') {
+        return `Early square-rigged plant${years}.`;
+    }
+    if (profile.family === 'yacht_metal') {
+        return /schooner/i.test(profile.name)
+            ? `Gaff schooner rigging${years}.`
+            : `Racing yacht rigging${years}.`;
+    }
+    return `${profile.name}${years}.`;
 }
 
 function describe(document: ProfileDocument): string {

@@ -536,3 +536,19 @@ test('loadDocument returns distinct documents per profile', () => {
     assert.equal(loadDocument('early_plant', '1.2.1').profile.profileId, 'early_plant');
     assert.throws(() => loadDocument('early_plant', '1.2.0'));
 });
+
+test('every profile card has a short purpose and an optional limitation', () => {
+    for (const profileDocument of loadAllDocuments()) {
+        const explanation = summariseProfile(profileDocument).explanation;
+        assert.ok(explanation.purpose.length > 0, `${profileDocument.profile.profileId}: empty purpose`);
+        assert.ok(
+            explanation.purpose.length <= 80,
+            `${profileDocument.profile.profileId}: purpose is too long`,
+        );
+        assert.match(explanation.purpose, /\.$/);
+        assert.doesNotMatch(explanation.purpose, /accuracy|verified/i);
+        if (explanation.caveat !== null) {
+            assert.ok(explanation.caveat.length > 0);
+        }
+    }
+});

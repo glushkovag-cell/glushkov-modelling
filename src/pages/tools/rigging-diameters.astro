@@ -128,8 +128,8 @@ const description =
 
             <p class="rig-profile__context">
               The profile is chosen explicitly. The historical year or period does
-              not select a profile; hover or select a card to read the full
-              description.
+              not select a profile. Open a card&rsquo;s details for coverage,
+              calibration and sources.
             </p>
 
             <div class="rig-profiles" role="radiogroup" aria-label="Rigging profile">
@@ -153,12 +153,19 @@ const description =
                   <label class="rig-profile__body" for={`profile-${entry.summary.profileId}`}>
                     <span class="rig-profile__head">
                       <strong>{entry.summary.name}</strong>
-                      <span class="rig-profile__range">{entry.summary.family} · v{entry.summary.profileVersion}</span>
-                      <span class="rig-profile__status">{entry.summary.status}</span>
+                      <span class={`rig-profile__status rig-profile__status--${entry.summary.status}`}>{entry.summary.status}</span>
                     </span>
-                    <span class="rig-profile__details">
+                    <span class="rig-profile__range">{entry.summary.family} · v{entry.summary.profileVersion}</span>
+                    <span class="rig-profile__purpose">{entry.summary.explanation.purpose}</span>
+                    <span class="rig-profile__limit">
+                      <span class="rig-profile__limit-label">Main limitation</span>
+                      {entry.summary.explanation.caveat ?? 'No profile-specific limitation is stated for this profile.'}
+                    </span>
+                  </label>
+                  <details class="rig-profile__more">
+                    <summary>Coverage, calibration &amp; sources</summary>
+                    <div class="rig-profile__details">
                       <span class="rig-profile__desc">{entry.summary.explanation.summary}</span>
-                      <span class="rig-profile__note">{entry.summary.explanation.disclaimer}</span>
                       <span class="rig-profile__note">{entry.summary.explanation.taxonomy}</span>
                       {entry.summary.explanation.calibration && (
                         <span class="rig-profile__note">{entry.summary.explanation.calibration}</span>
@@ -166,28 +173,26 @@ const description =
                       {entry.summary.explanation.accuracy && (
                         <span class="rig-profile__note">{entry.summary.explanation.accuracy}</span>
                       )}
-                      {entry.summary.explanation.caveat && (
-                        <span class="rig-profile__note">{entry.summary.explanation.caveat}</span>
-                      )}
-                    </span>
-                  </label>
-                  <details class="rig-profile__more">
-                    <summary>Sources &amp; full caveats</summary>
-                    <ul class="rig-profile__caveats">
-                      {entry.summary.warnings.map((warning) => (
-                        <li>{warning}</li>
-                      ))}
-                    </ul>
-                    <p class="rig-profile__source">
-                      Sources: {entry.document.profile.sources.map((source) => source.title).join(' · ')}
-                    </p>
+                      <span class="rig-profile__note">{entry.summary.explanation.disclaimer}</span>
+                      <ul class="rig-profile__caveats">
+                        {entry.summary.warnings.map((warning) => (
+                          <li>{warning}</li>
+                        ))}
+                      </ul>
+                      <p class="rig-profile__source">
+                        Sources: {entry.document.profile.sources.map((source) => source.title).join(' · ')}
+                      </p>
+                    </div>
                   </details>
                 </div>
               ))}
             </div>
 
-            <p class="rig-profile__context" id="profile-context-note" role="status" aria-live="polite">
-              Selected: {initial.summary.name} v{initial.summary.profileVersion} — {initial.summary.ruleCount} rule definitions. Draft profiles are not historical verification.
+            <p class="rig-profile__context">
+              <span id="profile-context-note" role="status" aria-live="polite">
+                Selected: {initial.summary.name} v{initial.summary.profileVersion} — {initial.summary.ruleCount} rule definitions. Draft profiles are not historical verification.
+              </span>
+              <button class="rig-link" type="button" id="undo-profile" hidden>Undo profile change</button>
             </p>
           </fieldset>
 
@@ -708,9 +713,12 @@ const description =
 
       <section class="rig-results" id="rig-results" tabindex="-1">
         <div class="rig-results__header">
-          <div>
+          <div class="rig-results__heading">
             <span class="eyebrow">Results</span>
-            <h2 class="rig-results__title">Estimated diameters</h2>
+            <div class="rig-results__title-row">
+              <h2 class="rig-results__title">Estimated diameters</h2>
+              <span class="rig-results__state" id="results-state" data-state="idle">Not calculated</span>
+            </div>
           </div>
           <div class="rig-results__actions">
             <button class="rig-button rig-button--ghost" type="button" id="recalculate">Recalculate</button>
@@ -723,7 +731,17 @@ const description =
           Press &ldquo;Calculate diameters&rdquo; to build the ledger.
         </p>
 
-        <p class="rig-calculation-error" id="calculation-error" role="alert" hidden></p>
+        <div class="rig-stale" id="stale-notice" hidden>
+          <p class="rig-stale__text" id="stale-text" role="status" aria-live="polite">
+            Inputs changed. The ledger below is from the previous calculation.
+          </p>
+          <button class="rig-button rig-button--ghost" type="button" id="stale-recalculate">Recalculate</button>
+        </div>
+
+        <div class="rig-calculation-error" id="calculation-error" hidden>
+          <span id="calculation-error-text" role="alert"></span>
+          <button class="rig-button rig-button--ghost" type="button" id="calculation-retry">Retry</button>
+        </div>
 
         <p class="rig-results__disclaimer">
           All diameters are engineering estimates or a preliminary fit — not
@@ -956,7 +974,7 @@ const description =
 
     .rig-profile__body {
         display: flex;
-        flex: 1 1 280px;
+        flex: 1 1 220px;
         flex-direction: column;
         gap: 6px;
         min-width: 0;
@@ -989,11 +1007,46 @@ const description =
         text-transform: uppercase;
     }
 
+    .rig-profile__status--published {
+        background: var(--color-primary-highlight);
+        color: var(--color-primary);
+    }
+
+    .rig-profile__status--draft {
+        background: color-mix(in srgb, #b54708 12%, transparent);
+        color: #b54708;
+    }
+
+    .rig-profile__status--deprecated {
+        background: color-mix(in srgb, #b42318 10%, transparent);
+        color: #b42318;
+    }
+
     .rig-profile__range {
         color: var(--color-text-muted);
         font-size: 0.85rem;
         font-variant-numeric: tabular-nums;
         font-weight: 600;
+    }
+
+    .rig-profile__purpose {
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .rig-profile__limit {
+        color: var(--color-text-muted);
+        font-size: 0.84rem;
+        line-height: 1.5;
+    }
+
+    .rig-profile__limit-label {
+        margin-right: 4px;
+        color: #b54708;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
     }
 
     .rig-profile__details > span {
@@ -1023,17 +1076,14 @@ const description =
     }
 
     .rig-profile__more {
-        display: none;
         flex: 1 1 100%;
         margin-left: 30px;
         font-size: 0.8rem;
         color: var(--color-text-muted);
     }
 
-    .rig-profile:hover .rig-profile__more,
-    .rig-profile:focus-within .rig-profile__more,
-    .rig-profile:has(input:checked) .rig-profile__more {
-        display: block;
+    .rig-profile__more[open] summary {
+        margin-bottom: 4px;
     }
 
     .rig-profile__more summary {
@@ -1319,13 +1369,58 @@ const description =
         flex-wrap: wrap;
     }
 
+    .rig-results__heading {
+        display: grid;
+        gap: 4px;
+    }
+
+    .rig-results__title-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 10px 14px;
+    }
+
     .rig-results__title {
         margin: 0;
         font-size: clamp(1.9rem, 3vw, 2.6rem);
     }
 
+    .rig-results__state {
+        padding: 3px 10px;
+        border-radius: var(--radius-full);
+        background: var(--color-surface-offset);
+        color: var(--color-text-muted);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .rig-results__state[data-state="ready"] {
+        background: var(--color-primary-highlight);
+        color: var(--color-primary);
+    }
+
+    .rig-results__state[data-state="calculating"] {
+        background: color-mix(in srgb, #b54708 12%, transparent);
+        color: #b54708;
+    }
+
+    .rig-results__state[data-state="stale"] {
+        background: color-mix(in srgb, #b54708 14%, transparent);
+        color: #b54708;
+    }
+
+    .rig-results__state[data-state="error"] {
+        background: color-mix(in srgb, #b42318 12%, transparent);
+        color: #b42318;
+    }
+
     .rig-results__actions {
         display: flex;
+        flex-wrap: wrap;
         gap: 0.6rem;
     }
 
@@ -1343,6 +1438,10 @@ const description =
     }
 
     .rig-calculation-error {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 14px;
         margin: 0.9rem 0 0;
         padding: 12px 16px;
         border: 1px solid #b42318;
@@ -1353,8 +1452,33 @@ const description =
         line-height: 1.55;
     }
 
-    .rig-calculation-error[hidden] {
-        display: none;
+    .rig-calculation-error #calculation-error-text {
+        flex: 1 1 240px;
+    }
+
+    .rig-calculation-error .rig-button {
+        flex: 0 0 auto;
+        color: #b42318;
+        border-color: color-mix(in srgb, #b42318 45%, transparent);
+    }
+
+    .rig-stale {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 14px;
+        margin: 0.9rem 0 0;
+        padding: 12px 16px;
+        border-left: 3px solid #b54708;
+        border-radius: var(--radius-sm);
+        background: color-mix(in srgb, #b54708 9%, transparent);
+        font-size: 0.9rem;
+        line-height: 1.55;
+    }
+
+    .rig-stale__text {
+        flex: 1 1 240px;
+        margin: 0;
     }
 
     .rig-summary {
@@ -1362,6 +1486,20 @@ const description =
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 12px;
         margin: 1.25rem 0;
+    }
+
+    .rig-summary__scope {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 6px 10px;
+        color: var(--color-text-muted);
+        font-size: 0.84rem;
+    }
+
+    .rig-summary__scope strong {
+        color: var(--color-text);
     }
 
     .rig-summary__item {
@@ -2363,22 +2501,15 @@ const description =
 </style>
 
 <style is:global>
-    /* Компактный выбор профиля: полная карточка — по наведению, фокусу или выбору. */
+    /* Компактная карточка профиля: первый уровень виден всегда, подробности — по раскрытию. */
     .rig-profile {
         cursor: pointer;
     }
 
     .rig-profile__details {
-        display: none;
         margin-top: 8px;
         padding-top: 8px;
         border-top: 1px dashed var(--color-border);
-    }
-
-    .rig-profile:hover .rig-profile__details,
-    .rig-profile:focus-within .rig-profile__details,
-    .rig-profile:has(input:checked) .rig-profile__details {
-        display: block;
     }
 
     .rig-section-group {
@@ -2418,6 +2549,34 @@ const description =
 
     .rig-row__material {
         opacity: 0.72;
+    }
+
+    .rig-row__basis {
+        display: inline-flex;
+        align-self: flex-start;
+        margin-top: 2px;
+        padding: 1px 6px;
+        border: 1px solid currentColor;
+        border-radius: 4px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+
+    .rig-row__basis--preliminary_fit {
+        color: #8a5a00;
+    }
+
+    .rig-row__basis--engineering_assumption {
+        color: #5a6470;
+    }
+
+    .rig-dim.is-highlighted,
+    .rig-field.is-highlighted {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 3px;
+        border-radius: var(--radius-sm);
+        transition: outline-color var(--transition);
     }
 
     /* Размер, который новый профиль требует ввести заново. */
