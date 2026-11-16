@@ -280,6 +280,10 @@ export function highlightSegments(
             if (index === -1) break;
             const start = owner[index];
             const end = owner[index + token.length - 1];
+            if (start === undefined || end === undefined) {
+                from = index + 1;
+                continue;
+            }
             for (let i = start; i <= end; i += 1) mask[i] = true;
             from = index + 1;
         }
@@ -287,7 +291,7 @@ export function highlightSegments(
 
     const segments: HighlightSegment[] = [];
     for (const [index, char] of chars.entries()) {
-        const match = mask[index];
+        const match = mask[index] ?? false;
         const last = segments.at(-1);
         if (last && last.match === match) {
             last.text += char;
