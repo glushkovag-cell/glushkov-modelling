@@ -113,8 +113,8 @@ const description =
         a full-size vessel.
       </div>
 
-      <div class="tools-layout">
-        <form class="rig-form" id="rigging-form" novalidate>
+      <div class="tools-layout rig-layout">
+        <form class="rig-form rig-form--steps" id="rigging-form" novalidate>
           <p class="rig-form__hint">
             Example values are prefilled — replace them with your model&rsquo;s
             dimensions. Results update only when you press{' '}
@@ -123,8 +123,25 @@ const description =
 
           <div class="rig-form__errors" id="form-errors" role="alert" hidden></div>
 
-          <fieldset class="rig-section">
-            <legend class="rig-section__title">1 · Rigging profile</legend>
+        <div class="rig-steps__bar">
+          <span class="rig-steps__label">Input steps</span>
+          <button class="rig-link rig-steps__toggle" type="button" id="expand-steps" aria-expanded="false">
+            Expand all steps
+          </button>
+        </div>
+
+        <details class="rig-step rig-step--profile" open>
+          <summary class="rig-step__summary">
+            <span class="rig-step__number" aria-hidden="true">1</span>
+            <span class="rig-step__text">
+              <span class="rig-step__title" role="heading" aria-level="2">Rigging profile</span>
+              <span class="rig-step__meta" id="step-profile-meta">Traditional plant rigging · v1.1.0</span>
+            </span>
+            <span class="rig-step__chevron" aria-hidden="true">›</span>
+          </summary>
+          <div class="rig-step__body">
+          <fieldset class="rig-section rig-section--step">
+            <legend class="rig-sr-only">1 · Rigging profile</legend>
 
             <p class="rig-profile__context">
               The profile is chosen explicitly. The historical year or period does
@@ -195,9 +212,21 @@ const description =
               <button class="rig-link" type="button" id="undo-profile" hidden>Undo profile change</button>
             </p>
           </fieldset>
+          </div>
+        </details>
 
-          <fieldset class="rig-section">
-            <legend class="rig-section__title">2 · Model scale &amp; dimensions</legend>
+        <details class="rig-step rig-step--scale">
+          <summary class="rig-step__summary">
+            <span class="rig-step__number" aria-hidden="true">2</span>
+            <span class="rig-step__text">
+              <span class="rig-step__title" role="heading" aria-level="2">Model scale &amp; dimensions</span>
+              <span class="rig-step__meta" id="step-scale-meta">1 : {defaults.scaleDenominator}</span>
+            </span>
+            <span class="rig-step__chevron" aria-hidden="true">›</span>
+          </summary>
+          <div class="rig-step__body">
+          <fieldset class="rig-section rig-section--step">
+            <legend class="rig-sr-only">2 · Model scale &amp; dimensions</legend>
 
             <div class="rig-field rig-field--scale">
               <label class="rig-label" for="scale">Model scale</label>
@@ -352,9 +381,21 @@ const description =
               </div>
             </div>
           </fieldset>
+          </div>
+        </details>
 
-          <fieldset class="rig-section" data-ui-block="masts">
-            <legend class="rig-section__title">3 · Masts &amp; sails</legend>
+        <details class="rig-step rig-step--masts">
+          <summary class="rig-step__summary">
+            <span class="rig-step__number" aria-hidden="true">3</span>
+            <span class="rig-step__text">
+              <span class="rig-step__title" role="heading" aria-level="2">Masts &amp; sails</span>
+              <span class="rig-step__meta">Masts, yards &amp; sails</span>
+            </span>
+            <span class="rig-step__chevron" aria-hidden="true">›</span>
+          </summary>
+          <div class="rig-step__body">
+          <fieldset class="rig-section rig-section--step" data-ui-block="masts">
+            <legend class="rig-sr-only">3 · Masts &amp; sails</legend>
 
             <p class="rig-subtitle">Masts</p>
             <table class="rig-matrix">
@@ -570,8 +611,20 @@ const description =
             </table>
           </div>
 
-          <fieldset class="rig-section" data-spars-fieldset>
-            <legend class="rig-section__title">4 · Spars &amp; auxiliary gear</legend>
+          </div>
+        </details>
+        <details class="rig-step rig-step--gear">
+          <summary class="rig-step__summary">
+            <span class="rig-step__number" aria-hidden="true">4</span>
+            <span class="rig-step__text">
+              <span class="rig-step__title" role="heading" aria-level="2">Spars &amp; auxiliary gear</span>
+              <span class="rig-step__meta">Bowsprit, anchor &amp; gun gear</span>
+            </span>
+            <span class="rig-step__chevron" aria-hidden="true">›</span>
+          </summary>
+          <div class="rig-step__body">
+          <fieldset class="rig-section rig-section--step" data-spars-fieldset>
+            <legend class="rig-sr-only">4 · Spars &amp; auxiliary gear</legend>
 
             <div class="rig-block" data-ui-block="bowsprit">
               <p class="rig-subtitle">Bowsprit &amp; spars</p>
@@ -654,61 +707,19 @@ const description =
               </div>
             </div>
           </fieldset>
+          </div>
+        </details>
 
-          <div class="rig-actions">
-            <button class="rig-button" type="submit" id="calculate">Calculate diameters</button>
-            <button class="rig-button rig-button--ghost" type="reset" id="reset">Reset to example</button>
-            <button class="rig-button rig-button--ghost" type="button" id="load-preset">Load preset</button>
-            <input class="rig-file-input" type="file" id="preset-file" accept="application/json,.json" hidden />
+          <div class="rig-actions" id="rig-actions">
+            <div class="rig-actions__inner">
+              <button class="rig-button" type="submit" id="calculate">Calculate diameters</button>
+              <button class="rig-button rig-button--ghost" type="reset" id="reset">Reset to example</button>
+              <button class="rig-button rig-button--ghost" type="button" id="load-preset">Load preset</button>
+              <input class="rig-file-input" type="file" id="preset-file" accept="application/json,.json" hidden />
+            </div>
           </div>
         </form>
 
-        <aside class="tools-aside">
-          <div class="tools-aside-card">
-            <h2>What this covers</h2>
-            <p>
-              Only the nodes supported by the selected profile are shown. A row in
-              the results does not assert that a rope was historically fitted.
-            </p>
-            <ul>
-              <li>Standing: stays, shrouds, backstays, ratlines, lanyards.</li>
-              <li>Running: halyards, lifts, braces, sheets, tacks, clewlines.</li>
-              <li>Bowsprit, anchor and gun gear where the profile defines them.</li>
-            </ul>
-          </div>
-
-          <div class="tools-aside-card">
-            <h2>Measurement points</h2>
-            <p>
-              Lower-mast diameter is taken <strong>at the partner</strong>. The
-              maximum diameter or the diameter at the step is only an explicitly
-              marked proxy and is flagged in the results.
-            </p>
-            <p>
-              Bowsprit diameter is the <strong>maximum working section</strong>;
-              hull width is the greatest moulded width; gun bore is the nominal{' '}
-              <strong>bore</strong>, not the outside diameter.
-            </p>
-          </div>
-
-          <div class="tools-aside-card">
-            <h2>Read before using</h2>
-            <p>
-              These are <strong>engineering estimates</strong> for a static model,
-              not a strength calculation and not a reconstruction of a specific
-              vessel. FIT and ENG rows are shown separately.
-            </p>
-            <p>
-              Counts, lengths and thread consumption are outside this tool. Presets
-              can be exported and loaded from JSON.
-            </p>
-          </div>
-
-          <p class="tools-note">
-            <strong>Estimate only.</strong> Do not use these diameters for a
-            full-size vessel. Choose the ropes you need for your own model.
-          </p>
-        </aside>
       </div>
 
       <section class="rig-results" id="rig-results" tabindex="-1">
@@ -914,6 +925,7 @@ const description =
 <style is:global>
     html {
         scrollbar-gutter: stable;
+        scroll-padding-bottom: 96px;
     }
 
     .rig-form,
@@ -932,6 +944,125 @@ const description =
         border-radius: var(--radius);
         box-shadow: var(--shadow-sm);
         padding: 24px;
+    }
+
+    .rig-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .rig-steps__bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin: 0 0 2px;
+    }
+
+    .rig-steps__label {
+        color: var(--color-text-faint);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .rig-steps__toggle {
+        padding: 4px 0;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    .rig-step {
+        border-top: 1px solid var(--color-divider);
+    }
+
+    .rig-step:first-of-type {
+        border-top: 0;
+    }
+
+    .rig-step__summary {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        min-height: 64px;
+        padding: 14px 0;
+        list-style: none;
+        cursor: pointer;
+    }
+
+    .rig-step__summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .rig-step__summary:hover {
+        background: color-mix(in srgb, var(--color-surface-2) 55%, transparent);
+    }
+
+    .rig-step__summary:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: -2px;
+        border-radius: var(--radius-sm);
+    }
+
+    .rig-step__number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: var(--radius-full);
+        background: var(--color-primary-highlight);
+        color: var(--color-primary);
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .rig-step__text {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .rig-step__title {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 1.25rem;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .rig-step__meta {
+        color: var(--color-text-muted);
+        font-size: 0.8rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .rig-step__chevron {
+        color: var(--color-text-muted);
+        font-size: 1.3rem;
+        line-height: 1;
+        transform-origin: center;
+        transition: transform var(--transition);
+    }
+
+    .rig-step[open] .rig-step__chevron {
+        transform: rotate(90deg);
+    }
+
+    .rig-step__body {
+        padding: 0 0 18px;
+    }
+
+    .rig-step--profile .rig-profiles {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .rig-section--step {
+        margin: 0;
+        padding: 0;
+        border: 0;
     }
 
     .rig-disclaimer {
@@ -1328,10 +1459,37 @@ const description =
     }
 
     .rig-actions {
+        min-height: 66px;
+        margin-top: 16px;
+    }
+
+    .rig-actions__inner {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.75rem;
-        margin-top: 1.5rem;
+        gap: 8px;
+        padding: 10px;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-surface);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .rig-actions.is-fixed .rig-actions__inner {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 30;
+        max-width: none;
+        margin: 0;
+        padding: 8px max(16px, calc((100vw - 1120px) / 2))
+            calc(8px + env(safe-area-inset-bottom));
+        border: 0;
+        border-top: 1px solid var(--color-border);
+        border-radius: 0;
+        background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+        box-shadow: 0 -10px 30px color-mix(in srgb, var(--color-text) 12%, transparent);
+        backdrop-filter: blur(10px);
     }
 
     .rig-button {
@@ -2408,6 +2566,10 @@ const description =
             display: none;
         }
 
+        .rig-step--profile .rig-profiles {
+            grid-template-columns: 1fr;
+        }
+
         .rig-ledger__controls {
             grid-template-columns: repeat(2, minmax(0, 1fr));
         }
@@ -2538,9 +2700,37 @@ const description =
     }
 
     @media (max-width: 640px) {
+        html {
+            scroll-padding-bottom: 156px;
+        }
+
         .rig-form {
             padding: 18px;
         }
+
+        .rig-actions {
+            min-height: 112px;
+        }
+
+        .rig-actions.is-fixed .rig-actions__inner {
+            padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+        }
+
+        .rig-actions__inner {
+            gap: 6px;
+            padding: 8px;
+        }
+
+        .rig-actions__inner #calculate {
+            flex: 1 1 100%;
+        }
+
+        .rig-actions__inner .rig-button--ghost {
+            flex: 1 1 calc(50% - 3px);
+            padding: 0 8px;
+            font-size: 0.82rem;
+        }
+
 
         .rig-dims,
         .rig-dim,

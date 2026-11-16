@@ -626,6 +626,31 @@ function applySettingsToForm(settings: RiggingSettings): void {
 
 /* ------------------------------- profile UI ------------------------------- */
 
+function visibleSteps(): HTMLDetailsElement[] {
+    return [...document.querySelectorAll<HTMLDetailsElement>('.rig-step')].filter(
+        (step) => !step.hidden,
+    );
+}
+
+function updateStepsToggle(): void {
+    const steps = visibleSteps();
+    const allOpen = steps.length > 0 && steps.every((step) => step.open);
+    expandStepsButton.textContent = allOpen ? 'Collapse all steps' : 'Expand all steps';
+    expandStepsButton.setAttribute('aria-expanded', allOpen ? 'true' : 'false');
+}
+
+function updateStepSummaries(): void {
+    const checked = document.querySelector<HTMLInputElement>('input[name="profile"]:checked');
+    const card = checked?.closest<HTMLElement>('[data-profile-card]');
+    const profileName = card?.querySelector('strong')?.textContent?.trim() ?? 'Profile';
+    const version = card?.dataset.version ? ` · v${card.dataset.version}` : '';
+    stepProfileMeta.textContent = `${profileName}${version}`;
+
+    const scale = document.getElementById('scale') as HTMLInputElement | null;
+    const scaleValue = scale?.value.trim() ?? '';
+    stepScaleMeta.textContent = scaleValue ? `1 : ${scaleValue}` : 'Scale not set';
+}
+
 function applyProfileUi(profile: ProfileCardData): void {
     const ui = profile.ui;
     const requirements = profile.requirements;
@@ -693,6 +718,20 @@ function applyProfileUi(profile: ProfileCardData): void {
         const element = document.querySelector<HTMLElement>(`[data-dim="mast-${mastId}"]`);
         if (element) element.hidden = !(ui.masts && requirements.mast);
     }
+
+    const mastsStep = document.querySelector<HTMLDetailsElement>('.rig-step--masts');
+    if (mastsStep) {
+        const hasVisibleBlock = [...mastsStep.querySelectorAll<HTMLElement>('[data-ui-block]')].some(
+            (element) => !element.hidden,
+        );
+        mastsStep.hidden = !hasVisibleBlock;
+    }
+
+    const gearStep = document.querySelector<HTMLDetailsElement>('.rig-step--gear');
+    if (gearStep) gearStep.hidden = sparsFieldset?.hidden ?? false;
+
+    updateStepSummaries();
+    updateStepsToggle();
 }
 
 /* ----------------------------- form dependencies -------------------------- */
@@ -816,6 +855,18 @@ const state = {
 };
 
 const form = byId<HTMLFormElement>('rigging-form');
+const actionsBar = byId('rig-actions');
+
+// Панель действий закреплена внизу, пока форма ввода в кадре; на результатах
+// она возвращается в обычный поток, чтобы не перекрывать ведомость.
+const actionsObserver = new IntersectionObserver(
+    (entries) => {
+        const visible = entries.some((entry) => entry.isIntersecting);
+        actionsBar.classList.toggle('is-fixed', visible);
+    },
+    { threshold: 0 },
+);
+actionsObserver.observe(form);
 const errorsBox = byId('form-errors');
 const resultsStatus = byId('results-status');
 const resultsSection = byId('rig-results');
@@ -833,6 +884,9 @@ const exportCsv = byId<HTMLButtonElement>('export-csv');
 const exportJson = byId<HTMLButtonElement>('export-json');
 const exportScopeSelect = select('export-scope');
 const calculateButton = byId<HTMLButtonElement>('calculate');
+const stepProfileMeta = byId('step-profile-meta');
+const stepScaleMeta = byId('step-scale-meta');
+const expandStepsButton = byId<HTMLButtonElement>('expand-steps');
 const loadPresetButton = byId<HTMLButtonElement>('load-preset');
 const presetFile = byId<HTMLInputElement>('preset-file');
 const ropeModal = byId('rope-modal');
@@ -1161,6 +1215,8 @@ function focusMeasurementFields(ids: readonly string[]): void {
         const element = fieldId ? document.getElementById(fieldId) : null;
         if (!element) continue;
 
+        const step = element.closest<HTMLDetailsElement>('.rig-step');
+        if (step) step.open = true;
         const row = element.closest<HTMLElement>('.rig-dim, .rig-field');
         row?.classList.add('is-highlighted');
         window.setTimeout(() => row?.classList.remove('is-highlighted'), 1600);
@@ -1881,7 +1937,11 @@ async function calculateAndRender(scrollOnSuccess: boolean): Promise<void> {
             },
         ]);
         const firstInput = missingDimensions[0]?.querySelector('input');
-        if (firstInput) firstInput.focus();
+        if (firstInput) {
+            const step = firstInput.closest<HTMLDetailsElement>('.rig-step');
+            if (step) step.open = true;
+            firstInput.focus();
+        }
         if (state.calculation) {
             resultsSection.classList.add('is-stale');
             setResultsState('stale');
@@ -2193,6 +2253,17 @@ form.addEventListener('reset', () => {
     }, 0);
 });
 
+expandStepsButton.addEventListener('click', () => {
+    const steps = visibleSteps();
+    const allOpen = steps.length > 0 && steps.every((step) => step.open);
+    steps.forEach((step) => {
+        step.open = !allOpen;
+    });
+    updateStepsToggle();
+});
+
+form.addEventListener('toggle', updateStepsToggle, true);
+
 form.addEventListener('input', (event) => {
     const target = event.target as HTMLElement;
     if (target.id === 'profile' || (target as HTMLInputElement).name === 'profile') return;
@@ -2200,6 +2271,7 @@ form.addEventListener('input', (event) => {
     if (key) state.editedDimensions.add(key);
     captureDimensionDraft(state.activeProfile);
     syncRequiredDimensions();
+    updateStepSummaries();
     markDirty();
 });
 
