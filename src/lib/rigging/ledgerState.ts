@@ -19,12 +19,15 @@ import {
 import { TIER_LABELS } from './profile.ts';
 import type { ResultStatus, Tier } from './types.ts';
 
+export type ExportScope = 'all' | 'selection';
+
 export interface LedgerState {
     mode: LedgerMode;
     filters: LedgerFilters;
     query: string;
     sort: LedgerSort;
     showNotApplicable: boolean;
+    exportScope: ExportScope;
     /** Свёрнутые пользователем секции узлов; новые секции раскрыты. */
     collapsedNodes: ReadonlySet<string>;
 }
@@ -41,6 +44,7 @@ export function initialLedgerState(): LedgerState {
         query: '',
         sort: 'profile',
         showNotApplicable: false,
+        exportScope: 'all',
         collapsedNodes: new Set<string>(),
     };
 }
@@ -112,6 +116,10 @@ export function setMode(state: LedgerState, mode: LedgerMode): LedgerState {
 
 export function setSort(state: LedgerState, sort: LedgerSort): LedgerState {
     return { ...state, sort };
+}
+
+export function setExportScope(state: LedgerState, exportScope: ExportScope): LedgerState {
+    return { ...state, exportScope };
 }
 
 /** Clear all: поиск и фильтры. Режим, сортировка и расчёт сохраняются. */

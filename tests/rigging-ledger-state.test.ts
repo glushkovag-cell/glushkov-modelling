@@ -14,6 +14,7 @@ import {
     initialLedgerState,
     reconcileState,
     setAllSections,
+    setExportScope,
     setMode,
     setNode,
     setQuery,
@@ -45,6 +46,7 @@ test('initial state is grouped, unfiltered and fully expanded', () => {
     assert.equal(state.query, '');
     assert.equal(state.sort, 'profile');
     assert.equal(state.showNotApplicable, false);
+    assert.equal(state.exportScope, 'all');
     assert.equal(state.collapsedNodes.size, 0);
 });
 
@@ -92,6 +94,16 @@ test('Not applicable status and the separate toggle stay in sync', () => {
     const calculated = setStatus(shown, 'calculated');
     assert.equal(calculated.filters.status, 'calculated');
     assert.equal(calculated.showNotApplicable, true, 'turning a status on must not hide NA rows');
+});
+
+test('export scope is a view setting and survives Clear all', () => {
+    const selected = setExportScope(initialLedgerState(), 'selection');
+    assert.equal(selected.exportScope, 'selection');
+
+    const withFilters = setNode(selected, 'fore', rows).state;
+    const cleared = clearFilters(withFilters);
+    assert.equal(cleared.exportScope, 'selection');
+    assert.equal(cleared.filters.node, 'all');
 });
 
 test('mode, sort and filters are independent', () => {

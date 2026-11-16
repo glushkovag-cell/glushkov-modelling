@@ -64,6 +64,7 @@ import {
     setNode,
     setQuery,
     setSectionOpen,
+    setExportScope,
     setShowNotApplicable,
     setSort,
     setStatus,
@@ -71,12 +72,19 @@ import {
     setType,
     tierFilterDisabled,
     tierFilterNote,
+    type ExportScope,
     type LedgerState,
 } from '../lib/rigging/ledgerState.ts';
+import {
+    loadLedgerState,
+    saveLedgerState,
+} from '../lib/rigging/ledgerPersistence.ts';
 import {
     makeThreadPick,
     threadPickDetails,
     threadPickLabel,
+    threadPickNeedsReview,
+    threadPickReviewNote,
     type ThreadMatch,
     type ThreadPick,
 } from '../lib/rigging/threadPick.ts';
@@ -769,11 +777,26 @@ function syncDisabled(): void {
 
 /* --------------------------------- state ---------------------------------- */
 
+function safeSessionStorage(): Storage | null {
+    try {
+        const storage = window.sessionStorage;
+        const probe = '__rigging_view_probe__';
+        storage.setItem(probe, '1');
+        storage.removeItem(probe);
+        return storage;
+    } catch {
+        return null;
+    }
+}
+
+const ledgerStorage = safeSessionStorage();
+
 const state = {
     calculation: null as Calculation | null,
     settings: null as RiggingSettings | null,
     ledgerRows: [] as LedgerRow[],
-    ledger: initialLedgerState() as LedgerState,
+    ledger: (loadLedgerState(ledgerStorage) ?? initialLedgerState()) as LedgerState,
+    currentSelection: null as LedgerSelection | null,
     facets: null as LedgerFacets | null,
     optionsSignature: '',
     threadPicks: new Map<string, ThreadPick>(),
@@ -807,6 +830,7 @@ const calculationRetry = byId<HTMLButtonElement>('calculation-retry');
 const showNaInput = input('show-na');
 const exportCsv = byId<HTMLButtonElement>('export-csv');
 const exportJson = byId<HTMLButtonElement>('export-json');
+const exportScopeSelect = select('export-scope');
 const calculateButton = byId<HTMLButtonElement>('calculate');
 const loadPresetButton = byId<HTMLButtonElement>('load-preset');
 const presetFile = byId<HTMLInputElement>('preset-file');
@@ -891,6 +915,53 @@ function showStale(message: string = STALE_MESSAGE): void {
 
 function hideStale(): void {
     staleNotice.hidden = true;
+}
+
+function saveLedgerView(): void {
+    saveLedgerState(state.ledger, ledgerStorage);
+}
+
+function selectedResults(): RiggingResult[] {
+    return (state.currentSelection?.visible ?? []).map((row) => row.result);
+}
+
+function exportConditions(): string[] {
+    return activeConditions({
+        filters: state.ledger.filters,
+        query: state.ledger.query,
+        showNotApplicable: state.ledger.showNotApplicable,
+    }).map((condition) => condition.label);
+}
+
+/**
+ * Экспорт доступен только для актуального расчёта и непустой области.
+ * Для области «текущая выборка» используется та же selection, что счётчик
+ * N of M и неприменимые строки.
+ */
+function updateExportAvailability(): void {
+    const calc = state.calculation;
+    if (!calc || state.dirty) {
+        exportCsv.disabled = true;
+        exportJson.disabled = true;
+        return;
+    }
+
+    const count =
+        state.ledger.exportScope === 'selection'
+            ? (state.currentSelection?.visible.length ?? 0)
+            : calc.results.length;
+    const exportable = calc.validationErrors.length === 0 && count > 0;
+    exportCsv.disabled = !exportable;
+    exportJson.disabled = !exportable;
+}
+
+function threadReviewCount(): number {
+    let count = 0;
+    for (const [key, pick] of state.threadPicks) {
+        const row = state.rowsByKey.get(key);
+        if (row && threadPickNeedsReview(pick, row.result.diameterModelMm)) count += 1;
+    }
+    return count;
 }
 
 function renderErrors(errors: Calculation['validationErrors']): void {
@@ -1012,17 +1083,30 @@ function threadControl(row: LedgerRow): HTMLElement {
     button.dataset.action = 'pick-thread';
     button.dataset.key = row.key;
 
+    const reviewNote = pick
+        ? threadPickReviewNote(pick, row.result.diameterModelMm)
+        : null;
+
     if (pick) {
         button.classList.add('rig-thread--picked');
+        if (reviewNote) button.classList.add('rig-thread--review');
         const label = el('span', 'rig-thread__label');
         label.textContent = threadPickLabel(pick);
         const meta = el('span', 'rig-thread__meta');
-        meta.textContent = `Ø ${pick.diameterMm.toFixed(3)} mm`;
+        meta.textContent = reviewNote
+            ? `Review · Ø ${pick.diameterMm.toFixed(3)} mm`
+            : `Ø ${pick.diameterMm.toFixed(3)} mm`;
         button.append(label, meta);
-        button.title = threadPickDetails(pick);
+        button.title = reviewNote
+            ? `${threadPickDetails(pick)} ${reviewNote}`
+            : threadPickDetails(pick);
         button.setAttribute(
             'aria-label',
-            `Change thread for ${row.result.nameEn}: ${threadPickLabel(pick)}, ${threadPickDetails(pick)}`,
+            `${
+                reviewNote ? 'Review thread' : 'Change thread'
+            } for ${row.result.nameEn}: ${threadPickLabel(pick)}, ${threadPickDetails(pick)}${
+                reviewNote ? `. ${reviewNote}` : ''
+            }`,
         );
     } else {
         const label = el('span', 'rig-thread__label');
@@ -1159,8 +1243,14 @@ function buildDetailsBody(result: RiggingResult, row: LedgerRow): HTMLDListEleme
         threadDef.append(
             document.createTextNode(`${threadPickLabel(pick)} — ${threadPickDetails(pick)}`),
             el('br'),
-            actionButton('Change thread', 'pick-thread', row.key),
         );
+        const reviewNote = threadPickReviewNote(pick, result.diameterModelMm);
+        if (reviewNote) {
+            const note = el('span', 'rig-thread-review');
+            note.textContent = reviewNote;
+            threadDef.append(note, el('br'));
+        }
+        threadDef.appendChild(actionButton('Change thread', 'pick-thread', row.key));
     } else if (result.status === 'calculated' && result.diameterModelMm !== null) {
         threadDef.appendChild(
             actionButton(
@@ -1595,8 +1685,15 @@ function renderLedgerToolbar(
 
     showNaInput.checked = state.ledger.showNotApplicable;
     sortSelect.value = state.ledger.sort;
+    exportScopeSelect.value = state.ledger.exportScope;
     modeGrouped.setAttribute('aria-pressed', state.ledger.mode === 'grouped' ? 'true' : 'false');
     modeFlat.setAttribute('aria-pressed', state.ledger.mode === 'flat' ? 'true' : 'false');
+
+    // Восстановленный из sessionStorage поиск должен появиться в поле, но
+    // нельзя перезаписывать ввод, пока пользователь печатает.
+    if (document.activeElement !== ledgerSearch && ledgerSearch.value !== state.ledger.query) {
+        ledgerSearch.value = state.ledger.query;
+    }
 
     const queryActive = state.ledger.query.trim() !== '';
     ledgerExpand.hidden = state.ledger.mode === 'flat';
@@ -1611,10 +1708,15 @@ function renderLedgerToolbar(
             ? 'No rows in this calculation.'
             : `${selection.visible.length} of ${total} ${total === 1 ? 'row' : 'rows'}`;
 
+    const reviewCount = threadReviewCount();
+    const reviewNote =
+        reviewCount > 0
+            ? ` ${reviewCount} thread ${reviewCount === 1 ? 'pick needs' : 'picks need'} review.`
+            : '';
     resultsStatus.textContent =
         calc.results.length === 0
             ? 'No rows produced for this configuration.'
-            : `Showing ${selection.visible.length} of ${total} rows.`;
+            : `Showing ${selection.visible.length} of ${total} rows.${reviewNote}`;
 }
 
 function renderResults(calc: Calculation): void {
@@ -1628,17 +1730,20 @@ function renderResults(calc: Calculation): void {
 
     state.facets = facets;
     state.rowsByKey = new Map(rows.map((row) => [row.key, row]));
+    state.currentSelection = selection;
 
     renderLedgerToolbar(calc, selection, facets);
     resultsList.replaceChildren();
 
     if (rows.length === 0 || selection.visible.length === 0) {
         renderEmpty(calc, selection);
+        updateExportAvailability();
         return;
     }
 
     if (state.ledger.mode === 'flat') {
         resultsList.appendChild(createFlatTable(selection));
+        updateExportAvailability();
         return;
     }
 
@@ -1654,6 +1759,8 @@ function renderResults(calc: Calculation): void {
     for (const section of groupedLedger(selection.visible, state.ledger.sort)) {
         resultsList.appendChild(createGroupedSection(section, selection.tokens, selection));
     }
+
+    updateExportAvailability();
 }
 
 function renderSummary(calc: Calculation): void {
@@ -1782,10 +1889,9 @@ async function calculateAndRender(scrollOnSuccess: boolean): Promise<void> {
         renderErrors(calc.validationErrors);
         renderSummary(calc);
         renderResults(calc);
+        saveLedgerView();
 
-        const exportable = calc.validationErrors.length === 0 && calc.results.length > 0;
-        exportCsv.disabled = !exportable || inputsChanged;
-        exportJson.disabled = !exportable || inputsChanged;
+        updateExportAvailability();
 
         if (inputsChanged) {
             resultsSection.classList.add('is-stale');
@@ -1816,8 +1922,7 @@ async function calculateAndRender(scrollOnSuccess: boolean): Promise<void> {
         }
         calculationErrorText.textContent = calculationErrorMessage(error);
         calculationError.hidden = false;
-        exportCsv.disabled = true;
-        exportJson.disabled = true;
+        updateExportAvailability();
         resultsStatus.textContent = state.calculation
             ? 'Calculation failed. Showing previous results.'
             : 'Calculation unavailable.';
@@ -1839,8 +1944,7 @@ function markDirty(): void {
     calculateButton.classList.add('rig-button--attention');
     setResultsState('stale');
     showStale();
-    exportCsv.disabled = true;
-    exportJson.disabled = true;
+    updateExportAvailability();
 }
 
 function download(filename: string, content: string, mime: string): void {
@@ -1917,22 +2021,69 @@ function onProfileChange(): void {
 
 /* -------------------------------- events ---------------------------------- */
 
+function exportReady(): boolean {
+    return Boolean(state.calculation && state.settings && !state.dirty);
+}
+
+function exportSuffix(): string {
+    return state.ledger.exportScope === 'selection' ? '-selection' : '';
+}
+
+/** Применяет ещё не отрисованный поиск, чтобы экспорт не отстал от поля. */
+function flushPendingSearch(): void {
+    if (ledgerSearch.value === state.ledger.query) return;
+    window.clearTimeout(searchTimer);
+    state.ledger = setQuery(state.ledger, ledgerSearch.value);
+    saveLedgerView();
+    if (state.calculation) renderResults(state.calculation);
+}
+
+function exportCount(): number {
+    if (!state.calculation) return 0;
+    return state.ledger.exportScope === 'selection'
+        ? (state.currentSelection?.visible.length ?? 0)
+        : state.calculation.results.length;
+}
+
 exportCsv.addEventListener('click', () => {
-    if (!state.calculation) return;
+    flushPendingSearch();
+    if (!exportReady() || !state.calculation) return;
+    if (state.calculation.validationErrors.length > 0 || exportCount() === 0) return;
+    const scope = state.ledger.exportScope;
+    const results = scope === 'selection' ? selectedResults() : undefined;
+
     download(
-        `rigging-diameters-${timestamp()}.csv`,
-        toCsv(state.calculation),
+        `rigging-diameters-${timestamp()}${exportSuffix()}.csv`,
+        toCsv(state.calculation, results),
         'text/csv;charset=utf-8',
     );
 });
 
 exportJson.addEventListener('click', () => {
-    if (!state.calculation || !state.settings) return;
+    flushPendingSearch();
+    if (!exportReady() || !state.calculation || !state.settings) return;
+    if (state.calculation.validationErrors.length > 0 || exportCount() === 0) return;
+    const scope = state.ledger.exportScope;
+    const results = scope === 'selection' ? selectedResults() : undefined;
+
     download(
-        `rigging-diameters-${timestamp()}.json`,
-        toProjectJson(state.calculation, state.settings),
+        `rigging-diameters-${timestamp()}${exportSuffix()}.json`,
+        toProjectJson(state.calculation, state.settings, undefined, {
+            results,
+            scope,
+            conditions: scope === 'selection' ? exportConditions() : [],
+        }),
         'application/json',
     );
+});
+
+exportScopeSelect.addEventListener('change', () => {
+    state.ledger = setExportScope(
+        state.ledger,
+        exportScopeSelect.value as ExportScope,
+    );
+    saveLedgerView();
+    updateExportAvailability();
 });
 
 loadPresetButton.addEventListener('click', () => presetFile.click());
@@ -2029,6 +2180,7 @@ form.addEventListener('change', (event) => {
 /* ------------------------------ ledger view ------------------------------- */
 
 function rerender(): void {
+    saveLedgerView();
     if (state.calculation) renderResults(state.calculation);
 }
 
@@ -2109,6 +2261,7 @@ function visibleNodeIds(): string[] {
 
 function setAllSectionsOpen(open: boolean): void {
     state.ledger = setAllSections(state.ledger, open, visibleNodeIds());
+    saveLedgerView();
     resultsList.querySelectorAll<HTMLDetailsElement>('.rig-node__details').forEach((details) => {
         details.open = open;
     });
@@ -2286,6 +2439,7 @@ resultsList.addEventListener(
                 target.open,
                 state.ledger.query.trim() !== '',
             );
+            saveLedgerView();
         }
     },
     true,
@@ -2387,10 +2541,12 @@ ropeWidget?.addEventListener('thread-select', (event) => {
     const detail = (event as CustomEvent<{ thread: ThreadMatch; targetMm: number }>).detail;
     if (!state.modalRowKey) return;
 
-    const pick = makeThreadPick(detail?.thread, detail?.targetMm);
+    const key = state.modalRowKey;
+    const row = state.rowsByKey.get(key);
+    const rowDiameterMm = row?.result.diameterModelMm ?? detail?.targetMm;
+    const pick = makeThreadPick(detail?.thread, detail?.targetMm, rowDiameterMm);
     if (!pick) return;
 
-    const key = state.modalRowKey;
     state.threadPicks.set(key, pick);
     closeRopeModal();
     rerender();
@@ -2446,6 +2602,8 @@ document.addEventListener('keydown', (event) => {
 
 /* --------------------------------- init ----------------------------------- */
 
+ledgerSearch.value = state.ledger.query;
+exportScopeSelect.value = state.ledger.exportScope;
 initDimState();
 setResultsState('idle');
 hideStale();

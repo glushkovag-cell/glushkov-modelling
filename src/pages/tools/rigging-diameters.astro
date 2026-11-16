@@ -722,6 +722,17 @@ const description =
           </div>
           <div class="rig-results__actions">
             <button class="rig-button rig-button--ghost" type="button" id="recalculate">Recalculate</button>
+            <label class="rig-export-scope">
+              <span>Rows</span>
+              <select
+                class="rig-select"
+                id="export-scope"
+                title="All rows includes hidden not-applicable rows. Current selection follows the ledger filters and search."
+              >
+                <option value="all">All rows</option>
+                <option value="selection">Current selection</option>
+              </select>
+            </label>
             <button class="rig-button rig-button--ghost" type="button" id="export-csv" disabled>Export CSV</button>
             <button class="rig-button rig-button--ghost" type="button" id="export-json" disabled>Export JSON</button>
           </div>
@@ -1421,7 +1432,27 @@ const description =
     .rig-results__actions {
         display: flex;
         flex-wrap: wrap;
+        align-items: flex-end;
         gap: 0.6rem;
+    }
+
+    .rig-export-scope {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        color: var(--color-text-muted);
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    .rig-export-scope .rig-select {
+        min-width: 156px;
+        min-height: 44px;
+        text-transform: none;
+        letter-spacing: normal;
+        font-weight: 500;
     }
 
     .rig-results__status {
@@ -1936,6 +1967,24 @@ const description =
         text-decoration: none;
     }
 
+    .rig-thread--review,
+    .rig-thread--review .rig-thread__label {
+        color: #b54708;
+    }
+
+    .rig-thread--review .rig-thread__meta {
+        color: #b54708;
+        font-weight: 700;
+    }
+
+    .rig-thread-review {
+        display: block;
+        margin: 5px 0;
+        color: #b54708;
+        font-size: 0.82rem;
+        line-height: 1.5;
+    }
+
     .rig-table-wrap {
         overflow-x: auto;
         border: 1px solid var(--color-border);
@@ -2430,6 +2479,18 @@ const description =
 
         .rig-summary {
             grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .rig-results__actions {
+            width: 100%;
+        }
+
+        .rig-export-scope {
+            flex: 1 1 100%;
+        }
+
+        .rig-export-scope .rig-select {
+            width: 100%;
         }
 
         .rig-ledger__toolbar {

@@ -56,10 +56,13 @@ function resultValue(result: RiggingResult, column: (typeof CSV_COLUMNS)[number]
     return result[column];
 }
 
-export function toCsv(calculation: Calculation): string {
+export function toCsv(
+    calculation: Calculation,
+    results: readonly RiggingResult[] = calculation.results,
+): string {
     const lines = [CSV_COLUMNS.join(',')];
 
-    for (const result of calculation.results) {
+    for (const result of results) {
         lines.push(
             CSV_COLUMNS.map((column) => csvCell(resultValue(result, column))).join(','),
         );
@@ -74,6 +77,15 @@ export type ExportedCalculation = Omit<Calculation, 'results'> & {
     results: ExportedResult[];
 };
 
+export type ExportScope = 'all' | 'selection';
+
+export interface ExportSelection {
+    scope: ExportScope;
+    rowCount: number;
+    totalRowCount: number;
+    conditions: string[];
+}
+
 export interface ProjectExport {
     exportedAt: string;
     profile: {
@@ -84,6 +96,14 @@ export interface ProjectExport {
     };
     settings: RiggingSettings;
     calculation: ExportedCalculation;
+    /** Присутствует только для экспорта текущей выборки. */
+    selection?: ExportSelection;
+}
+
+export interface ExportOptions {
+    results?: readonly RiggingResult[];
+    scope?: ExportScope;
+    conditions?: string[];
 }
 
 function withoutFormulas(result: RiggingResult): ExportedResult {
@@ -97,8 +117,11 @@ export function toProjectJson(
     calculation: Calculation,
     settings: RiggingSettings,
     exportedAt = new Date().toISOString(),
+    options: ExportOptions = {},
 ): string {
     const { results, ...meta } = calculation;
+    const exportedResults = options.results ?? results;
+    const scope = options.scope ?? 'all';
 
     const project: ProjectExport = {
         exportedAt,
@@ -111,9 +134,18 @@ export function toProjectJson(
         settings,
         calculation: {
             ...meta,
-            results: results.map(withoutFormulas),
+            results: exportedResults.map(withoutFormulas),
         },
     };
+
+    if (scope === 'selection') {
+        project.selection = {
+            scope,
+            rowCount: exportedResults.length,
+            totalRowCount: results.length,
+            conditions: options.conditions ?? [],
+        };
+    }
 
     return `${JSON.stringify(project, null, 2)}\n`;
 }
