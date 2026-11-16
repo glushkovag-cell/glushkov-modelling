@@ -812,10 +812,10 @@ const description =
             <div class="rig-control-block">
               <span class="rig-control-label" id="ledger-grouping-label">Grouping</span>
               <div class="rig-segmented" role="group" aria-labelledby="ledger-grouping-label">
-                <button class="rig-segmented__button" type="button" id="ledger-mode-grouped" data-mode="grouped" aria-pressed="true">Grouped</button>
+                <button class="rig-segmented__button" type="button" id="ledger-mode-grouped" data-mode="grouped" aria-pressed="true">By node</button>
                 <button class="rig-segmented__button" type="button" id="ledger-mode-flat" data-mode="flat" aria-pressed="false">Flat table</button>
               </div>
-              <span class="rig-control-meta" id="ledger-grouping-meta">Node → tier → type</span>
+              <span class="rig-control-meta" id="ledger-grouping-meta">Tiers and types as subheadings</span>
             </div>
           </div>
 
@@ -1676,6 +1676,19 @@ const description =
         gap: 8px;
     }
 
+    .rig-ledger__filters-toggle[aria-expanded="true"] {
+        border-color: var(--color-primary);
+        background: var(--color-primary-highlight);
+        color: var(--color-text);
+        box-shadow: inset 0 0 0 1px var(--color-primary);
+    }
+
+    .rig-ledger__filters:not([hidden]) {
+        border-color: var(--color-primary);
+        background: color-mix(in srgb, var(--color-primary-highlight) 45%, var(--color-surface));
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 22%, transparent);
+    }
+
     .rig-ledger__badge {
         min-width: 18px;
         padding: 1px 6px;
@@ -1852,7 +1865,7 @@ const description =
 
     .rig-ledger__head {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 92px 86px 104px minmax(120px, 150px);
+        grid-template-columns: minmax(0, 1fr) 92px 86px 104px minmax(120px, 150px) 84px;
         gap: 12px;
         padding: 0 33px 4px;
         color: var(--color-text-faint);
@@ -1862,7 +1875,8 @@ const description =
         text-transform: uppercase;
     }
 
-    .rig-ledger__head span:nth-child(2) {
+    .rig-ledger__head span:nth-child(2),
+    .rig-ledger__head span:nth-child(6) {
         text-align: right;
     }
 
@@ -2124,13 +2138,13 @@ const description =
         margin: 0;
     }
 
-    .rig-table__expand {
+    .rig-details-toggle {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         min-width: 34px;
         min-height: 34px;
-        padding: 0 8px;
+        padding: 0 10px;
         border: 1px solid var(--color-border);
         border-radius: var(--radius-sm);
         background: var(--color-surface);
@@ -2141,12 +2155,12 @@ const description =
         cursor: pointer;
     }
 
-    .rig-table__expand:hover {
+    .rig-details-toggle:hover {
         border-color: var(--color-primary);
         background: var(--color-primary-highlight);
     }
 
-    .rig-table__expand:focus-visible {
+    .rig-details-toggle:focus-visible {
         outline: 2px solid var(--color-primary);
         outline-offset: 2px;
     }
@@ -2158,28 +2172,21 @@ const description =
         overflow: hidden;
     }
 
-    .rig-row[open] {
+    .rig-row:has(.rig-details-toggle[aria-expanded="true"]) {
         border-color: var(--color-primary);
     }
 
     .rig-row__summary {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 92px 86px 104px minmax(120px, 150px);
+        grid-template-columns: minmax(0, 1fr) 92px 86px 104px minmax(120px, 150px) 84px;
         gap: 8px 12px;
         align-items: center;
         padding: 12px 16px;
         font-size: 0.92rem;
-        list-style: none;
-        cursor: pointer;
     }
 
-    .rig-row__summary::-webkit-details-marker {
-        display: none;
-    }
-
-    .rig-row__summary:focus-visible {
-        outline: 2px solid var(--color-primary);
-        outline-offset: -2px;
+    .rig-row__details {
+        justify-self: end;
     }
 
     .rig-row__identity {
@@ -2427,7 +2434,8 @@ const description =
             grid-template-areas:
                 "identity identity"
                 "diameter material"
-                "status thread";
+                "status thread"
+                "details details";
             align-items: start;
             gap: 6px 10px;
         }
@@ -2437,6 +2445,8 @@ const description =
         .rig-row__summary > .rig-row__material { grid-area: material; justify-self: end; }
         .rig-row__summary > .rig-row__badge { grid-area: status; justify-self: start; }
         .rig-row__summary > .rig-row__thread { grid-area: thread; justify-self: end; }
+        .rig-row__summary > .rig-row__details { grid-area: details; justify-self: stretch; }
+        .rig-row__details .rig-details-toggle { width: 100%; }
 
         .rig-table-wrap {
             overflow: visible;
@@ -2517,7 +2527,7 @@ const description =
             display: none;
         }
 
-        .rig-table__expand {
+        .rig-table .rig-details-toggle {
             width: 100%;
         }
 

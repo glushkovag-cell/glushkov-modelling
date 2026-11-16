@@ -44,7 +44,6 @@ import {
     groupedLedger,
     hasActiveConditions,
     highlightSegments,
-    isSectionOpen,
     nodeLabel,
     selectLedgerRows,
     sortLedgerRows,
@@ -797,6 +796,7 @@ const state = {
     settings: null as RiggingSettings | null,
     ledgerRows: [] as LedgerRow[],
     ledger: (loadLedgerState(ledgerStorage) ?? initialLedgerState()) as LedgerState,
+    searchExpansion: 'auto' as 'auto' | 'expanded' | 'collapsed',
     currentSelection: null as LedgerSelection | null,
     facets: null as LedgerFacets | null,
     optionsSignature: '',
@@ -1312,12 +1312,12 @@ function buildDetailsBody(result: RiggingResult, row: LedgerRow): HTMLDListEleme
 
 function createRow(row: LedgerRow, tokens: string[], showContext: boolean): HTMLElement {
     const result = row.result;
-    const details = el('details', 'rig-row');
-    details.dataset.status = result.status;
-    details.dataset.group = result.group;
-    details.dataset.key = row.key;
+    const container = el('div', 'rig-row');
+    container.dataset.status = result.status;
+    container.dataset.group = result.group;
+    container.dataset.key = row.key;
 
-    const summaryEl = el('summary', 'rig-row__summary');
+    const summaryEl = el('div', 'rig-row__summary');
 
     const identity = el('span', 'rig-row__identity');
     const name = el('span', 'rig-row__name');
@@ -1347,13 +1347,37 @@ function createRow(row: LedgerRow, tokens: string[], showContext: boolean): HTML
     const thread = el('span', 'rig-row__thread');
     thread.appendChild(threadControl(row));
 
-    summaryEl.append(identity, diameter, material, badge, thread);
+    const detailsCell = el('span', 'rig-row__details');
+    const bodyId = `rig-row-body-${row.order}`;
+    const toggle = el('button', 'rig-button rig-button--ghost rig-details-toggle');
+    toggle.type = 'button';
+    toggle.textContent = 'Details';
+    toggle.dataset.action = 'toggle-grouped-details';
+    toggle.dataset.key = row.key;
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-controls', bodyId);
+    toggle.dataset.detailContext = `${result.nameEn} — ${rowContext(row)}`;
+    toggle.setAttribute('aria-label', `Details for ${toggle.dataset.detailContext}`);
+    detailsCell.appendChild(toggle);
+
+    summaryEl.append(identity, diameter, material, badge, thread, detailsCell);
 
     const body = el('div', 'rig-row__body');
+    body.id = bodyId;
     body.dataset.built = 'false';
+    body.hidden = true;
 
-    details.append(summaryEl, body);
-    return details;
+    container.append(summaryEl, body);
+    return container;
+}
+
+function sectionIsOpen(nodeId: string, selection: LedgerSelection): boolean {
+    if (state.ledger.query.trim() === '') {
+        return !state.ledger.collapsedNodes.has(nodeId);
+    }
+    if (state.searchExpansion === 'expanded') return true;
+    if (state.searchExpansion === 'collapsed') return false;
+    return selection.matchingNodes.has(nodeId);
 }
 
 function createGroupedSection(
@@ -1366,12 +1390,7 @@ function createGroupedSection(
 
     const details = el('details', 'rig-node__details');
     details.dataset.node = section.nodeId;
-    details.open = isSectionOpen(
-        state.ledger.collapsedNodes,
-        section.nodeId,
-        state.ledger.query,
-        selection.matchingNodes,
-    );
+    details.open = sectionIsOpen(section.nodeId, selection);
 
     const summaryEl = el('summary', 'rig-node__summary');
     const title = el('span', 'rig-node__title');
@@ -1502,7 +1521,12 @@ function createFlatTable(selection: LedgerSelection): HTMLElement {
         const detailsCell = el('td');
         detailsCell.dataset.label = 'Details';
         const detailsId = `rig-flat-details-${index}`;
-        const toggle = actionButton('Details', 'toggle-details', row.key, 'rig-table__expand');
+        const toggle = actionButton(
+            'Details',
+            'toggle-details',
+            row.key,
+            'rig-button rig-button--ghost rig-details-toggle',
+        );
         toggle.setAttribute('aria-expanded', 'false');
         toggle.setAttribute('aria-controls', detailsId);
         toggle.setAttribute(
@@ -1725,13 +1749,9 @@ function renderLedgerToolbar(
     sortMeta.textContent =
         state.ledger.mode === 'grouped' ? 'Within each group' : 'Whole table';
     groupingMeta.textContent =
-        state.ledger.mode === 'grouped' ? 'Node → tier → type' : 'One table';
-
-    const queryActive = state.ledger.query.trim() !== '';
-    expandAllButton.disabled = queryActive;
-    collapseAllButton.disabled = queryActive;
-    expandAllButton.title = queryActive ? 'Collapse and expand are paused while search is active.' : '';
-    collapseAllButton.title = expandAllButton.title;
+        state.ledger.mode === 'grouped'
+            ? 'Tiers and types as subheadings'
+            : 'No grouping';
 
     const total = selection.totalM;
     ledgerCount.textContent =
@@ -1782,10 +1802,10 @@ function renderResults(calc: Calculation): void {
     const sections = groupedLedger(selection.visible, state.ledger.sort);
     groupedToolbar.hidden = false;
     groupedMeta.textContent =
-        `Grouped by node · ${sections.length} ${sections.length === 1 ? 'section' : 'sections'}`;
+        `${sections.length} ${sections.length === 1 ? 'node group' : 'node groups'}`;
 
     const head = el('div', 'rig-ledger__head');
-    for (const label of ['Rope', 'Model Ø', 'Material', 'Status', 'Thread']) {
+    for (const label of ['Rope', 'Model Ø', 'Material', 'Status', 'Thread', 'Details']) {
         const cell = el('span');
         cell.textContent = label;
         head.appendChild(cell);
@@ -2055,6 +2075,7 @@ function exportSuffix(): string {
 function flushPendingSearch(): void {
     if (ledgerSearch.value === state.ledger.query) return;
     window.clearTimeout(searchTimer);
+    state.searchExpansion = 'auto';
     state.ledger = setQuery(state.ledger, ledgerSearch.value);
     saveLedgerView();
     if (state.calculation) renderResults(state.calculation);
@@ -2217,6 +2238,7 @@ ledgerSearch.addEventListener('input', () => {
     window.clearTimeout(searchTimer);
     searchTimer = window.setTimeout(() => {
         state.notice = null;
+        state.searchExpansion = 'auto';
         state.ledger = setQuery(state.ledger, ledgerSearch.value);
         rerender();
     }, 140);
@@ -2293,8 +2315,15 @@ function visibleNodeIds(): string[] {
 }
 
 function setAllSectionsOpen(open: boolean): void {
-    state.ledger = setAllSections(state.ledger, open, visibleNodeIds());
-    saveLedgerView();
+    if (state.ledger.query.trim() !== '') {
+        // Во время поиска это временное состояние просмотра: очистка поиска
+        // возвращает прежнюю раскладку секций.
+        state.searchExpansion = open ? 'expanded' : 'collapsed';
+    } else {
+        state.searchExpansion = 'auto';
+        state.ledger = setAllSections(state.ledger, open, visibleNodeIds());
+        saveLedgerView();
+    }
     resultsList.querySelectorAll<HTMLDetailsElement>('.rig-node__details').forEach((details) => {
         details.open = open;
     });
@@ -2342,6 +2371,7 @@ calculationRetry.addEventListener('click', () => {
 
 function clearAll(focusSearch: boolean): void {
     state.notice = null;
+    state.searchExpansion = 'auto';
     state.ledger = clearFilters(state.ledger);
     ledgerSearch.value = '';
     rerender();
@@ -2361,6 +2391,7 @@ ledgerActive.addEventListener('click', (event) => {
 
     if (kind === 'query') {
         ledgerSearch.value = '';
+        state.searchExpansion = 'auto';
         state.ledger = setQuery(state.ledger, '');
     } else if (kind === 'node') {
         state.ledger = setNode(state.ledger, 'all', state.ledgerRows).state;
@@ -2382,16 +2413,40 @@ ledgerActive.addEventListener('click', (event) => {
     next.focus();
 });
 
-function populateRowDetails(details: HTMLDetailsElement): void {
-    const key = details.dataset.key;
-    const body = details.querySelector<HTMLElement>('.rig-row__body');
-    if (!key || !body || body.dataset.built === 'true') return;
+function toggleGroupedDetails(button: HTMLButtonElement): void {
+    const id = button.getAttribute('aria-controls');
+    if (!id) return;
+    const body = document.getElementById(id);
+    if (!body) return;
 
-    const row = state.rowsByKey.get(key);
-    if (!row) return;
+    const key = button.dataset.key;
+    const row = key ? state.rowsByKey.get(key) : undefined;
 
-    body.appendChild(buildDetailsBody(row.result, row));
-    body.dataset.built = 'true';
+    if (body.hidden) {
+        if (row && body.dataset.built !== 'true') {
+            body.appendChild(buildDetailsBody(row.result, row));
+            body.dataset.built = 'true';
+        }
+        body.hidden = false;
+        button.setAttribute('aria-expanded', 'true');
+        button.textContent = 'Hide';
+        if (button.dataset.detailContext) {
+            button.setAttribute(
+                'aria-label',
+                `Hide details for ${button.dataset.detailContext}`,
+            );
+        }
+    } else {
+        body.hidden = true;
+        button.setAttribute('aria-expanded', 'false');
+        button.textContent = 'Details';
+        if (button.dataset.detailContext) {
+            button.setAttribute(
+                'aria-label',
+                `Details for ${button.dataset.detailContext}`,
+            );
+        }
+    }
 }
 
 function toggleFlatDetails(button: HTMLButtonElement): void {
@@ -2438,6 +2493,11 @@ resultsList.addEventListener('click', (event) => {
         return;
     }
 
+    if (action === 'toggle-grouped-details') {
+        toggleGroupedDetails(actionEl as HTMLButtonElement);
+        return;
+    }
+
     if (action === 'clear-filters') {
         clearAll(true);
         return;
@@ -2457,11 +2517,6 @@ resultsList.addEventListener(
     (event) => {
         const target = event.target;
         if (!(target instanceof HTMLDetailsElement)) return;
-
-        if (target.classList.contains('rig-row')) {
-            if (target.open) populateRowDetails(target);
-            return;
-        }
 
         if (target.classList.contains('rig-node__details')) {
             const nodeId = target.dataset.node ?? '';
