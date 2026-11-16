@@ -1,4 +1,4 @@
-import type { CatalogResponse, ForwardBody, ReverseResponse } from './api';
+import type { CatalogResponse, ForwardBody, ReverseMatch, ReverseResponse } from './api';
 import { ApiError, fetchCatalog, isAbortError, postForward, postReverse } from './api';
 import {
   formatConstruction,
@@ -150,6 +150,7 @@ const template = `
             <th scope="col">Construction</th>
             <th scope="col">Diameter (mm)</th>
             <th scope="col">Deviation</th>
+            <th scope="col" data-select-column hidden>Use</th>
           </tr>
         </thead>
         <tbody data-results></tbody>
@@ -172,7 +173,7 @@ const template = `
  * работает в светлой и тёмной теме и вне сайта (за счёт fallback-значений).
  */
 export class RopeCalculatorElement extends HTMLElement {
-  static observedAttributes = ['api-base'];
+  static observedAttributes = ['api-base', 'selectable'];
 
   #root: ShadowRoot;
   #apiBase = DEFAULT_API_BASE;
@@ -199,6 +200,7 @@ export class RopeCalculatorElement extends HTMLElement {
   #results: HTMLElement;
 
   #catalog: CatalogResponse['threads'] | null = null;
+  #lastReverse: ReverseResponse | null = null;
   #catalogLoading = false;
   #initialRunDone = false;
   #listenersBound = false;
@@ -271,12 +273,20 @@ export class RopeCalculatorElement extends HTMLElement {
   }
 
   attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
-    if (name !== 'api-base' || oldValue === newValue) return;
+    if (oldValue === newValue) return;
+
+    if (name === 'selectable') {
+      if (this.#lastReverse) this.#renderReverse(this.#lastReverse);
+      return;
+    }
+
+    if (name !== 'api-base') return;
 
     this.#apiBase = (newValue ?? '').trim() || DEFAULT_API_BASE;
     if (!this.isConnected) return;
 
     this.#catalog = null;
+    this.#lastReverse = null;
     this.#initialRunDone = false;
     this.#catalogOption.disabled = false;
     this.#reverseOption.disabled = false;
@@ -601,7 +611,30 @@ export class RopeCalculatorElement extends HTMLElement {
     }
   }
 
+  #isSelectable(): boolean {
+    return this.hasAttribute('selectable');
+  }
+
+  #selectThread(match: ReverseMatch): void {
+    const targetMm = Number(this.#target.value.trim().replace(',', '.'));
+    if (!Number.isFinite(targetMm) || targetMm <= 0) return;
+
+    this.dispatchEvent(
+      new CustomEvent('thread-select', {
+        bubbles: true,
+        composed: true,
+        detail: { thread: { ...match }, targetMm },
+      }),
+    );
+  }
+
   #renderReverse(response: ReverseResponse): void {
+    this.#lastReverse = response;
+
+    const selectable = this.#isSelectable();
+    const selectHeader = this.#root.querySelector<HTMLElement>('[data-select-column]');
+    if (selectHeader) selectHeader.hidden = !selectable;
+
     const rows = response.results.map((match) => {
       const row = document.createElement('tr');
       const cells = [
@@ -616,6 +649,21 @@ export class RopeCalculatorElement extends HTMLElement {
       for (const value of cells) {
         const cell = document.createElement('td');
         cell.textContent = value;
+        row.appendChild(cell);
+      }
+
+      if (selectable) {
+        const cell = document.createElement('td');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'rc-use';
+        button.textContent = 'Use';
+        button.setAttribute(
+          'aria-label',
+          `Use ${match.brand} ${match.number} for this rope`,
+        );
+        button.addEventListener('click', () => this.#selectThread(match));
+        cell.appendChild(button);
         row.appendChild(cell);
       }
 

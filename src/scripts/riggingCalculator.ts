@@ -14,7 +14,7 @@ import {
     type SailNodeKind,
 } from '../lib/rigging/settings.ts';
 import { toCsv, toProjectJson } from '../lib/rigging/export.ts';
-import { formatDiameter } from '../lib/rigging/format.ts';
+import { formatDiameter, formatMm } from '../lib/rigging/format.ts';
 import { sailSelectable, tierAvailability } from '../lib/rigging/formRules.ts';
 import { parsePresetJson } from '../lib/rigging/preset.ts';
 import {
@@ -31,14 +31,55 @@ import {
     MEASUREMENT_POINT_LABELS,
     ORIGIN_LABELS,
     ORIGIN_SHORT_LABELS,
-    OWNER_LABELS,
-    OWNER_ORDER,
     REASON_LABELS,
     SAIL_CLASSES,
     STATUS_LABELS,
     TIER_LABELS,
 } from '../lib/rigging/profile.ts';
 import type { ProfileUi } from '../lib/rigging/document.ts';
+import {
+    activeConditions,
+    buildFacets,
+    buildLedgerRows,
+    groupedLedger,
+    hasActiveConditions,
+    highlightSegments,
+    isSectionOpen,
+    nodeLabel,
+    selectLedgerRows,
+    sortLedgerRows,
+    type LedgerFacets,
+    type LedgerNodeSection,
+    type LedgerRow,
+    type LedgerSelection,
+    type LedgerSort,
+    type LedgerType,
+} from '../lib/rigging/ledgerView.ts';
+import {
+    clearFilters,
+    initialLedgerState,
+    reconcileState,
+    setAllSections,
+    setMode,
+    setNode,
+    setQuery,
+    setSectionOpen,
+    setShowNotApplicable,
+    setSort,
+    setStatus,
+    setTier,
+    setType,
+    tierFilterDisabled,
+    tierFilterNote,
+    type LedgerState,
+} from '../lib/rigging/ledgerState.ts';
+import {
+    makeThreadPick,
+    threadPickDetails,
+    threadPickLabel,
+    type ThreadMatch,
+    type ThreadPick,
+} from '../lib/rigging/threadPick.ts';
 import type {
     AnchorConnection,
     Basis,
@@ -48,7 +89,6 @@ import type {
     Measurement,
     MeasurementPointId,
     MountingType,
-    ResultGroup,
     ResultStatus,
     RiggingResult,
     SailClass,
@@ -71,8 +111,6 @@ const API_BASE = (() => {
     const override = new URLSearchParams(window.location.search).get('api');
     return (override?.trim() || DEFAULT_API_BASE).replace(/\/+$/, '');
 })();
-
-type GroupFilter = 'all' | ResultGroup;
 
 interface ProfileCardData {
     profileId: string;
@@ -128,13 +166,6 @@ function checked(id: string): boolean {
     const element = document.getElementById(id) as HTMLInputElement | null;
     return element ? element.checked : false;
 }
-
-function isRussianLocale(): boolean {
-    const navigatorLang = (navigator.language || '').toLowerCase();
-    return navigatorLang.startsWith('ru');
-}
-
-const SHOW_RUSSIAN_NAMES = isRussianLocale();
 
 function readNumberOrNull(id: string): number | null {
     const raw = input(id).value.trim().replace(',', '.');
@@ -739,8 +770,15 @@ function syncDisabled(): void {
 const state = {
     calculation: null as Calculation | null,
     settings: null as RiggingSettings | null,
-    activeGroup: 'all' as GroupFilter,
-    showNotApplicable: false,
+    ledgerRows: [] as LedgerRow[],
+    ledger: initialLedgerState() as LedgerState,
+    facets: null as LedgerFacets | null,
+    optionsSignature: '',
+    threadPicks: new Map<string, ThreadPick>(),
+    rowsByKey: new Map<string, LedgerRow>(),
+    modalRowKey: null as string | null,
+    lastFocused: null as HTMLElement | null,
+    notice: null as string | null,
     dirty: false,
     formVersion: 0,
     requestSeq: 0,
@@ -765,6 +803,27 @@ const loadPresetButton = byId<HTMLButtonElement>('load-preset');
 const presetFile = byId<HTMLInputElement>('preset-file');
 const ropeModal = byId('rope-modal');
 const ropeModalTarget = byId('rope-modal-target');
+const ropeWidget = ropeModal.querySelector('gm-rope-calculator') as HTMLElement | null;
+const ledgerSearch = input('ledger-search');
+const ledgerCount = byId('ledger-count');
+const filtersToggle = byId<HTMLButtonElement>('ledger-filters-toggle');
+const filtersPanel = byId('ledger-filters');
+const filterNode = select('filter-node');
+const filterTier = select('filter-tier');
+const filterType = select('filter-type');
+const filterStatus = select('filter-status');
+const filterBadge = byId('ledger-filter-badge');
+const tierDisabledNote = byId('tier-disabled-note');
+const clearFiltersButton = byId<HTMLButtonElement>('clear-filters');
+const ledgerActive = byId('ledger-active');
+const ledgerNotice = byId('ledger-notice');
+const modeGrouped = byId<HTMLButtonElement>('ledger-mode-grouped');
+const modeFlat = byId<HTMLButtonElement>('ledger-mode-flat');
+const sortSelect = select('ledger-sort');
+const expandAllButton = byId<HTMLButtonElement>('expand-all');
+const collapseAllButton = byId<HTMLButtonElement>('collapse-all');
+const ledgerExpand = byId('ledger-expand');
+const recalculateButton = byId<HTMLButtonElement>('recalculate');
 
 const FIELD_TO_ID: Record<string, string> = {
     scaleDenominator: 'scale',
@@ -804,15 +863,15 @@ function renderErrors(errors: Calculation['validationErrors']): void {
     form.focus();
 }
 
-function tierLabel(tier: Tier | undefined): string {
-    if (!tier) return '';
-    return TIER_LABELS[tier].en;
+function tierLabel(tier: Tier | null): string {
+    return tier ? TIER_LABELS[tier].en : 'No tier';
 }
 
-function metaLabel(result: RiggingResult): string {
-    const group = GROUP_LABELS[result.group];
-    const tier = tierLabel(result.tier);
-    return tier ? `${group} · ${tier}` : group;
+function rowContext(row: LedgerRow): string {
+    const parts = [nodeLabel(row.nodeId)];
+    if (row.nodeKind === 'mast') parts.push(tierLabel(row.tier));
+    if (row.type) parts.push(GROUP_LABELS[row.type]);
+    return parts.join(' · ');
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -838,12 +897,90 @@ function definitionText(dl: HTMLDListElement, term: string, text: string | null)
     dl.appendChild(dd);
 }
 
-function buildDetailsBody(result: RiggingResult): HTMLDListElement {
-    const dl = el('dl', 'rig-details');
+function actionButton(
+    label: string,
+    action: string,
+    key: string | null = null,
+    className = 'rig-link',
+): HTMLButtonElement {
+    const button = el('button', className);
+    button.type = 'button';
+    button.dataset.action = action;
+    if (key !== null) button.dataset.key = key;
+    button.textContent = label;
+    return button;
+}
 
+function appendHighlighted(container: HTMLElement, text: string, tokens: string[]): void {
+    for (const segment of highlightSegments(text, tokens)) {
+        if (!segment.match) {
+            container.appendChild(document.createTextNode(segment.text));
+            continue;
+        }
+        const mark = el('mark', 'rig-mark');
+        mark.textContent = segment.text;
+        container.appendChild(mark);
+    }
+}
+
+function statusBadge(status: ResultStatus, withLabel = true): HTMLElement {
+    const badge = el('span', `rig-row__badge rig-row__badge--${status}`);
+    badge.textContent = STATUS_LABELS[status];
+    if (withLabel) {
+        const badgeLabel = el('span', 'rig-sr-only');
+        badgeLabel.textContent = 'Status: ';
+        badge.prepend(badgeLabel);
+    }
+    return badge;
+}
+
+function threadControl(row: LedgerRow): HTMLElement {
+    const pick = state.threadPicks.get(row.key);
+    const button = el('button', 'rig-thread');
+    button.type = 'button';
+    button.dataset.action = 'pick-thread';
+    button.dataset.key = row.key;
+
+    if (pick) {
+        button.classList.add('rig-thread--picked');
+        const label = el('span', 'rig-thread__label');
+        label.textContent = threadPickLabel(pick);
+        const meta = el('span', 'rig-thread__meta');
+        meta.textContent = `Ø ${pick.diameterMm.toFixed(3)} mm`;
+        button.append(label, meta);
+        button.title = threadPickDetails(pick);
+        button.setAttribute(
+            'aria-label',
+            `Change thread for ${row.result.nameEn}: ${threadPickLabel(pick)}, ${threadPickDetails(pick)}`,
+        );
+    } else {
+        const label = el('span', 'rig-thread__label');
+        label.textContent = 'Pick thread';
+        button.appendChild(label);
+        button.setAttribute('aria-label', `Pick a model thread for ${row.result.nameEn}`);
+    }
+
+    return button;
+}
+
+function buildDetailsBody(result: RiggingResult, row: LedgerRow): HTMLDListElement {
+    const dl = el('dl', 'rig-details');
+    const pick = state.threadPicks.get(row.key);
+
+    definitionText(dl, 'Node', nodeLabel(result.ownerId));
+    definitionText(
+        dl,
+        'Tier',
+        result.tier ? TIER_LABELS[result.tier].en : row.nodeKind === 'mast' ? 'No tier' : '—',
+    );
+    definitionText(dl, 'Rigging type', row.type ? GROUP_LABELS[row.type] : '—');
     definitionText(dl, 'Formula', result.formula);
     definitionText(dl, 'Base reference', result.referenceLabel);
     definitionText(dl, 'Coefficient', result.factorLabel);
+    if (result.variant) definitionText(dl, 'Variant', result.variant);
+    if (result.alternativeGroupId) {
+        definitionText(dl, 'Alternative group', result.alternativeGroupId);
+    }
     definitionText(
         dl,
         'Origin',
@@ -857,6 +994,11 @@ function buildDetailsBody(result: RiggingResult): HTMLDListElement {
             ? (MEASUREMENT_POINT_LABELS[result.measurementPointId] ?? result.measurementPointId)
             : null,
     );
+    definitionText(
+        dl,
+        'Prototype Ø',
+        result.diameterPrototypeMm === null ? null : formatMm(result.diameterPrototypeMm, 3),
+    );
     definitionText(dl, 'Profile', `${result.profileId} v${result.profileVersion}`);
     definitionText(
         dl,
@@ -865,6 +1007,27 @@ function buildDetailsBody(result: RiggingResult): HTMLDListElement {
             ? `${result.sourceIds.join(', ')}${result.sourceLocator ? ` · ${result.sourceLocator}` : ''}`
             : null,
     );
+
+    definitionTerm(dl, 'Thread');
+    const threadDef = el('dd', 'rig-details__def');
+    if (pick) {
+        threadDef.append(
+            document.createTextNode(`${threadPickLabel(pick)} — ${threadPickDetails(pick)}`),
+            el('br'),
+            actionButton('Change thread', 'pick-thread', row.key),
+        );
+    } else if (result.status === 'calculated' && result.diameterModelMm !== null) {
+        threadDef.appendChild(
+            actionButton(
+                `Find a model rope for Ø ${result.diameterModelMm.toFixed(3)} mm`,
+                'pick-thread',
+                row.key,
+            ),
+        );
+    } else {
+        threadDef.textContent = '—';
+    }
+    dl.appendChild(threadDef);
 
     if (result.status !== 'calculated' && result.reasonCode) {
         definitionText(dl, 'Status', REASON_LABELS[result.reasonCode]);
@@ -877,20 +1040,6 @@ function buildDetailsBody(result: RiggingResult): HTMLDListElement {
             (measurementId) => MEASUREMENT_LABELS[measurementId] ?? measurementId,
         );
         dd.textContent = items.join('; ');
-        dl.appendChild(dd);
-    }
-
-    if (result.status === 'calculated' && result.diameterModelMm !== null) {
-        definitionTerm(dl, 'Choose material');
-        const dd = el('dd', 'rig-details__def');
-        const target = result.diameterModelMm.toFixed(3);
-        const button = el('button', 'rig-link');
-        button.type = 'button';
-        button.textContent = `Find a model rope for Ø ${target} mm`;
-        button.addEventListener('click', () => {
-            openRopeModal(result.diameterModelMm);
-        });
-        dd.appendChild(button);
         dl.appendChild(dd);
     }
 
@@ -913,104 +1062,441 @@ function buildDetailsBody(result: RiggingResult): HTMLDListElement {
     return dl;
 }
 
-function createRow(result: RiggingResult): HTMLElement {
+function createRow(row: LedgerRow, tokens: string[], showContext: boolean): HTMLElement {
+    const result = row.result;
     const details = el('details', 'rig-row');
     details.dataset.status = result.status;
     details.dataset.group = result.group;
+    details.dataset.key = row.key;
 
     const summaryEl = el('summary', 'rig-row__summary');
 
     const identity = el('span', 'rig-row__identity');
     const name = el('span', 'rig-row__name');
-    name.textContent = result.nameEn;
-    identity.append(name);
-
-    if (SHOW_RUSSIAN_NAMES) {
-        const nameRu = el('span', 'rig-row__ru');
-        nameRu.textContent = result.nameRu;
-        identity.append(nameRu);
-    }
-
-    const meta = el('span', 'rig-row__meta');
-    meta.textContent = metaLabel(result);
-    const material = el('span', 'rig-row__material');
-    material.textContent = MATERIAL_LABELS[result.material];
-    meta.appendChild(material);
-    if (result.status === 'calculated') {
-        const basis = el('span', `rig-row__basis rig-row__basis--${result.coefficientBasis}`);
-        basis.textContent = ORIGIN_SHORT_LABELS[result.coefficientBasis];
-        basis.title = ORIGIN_LABELS[result.coefficientBasis];
-        meta.appendChild(basis);
+    appendHighlighted(name, result.nameEn, tokens);
+    const nameRu = el('span', 'rig-row__ru');
+    appendHighlighted(nameRu, result.nameRu, tokens);
+    identity.append(name, nameRu);
+    if (showContext) {
+        const context = el('span', 'rig-row__context');
+        context.textContent = rowContext(row);
+        identity.appendChild(context);
     }
 
     const diameter = el('span', 'rig-row__diameter');
-    diameter.textContent = formatDiameter(result.diameterModelMm);
+    const diameterLabel = el('span', 'rig-sr-only');
+    diameterLabel.textContent = 'Model diameter: ';
+    diameter.append(diameterLabel, document.createTextNode(formatDiameter(result.diameterModelMm)));
 
-    const badge = el('span', `rig-row__badge rig-row__badge--${result.status}`);
-    badge.textContent = STATUS_LABELS[result.status];
+    const material = el('span', 'rig-row__material');
+    const materialLabel = el('span', 'rig-sr-only');
+    materialLabel.textContent = 'Material: ';
+    material.append(materialLabel, document.createTextNode(MATERIAL_LABELS[result.material]));
 
-    summaryEl.append(identity, meta, diameter, badge);
+    const badge = statusBadge(result.status, true);
+    const thread = el('span', 'rig-row__thread');
+    thread.appendChild(threadControl(row));
+
+    summaryEl.append(identity, diameter, material, badge, thread);
 
     const body = el('div', 'rig-row__body');
-    body.appendChild(buildDetailsBody(result));
+    body.dataset.built = 'false';
 
     details.append(summaryEl, body);
     return details;
 }
 
-function ownerHeading(ownerId: string): string {
-    return OWNER_LABELS[ownerId] ?? ownerId;
+function createGroupedSection(
+    section: LedgerNodeSection,
+    tokens: string[],
+    selection: LedgerSelection,
+): HTMLElement {
+    const wrapper = el('section', 'rig-node');
+    wrapper.dataset.node = section.nodeId;
+
+    const details = el('details', 'rig-node__details');
+    details.dataset.node = section.nodeId;
+    details.open = isSectionOpen(
+        state.ledger.collapsedNodes,
+        section.nodeId,
+        state.ledger.query,
+        selection.matchingNodes,
+    );
+
+    const summaryEl = el('summary', 'rig-node__summary');
+    const title = el('span', 'rig-node__title');
+    title.setAttribute('role', 'heading');
+    title.setAttribute('aria-level', '3');
+    title.textContent = section.label;
+    const meta = el('span', 'rig-node__meta');
+    const tierCount = section.tiers.filter((tier) => tier.tier !== null).length;
+    meta.textContent =
+        `${section.count} ${section.count === 1 ? 'row' : 'rows'}` +
+        (tierCount > 0 ? ` · ${tierCount} ${tierCount === 1 ? 'tier' : 'tiers'}` : '');
+    summaryEl.append(title, meta);
+
+    const body = el('div', 'rig-node__body');
+    const showContext = state.ledger.query.trim() !== '';
+
+    for (const tier of section.tiers) {
+        const tierEl = el('section', 'rig-tier');
+        if (tier.label) {
+            const heading = el('h4', 'rig-tier__title');
+            const headingText = el('span');
+            headingText.textContent = tier.label;
+            const count = el('span', 'rig-tier__count');
+            count.textContent = `${tier.count} ${tier.count === 1 ? 'row' : 'rows'}`;
+            heading.append(headingText, count);
+            tierEl.appendChild(heading);
+        }
+
+        for (const type of tier.types) {
+            const typeEl = el('section', 'rig-type');
+            if (type.label) {
+                const heading = el('h5', 'rig-type__title');
+                heading.textContent = type.label;
+                typeEl.appendChild(heading);
+            }
+
+            const rowsEl = el('div', 'rig-type__rows');
+            for (const row of type.rows) {
+                rowsEl.appendChild(createRow(row, tokens, showContext));
+            }
+            typeEl.appendChild(rowsEl);
+            tierEl.appendChild(typeEl);
+        }
+
+        body.appendChild(tierEl);
+    }
+
+    details.append(summaryEl, body);
+    wrapper.appendChild(details);
+    return wrapper;
 }
 
-function renderResults(calc: Calculation): void {
-    resultsList.replaceChildren();
+function createFlatTable(selection: LedgerSelection): HTMLElement {
+    const tokens = selection.tokens;
+    const rows = sortLedgerRows(selection.visible, state.ledger.sort);
 
-    const visible = calc.results.filter((result) => {
-        if (state.activeGroup !== 'all' && result.group !== state.activeGroup) return false;
-        if (result.status === 'not_applicable' && !state.showNotApplicable) return false;
-        return true;
+    const wrap = el('div', 'rig-table-wrap');
+    const table = el('table', 'rig-table');
+    const caption = el('caption', 'rig-sr-only');
+    caption.textContent = 'Rigging ledger';
+    table.appendChild(caption);
+
+    const thead = el('thead');
+    const headRow = el('tr');
+    for (const label of [
+        'Rope',
+        'Node',
+        'Tier',
+        'Model Ø (mm)',
+        'Material',
+        'Status',
+        'Thread',
+        'Details',
+    ]) {
+        const th = el('th');
+        th.scope = 'col';
+        th.textContent = label;
+        headRow.appendChild(th);
+    }
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = el('tbody');
+
+    rows.forEach((row, index) => {
+        const result = row.result;
+        const tableRow = el('tr', 'rig-table__row');
+        tableRow.dataset.key = row.key;
+
+        const ropeCell = el('td');
+        ropeCell.dataset.label = 'Rope';
+        const name = el('span', 'rig-table__name');
+        appendHighlighted(name, result.nameEn, tokens);
+        const nameRu = el('span', 'rig-table__ru');
+        appendHighlighted(nameRu, result.nameRu, tokens);
+        ropeCell.append(name, nameRu);
+
+        const nodeCell = el('td', 'rig-table__node');
+        nodeCell.dataset.label = 'Node';
+        nodeCell.textContent = nodeLabel(row.nodeId);
+
+        const tierCell = el('td', 'rig-table__tier');
+        tierCell.dataset.label = 'Tier';
+        tierCell.textContent = row.tier
+            ? TIER_LABELS[row.tier].en
+            : row.nodeKind === 'mast'
+              ? 'No tier'
+              : '—';
+
+        const diameterCell = el('td', 'rig-table__diameter');
+        diameterCell.dataset.label = 'Model Ø (mm)';
+        diameterCell.textContent = formatDiameter(result.diameterModelMm);
+
+        const materialCell = el('td');
+        materialCell.dataset.label = 'Material';
+        materialCell.textContent = MATERIAL_LABELS[result.material];
+
+        const statusCell = el('td');
+        statusCell.dataset.label = 'Status';
+        statusCell.appendChild(statusBadge(result.status, false));
+
+        const threadCell = el('td');
+        threadCell.dataset.label = 'Thread';
+        threadCell.appendChild(threadControl(row));
+
+        const detailsCell = el('td');
+        detailsCell.dataset.label = 'Details';
+        const detailsId = `rig-flat-details-${index}`;
+        const toggle = actionButton('Details', 'toggle-details', row.key, 'rig-table__expand');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-controls', detailsId);
+        toggle.setAttribute(
+            'aria-label',
+            `Details for ${result.nameEn} — ${nodeLabel(row.nodeId)}${
+                row.tier ? `, ${TIER_LABELS[row.tier].en}` : ''
+            }`,
+        );
+        detailsCell.appendChild(toggle);
+
+        tableRow.append(
+            ropeCell,
+            nodeCell,
+            tierCell,
+            diameterCell,
+            materialCell,
+            statusCell,
+            threadCell,
+            detailsCell,
+        );
+
+        const detailsRow = el('tr', 'rig-table__details');
+        detailsRow.id = detailsId;
+        detailsRow.hidden = true;
+        const detailsCellFull = el('td');
+        detailsCellFull.colSpan = 8;
+        detailsCellFull.dataset.built = 'false';
+        detailsRow.appendChild(detailsCellFull);
+
+        tbody.append(tableRow, detailsRow);
     });
 
-    const calculated = visible.filter((result) => result.status === 'calculated').length;
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    return wrap;
+}
 
-    resultsStatus.textContent = calc.results.length
-        ? `Calculated ${calculated} of ${visible.length} shown. ${calc.results.length} rows total.`
-        : 'No rows produced.';
+function renderEmpty(calc: Calculation, selection: LedgerSelection): void {
+    const wrap = el('div', 'rig-empty');
+    const title = el('p', 'rig-empty__title');
+    const text = el('p', 'rig-empty__text');
 
-    if (visible.length === 0) {
-        const empty = el('p', 'rig-results__empty');
-        empty.textContent = 'No rows match the current filters.';
-        resultsList.appendChild(empty);
+    if (calc.results.length === 0) {
+        title.textContent = 'No rows for this configuration';
+        text.textContent =
+            'Add a mast, spar, anchor or gun group in the form and calculate again.';
+        wrap.append(title, text);
+        resultsList.appendChild(wrap);
         return;
     }
 
-    const byOwner = new Map<string, RiggingResult[]>();
-    for (const result of visible) {
-        const list = byOwner.get(result.ownerId) ?? [];
-        list.push(result);
-        byOwner.set(result.ownerId, list);
+    if (
+        selection.totalM === 0 &&
+        !hasActiveConditions({
+            filters: state.ledger.filters,
+            query: state.ledger.query,
+            showNotApplicable: false,
+        })
+    ) {
+        title.textContent = 'Only not-applicable rows are hidden';
+        text.textContent =
+            'This configuration has no applicable rows. Show not-applicable rows to see the ledger.';
+        wrap.append(title, text, actionButton('Show not applicable', 'show-na'));
+        resultsList.appendChild(wrap);
+        return;
     }
 
-    const owners = [
-        ...OWNER_ORDER.filter((ownerId) => byOwner.has(ownerId)),
-        ...[...byOwner.keys()].filter((ownerId) => !OWNER_ORDER.includes(ownerId)),
-    ];
+    title.textContent = 'No rows match the current conditions';
+    text.textContent = `${selection.totalM} ${
+        selection.totalM === 1 ? 'row is' : 'rows are'
+    } in this calculation. Change the search or clear the filters.`;
+    wrap.append(title, text, actionButton('Clear filters', 'clear-filters'));
+    resultsList.appendChild(wrap);
+}
 
-    for (const ownerId of owners) {
-        const rows = byOwner.get(ownerId);
-        if (!rows || rows.length === 0) continue;
+function fillSelect(
+    element: HTMLSelectElement,
+    options: Array<{ value: string; label: string }>,
+): void {
+    const previous = element.value;
+    element.replaceChildren(
+        ...options.map(({ value, label }) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = label;
+            return option;
+        }),
+    );
+    if (options.some((option) => option.value === previous)) element.value = previous;
+}
 
-        const section = el('section', 'rig-group');
-        const heading = el('h3', 'rig-group__title');
-        heading.textContent = ownerHeading(ownerId);
-        section.appendChild(heading);
+function renderFilterOptions(facets: LedgerFacets): void {
+    const signature = [
+        facets.nodes.map((node) => node.value).join(','),
+        facets.tiers.join(','),
+        facets.statuses.join(','),
+    ].join('|');
 
-        const rowsWrap = el('div', 'rig-group__rows');
-        for (const result of rows) {
-            rowsWrap.appendChild(createRow(result));
-        }
-        section.appendChild(rowsWrap);
-        resultsList.appendChild(section);
+    if (signature !== state.optionsSignature) {
+        state.optionsSignature = signature;
+        fillSelect(filterNode, [
+            { value: 'all', label: 'All nodes' },
+            ...facets.nodes.map((node) => ({ value: node.value, label: node.label })),
+        ]);
+        fillSelect(filterTier, [
+            { value: 'all', label: 'All tiers' },
+            ...facets.tiers.map((tier) => ({ value: tier, label: TIER_LABELS[tier].en })),
+        ]);
+        fillSelect(filterStatus, [
+            { value: 'all', label: 'All' },
+            ...facets.statuses.map((status) => ({
+                value: status,
+                label: STATUS_LABELS[status],
+            })),
+        ]);
+    }
+
+    filterNode.value = state.ledger.filters.node;
+    filterTier.value = state.ledger.filters.tier;
+    filterType.value = state.ledger.filters.type;
+    filterStatus.value = state.ledger.filters.status;
+
+    const tiers = state.facets?.nodes.find(
+        (node) => node.value === state.ledger.filters.node,
+    )?.tiers;
+    const disabled = tierFilterDisabled(state.ledgerRows, state.ledger.filters.node);
+    filterTier.disabled = disabled;
+    tierDisabledNote.hidden = !disabled;
+    tierDisabledNote.textContent = tierFilterNote(state.ledgerRows, state.ledger.filters.node);
+
+    for (const option of filterTier.options) {
+        if (option.value === 'all') continue;
+        option.disabled =
+            state.ledger.filters.node !== 'all' &&
+            !(tiers ?? []).includes(option.value as Tier);
+    }
+}
+
+function renderActiveConditions(): void {
+    const conditions = activeConditions({
+        filters: state.ledger.filters,
+        query: state.ledger.query,
+        showNotApplicable: state.ledger.showNotApplicable,
+    });
+
+    ledgerActive.replaceChildren();
+    ledgerActive.hidden = conditions.length === 0;
+
+    conditions.forEach((condition, index) => {
+        const chip = el('span', 'rig-condition');
+        chip.setAttribute('role', 'listitem');
+        chip.appendChild(document.createTextNode(condition.label));
+
+        const remove = el('button', 'rig-condition__remove');
+        remove.type = 'button';
+        remove.dataset.action = 'remove-condition';
+        remove.dataset.kind = condition.kind;
+        remove.dataset.index = String(index);
+        remove.setAttribute('aria-label', `Remove ${condition.label}`);
+        remove.textContent = '×';
+        chip.appendChild(remove);
+        ledgerActive.appendChild(chip);
+    });
+
+    const filterCount =
+        (state.ledger.filters.node !== 'all' ? 1 : 0) +
+        (state.ledger.filters.tier !== 'all' ? 1 : 0) +
+        (state.ledger.filters.type !== 'all' ? 1 : 0) +
+        (state.ledger.filters.status !== 'all' ? 1 : 0) +
+        (state.ledger.showNotApplicable ? 1 : 0);
+    filterBadge.hidden = filterCount === 0;
+    filterBadge.textContent = String(filterCount);
+
+    clearFiltersButton.disabled = conditions.length === 0;
+    ledgerNotice.textContent = state.notice ?? '';
+    ledgerNotice.hidden = !state.notice;
+}
+
+function renderLedgerToolbar(
+    calc: Calculation,
+    selection: LedgerSelection,
+    facets: LedgerFacets,
+): void {
+    renderFilterOptions(facets);
+    renderActiveConditions();
+
+    showNaInput.checked = state.ledger.showNotApplicable;
+    sortSelect.value = state.ledger.sort;
+    modeGrouped.setAttribute('aria-pressed', state.ledger.mode === 'grouped' ? 'true' : 'false');
+    modeFlat.setAttribute('aria-pressed', state.ledger.mode === 'flat' ? 'true' : 'false');
+
+    const queryActive = state.ledger.query.trim() !== '';
+    ledgerExpand.hidden = state.ledger.mode === 'flat';
+    expandAllButton.disabled = queryActive;
+    collapseAllButton.disabled = queryActive;
+    expandAllButton.title = queryActive ? 'Collapse and expand are paused while search is active.' : '';
+    collapseAllButton.title = expandAllButton.title;
+
+    const total = selection.totalM;
+    ledgerCount.textContent =
+        calc.results.length === 0
+            ? 'No rows in this calculation.'
+            : `${selection.visible.length} of ${total} ${total === 1 ? 'row' : 'rows'}`;
+
+    resultsStatus.textContent =
+        calc.results.length === 0
+            ? 'No rows produced for this configuration.'
+            : `Showing ${selection.visible.length} of ${total} rows.`;
+}
+
+function renderResults(calc: Calculation): void {
+    const rows = state.ledgerRows;
+    const facets = buildFacets(rows);
+    const selection = selectLedgerRows(rows, {
+        filters: state.ledger.filters,
+        query: state.ledger.query,
+        showNotApplicable: state.ledger.showNotApplicable,
+    });
+
+    state.facets = facets;
+    state.rowsByKey = new Map(rows.map((row) => [row.key, row]));
+
+    renderLedgerToolbar(calc, selection, facets);
+    resultsList.replaceChildren();
+
+    if (rows.length === 0 || selection.visible.length === 0) {
+        renderEmpty(calc, selection);
+        return;
+    }
+
+    if (state.ledger.mode === 'flat') {
+        resultsList.appendChild(createFlatTable(selection));
+        return;
+    }
+
+    const head = el('div', 'rig-ledger__head');
+    for (const label of ['Rope', 'Model Ø', 'Material', 'Status', 'Thread']) {
+        const cell = el('span');
+        cell.textContent = label;
+        head.appendChild(cell);
+    }
+    head.setAttribute('aria-hidden', 'true');
+    resultsList.appendChild(head);
+
+    for (const section of groupedLedger(selection.visible, state.ledger.sort)) {
+        resultsList.appendChild(createGroupedSection(section, selection.tokens, selection));
     }
 }
 
@@ -1111,6 +1597,10 @@ async function calculateAndRender(scrollOnSuccess: boolean): Promise<void> {
 
         state.calculation = calc;
         state.settings = settings;
+        state.ledgerRows = buildLedgerRows(calc.results);
+        const reconciled = reconcileState(state.ledger, state.ledgerRows);
+        state.ledger = reconciled.state;
+        state.notice = reconciled.notice;
 
         const inputsChanged = state.formVersion !== versionAtStart;
         state.dirty = inputsChanged;
@@ -1161,13 +1651,6 @@ function markDirty(): void {
     calculateButton.classList.add('rig-button--attention');
     exportCsv.disabled = true;
     exportJson.disabled = true;
-}
-
-function updateFilterUI(): void {
-    document.querySelectorAll<HTMLButtonElement>('.rig-chip[data-group]').forEach((button) => {
-        const active = button.dataset.group === state.activeGroup;
-        button.setAttribute('aria-pressed', active ? 'true' : 'false');
-    });
 }
 
 function download(filename: string, content: string, mime: string): void {
@@ -1335,28 +1818,260 @@ form.addEventListener('change', (event) => {
     markDirty();
 });
 
-document.querySelectorAll<HTMLButtonElement>('.rig-chip[data-group]').forEach((button) => {
-    button.addEventListener('click', () => {
-        state.activeGroup = (button.dataset.group ?? 'all') as GroupFilter;
-        updateFilterUI();
-        if (state.calculation) renderResults(state.calculation);
-    });
+/* ------------------------------ ledger view ------------------------------- */
+
+function rerender(): void {
+    if (state.calculation) renderResults(state.calculation);
+}
+
+function applyLedger(next: LedgerState, notice: string | null = null): void {
+    state.ledger = next;
+    state.notice = notice;
+    rerender();
+}
+
+let searchTimer = 0;
+ledgerSearch.addEventListener('input', () => {
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(() => {
+        state.notice = null;
+        state.ledger = setQuery(state.ledger, ledgerSearch.value);
+        rerender();
+    }, 140);
+});
+
+filtersToggle.addEventListener('click', () => {
+    const expanded = filtersToggle.getAttribute('aria-expanded') === 'true';
+    filtersToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+    filtersPanel.hidden = expanded;
+});
+
+filterNode.addEventListener('change', () => {
+    const change = setNode(state.ledger, filterNode.value, state.ledgerRows);
+    applyLedger(change.state, change.notice);
+});
+
+filterTier.addEventListener('change', () => {
+    state.notice = null;
+    state.ledger = setTier(state.ledger, filterTier.value as Tier | 'all', state.ledgerRows);
+    rerender();
+});
+
+filterType.addEventListener('change', () => {
+    state.notice = null;
+    state.ledger = setType(state.ledger, filterType.value as LedgerType | 'all');
+    rerender();
+});
+
+filterStatus.addEventListener('change', () => {
+    state.notice = null;
+    state.ledger = setStatus(state.ledger, filterStatus.value as ResultStatus | 'all');
+    rerender();
 });
 
 showNaInput.addEventListener('change', () => {
-    state.showNotApplicable = showNaInput.checked;
-    if (state.calculation) renderResults(state.calculation);
+    state.notice = null;
+    state.ledger = setShowNotApplicable(state.ledger, showNaInput.checked);
+    rerender();
 });
+
+modeGrouped.addEventListener('click', () => {
+    state.notice = null;
+    state.ledger = setMode(state.ledger, 'grouped');
+    rerender();
+});
+
+modeFlat.addEventListener('click', () => {
+    state.notice = null;
+    state.ledger = setMode(state.ledger, 'flat');
+    rerender();
+});
+
+sortSelect.addEventListener('change', () => {
+    state.notice = null;
+    state.ledger = setSort(state.ledger, sortSelect.value as LedgerSort);
+    rerender();
+});
+
+function visibleNodeIds(): string[] {
+    return [...resultsList.querySelectorAll<HTMLElement>('.rig-node')]
+        .map((element) => element.dataset.node ?? '')
+        .filter(Boolean);
+}
+
+function setAllSectionsOpen(open: boolean): void {
+    state.ledger = setAllSections(state.ledger, open, visibleNodeIds());
+    resultsList.querySelectorAll<HTMLDetailsElement>('.rig-node__details').forEach((details) => {
+        details.open = open;
+    });
+}
+
+expandAllButton.addEventListener('click', () => setAllSectionsOpen(true));
+collapseAllButton.addEventListener('click', () => setAllSectionsOpen(false));
+
+recalculateButton.addEventListener('click', () => {
+    syncDisabled();
+    void calculateAndRender(true);
+});
+
+function clearAll(focusSearch: boolean): void {
+    state.notice = null;
+    state.ledger = clearFilters(state.ledger);
+    ledgerSearch.value = '';
+    rerender();
+    if (focusSearch) ledgerSearch.focus();
+}
+
+clearFiltersButton.addEventListener('click', () => clearAll(false));
+
+ledgerActive.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
+        '.rig-condition__remove',
+    );
+    if (!button) return;
+
+    const index = Number(button.dataset.index ?? '0');
+    const kind = button.dataset.kind;
+
+    if (kind === 'query') {
+        ledgerSearch.value = '';
+        state.ledger = setQuery(state.ledger, '');
+    } else if (kind === 'node') {
+        state.ledger = setNode(state.ledger, 'all', state.ledgerRows).state;
+    } else if (kind === 'tier') {
+        state.ledger = setTier(state.ledger, 'all', state.ledgerRows);
+    } else if (kind === 'type') {
+        state.ledger = setType(state.ledger, 'all');
+    } else if (kind === 'status') {
+        state.ledger = setStatus(state.ledger, 'all');
+    } else if (kind === 'notApplicable') {
+        state.ledger = setShowNotApplicable(state.ledger, false);
+    }
+
+    state.notice = null;
+    rerender();
+
+    const chips = ledgerActive.querySelectorAll<HTMLButtonElement>('.rig-condition__remove');
+    const next = chips[Math.min(index, chips.length - 1)] ?? ledgerSearch;
+    next.focus();
+});
+
+function populateRowDetails(details: HTMLDetailsElement): void {
+    const key = details.dataset.key;
+    const body = details.querySelector<HTMLElement>('.rig-row__body');
+    if (!key || !body || body.dataset.built === 'true') return;
+
+    const row = state.rowsByKey.get(key);
+    if (!row) return;
+
+    body.appendChild(buildDetailsBody(row.result, row));
+    body.dataset.built = 'true';
+}
+
+function toggleFlatDetails(button: HTMLButtonElement): void {
+    const id = button.getAttribute('aria-controls');
+    if (!id) return;
+    const detailsRow = document.getElementById(id) as HTMLTableRowElement | null;
+    if (!detailsRow) return;
+
+    const cell = detailsRow.querySelector<HTMLTableCellElement>('td');
+    const key = button.dataset.key;
+    const row = key ? state.rowsByKey.get(key) : undefined;
+
+    if (detailsRow.hidden) {
+        if (cell && row && cell.dataset.built !== 'true') {
+            cell.appendChild(buildDetailsBody(row.result, row));
+            cell.dataset.built = 'true';
+        }
+        detailsRow.hidden = false;
+        button.setAttribute('aria-expanded', 'true');
+        button.textContent = 'Hide';
+    } else {
+        detailsRow.hidden = true;
+        button.setAttribute('aria-expanded', 'false');
+        button.textContent = 'Details';
+    }
+}
+
+resultsList.addEventListener('click', (event) => {
+    const actionEl = (event.target as HTMLElement).closest<HTMLElement>('[data-action]');
+    if (!actionEl) return;
+
+    const action = actionEl.dataset.action;
+
+    if (action === 'pick-thread') {
+        event.preventDefault();
+        const key = actionEl.dataset.key;
+        const row = key ? state.rowsByKey.get(key) : undefined;
+        if (row) openRopeModal(row);
+        return;
+    }
+
+    if (action === 'toggle-details') {
+        toggleFlatDetails(actionEl as HTMLButtonElement);
+        return;
+    }
+
+    if (action === 'clear-filters') {
+        clearAll(true);
+        return;
+    }
+
+    if (action === 'show-na') {
+        showNaInput.checked = true;
+        state.notice = null;
+        state.ledger = setShowNotApplicable(state.ledger, true);
+        rerender();
+        ledgerSearch.focus();
+    }
+});
+
+resultsList.addEventListener(
+    'toggle',
+    (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLDetailsElement)) return;
+
+        if (target.classList.contains('rig-row')) {
+            if (target.open) populateRowDetails(target);
+            return;
+        }
+
+        if (target.classList.contains('rig-node__details')) {
+            const nodeId = target.dataset.node ?? '';
+            if (!nodeId) return;
+            state.ledger = setSectionOpen(
+                state.ledger,
+                nodeId,
+                target.open,
+                state.ledger.query.trim() !== '',
+            );
+        }
+    },
+    true,
+);
+
+function focusThreadButton(key: string): void {
+    const buttons = resultsList.querySelectorAll<HTMLButtonElement>(
+        '[data-action="pick-thread"]',
+    );
+    for (const button of buttons) {
+        if (button.dataset.key === key && button.getClientRects().length > 0) {
+            button.focus();
+            return;
+        }
+    }
+    resultsSection.focus();
+}
 
 /* -------------------------------- rope modal ------------------------------ */
 
 function setRopeTarget(targetMm: number): void {
-    const element = ropeModal.querySelector('gm-rope-calculator') as HTMLElement | null;
-    if (!element) return;
+    if (!ropeWidget) return;
 
     let attempts = 0;
     const apply = () => {
-        const root = element.shadowRoot;
+        const root = ropeWidget.shadowRoot;
         if (!root) {
             if (++attempts < 60) window.setTimeout(apply, 100);
             return;
@@ -1364,10 +2079,25 @@ function setRopeTarget(targetMm: number): void {
 
         const mode = root.querySelector<HTMLSelectElement>('#mode');
         const targetInput = root.querySelector<HTMLInputElement>('#target');
-        if (mode && targetInput) {
+        if (!mode || !targetInput) return;
+
+        // Сначала фиксируем цель, потом включаем обратный режим: иначе
+        // виджет успевает запросить результаты для прежней цели и в таблице
+        // на мгновение появляются кнопки Use для чужого диаметра.
+        targetInput.value = targetMm.toFixed(3);
+
+        // Убираем прошлые совпадения сразу: кнопки Use не должны относиться
+        // к прежней цели, пока новый запрос ещё выполняется.
+        root.querySelector('[data-results]')?.replaceChildren();
+        const tableWrap = root.querySelector<HTMLElement>('[data-table-wrap]');
+        if (tableWrap) tableWrap.hidden = true;
+        const status = root.querySelector('[data-status]');
+        if (status) status.textContent = 'Searching…';
+
+        if (mode.value !== 'reverse') {
             mode.value = 'reverse';
             mode.dispatchEvent(new Event('change'));
-            targetInput.value = targetMm.toFixed(3);
+        } else {
             targetInput.dispatchEvent(new Event('input'));
         }
     };
@@ -1375,9 +2105,16 @@ function setRopeTarget(targetMm: number): void {
     apply();
 }
 
-function openRopeModal(targetMm: number | null): void {
+function openRopeModal(row: LedgerRow): void {
+    const targetMm = row.result.diameterModelMm;
     if (targetMm === null) return;
-    ropeModalTarget.textContent = `Target diameter: Ø ${targetMm.toFixed(3)} mm`;
+
+    state.modalRowKey = row.key;
+    state.lastFocused =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    ropeModalTarget.textContent =
+        `Target diameter: Ø ${targetMm.toFixed(3)} mm · ` +
+        `${row.result.nameEn} (${rowContext(row)})`;
     ropeModal.hidden = false;
     document.body.style.overflow = 'hidden';
     setRopeTarget(targetMm);
@@ -1387,10 +2124,29 @@ function openRopeModal(targetMm: number | null): void {
 function closeRopeModal(): void {
     ropeModal.hidden = true;
     document.body.style.overflow = '';
+    state.modalRowKey = null;
+
+    const previous = state.lastFocused;
+    state.lastFocused = null;
+    if (previous?.isConnected) previous.focus();
 }
 
 ropeModal.querySelectorAll<HTMLElement>('[data-close-rope]').forEach((element) => {
     element.addEventListener('click', closeRopeModal);
+});
+
+ropeWidget?.addEventListener('thread-select', (event) => {
+    const detail = (event as CustomEvent<{ thread: ThreadMatch; targetMm: number }>).detail;
+    if (!state.modalRowKey) return;
+
+    const pick = makeThreadPick(detail?.thread, detail?.targetMm);
+    if (!pick) return;
+
+    const key = state.modalRowKey;
+    state.threadPicks.set(key, pick);
+    closeRopeModal();
+    rerender();
+    focusThreadButton(key);
 });
 
 document.addEventListener('keydown', (event) => {

@@ -179,6 +179,24 @@ button:focus-visible {
   font-weight: 600;
 }
 
+.rc-use {
+  min-height: 32px;
+  padding: 5px 10px;
+  border: 1px solid var(--color-primary, #01696f);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--color-primary, #01696f);
+  color: var(--color-text-inverse, #ffffff);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rc-use:hover {
+  background: var(--color-primary-hover, #01555a);
+  border-color: var(--color-primary-hover, #01555a);
+}
+
 .rc-note {
   margin: 16px 0 0;
   color: var(--color-text-muted, #7a7974);
