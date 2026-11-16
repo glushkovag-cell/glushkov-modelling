@@ -804,6 +804,19 @@ const presetFile = byId<HTMLInputElement>('preset-file');
 const ropeModal = byId('rope-modal');
 const ropeModalTarget = byId('rope-modal-target');
 const ropeWidget = ropeModal.querySelector('gm-rope-calculator') as HTMLElement | null;
+
+/**
+ * Локальная разработка: каталог нитей на отдельном хосте и не разрешает
+ * CORS для localhost. Параметр `?rope-api=` позволяет направить виджет на
+ * локальный прокси, как `?api=` для расчётного API.
+ */
+const ROPE_API_OVERRIDE = new URLSearchParams(window.location.search)
+    .get('rope-api')
+    ?.trim();
+if (ROPE_API_OVERRIDE && ropeWidget) {
+    ropeWidget.setAttribute('api-base', ROPE_API_OVERRIDE.replace(/\/+$/, ''));
+}
+
 const ledgerSearch = input('ledger-search');
 const ledgerCount = byId('ledger-count');
 const filtersToggle = byId<HTMLButtonElement>('ledger-filters-toggle');
@@ -2080,6 +2093,13 @@ function setRopeTarget(targetMm: number): void {
         const mode = root.querySelector<HTMLSelectElement>('#mode');
         const targetInput = root.querySelector<HTMLInputElement>('#target');
         if (!mode || !targetInput) return;
+
+        const reverseOption = mode.querySelector<HTMLOptionElement>(
+            'option[value="reverse"]',
+        );
+        // Каталог недоступен: виджет уже показывает причину в статусе.
+        // Не переводим его в обратный режим, где нет ни одного варианта.
+        if (reverseOption?.disabled) return;
 
         // Сначала фиксируем цель, потом включаем обратный режим: иначе
         // виджет успевает запросить результаты для прежней цели и в таблице

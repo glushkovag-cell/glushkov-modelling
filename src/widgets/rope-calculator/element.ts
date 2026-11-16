@@ -377,7 +377,7 @@ export class RopeCalculatorElement extends HTMLElement {
       if (!this.isConnected) return;
 
       this.#catalogStatus.textContent =
-        'Thread catalog is unavailable. Custom dTex still works.';
+        'Thread catalog is unavailable. Check your connection, or use a custom dTex.';
       this.#catalogOption.disabled = true;
       this.#reverseOption.disabled = true;
 
@@ -567,15 +567,20 @@ export class RopeCalculatorElement extends HTMLElement {
       return;
     }
 
-    const threadIds = this.#selectedThreadIds();
-    if (threadIds.length === 0) {
-      this.#showReverseError('Select at least one available thread.', false);
+    if (!this.#catalog) {
+      this.#showReverseError(
+        this.#catalogLoading
+          ? 'Thread catalog is still loading. Try again in a moment.'
+          : 'Thread catalog is unavailable. Check your connection and try again.',
+        false,
+      );
       this.#resetReverseOutput();
       return;
     }
 
-    if (!this.#catalog) {
-      this.#showReverseError('Thread catalog is unavailable. Custom dTex still works.', false);
+    const threadIds = this.#selectedThreadIds();
+    if (threadIds.length === 0) {
+      this.#showReverseError('Select at least one available thread.', false);
       this.#resetReverseOutput();
       return;
     }
