@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import { buildInput } from '../src/lib/rigging/settings.ts';
 import { calculate } from '../src/lib/rigging/calculate.ts';
 import { toCsv, toProjectJson } from '../src/lib/rigging/export.ts';
+import { ledgerRowKey } from '../src/lib/rigging/ledgerKey.ts';
+import { makeThreadPick } from '../src/lib/rigging/threadPick.ts';
 import { loadDocument } from './helpers/profiles.ts';
 import { fullSettingsFor } from './helpers/control.ts';
 
@@ -65,4 +67,49 @@ test('the default project export still contains the whole ledger', () => {
 
     assert.equal(parsed.calculation.results.length, calculation.results.length);
     assert.equal(parsed.selection, undefined);
+});
+
+test('CSV and JSON include the selected thread by thread_id', () => {
+    const target = calculation.results.find((result) => result.diameterModelMm !== null)!;
+    const rowKey = ledgerRowKey(target);
+    const pick = makeThreadPick(
+        {
+            threadId: 'test-40',
+            brand: 'Test',
+            number: '40',
+            dtex: 400,
+            threadsPerStrand: 2,
+            diameterMm: 0.5,
+            deviationPercent: 1.5,
+        },
+        target.diameterModelMm!,
+        target.diameterModelMm!,
+    )!;
+    const picks = new Map([[rowKey, pick]]);
+
+    const csv = toCsv(calculation, [target], picks);
+    const [header, row] = csv.trim().split('\r\n');
+    assert.ok(header.replace(/^\uFEFF/, '').split(',').includes('thread_id'));
+    assert.ok(row.includes('test-40'));
+    assert.ok(row.includes('Test 40'));
+    assert.ok(row.includes('0.5'));
+
+    const exported = toProjectJson(calculation, settings, '2026-11-16T00:00:00.000Z', {
+        results: [target],
+        scope: 'selection',
+        threadPicks: picks,
+    });
+    const parsed = JSON.parse(exported) as {
+        threads: Array<Record<string, unknown>>;
+    };
+    assert.equal(parsed.threads.length, 1);
+    assert.equal(parsed.threads[0].rowKey, rowKey);
+    assert.equal(parsed.threads[0].thread_id, 'test-40');
+    assert.equal(parsed.threads[0].targetMm, target.diameterModelMm);
+});
+
+test('exports without picks keep the threads field out', () => {
+    const exported = toProjectJson(calculation, settings, '2026-11-16T00:00:00.000Z');
+    const parsed = JSON.parse(exported) as { threads?: unknown };
+    assert.equal(parsed.threads, undefined);
 });

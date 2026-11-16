@@ -5,9 +5,12 @@ import { calculate } from '../src/lib/rigging/calculate.ts';
 import { toProjectJson } from '../src/lib/rigging/export.ts';
 import {
     PresetError,
+    parsePreset,
     parsePresetJson,
     profileVersions,
 } from '../src/lib/rigging/preset.ts';
+import { ledgerRowKey } from '../src/lib/rigging/ledgerKey.ts';
+import { makeThreadPick } from '../src/lib/rigging/threadPick.ts';
 import { buildInput, defaultSettingsForProfile } from '../src/lib/rigging/settings.ts';
 import { EARLY, SCHOONER } from './helpers/profiles.ts';
 
@@ -63,4 +66,40 @@ test('invalid JSON and missing dimensions are rejected', () => {
         (error: unknown) =>
             error instanceof PresetError && error.message.includes('scaleDenominator'),
     );
+});
+
+test('an exported project restores selected threads', () => {
+    const document = EARLY();
+    const settings = defaultSettingsForProfile(document);
+    const calculation = calculate(buildInput(settings), document);
+    const target = calculation.results.find((result) => result.diameterModelMm !== null)!;
+    const rowKey = ledgerRowKey(target);
+    const pick = makeThreadPick(
+        {
+            threadId: 'test-40',
+            brand: 'Test',
+            number: '40',
+            dtex: 400,
+            threadsPerStrand: 2,
+            diameterMm: 0.5,
+            deviationPercent: 1.5,
+        },
+        target.diameterModelMm!,
+        target.diameterModelMm!,
+    )!;
+
+    const exported = toProjectJson(calculation, settings, '2026-11-08T00:00:00.000Z', {
+        threadPicks: new Map([[rowKey, pick]]),
+    });
+    const parsed = parsePreset(exported, VERSIONS);
+    assert.equal(parsed.threadPicks.length, 1);
+    assert.equal(parsed.threadPicks[0].rowKey, rowKey);
+    assert.equal(parsed.threadPicks[0].pick.threadId, 'test-40');
+    assert.equal(parsed.threadPicks[0].pick.targetMm, target.diameterModelMm);
+});
+
+test('a preset without threads has no thread picks', () => {
+    const settings = defaultSettingsForProfile(SCHOONER());
+    const parsed = parsePreset(JSON.stringify(settings), VERSIONS);
+    assert.deepEqual(parsed.threadPicks, []);
 });

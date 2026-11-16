@@ -16,7 +16,7 @@ import {
 import { toCsv, toProjectJson } from '../lib/rigging/export.ts';
 import { formatDiameter, formatMm } from '../lib/rigging/format.ts';
 import { sailSelectable, tierAvailability } from '../lib/rigging/formRules.ts';
-import { parsePresetJson } from '../lib/rigging/preset.ts';
+import { parsePreset } from '../lib/rigging/preset.ts';
 import {
     switchProfileSettings,
     type DimensionKey,
@@ -858,11 +858,10 @@ const form = byId<HTMLFormElement>('rigging-form');
 const actionsBar = byId('rig-actions');
 
 // Панель действий закреплена внизу, пока форма ввода в кадре; на результатах
-// она возвращается в обычный поток, чтобы не перекрывать ведомость.
+// она скрывается на результатах и не занимает места в потоке формы.
 const actionsObserver = new IntersectionObserver(
     (entries) => {
-        const visible = entries.some((entry) => entry.isIntersecting);
-        actionsBar.classList.toggle('is-fixed', visible);
+        actionsBar.hidden = !entries.some((entry) => entry.isIntersecting);
     },
     { threshold: 0 },
 );
@@ -2157,7 +2156,7 @@ exportCsv.addEventListener('click', () => {
 
     download(
         `rigging-diameters-${timestamp()}${exportSuffix()}.csv`,
-        toCsv(state.calculation, results),
+        toCsv(state.calculation, results, state.threadPicks),
         'text/csv;charset=utf-8',
     );
 });
@@ -2175,6 +2174,7 @@ exportJson.addEventListener('click', () => {
             results,
             scope,
             conditions: scope === 'selection' ? exportConditions() : [],
+            threadPicks: state.threadPicks,
         }),
         'application/json',
     );
@@ -2195,7 +2195,8 @@ presetFile.addEventListener('change', async () => {
     const file = presetFile.files?.[0];
     if (!file) return;
     try {
-        const settings = parsePresetJson(await file.text(), PROFILE_VERSIONS);
+        const parsed = parsePreset(await file.text(), PROFILE_VERSIONS);
+        const settings = parsed.settings;
         const profile = PROFILE_DATA.get(settings.profileId)!;
         state.profileUndo = null;
         applySettingsToForm(settings);
@@ -2213,6 +2214,15 @@ presetFile.addEventListener('change', async () => {
         updateProfileNote();
         markDirty();
         await calculateAndRender(true);
+        if (state.calculation && !state.dirty) {
+            state.threadPicks.clear();
+            for (const entry of parsed.threadPicks) {
+                if (state.rowsByKey.has(entry.rowKey)) {
+                    state.threadPicks.set(entry.rowKey, entry.pick);
+                }
+            }
+            renderResults(state.calculation);
+        }
     } catch (error) {
         renderErrors([
             {

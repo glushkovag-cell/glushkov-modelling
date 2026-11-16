@@ -1459,37 +1459,41 @@ const description =
     }
 
     .rig-actions {
-        min-height: 66px;
-        margin-top: 16px;
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 30;
+        padding: 8px max(16px, calc((100vw - 1120px) / 2))
+            calc(8px + env(safe-area-inset-bottom));
+        border-top: 1px solid var(--color-border);
+        background: color-mix(in srgb, var(--color-surface) 96%, transparent);
+        box-shadow: 0 -10px 30px color-mix(in srgb, var(--color-text) 12%, transparent);
+        backdrop-filter: blur(10px);
+    }
+
+    .rig-actions[hidden] {
+        display: none;
     }
 
     .rig-actions__inner {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        padding: 10px;
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-md);
-        background: var(--color-surface);
-        box-shadow: var(--shadow-sm);
+        max-width: 1120px;
+        margin: 0 auto;
     }
 
-    .rig-actions.is-fixed .rig-actions__inner {
-        position: fixed;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        z-index: 30;
-        max-width: none;
-        margin: 0;
-        padding: 8px max(16px, calc((100vw - 1120px) / 2))
-            calc(8px + env(safe-area-inset-bottom));
-        border: 0;
-        border-top: 1px solid var(--color-border);
-        border-radius: 0;
-        background: color-mix(in srgb, var(--color-surface) 96%, transparent);
-        box-shadow: 0 -10px 30px color-mix(in srgb, var(--color-text) 12%, transparent);
-        backdrop-filter: blur(10px);
+    .rig-form--steps {
+        padding-bottom: 16px;
+    }
+
+    .rig-step:last-of-type .rig-step__body {
+        padding-bottom: 0;
+    }
+
+    .rig-step--gear .rig-block:last-of-type {
+        padding-bottom: 0;
     }
 
     .rig-button {
@@ -2709,16 +2713,11 @@ const description =
         }
 
         .rig-actions {
-            min-height: 112px;
-        }
-
-        .rig-actions.is-fixed .rig-actions__inner {
             padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
         }
 
         .rig-actions__inner {
             gap: 6px;
-            padding: 8px;
         }
 
         .rig-actions__inner #calculate {
@@ -2729,6 +2728,10 @@ const description =
             flex: 1 1 calc(50% - 3px);
             padding: 0 8px;
             font-size: 0.82rem;
+        }
+
+        .rig-form--steps {
+            padding-bottom: 14px;
         }
 
 
