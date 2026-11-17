@@ -7,7 +7,10 @@ import {
     formatConstruction,
     formatDeviation,
     formatDiameter,
+    formatLoad,
+    formatSelectionSummary,
     formatThreadLabel,
+    formatTotalDtex,
     parseCustomDtex,
 } from '../src/widgets/rope-calculator/format.ts';
 
@@ -52,22 +55,49 @@ test('подпись нити совпадает с эталонным форм�
     );
 });
 
-test('ручной dTex принимается в диапазоне 80–6000 включительно', () => {
+test('ручной dTex принимается в диапазоне 20–6000 включительно (API v2)', () => {
     assert.equal(parseCustomDtex('750'), 750);
     assert.equal(parseCustomDtex(' 80 '), 80);
+    assert.equal(parseCustomDtex('20'), 20);
+    assert.equal(parseCustomDtex('22.22'), 22.22);
     assert.equal(parseCustomDtex('6000'), 6000);
     assert.equal(parseCustomDtex('80.5'), 80.5);
 });
 
 test('ручной dTex отклоняется вне диапазона и для мусора', () => {
-    for (const raw of ['', '   ', '79.99', '6000.01', 'abc', 'NaN', '-5']) {
+    for (const raw of ['', '   ', '19.99', '6000.01', 'abc', 'NaN', 'Infinity', '-5', '0']) {
         assert.equal(parseCustomDtex(raw), null, `ожидался null для ${JSON.stringify(raw)}`);
     }
 });
 
 test('границы диапазона совпадают с контрактом API', () => {
-    assert.equal(MIN_CUSTOM_DTEX, 80);
+    assert.equal(MIN_CUSTOM_DTEX, 20);
     assert.equal(MAX_CUSTOM_DTEX, 6000);
     assert.equal(parseCustomDtex(String(MIN_CUSTOM_DTEX)), MIN_CUSTOM_DTEX);
     assert.equal(parseCustomDtex(String(MAX_CUSTOM_DTEX)), MAX_CUSTOM_DTEX);
+});
+
+test('отклонение никогда не печатается как -0.00%', () => {
+    for (const value of [-0, -0.0049, -0.004999999, 0.0049]) {
+        assert.equal(formatDeviation(value), '0.00%');
+    }
+    assert.equal(formatDeviation(-9.999), '-10.00%');
+});
+
+test('диаметр с тремя знаками для тонких канатов', () => {
+    assert.equal(formatDiameter(0.05302633236570825), '0.053 mm');
+    assert.equal(formatDiameter(0.24069446380613793), '0.241 mm');
+});
+
+test('суммарный dTex и груз', () => {
+    assert.equal(formatTotalDtex(480), '480 dTex');
+    assert.equal(formatTotalDtex(66.66), '66.66 dTex');
+    assert.equal(formatTotalDtex(3 * 22.22 * 1), '66.66 dTex');
+    assert.equal(formatLoad(150), '150 g');
+});
+
+test('сводка выбранных нитей', () => {
+    assert.equal(formatSelectionSummary(22, 4), 'Selected 22 threads in 4 brands');
+    assert.equal(formatSelectionSummary(1, 1), 'Selected 1 thread in 1 brand');
+    assert.equal(formatSelectionSummary(0, 0), 'Selected 0 threads in 0 brands');
 });

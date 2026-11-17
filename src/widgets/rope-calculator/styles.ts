@@ -203,12 +203,138 @@ button:focus-visible {
   font-size: 0.8rem;
 }
 
+.rc-load .rc-load-label {
+  margin-top: 12px;
+}
+
+.rc-segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-top: 8px;
+  border: 1px solid var(--color-border, #ddd7ce);
+  border-radius: var(--radius-sm, 6px);
+  overflow: hidden;
+}
+
+.rc-segment {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.rc-segment + .rc-segment {
+  border-left: 1px solid var(--color-border, #ddd7ce);
+}
+
+.rc-segment input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.rc-segment span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: var(--color-surface-2, #fbfbf9);
+}
+
+.rc-segment input:checked + span {
+  background: var(--color-primary, #01696f);
+  color: var(--color-text-inverse, #ffffff);
+}
+
+.rc-segment input:focus-visible + span {
+  outline: 2px solid var(--color-primary, #01696f);
+  outline-offset: -4px;
+}
+
+.rc-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 16px;
+  margin: 12px 0 0;
+}
+
+.rc-details div {
+  min-width: 0;
+}
+
+.rc-details dt {
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #7a7974);
+}
+
+.rc-details dd {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
+}
+
+.rc-result-note {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted, #7a7974);
+}
+
+.rc-warnings {
+  margin: 12px 0 0;
+  padding: 10px 14px 10px 30px;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--color-surface-offset, #f3f0ec);
+  font-size: 0.82rem;
+}
+
+.rc-warnings li + li {
+  margin-top: 4px;
+}
+
+.rc-catalog-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 0 0 16px;
+  font-size: 0.92rem;
+}
+
+.rc-link-button {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-border, #ddd7ce);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--color-surface-2, #fbfbf9);
+  color: var(--color-primary, #01696f);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rc-link-button:hover {
+  background: var(--color-surface-offset, #f3f0ec);
+}
+
 @media (max-width: 480px) {
   .rc {
     padding: 14px;
   }
 
   .rc-thread-list {
+    grid-template-columns: 1fr;
+  }
+
+  .rc-details {
     grid-template-columns: 1fr;
   }
 }
