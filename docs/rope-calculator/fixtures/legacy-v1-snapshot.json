@@ -1,0 +1,1581 @@
+{
+  "schema": 1,
+  "description": "Legacy rope calculator contract before load-aware algorithm 3.0.0.",
+  "catalogVersion": "0b24290aff0e",
+  "contract": {
+    "apiVersion": "1",
+    "algorithmVersion": "2.0.0",
+    "routes": [
+      "/api/rope/v1/health",
+      "/api/rope/v1/catalog",
+      "/api/rope/v1/forward",
+      "/api/rope/v1/reverse"
+    ],
+    "formula": "0.0204055952 * dtex^0.5293147610 * n^0.5366123919",
+    "threadsPerStrand": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "customDtex": {
+      "min": 80,
+      "max": 6000
+    },
+    "reverseTolerance": 0.15,
+    "forwardRequest": {
+      "catalog": {
+        "basis": "catalog",
+        "threadId": "string",
+        "threadsPerStrand": "1..5"
+      },
+      "dtex": {
+        "basis": "dtex",
+        "dtex": "80..6000",
+        "threadsPerStrand": "1..5"
+      }
+    },
+    "forwardResponse": [
+      "apiVersion",
+      "algorithmVersion",
+      "catalogVersion",
+      "fetchedAt",
+      "basis",
+      "input",
+      "result"
+    ],
+    "forwardResult": [
+      "basis",
+      "threadId",
+      "dtex",
+      "threadsPerStrand",
+      "strands",
+      "construction",
+      "diameterMm"
+    ],
+    "reverseRequest": {
+      "targetDiameterMm": "> 0",
+      "threadIds": "string[] | absent"
+    },
+    "reverseResponse": [
+      "apiVersion",
+      "algorithmVersion",
+      "catalogVersion",
+      "fetchedAt",
+      "input",
+      "results"
+    ],
+    "reverseMatch": [
+      "threadId",
+      "brand",
+      "number",
+      "dtex",
+      "threadsPerStrand",
+      "construction",
+      "diameterMm",
+      "deviationPercent"
+    ],
+    "reverseSort": [
+      "|deviation|",
+      "dtex",
+      "threadsPerStrand",
+      "sortOrder",
+      "threadId"
+    ]
+  },
+  "mcp": {
+    "calculate_rope_diameter": {
+      "input": {
+        "basis": "'catalog' | 'dtex'",
+        "threadId": "string?",
+        "dtex": "number 80..6000?",
+        "threadsPerStrand": "int 1..5"
+      },
+      "output": [
+        "basis",
+        "threadId",
+        "dtex",
+        "diameterMm",
+        "threadsPerStrand",
+        "strands",
+        "construction",
+        "catalogVersion",
+        "apiVersion",
+        "algorithmVersion"
+      ],
+      "rounding": "none: Worker numbers are passed through"
+    },
+    "find_rope_threads": {
+      "input": {
+        "targetDiameterMm": "number > 0",
+        "threadIds": "string[]?"
+      },
+      "output": [
+        "targetDiameterMm",
+        "tolerancePercent",
+        "totalMatched",
+        "catalogVersion",
+        "apiVersion",
+        "algorithmVersion",
+        "results"
+      ],
+      "rounding": "none: Worker numbers are passed through"
+    }
+  },
+  "forward": {
+    "catalog": [
+      {
+        "threadId": "mara-220",
+        "dtex": 130,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.26834325737043463
+      },
+      {
+        "threadId": "mara-220",
+        "dtex": 130,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.38924864846432555
+      },
+      {
+        "threadId": "mara-220",
+        "dtex": 130,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.48386016033818874
+      },
+      {
+        "threadId": "mara-220",
+        "dtex": 130,
+        "threadsPerStrand": 4,
+        "diameterMm": 0.5646294668106596
+      },
+      {
+        "threadId": "mara-220",
+        "dtex": 130,
+        "threadsPerStrand": 5,
+        "diameterMm": 0.6364534620079088
+      },
+      {
+        "threadId": "mara-150",
+        "dtex": 200,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.3370686869173945
+      },
+      {
+        "threadId": "mara-150",
+        "dtex": 200,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.48893917480147714
+      },
+      {
+        "threadId": "mara-150",
+        "dtex": 200,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.6077816543446436
+      },
+      {
+        "threadId": "mara-150",
+        "dtex": 200,
+        "threadsPerStrand": 4,
+        "diameterMm": 0.7092367993059417
+      },
+      {
+        "threadId": "mara-150",
+        "dtex": 200,
+        "threadsPerStrand": 5,
+        "diameterMm": 0.7994556480578514
+      },
+      {
+        "threadId": "mara-120",
+        "dtex": 250,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.37932748324080096
+      },
+      {
+        "threadId": "mara-120",
+        "dtex": 250,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.5502381972393985
+      },
+      {
+        "threadId": "mara-120",
+        "dtex": 250,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.6839801329839477
+      },
+      {
+        "threadId": "mara-120",
+        "dtex": 250,
+        "threadsPerStrand": 4,
+        "diameterMm": 0.7981548584737446
+      },
+      {
+        "threadId": "mara-120",
+        "dtex": 250,
+        "threadsPerStrand": 5,
+        "diameterMm": 0.8996845767959074
+      },
+      {
+        "threadId": "mara-100",
+        "dtex": 300,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.41775928570262066
+      },
+      {
+        "threadId": "mara-100",
+        "dtex": 300,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.6059859261479
+      },
+      {
+        "threadId": "mara-100",
+        "dtex": 300,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.7532780102009308
+      },
+      {
+        "threadId": "mara-100",
+        "dtex": 300,
+        "threadsPerStrand": 4,
+        "diameterMm": 0.8790204197896171
+      },
+      {
+        "threadId": "mara-100",
+        "dtex": 300,
+        "threadsPerStrand": 5,
+        "diameterMm": 0.990836685359095
+      },
+      {
+        "threadId": "mara-80",
+        "dtex": 400,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.4864722026317321
+      },
+      {
+        "threadId": "mara-80",
+        "dtex": 400,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.7056583021516541
+      },
+      {
+        "threadId": "mara-80",
+        "dtex": 400,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.8771769422196624
+      },
+      {
+        "threadId": "mara-80",
+        "dtex": 400,
+        "threadsPerStrand": 4,
+        "diameterMm": 1.0236014240931146
+      },
+      {
+        "threadId": "mara-80",
+        "dtex": 400,
+        "threadsPerStrand": 5,
+        "diameterMm": 1.1538091941254476
+      },
+      {
+        "threadId": "mara-50",
+        "dtex": 600,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.6029283875171061
+      },
+      {
+        "threadId": "mara-50",
+        "dtex": 600,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.8745852691123595
+      },
+      {
+        "threadId": "mara-50",
+        "dtex": 600,
+        "threadsPerStrand": 3,
+        "diameterMm": 1.0871636169108192
+      },
+      {
+        "threadId": "mara-50",
+        "dtex": 600,
+        "threadsPerStrand": 4,
+        "diameterMm": 1.2686405363964333
+      },
+      {
+        "threadId": "mara-50",
+        "dtex": 600,
+        "threadsPerStrand": 5,
+        "diameterMm": 1.4300186385841613
+      },
+      {
+        "threadId": "mara-30",
+        "dtex": 1000,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.7901209004486947
+      },
+      {
+        "threadId": "mara-30",
+        "dtex": 1000,
+        "threadsPerStrand": 2,
+        "diameterMm": 1.1461196962311146
+      },
+      {
+        "threadId": "mara-30",
+        "dtex": 1000,
+        "threadsPerStrand": 3,
+        "diameterMm": 1.4246977148745799
+      },
+      {
+        "threadId": "mara-30",
+        "dtex": 1000,
+        "threadsPerStrand": 4,
+        "diameterMm": 1.662518175817067
+      },
+      {
+        "threadId": "mara-30",
+        "dtex": 1000,
+        "threadsPerStrand": 5,
+        "diameterMm": 1.8739996951038853
+      },
+      {
+        "threadId": "mara-15",
+        "dtex": 2000,
+        "threadsPerStrand": 1,
+        "diameterMm": 1.1403368800046445
+      },
+      {
+        "threadId": "mara-15",
+        "dtex": 2000,
+        "threadsPerStrand": 2,
+        "diameterMm": 1.6541298398382587
+      },
+      {
+        "threadId": "mara-15",
+        "dtex": 2000,
+        "threadsPerStrand": 3,
+        "diameterMm": 2.0561857637321395
+      },
+      {
+        "threadId": "mara-15",
+        "dtex": 2000,
+        "threadsPerStrand": 4,
+        "diameterMm": 2.399418606045785
+      },
+      {
+        "threadId": "mara-15",
+        "dtex": 2000,
+        "threadsPerStrand": 5,
+        "diameterMm": 2.704637941144024
+      },
+      {
+        "threadId": "mara-11",
+        "dtex": 2599,
+        "threadsPerStrand": 1,
+        "diameterMm": 1.3099557836558013
+      },
+      {
+        "threadId": "mara-11",
+        "dtex": 2599,
+        "threadsPerStrand": 2,
+        "diameterMm": 1.9001726495112095
+      },
+      {
+        "threadId": "mara-11",
+        "dtex": 2599,
+        "threadsPerStrand": 3,
+        "diameterMm": 2.3620322035543273
+      },
+      {
+        "threadId": "mara-11",
+        "dtex": 2599,
+        "threadsPerStrand": 4,
+        "diameterMm": 2.756319062826605
+      },
+      {
+        "threadId": "mara-11",
+        "dtex": 2599,
+        "threadsPerStrand": 5,
+        "diameterMm": 3.106938112605902
+      },
+      {
+        "threadId": "skala-360",
+        "dtex": 80,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.20753095693301185
+      },
+      {
+        "threadId": "skala-360",
+        "dtex": 80,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.301036609946076
+      },
+      {
+        "threadId": "skala-360",
+        "dtex": 80,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.3742071370853398
+      },
+      {
+        "threadId": "skala-360",
+        "dtex": 80,
+        "threadsPerStrand": 4,
+        "diameterMm": 0.43667239754056447
+      },
+      {
+        "threadId": "skala-360",
+        "dtex": 80,
+        "threadsPerStrand": 5,
+        "diameterMm": 0.4922195448775314
+      },
+      {
+        "threadId": "skala-240",
+        "dtex": 119,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.25607484045938717
+      },
+      {
+        "threadId": "skala-240",
+        "dtex": 119,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.3714525437728266
+      },
+      {
+        "threadId": "skala-240",
+        "dtex": 119,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.4617385008195352
+      },
+      {
+        "threadId": "skala-240",
+        "dtex": 119,
+        "threadsPerStrand": 4,
+        "diameterMm": 0.5388151058799019
+      },
+      {
+        "threadId": "skala-240",
+        "dtex": 119,
+        "threadsPerStrand": 5,
+        "diameterMm": 0.6073553714022126
+      },
+      {
+        "threadId": "skala-200",
+        "dtex": 150,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.2894586229543095
+      },
+      {
+        "threadId": "skala-200",
+        "dtex": 150,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.41987780455304125
+      },
+      {
+        "threadId": "skala-200",
+        "dtex": 150,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.521934096971183
+      },
+      {
+        "threadId": "skala-200",
+        "dtex": 150,
+        "threadsPerStrand": 4,
+        "diameterMm": 0.6090589700072956
+      },
+      {
+        "threadId": "skala-200",
+        "dtex": 150,
+        "threadsPerStrand": 5,
+        "diameterMm": 0.6865346440696888
+      },
+      {
+        "threadId": "tera-fine-180",
+        "dtex": 160,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.29951771152867496
+      },
+      {
+        "threadId": "tera-fine-180",
+        "dtex": 160,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.4344691405557549
+      },
+      {
+        "threadId": "tera-fine-180",
+        "dtex": 160,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.5400720306690272
+      },
+      {
+        "threadId": "tera-fine-180",
+        "dtex": 160,
+        "threadsPerStrand": 4,
+        "diameterMm": 0.6302246138695695
+      },
+      {
+        "threadId": "tera-fine-180",
+        "dtex": 160,
+        "threadsPerStrand": 5,
+        "diameterMm": 0.7103926750503637
+      },
+      {
+        "threadId": "tera-80",
+        "dtex": 350,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.45327528105828824
+      },
+      {
+        "threadId": "tera-80",
+        "dtex": 350,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.6575040948044532
+      },
+      {
+        "threadId": "tera-80",
+        "dtex": 350,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.8173182822605374
+      },
+      {
+        "threadId": "tera-80",
+        "dtex": 350,
+        "threadsPerStrand": 4,
+        "diameterMm": 0.9537507398931617
+      },
+      {
+        "threadId": "tera-80",
+        "dtex": 350,
+        "threadsPerStrand": 5,
+        "diameterMm": 1.0750731160496838
+      },
+      {
+        "threadId": "tera-60",
+        "dtex": 500,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.5474619371455506
+      },
+      {
+        "threadId": "tera-60",
+        "dtex": 500,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.7941277198755723
+      },
+      {
+        "threadId": "tera-60",
+        "dtex": 500,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.987149903754157
+      },
+      {
+        "threadId": "tera-60",
+        "dtex": 500,
+        "threadsPerStrand": 4,
+        "diameterMm": 1.1519318379701549
+      },
+      {
+        "threadId": "tera-60",
+        "dtex": 500,
+        "threadsPerStrand": 5,
+        "diameterMm": 1.2984639473644228
+      },
+      {
+        "threadId": "tera-40",
+        "dtex": 750,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.678518404966367
+      },
+      {
+        "threadId": "tera-40",
+        "dtex": 750,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.9842333087830643
+      },
+      {
+        "threadId": "tera-40",
+        "dtex": 750,
+        "threadsPerStrand": 3,
+        "diameterMm": 1.22346291625366
+      },
+      {
+        "threadId": "tera-40",
+        "dtex": 750,
+        "threadsPerStrand": 4,
+        "diameterMm": 1.4276918636659182
+      },
+      {
+        "threadId": "tera-40",
+        "dtex": 750,
+        "threadsPerStrand": 5,
+        "diameterMm": 1.609302175537011
+      },
+      {
+        "threadId": "tera-30",
+        "dtex": 1000,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.7901209004486947
+      },
+      {
+        "threadId": "tera-30",
+        "dtex": 1000,
+        "threadsPerStrand": 2,
+        "diameterMm": 1.1461196962311146
+      },
+      {
+        "threadId": "tera-30",
+        "dtex": 1000,
+        "threadsPerStrand": 3,
+        "diameterMm": 1.4246977148745799
+      },
+      {
+        "threadId": "tera-30",
+        "dtex": 1000,
+        "threadsPerStrand": 4,
+        "diameterMm": 1.662518175817067
+      },
+      {
+        "threadId": "tera-30",
+        "dtex": 1000,
+        "threadsPerStrand": 5,
+        "diameterMm": 1.8739996951038853
+      },
+      {
+        "threadId": "tera-20",
+        "dtex": 1500,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.9792673001127837
+      },
+      {
+        "threadId": "tera-20",
+        "dtex": 1500,
+        "threadsPerStrand": 2,
+        "diameterMm": 1.4204883580436385
+      },
+      {
+        "threadId": "tera-20",
+        "dtex": 1500,
+        "threadsPerStrand": 3,
+        "diameterMm": 1.7657549419712826
+      },
+      {
+        "threadId": "tera-20",
+        "dtex": 1500,
+        "threadsPerStrand": 4,
+        "diameterMm": 2.060507049612624
+      },
+      {
+        "threadId": "tera-20",
+        "dtex": 1500,
+        "threadsPerStrand": 5,
+        "diameterMm": 2.322614957779774
+      },
+      {
+        "threadId": "tera-15",
+        "dtex": 2000,
+        "threadsPerStrand": 1,
+        "diameterMm": 1.1403368800046445
+      },
+      {
+        "threadId": "tera-15",
+        "dtex": 2000,
+        "threadsPerStrand": 2,
+        "diameterMm": 1.6541298398382587
+      },
+      {
+        "threadId": "tera-15",
+        "dtex": 2000,
+        "threadsPerStrand": 3,
+        "diameterMm": 2.0561857637321395
+      },
+      {
+        "threadId": "tera-15",
+        "dtex": 2000,
+        "threadsPerStrand": 4,
+        "diameterMm": 2.399418606045785
+      },
+      {
+        "threadId": "tera-15",
+        "dtex": 2000,
+        "threadsPerStrand": 5,
+        "diameterMm": 2.704637941144024
+      },
+      {
+        "threadId": "tera-10",
+        "dtex": 2900,
+        "threadsPerStrand": 1,
+        "diameterMm": 1.3881859218830672
+      },
+      {
+        "threadId": "tera-10",
+        "dtex": 2900,
+        "threadsPerStrand": 2,
+        "diameterMm": 2.0136503492027824
+      },
+      {
+        "threadId": "tera-10",
+        "dtex": 2900,
+        "threadsPerStrand": 3,
+        "diameterMm": 2.5030920073177962
+      },
+      {
+        "threadId": "tera-10",
+        "dtex": 2900,
+        "threadsPerStrand": 4,
+        "diameterMm": 2.9209255510560053
+      },
+      {
+        "threadId": "tera-10",
+        "dtex": 2900,
+        "threadsPerStrand": 5,
+        "diameterMm": 3.2924834577582422
+      },
+      {
+        "threadId": "tera-8",
+        "dtex": 3750,
+        "threadsPerStrand": 1,
+        "diameterMm": 1.5905113524663383
+      },
+      {
+        "threadId": "tera-8",
+        "dtex": 3750,
+        "threadsPerStrand": 2,
+        "diameterMm": 2.307136018178559
+      },
+      {
+        "threadId": "tera-8",
+        "dtex": 3750,
+        "threadsPerStrand": 3,
+        "diameterMm": 2.867912857455172
+      },
+      {
+        "threadId": "tera-8",
+        "dtex": 3750,
+        "threadsPerStrand": 4,
+        "diameterMm": 3.346644837286359
+      },
+      {
+        "threadId": "tera-8",
+        "dtex": 3750,
+        "threadsPerStrand": 5,
+        "diameterMm": 3.772356594906615
+      },
+      {
+        "threadId": "tera-5",
+        "dtex": 6000,
+        "threadsPerStrand": 1,
+        "diameterMm": 2.0397666795313563
+      },
+      {
+        "threadId": "tera-5",
+        "dtex": 6000,
+        "threadsPerStrand": 2,
+        "diameterMm": 2.95880891873538
+      },
+      {
+        "threadId": "tera-5",
+        "dtex": 6000,
+        "threadsPerStrand": 3,
+        "diameterMm": 3.677982604377813
+      },
+      {
+        "threadId": "tera-5",
+        "dtex": 6000,
+        "threadsPerStrand": 4,
+        "diameterMm": 4.2919370658606
+      },
+      {
+        "threadId": "tera-5",
+        "dtex": 6000,
+        "threadsPerStrand": 5,
+        "diameterMm": 4.837895230152864
+      }
+    ],
+    "dtex": [
+      {
+        "dtex": 80,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.20753095693301185
+      },
+      {
+        "dtex": 80,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.301036609946076
+      },
+      {
+        "dtex": 80,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.3742071370853398
+      },
+      {
+        "dtex": 80,
+        "threadsPerStrand": 4,
+        "diameterMm": 0.43667239754056447
+      },
+      {
+        "dtex": 80,
+        "threadsPerStrand": 5,
+        "diameterMm": 0.4922195448775314
+      },
+      {
+        "dtex": 130,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.26834325737043463
+      },
+      {
+        "dtex": 130,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.38924864846432555
+      },
+      {
+        "dtex": 130,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.48386016033818874
+      },
+      {
+        "dtex": 130,
+        "threadsPerStrand": 4,
+        "diameterMm": 0.5646294668106596
+      },
+      {
+        "dtex": 130,
+        "threadsPerStrand": 5,
+        "diameterMm": 0.6364534620079088
+      },
+      {
+        "dtex": 300,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.41775928570262066
+      },
+      {
+        "dtex": 300,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.6059859261479
+      },
+      {
+        "dtex": 300,
+        "threadsPerStrand": 3,
+        "diameterMm": 0.7532780102009308
+      },
+      {
+        "dtex": 300,
+        "threadsPerStrand": 4,
+        "diameterMm": 0.8790204197896171
+      },
+      {
+        "dtex": 300,
+        "threadsPerStrand": 5,
+        "diameterMm": 0.990836685359095
+      },
+      {
+        "dtex": 750,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.678518404966367
+      },
+      {
+        "dtex": 750,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.9842333087830643
+      },
+      {
+        "dtex": 750,
+        "threadsPerStrand": 3,
+        "diameterMm": 1.22346291625366
+      },
+      {
+        "dtex": 750,
+        "threadsPerStrand": 4,
+        "diameterMm": 1.4276918636659182
+      },
+      {
+        "dtex": 750,
+        "threadsPerStrand": 5,
+        "diameterMm": 1.609302175537011
+      },
+      {
+        "dtex": 1500,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.9792673001127837
+      },
+      {
+        "dtex": 1500,
+        "threadsPerStrand": 2,
+        "diameterMm": 1.4204883580436385
+      },
+      {
+        "dtex": 1500,
+        "threadsPerStrand": 3,
+        "diameterMm": 1.7657549419712826
+      },
+      {
+        "dtex": 1500,
+        "threadsPerStrand": 4,
+        "diameterMm": 2.060507049612624
+      },
+      {
+        "dtex": 1500,
+        "threadsPerStrand": 5,
+        "diameterMm": 2.322614957779774
+      },
+      {
+        "dtex": 3000,
+        "threadsPerStrand": 1,
+        "diameterMm": 1.41332119814453
+      },
+      {
+        "dtex": 3000,
+        "threadsPerStrand": 2,
+        "diameterMm": 2.0501106367070276
+      },
+      {
+        "dtex": 3000,
+        "threadsPerStrand": 3,
+        "diameterMm": 2.548414401184496
+      },
+      {
+        "dtex": 3000,
+        "threadsPerStrand": 4,
+        "diameterMm": 2.9738134744296745
+      },
+      {
+        "dtex": 3000,
+        "threadsPerStrand": 5,
+        "diameterMm": 3.352099017887817
+      },
+      {
+        "dtex": 6000,
+        "threadsPerStrand": 1,
+        "diameterMm": 2.0397666795313563
+      },
+      {
+        "dtex": 6000,
+        "threadsPerStrand": 2,
+        "diameterMm": 2.95880891873538
+      },
+      {
+        "dtex": 6000,
+        "threadsPerStrand": 3,
+        "diameterMm": 3.677982604377813
+      },
+      {
+        "dtex": 6000,
+        "threadsPerStrand": 4,
+        "diameterMm": 4.2919370658606
+      },
+      {
+        "dtex": 6000,
+        "threadsPerStrand": 5,
+        "diameterMm": 4.837895230152864
+      }
+    ]
+  },
+  "reverse": [
+    {
+      "targetDiameterMm": 0.25,
+      "tolerance": 0.15,
+      "results": [
+        {
+          "threadId": "skala-240",
+          "threadsPerStrand": 1,
+          "diameterMm": 0.25607484045938717,
+          "deviationPercent": 2.429936183754866
+        },
+        {
+          "threadId": "mara-220",
+          "threadsPerStrand": 1,
+          "diameterMm": 0.26834325737043463,
+          "deviationPercent": 7.337302948173852
+        }
+      ]
+    },
+    {
+      "targetDiameterMm": 0.35,
+      "tolerance": 0.15,
+      "results": [
+        {
+          "threadId": "mara-150",
+          "threadsPerStrand": 1,
+          "diameterMm": 0.3370686869173945,
+          "deviationPercent": -3.694660880744422
+        },
+        {
+          "threadId": "skala-240",
+          "threadsPerStrand": 2,
+          "diameterMm": 0.3714525437728266,
+          "deviationPercent": 6.129298220807608
+        },
+        {
+          "threadId": "skala-360",
+          "threadsPerStrand": 3,
+          "diameterMm": 0.3742071370853398,
+          "deviationPercent": 6.916324881525668
+        },
+        {
+          "threadId": "mara-120",
+          "threadsPerStrand": 1,
+          "diameterMm": 0.37932748324080096,
+          "deviationPercent": 8.379280925943137
+        },
+        {
+          "threadId": "mara-220",
+          "threadsPerStrand": 2,
+          "diameterMm": 0.38924864846432555,
+          "deviationPercent": 11.213899561235879
+        },
+        {
+          "threadId": "skala-360",
+          "threadsPerStrand": 2,
+          "diameterMm": 0.301036609946076,
+          "deviationPercent": -13.98954001540685
+        },
+        {
+          "threadId": "tera-fine-180",
+          "threadsPerStrand": 1,
+          "diameterMm": 0.29951771152867496,
+          "deviationPercent": -14.42351099180715
+        }
+      ]
+    },
+    {
+      "targetDiameterMm": 0.5,
+      "tolerance": 0.15,
+      "results": [
+        {
+          "threadId": "skala-360",
+          "threadsPerStrand": 5,
+          "diameterMm": 0.4922195448775314,
+          "deviationPercent": -1.556091024493722
+        },
+        {
+          "threadId": "mara-150",
+          "threadsPerStrand": 2,
+          "diameterMm": 0.48893917480147714,
+          "deviationPercent": -2.2121650397045722
+        },
+        {
+          "threadId": "mara-80",
+          "threadsPerStrand": 1,
+          "diameterMm": 0.4864722026317321,
+          "deviationPercent": -2.705559473653585
+        },
+        {
+          "threadId": "mara-220",
+          "threadsPerStrand": 3,
+          "diameterMm": 0.48386016033818874,
+          "deviationPercent": -3.2279679323622523
+        },
+        {
+          "threadId": "skala-200",
+          "threadsPerStrand": 3,
+          "diameterMm": 0.521934096971183,
+          "deviationPercent": 4.386819394236596
+        },
+        {
+          "threadId": "skala-240",
+          "threadsPerStrand": 3,
+          "diameterMm": 0.4617385008195352,
+          "deviationPercent": -7.652299836092958
+        },
+        {
+          "threadId": "skala-240",
+          "threadsPerStrand": 4,
+          "diameterMm": 0.5388151058799019,
+          "deviationPercent": 7.763021175980378
+        },
+        {
+          "threadId": "tera-fine-180",
+          "threadsPerStrand": 3,
+          "diameterMm": 0.5400720306690272,
+          "deviationPercent": 8.01440613380544
+        },
+        {
+          "threadId": "tera-80",
+          "threadsPerStrand": 1,
+          "diameterMm": 0.45327528105828824,
+          "deviationPercent": -9.344943788342352
+        },
+        {
+          "threadId": "tera-60",
+          "threadsPerStrand": 1,
+          "diameterMm": 0.5474619371455506,
+          "deviationPercent": 9.492387429110117
+        },
+        {
+          "threadId": "mara-120",
+          "threadsPerStrand": 2,
+          "diameterMm": 0.5502381972393985,
+          "deviationPercent": 10.047639447879696
+        },
+        {
+          "threadId": "skala-360",
+          "threadsPerStrand": 4,
+          "diameterMm": 0.43667239754056447,
+          "deviationPercent": -12.665520491887106
+        },
+        {
+          "threadId": "mara-220",
+          "threadsPerStrand": 4,
+          "diameterMm": 0.5646294668106596,
+          "deviationPercent": 12.925893362131923
+        },
+        {
+          "threadId": "tera-fine-180",
+          "threadsPerStrand": 2,
+          "diameterMm": 0.4344691405557549,
+          "deviationPercent": -13.106171888849016
+        }
+      ]
+    },
+    {
+      "targetDiameterMm": 0.75,
+      "tolerance": 0.15,
+      "results": [
+        {
+          "threadId": "mara-100",
+          "threadsPerStrand": 3,
+          "diameterMm": 0.7532780102009308,
+          "deviationPercent": 0.43706802679076934
+        },
+        {
+          "threadId": "tera-fine-180",
+          "threadsPerStrand": 5,
+          "diameterMm": 0.7103926750503637,
+          "deviationPercent": -5.2809766599515005
+        },
+        {
+          "threadId": "mara-30",
+          "threadsPerStrand": 1,
+          "diameterMm": 0.7901209004486947,
+          "deviationPercent": 5.349453393159287
+        },
+        {
+          "threadId": "tera-30",
+          "threadsPerStrand": 1,
+          "diameterMm": 0.7901209004486947,
+          "deviationPercent": 5.349453393159287
+        },
+        {
+          "threadId": "mara-150",
+          "threadsPerStrand": 4,
+          "diameterMm": 0.7092367993059417,
+          "deviationPercent": -5.435093425874435
+        },
+        {
+          "threadId": "tera-60",
+          "threadsPerStrand": 2,
+          "diameterMm": 0.7941277198755723,
+          "deviationPercent": 5.883695983409639
+        },
+        {
+          "threadId": "mara-80",
+          "threadsPerStrand": 2,
+          "diameterMm": 0.7056583021516541,
+          "deviationPercent": -5.912226379779447
+        },
+        {
+          "threadId": "mara-120",
+          "threadsPerStrand": 4,
+          "diameterMm": 0.7981548584737446,
+          "deviationPercent": 6.420647796499275
+        },
+        {
+          "threadId": "mara-150",
+          "threadsPerStrand": 5,
+          "diameterMm": 0.7994556480578514,
+          "deviationPercent": 6.5940864077135215
+        },
+        {
+          "threadId": "skala-200",
+          "threadsPerStrand": 5,
+          "diameterMm": 0.6865346440696888,
+          "deviationPercent": -8.462047457374828
+        },
+        {
+          "threadId": "mara-120",
+          "threadsPerStrand": 3,
+          "diameterMm": 0.6839801329839477,
+          "deviationPercent": -8.802648935473645
+        },
+        {
+          "threadId": "tera-80",
+          "threadsPerStrand": 3,
+          "diameterMm": 0.8173182822605374,
+          "deviationPercent": 8.97577096807165
+        },
+        {
+          "threadId": "tera-40",
+          "threadsPerStrand": 1,
+          "diameterMm": 0.678518404966367,
+          "deviationPercent": -9.530879337817739
+        },
+        {
+          "threadId": "tera-80",
+          "threadsPerStrand": 2,
+          "diameterMm": 0.6575040948044532,
+          "deviationPercent": -12.332787359406245
+        }
+      ]
+    },
+    {
+      "targetDiameterMm": 1,
+      "tolerance": 0.15,
+      "results": [
+        {
+          "threadId": "mara-100",
+          "threadsPerStrand": 5,
+          "diameterMm": 0.990836685359095,
+          "deviationPercent": -0.9163314640905029
+        },
+        {
+          "threadId": "tera-60",
+          "threadsPerStrand": 3,
+          "diameterMm": 0.987149903754157,
+          "deviationPercent": -1.285009624584299
+        },
+        {
+          "threadId": "tera-40",
+          "threadsPerStrand": 2,
+          "diameterMm": 0.9842333087830643,
+          "deviationPercent": -1.5766691216935746
+        },
+        {
+          "threadId": "tera-20",
+          "threadsPerStrand": 1,
+          "diameterMm": 0.9792673001127837,
+          "deviationPercent": -2.0732699887216266
+        },
+        {
+          "threadId": "mara-80",
+          "threadsPerStrand": 4,
+          "diameterMm": 1.0236014240931146,
+          "deviationPercent": 2.360142409311461
+        },
+        {
+          "threadId": "tera-80",
+          "threadsPerStrand": 4,
+          "diameterMm": 0.9537507398931617,
+          "deviationPercent": -4.6249260106838275
+        },
+        {
+          "threadId": "tera-80",
+          "threadsPerStrand": 5,
+          "diameterMm": 1.0750731160496838,
+          "deviationPercent": 7.507311604968381
+        },
+        {
+          "threadId": "mara-50",
+          "threadsPerStrand": 3,
+          "diameterMm": 1.0871636169108192,
+          "deviationPercent": 8.71636169108192
+        },
+        {
+          "threadId": "mara-120",
+          "threadsPerStrand": 5,
+          "diameterMm": 0.8996845767959074,
+          "deviationPercent": -10.031542320409258
+        },
+        {
+          "threadId": "mara-100",
+          "threadsPerStrand": 4,
+          "diameterMm": 0.8790204197896171,
+          "deviationPercent": -12.097958021038291
+        },
+        {
+          "threadId": "mara-80",
+          "threadsPerStrand": 3,
+          "diameterMm": 0.8771769422196624,
+          "deviationPercent": -12.282305778033765
+        },
+        {
+          "threadId": "mara-50",
+          "threadsPerStrand": 2,
+          "diameterMm": 0.8745852691123595,
+          "deviationPercent": -12.541473088764054
+        },
+        {
+          "threadId": "mara-15",
+          "threadsPerStrand": 1,
+          "diameterMm": 1.1403368800046445,
+          "deviationPercent": 14.033688000464451
+        },
+        {
+          "threadId": "tera-15",
+          "threadsPerStrand": 1,
+          "diameterMm": 1.1403368800046445,
+          "deviationPercent": 14.033688000464451
+        },
+        {
+          "threadId": "mara-30",
+          "threadsPerStrand": 2,
+          "diameterMm": 1.1461196962311146,
+          "deviationPercent": 14.611969623111465
+        },
+        {
+          "threadId": "tera-30",
+          "threadsPerStrand": 2,
+          "diameterMm": 1.1461196962311146,
+          "deviationPercent": 14.611969623111465
+        }
+      ]
+    },
+    {
+      "targetDiameterMm": 1.25,
+      "tolerance": 0.15,
+      "results": [
+        {
+          "threadId": "mara-50",
+          "threadsPerStrand": 4,
+          "diameterMm": 1.2686405363964333,
+          "deviationPercent": 1.4912429117146608
+        },
+        {
+          "threadId": "tera-40",
+          "threadsPerStrand": 3,
+          "diameterMm": 1.22346291625366,
+          "deviationPercent": -2.1229666997071917
+        },
+        {
+          "threadId": "tera-60",
+          "threadsPerStrand": 5,
+          "diameterMm": 1.2984639473644228,
+          "deviationPercent": 3.8771157891538266
+        },
+        {
+          "threadId": "mara-11",
+          "threadsPerStrand": 1,
+          "diameterMm": 1.3099557836558013,
+          "deviationPercent": 4.796462692464107
+        },
+        {
+          "threadId": "mara-80",
+          "threadsPerStrand": 5,
+          "diameterMm": 1.1538091941254476,
+          "deviationPercent": -7.6952644699641946
+        },
+        {
+          "threadId": "tera-60",
+          "threadsPerStrand": 4,
+          "diameterMm": 1.1519318379701549,
+          "deviationPercent": -7.845452962387611
+        },
+        {
+          "threadId": "mara-30",
+          "threadsPerStrand": 2,
+          "diameterMm": 1.1461196962311146,
+          "deviationPercent": -8.310424301510828
+        },
+        {
+          "threadId": "tera-30",
+          "threadsPerStrand": 2,
+          "diameterMm": 1.1461196962311146,
+          "deviationPercent": -8.310424301510828
+        },
+        {
+          "threadId": "mara-15",
+          "threadsPerStrand": 1,
+          "diameterMm": 1.1403368800046445,
+          "deviationPercent": -8.77304959962844
+        },
+        {
+          "threadId": "tera-15",
+          "threadsPerStrand": 1,
+          "diameterMm": 1.1403368800046445,
+          "deviationPercent": -8.77304959962844
+        },
+        {
+          "threadId": "tera-10",
+          "threadsPerStrand": 1,
+          "diameterMm": 1.3881859218830672,
+          "deviationPercent": 11.054873750645378
+        },
+        {
+          "threadId": "mara-50",
+          "threadsPerStrand": 3,
+          "diameterMm": 1.0871636169108192,
+          "deviationPercent": -13.026910647134466
+        },
+        {
+          "threadId": "tera-20",
+          "threadsPerStrand": 2,
+          "diameterMm": 1.4204883580436385,
+          "deviationPercent": 13.639068643491079
+        },
+        {
+          "threadId": "mara-30",
+          "threadsPerStrand": 3,
+          "diameterMm": 1.4246977148745799,
+          "deviationPercent": 13.975817189966389
+        },
+        {
+          "threadId": "tera-30",
+          "threadsPerStrand": 3,
+          "diameterMm": 1.4246977148745799,
+          "deviationPercent": 13.975817189966389
+        },
+        {
+          "threadId": "tera-80",
+          "threadsPerStrand": 5,
+          "diameterMm": 1.0750731160496838,
+          "deviationPercent": -13.994150716025294
+        },
+        {
+          "threadId": "tera-40",
+          "threadsPerStrand": 4,
+          "diameterMm": 1.4276918636659182,
+          "deviationPercent": 14.215349093273453
+        },
+        {
+          "threadId": "mara-50",
+          "threadsPerStrand": 5,
+          "diameterMm": 1.4300186385841613,
+          "deviationPercent": 14.401491086732907
+        }
+      ]
+    },
+    {
+      "targetDiameterMm": 1.5,
+      "tolerance": 0.15,
+      "results": [
+        {
+          "threadId": "mara-50",
+          "threadsPerStrand": 5,
+          "diameterMm": 1.4300186385841613,
+          "deviationPercent": -4.665424094389245
+        },
+        {
+          "threadId": "tera-40",
+          "threadsPerStrand": 4,
+          "diameterMm": 1.4276918636659182,
+          "deviationPercent": -4.820542422272123
+        },
+        {
+          "threadId": "mara-30",
+          "threadsPerStrand": 3,
+          "diameterMm": 1.4246977148745799,
+          "deviationPercent": -5.020152341694676
+        },
+        {
+          "threadId": "tera-30",
+          "threadsPerStrand": 3,
+          "diameterMm": 1.4246977148745799,
+          "deviationPercent": -5.020152341694676
+        },
+        {
+          "threadId": "tera-20",
+          "threadsPerStrand": 2,
+          "diameterMm": 1.4204883580436385,
+          "deviationPercent": -5.300776130424101
+        },
+        {
+          "threadId": "tera-8",
+          "threadsPerStrand": 1,
+          "diameterMm": 1.5905113524663383,
+          "deviationPercent": 6.034090164422556
+        },
+        {
+          "threadId": "tera-40",
+          "threadsPerStrand": 5,
+          "diameterMm": 1.609302175537011,
+          "deviationPercent": 7.2868117024673955
+        },
+        {
+          "threadId": "tera-10",
+          "threadsPerStrand": 1,
+          "diameterMm": 1.3881859218830672,
+          "deviationPercent": -7.454271874462186
+        },
+        {
+          "threadId": "mara-15",
+          "threadsPerStrand": 2,
+          "diameterMm": 1.6541298398382587,
+          "deviationPercent": 10.275322655883912
+        },
+        {
+          "threadId": "tera-15",
+          "threadsPerStrand": 2,
+          "diameterMm": 1.6541298398382587,
+          "deviationPercent": 10.275322655883912
+        },
+        {
+          "threadId": "mara-30",
+          "threadsPerStrand": 4,
+          "diameterMm": 1.662518175817067,
+          "deviationPercent": 10.834545054471139
+        },
+        {
+          "threadId": "tera-30",
+          "threadsPerStrand": 4,
+          "diameterMm": 1.662518175817067,
+          "deviationPercent": 10.834545054471139
+        },
+        {
+          "threadId": "mara-11",
+          "threadsPerStrand": 1,
+          "diameterMm": 1.3099557836558013,
+          "deviationPercent": -12.669614422946577
+        },
+        {
+          "threadId": "tera-60",
+          "threadsPerStrand": 5,
+          "diameterMm": 1.2984639473644228,
+          "deviationPercent": -13.435736842371812
+        }
+      ]
+    },
+    {
+      "targetDiameterMm": 2,
+      "tolerance": 0.15,
+      "results": [
+        {
+          "threadId": "tera-10",
+          "threadsPerStrand": 2,
+          "diameterMm": 2.0136503492027824,
+          "deviationPercent": 0.6825174601391204
+        },
+        {
+          "threadId": "tera-5",
+          "threadsPerStrand": 1,
+          "diameterMm": 2.0397666795313563,
+          "deviationPercent": 1.9883339765678132
+        },
+        {
+          "threadId": "mara-15",
+          "threadsPerStrand": 3,
+          "diameterMm": 2.0561857637321395,
+          "deviationPercent": 2.809288186606973
+        },
+        {
+          "threadId": "tera-15",
+          "threadsPerStrand": 3,
+          "diameterMm": 2.0561857637321395,
+          "deviationPercent": 2.809288186606973
+        },
+        {
+          "threadId": "tera-20",
+          "threadsPerStrand": 4,
+          "diameterMm": 2.060507049612624,
+          "deviationPercent": 3.025352480631205
+        },
+        {
+          "threadId": "mara-11",
+          "threadsPerStrand": 2,
+          "diameterMm": 1.9001726495112095,
+          "deviationPercent": -4.991367524439527
+        },
+        {
+          "threadId": "mara-30",
+          "threadsPerStrand": 5,
+          "diameterMm": 1.8739996951038853,
+          "deviationPercent": -6.300015244805735
+        },
+        {
+          "threadId": "tera-30",
+          "threadsPerStrand": 5,
+          "diameterMm": 1.8739996951038853,
+          "deviationPercent": -6.300015244805735
+        },
+        {
+          "threadId": "tera-20",
+          "threadsPerStrand": 3,
+          "diameterMm": 1.7657549419712826,
+          "deviationPercent": -11.712252901435871
+        }
+      ]
+    }
+  ]
+}
