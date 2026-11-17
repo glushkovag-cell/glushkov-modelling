@@ -1,0 +1,3558 @@
+{
+  "schema": 1,
+  "model": "rope-diameter-no-load",
+  "source": {
+    "file": "threads_merged.xlsx",
+    "sheet": "Общая таблица",
+    "sha256": "4924e12a2046b9fb034cee444b285fb22da43904ce6e923564ecdd24ebb056eb",
+    "normalizedCsv": "normalized.csv",
+    "normalizedCsvSha256": "4b015f8991f4fc816dd4618fdd635715f6ae4bb056ecd132751b0c488b0dc0db",
+    "documentedSha256": {
+      "threads_merged.xlsx": "4924e12a2046b9fb034cee444b285fb22da43904ce6e923564ecdd24ebb056eb",
+      "normalized.csv": "4b015f8991f4fc816dd4618fdd635715f6ae4bb056ecd132751b0c488b0dc0db"
+    },
+    "documentedSha256Match": {
+      "threads_merged.xlsx": true,
+      "normalized.csv": true
+    }
+  },
+  "xlsxCrossCheck": {
+    "status": "match",
+    "sheet": "Общая таблица",
+    "comparedColumns": [
+      "manufacturer",
+      "series",
+      "identifier",
+      "dtex",
+      "threadDiameterMm",
+      "ropeType",
+      "construction",
+      "diameterMm",
+      "loadGrams",
+      "source",
+      "position"
+    ],
+    "rowsCompared": 186,
+    "mismatchCount": 0,
+    "mismatches": []
+  },
+  "sample": {
+    "dataRows": 186,
+    "typePMeasurements": 143,
+    "typePOld": 130,
+    "typePNew": 13,
+    "newRows": [
+      175,
+      187
+    ],
+    "removedRows": [
+      {
+        "excelRow": 179,
+        "manufacturer": "UNI-C 20D",
+        "series": "",
+        "dtex": 22.22,
+        "threadsPerStrand": 1,
+        "diameterMm": 0.089,
+        "reason": "UNI-C 20D 22.22 dTex: removed from the working sample by the sample rule (179/180 are the unsplit pair, 181 is the 0.048 mm outlier); the record is kept in threads_merged.xlsx and normalized.csv"
+      },
+      {
+        "excelRow": 180,
+        "manufacturer": "UNI-C 20D",
+        "series": "",
+        "dtex": 22.22,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.096,
+        "reason": "UNI-C 20D 22.22 dTex: removed from the working sample by the sample rule (179/180 are the unsplit pair, 181 is the 0.048 mm outlier); the record is kept in threads_merged.xlsx and normalized.csv"
+      },
+      {
+        "excelRow": 181,
+        "manufacturer": "UNI-C 20D",
+        "series": "",
+        "dtex": 22.22,
+        "threadsPerStrand": 2,
+        "diameterMm": 0.048,
+        "reason": "UNI-C 20D 22.22 dTex: removed from the working sample by the sample rule (179/180 are the unsplit pair, 181 is the 0.048 mm outlier); the record is kept in threads_merged.xlsx and normalized.csv"
+      }
+    ],
+    "afterRemoval": 140,
+    "averagingGroups": 10,
+    "aggregatedRows": 130,
+    "aggregatedOld": 123,
+    "aggregatedNew": 7,
+    "trainingRows": 128,
+    "trainingOld": 121,
+    "trainingNew": 7,
+    "excludedRows": [
+      {
+        "excelRow": 95,
+        "identityKind": "series",
+        "identity": "Skala 240",
+        "dtex": 120.0,
+        "threadsPerStrand": 5,
+        "diameterMm": 0.825,
+        "family": "Skala 240",
+        "reason": "Skala 240 5x3, measured 0.825 mm: pre-existing training exception"
+      },
+      {
+        "excelRow": 133,
+        "identityKind": "series",
+        "identity": "Tera 30",
+        "dtex": 1000.0,
+        "threadsPerStrand": 2,
+        "diameterMm": 1.0,
+        "family": "Tera 30",
+        "reason": "Tera 30 2x3, measured 1.000 mm: pre-existing training exception"
+      }
+    ],
+    "families": 22
+  },
+  "averaging": {
+    "spreadLimit": 0.15,
+    "groups": [
+      {
+        "groupId": 1,
+        "identityKind": "series",
+        "identity": "Skala 360",
+        "dtex": 80.0,
+        "threadsPerStrand": 1,
+        "sourceExcelRows": [
+          2,
+          3
+        ],
+        "rawDiametersMm": [
+          0.18,
+          0.19
+        ],
+        "meanDiameterMm": 0.185,
+        "minDiameterMm": 0.18,
+        "maxDiameterMm": 0.19,
+        "spreadRelative": 0.05555555555555561,
+        "spreadPercent": 5.555555555555561,
+        "spreadLimit": 0.15,
+        "qualifiesBySpread": true,
+        "decision": "averaged",
+        "weight": 1,
+        "family": "Skala 360",
+        "isNew": false,
+        "note": ""
+      },
+      {
+        "groupId": 2,
+        "identityKind": "series",
+        "identity": "Skala 240",
+        "dtex": 120.0,
+        "threadsPerStrand": 1,
+        "sourceExcelRows": [
+          4,
+          5
+        ],
+        "rawDiametersMm": [
+          0.22,
+          0.22
+        ],
+        "meanDiameterMm": 0.22,
+        "minDiameterMm": 0.22,
+        "maxDiameterMm": 0.22,
+        "spreadRelative": 0.0,
+        "spreadPercent": 0.0,
+        "spreadLimit": 0.15,
+        "qualifiesBySpread": true,
+        "decision": "averaged",
+        "weight": 1,
+        "family": "Skala 240",
+        "isNew": false,
+        "note": ""
+      },
+      {
+        "groupId": 3,
+        "identityKind": "series",
+        "identity": "Skala 360",
+        "dtex": 80.0,
+        "threadsPerStrand": 2,
+        "sourceExcelRows": [
+          7,
+          8
+        ],
+        "rawDiametersMm": [
+          0.26,
+          0.3
+        ],
+        "meanDiameterMm": 0.28,
+        "minDiameterMm": 0.26,
+        "maxDiameterMm": 0.3,
+        "spreadRelative": 0.15384615384615377,
+        "spreadPercent": 15.384615384615378,
+        "spreadLimit": 0.15,
+        "qualifiesBySpread": true,
+        "decision": "averaged-by-explicit-decision",
+        "weight": 1,
+        "family": "Skala 360",
+        "isNew": false,
+        "note": "averaged by explicit user decision (within-group spread 15.4 % exceeds the 15 % limit)"
+      },
+      {
+        "groupId": 4,
+        "identityKind": "series",
+        "identity": "Skala 240",
+        "dtex": 120.0,
+        "threadsPerStrand": 2,
+        "sourceExcelRows": [
+          10,
+          12
+        ],
+        "rawDiametersMm": [
+          0.35,
+          0.375
+        ],
+        "meanDiameterMm": 0.3625,
+        "minDiameterMm": 0.35,
+        "maxDiameterMm": 0.375,
+        "spreadRelative": 0.0714285714285715,
+        "spreadPercent": 7.1428571428571495,
+        "spreadLimit": 0.15,
+        "qualifiesBySpread": true,
+        "decision": "averaged",
+        "weight": 1,
+        "family": "Skala 240",
+        "isNew": false,
+        "note": ""
+      },
+      {
+        "groupId": 5,
+        "identityKind": "series",
+        "identity": "Skala 360",
+        "dtex": 80.0,
+        "threadsPerStrand": 3,
+        "sourceExcelRows": [
+          13,
+          14
+        ],
+        "rawDiametersMm": [
+          0.375,
+          0.38
+        ],
+        "meanDiameterMm": 0.3775,
+        "minDiameterMm": 0.375,
+        "maxDiameterMm": 0.38,
+        "spreadRelative": 0.013333333333333345,
+        "spreadPercent": 1.3333333333333344,
+        "spreadLimit": 0.15,
+        "qualifiesBySpread": true,
+        "decision": "averaged",
+        "weight": 1,
+        "family": "Skala 360",
+        "isNew": false,
+        "note": ""
+      },
+      {
+        "groupId": 6,
+        "identityKind": "series",
+        "identity": "Skala 240",
+        "dtex": 120.0,
+        "threadsPerStrand": 3,
+        "sourceExcelRows": [
+          27,
+          37
+        ],
+        "rawDiametersMm": [
+          0.45,
+          0.48
+        ],
+        "meanDiameterMm": 0.465,
+        "minDiameterMm": 0.45,
+        "maxDiameterMm": 0.48,
+        "spreadRelative": 0.0666666666666666,
+        "spreadPercent": 6.66666666666666,
+        "spreadLimit": 0.15,
+        "qualifiesBySpread": true,
+        "decision": "averaged",
+        "weight": 1,
+        "family": "Skala 240",
+        "isNew": false,
+        "note": ""
+      },
+      {
+        "groupId": 7,
+        "identityKind": "barcode",
+        "identity": "4606080151661",
+        "dtex": 315.0,
+        "threadsPerStrand": 3,
+        "sourceExcelRows": [
+          77,
+          82
+        ],
+        "rawDiametersMm": [
+          0.75,
+          0.775
+        ],
+        "meanDiameterMm": 0.7625,
+        "minDiameterMm": 0.75,
+        "maxDiameterMm": 0.775,
+        "spreadRelative": 0.03333333333333336,
+        "spreadPercent": 3.333333333333336,
+        "spreadLimit": 0.15,
+        "qualifiesBySpread": true,
+        "decision": "averaged",
+        "weight": 1,
+        "family": "Gamma 40/2",
+        "isNew": false,
+        "note": ""
+      },
+      {
+        "groupId": 8,
+        "identityKind": "manufacturer",
+        "identity": "TMC 16/0 W",
+        "dtex": 40.0,
+        "threadsPerStrand": 1,
+        "sourceExcelRows": [
+          177,
+          178
+        ],
+        "rawDiametersMm": [
+          0.075,
+          0.077
+        ],
+        "meanDiameterMm": 0.076,
+        "minDiameterMm": 0.075,
+        "maxDiameterMm": 0.077,
+        "spreadRelative": 0.026666666666666693,
+        "spreadPercent": 2.666666666666669,
+        "spreadLimit": 0.15,
+        "qualifiesBySpread": true,
+        "decision": "averaged",
+        "weight": 1,
+        "family": "TMC 16/0 W",
+        "isNew": true,
+        "note": ""
+      },
+      {
+        "groupId": 9,
+        "identityKind": "manufacturer",
+        "identity": "UNI-T 8/0 W",
+        "dtex": 80.0,
+        "threadsPerStrand": 1,
+        "sourceExcelRows": [
+          184,
+          186
+        ],
+        "rawDiametersMm": [
+          0.11,
+          0.109
+        ],
+        "meanDiameterMm": 0.1095,
+        "minDiameterMm": 0.109,
+        "maxDiameterMm": 0.11,
+        "spreadRelative": 0.009174311926605512,
+        "spreadPercent": 0.9174311926605512,
+        "spreadLimit": 0.15,
+        "qualifiesBySpread": true,
+        "decision": "averaged",
+        "weight": 1,
+        "family": "UNI-T 8/0 W",
+        "isNew": true,
+        "note": ""
+      },
+      {
+        "groupId": 10,
+        "identityKind": "manufacturer",
+        "identity": "UNI-T 8/0 W",
+        "dtex": 80.0,
+        "threadsPerStrand": 2,
+        "sourceExcelRows": [
+          185,
+          187
+        ],
+        "rawDiametersMm": [
+          0.172,
+          0.164
+        ],
+        "meanDiameterMm": 0.168,
+        "minDiameterMm": 0.164,
+        "maxDiameterMm": 0.172,
+        "spreadRelative": 0.04878048780487792,
+        "spreadPercent": 4.8780487804877914,
+        "spreadLimit": 0.15,
+        "qualifiesBySpread": true,
+        "decision": "averaged",
+        "weight": 1,
+        "family": "UNI-T 8/0 W",
+        "isNew": true,
+        "note": ""
+      }
+    ]
+  },
+  "families": [
+    {
+      "family": "9125 No.120",
+      "members": 5,
+      "oldMembers": 5,
+      "newMembers": 0
+    },
+    {
+      "family": "Gamma 40/2",
+      "members": 30,
+      "oldMembers": 30,
+      "newMembers": 0
+    },
+    {
+      "family": "Gutermann Extra Strong 750",
+      "members": 10,
+      "oldMembers": 10,
+      "newMembers": 0
+    },
+    {
+      "family": "Gutermann Sew-all 300",
+      "members": 32,
+      "oldMembers": 32,
+      "newMembers": 0
+    },
+    {
+      "family": "Gutermann Top Stitch 1000",
+      "members": 2,
+      "oldMembers": 2,
+      "newMembers": 0
+    },
+    {
+      "family": "HUF 0.04",
+      "members": 1,
+      "oldMembers": 0,
+      "newMembers": 1
+    },
+    {
+      "family": "M202 extra fine",
+      "members": 5,
+      "oldMembers": 5,
+      "newMembers": 0
+    },
+    {
+      "family": "Mara 100",
+      "members": 1,
+      "oldMembers": 0,
+      "newMembers": 1
+    },
+    {
+      "family": "Maraflex N.120",
+      "members": 5,
+      "oldMembers": 5,
+      "newMembers": 0
+    },
+    {
+      "family": "Skala 200",
+      "members": 3,
+      "oldMembers": 3,
+      "newMembers": 0
+    },
+    {
+      "family": "Skala 240",
+      "members": 4,
+      "oldMembers": 4,
+      "newMembers": 0
+    },
+    {
+      "family": "Skala 360",
+      "members": 5,
+      "oldMembers": 5,
+      "newMembers": 0
+    },
+    {
+      "family": "TMC 16/0 W",
+      "members": 1,
+      "oldMembers": 0,
+      "newMembers": 1
+    },
+    {
+      "family": "Tera 10",
+      "members": 2,
+      "oldMembers": 2,
+      "newMembers": 0
+    },
+    {
+      "family": "Tera 20",
+      "members": 2,
+      "oldMembers": 2,
+      "newMembers": 0
+    },
+    {
+      "family": "Tera 30",
+      "members": 2,
+      "oldMembers": 2,
+      "newMembers": 0
+    },
+    {
+      "family": "Tera 40",
+      "members": 3,
+      "oldMembers": 3,
+      "newMembers": 0
+    },
+    {
+      "family": "Tera 60",
+      "members": 3,
+      "oldMembers": 3,
+      "newMembers": 0
+    },
+    {
+      "family": "Tera 80",
+      "members": 3,
+      "oldMembers": 3,
+      "newMembers": 0
+    },
+    {
+      "family": "UNI-C 20D",
+      "members": 2,
+      "oldMembers": 0,
+      "newMembers": 2
+    },
+    {
+      "family": "UNI-T 8/0 W",
+      "members": 2,
+      "oldMembers": 0,
+      "newMembers": 2
+    },
+    {
+      "family": "seta",
+      "members": 5,
+      "oldMembers": 5,
+      "newMembers": 0
+    }
+  ],
+  "coefficients": {
+    "fitted": {
+      "c0": -0.8841755963398531,
+      "c1": 0.6318544941078147,
+      "c2": 0.5435747541143862,
+      "c3": -0.061470049387915754
+    },
+    "spec": {
+      "c0": -0.8841755979848913,
+      "c1": 0.6318544934210768,
+      "c2": 0.5435747556354212,
+      "c3": -0.061470048768181726
+    },
+    "fit": {
+      "rows": 128,
+      "starts": 3,
+      "nfev": 8,
+      "optimality": 3.806572035358613e-08,
+      "sumSquaredRelativeErrors": 1.0061432438251512
+    },
+    "oldOnlyFit": {
+      "coefficients": {
+        "c0": -0.8640459903928657,
+        "c1": 0.5547160965272543,
+        "c2": 0.5263720020037216,
+        "c3": -0.01765063184213053
+      },
+      "rows": 121,
+      "starts": 3,
+      "nfev": 13,
+      "optimality": 4.776065126721463e-09,
+      "sumSquaredRelativeErrors": 0.2852625805090485
+    }
+  },
+  "metrics": {
+    "training": {
+      "all": {
+        "count": 128,
+        "rmspePercent": 8.865942754374176,
+        "mapePercent": 5.679904736160328,
+        "maeMm": 0.030695296790083818,
+        "rmseMm": 0.03852821358549894,
+        "biasPercent": -0.7860494100807932,
+        "biasMm": -0.003722078349249719
+      },
+      "old": {
+        "count": 121,
+        "rmspePercent": 6.607150716013084,
+        "mapePercent": 4.819092014506348,
+        "maeMm": 0.031091021732583442,
+        "rmseMm": 0.03879713645700343,
+        "biasPercent": -1.4671171683401472,
+        "biasMm": -0.0047925145353344654
+      },
+      "new": {
+        "count": 7,
+        "rmspePercent": 26.12947194145211,
+        "mapePercent": 20.559667496179124,
+        "maeMm": 0.023854908498304597,
+        "rmseMm": 0.03354063956846747,
+        "biasPercent": 10.986693268402322,
+        "biasMm": 0.014781175724500882
+      }
+    },
+    "lofo": {
+      "all": {
+        "count": 128,
+        "rmspePercent": 10.198992896212745,
+        "mapePercent": 6.53355162455662,
+        "maeMm": 0.03596206727184359,
+        "rmseMm": 0.04496286389559252,
+        "biasPercent": -0.6284534377787371,
+        "biasMm": -0.0024284713768478877
+      },
+      "old": {
+        "count": 121,
+        "rmspePercent": 7.459276549669227,
+        "mapePercent": 5.545809687761852,
+        "maeMm": 0.03643882161104629,
+        "rmseMm": 0.045258802671029726,
+        "biasPercent": -1.4064530304183724,
+        "biasMm": -0.0035827489610928956
+      },
+      "new": {
+        "count": 7,
+        "rmspePercent": 30.663968563487565,
+        "mapePercent": 23.607376532009035,
+        "maeMm": 0.02772102797991122,
+        "rmseMm": 0.03949846846169703,
+        "biasPercent": 12.819825234992097,
+        "biasMm": 0.017524041150815812
+      }
+    },
+    "oldOnlyToNew": {
+      "count": 7,
+      "rmspePercent": 58.638127890524906,
+      "mapePercent": 50.92393390288541,
+      "maeMm": 0.05000828711282073,
+      "rmseMm": 0.06190982655477515,
+      "biasPercent": 50.92393390288541,
+      "biasMm": 0.05000828711282073
+    }
+  },
+  "lofoFolds": [
+    {
+      "family": "9125 No.120",
+      "trainingRows": 123,
+      "heldOutRows": 5,
+      "coefficients": {
+        "c0": -0.8874728039370284,
+        "c1": 0.632531166872835,
+        "c2": 0.5446547666773903,
+        "c3": -0.06052515782743767
+      },
+      "heldOut": {
+        "count": 5,
+        "rmspePercent": 5.641781378820419,
+        "mapePercent": 4.949544367430679,
+        "maeMm": 0.03195445463106632,
+        "rmseMm": 0.03427967291440682,
+        "biasPercent": -4.949544367430679,
+        "biasMm": -0.03195445463106632
+      }
+    },
+    {
+      "family": "Gamma 40/2",
+      "trainingRows": 98,
+      "heldOutRows": 30,
+      "coefficients": {
+        "c0": -0.9026550602504574,
+        "c1": 0.6317976753608705,
+        "c2": 0.5604189100121955,
+        "c3": -0.058003191291646716
+      },
+      "heldOut": {
+        "count": 30,
+        "rmspePercent": 4.953938833184164,
+        "mapePercent": 3.606188457782774,
+        "maeMm": 0.02305714241555056,
+        "rmseMm": 0.028998992305143433,
+        "biasPercent": -1.1597918309755122,
+        "biasMm": -0.0018984011556884782
+      }
+    },
+    {
+      "family": "Gutermann Extra Strong 750",
+      "trainingRows": 118,
+      "heldOutRows": 10,
+      "coefficients": {
+        "c0": -0.8892630271794124,
+        "c1": 0.6290970562079552,
+        "c2": 0.5478193487166901,
+        "c3": -0.0614670653357099
+      },
+      "heldOut": {
+        "count": 10,
+        "rmspePercent": 4.637533687234507,
+        "mapePercent": 3.6453424121002698,
+        "maeMm": 0.038001588550580966,
+        "rmseMm": 0.04279233355622021,
+        "biasPercent": -2.1923141223601723,
+        "biasMm": -0.01705136289132526
+      }
+    },
+    {
+      "family": "Gutermann Sew-all 300",
+      "trainingRows": 96,
+      "heldOutRows": 32,
+      "coefficients": {
+        "c0": -0.8841085564502107,
+        "c1": 0.629722920560018,
+        "c2": 0.556779499298062,
+        "c3": -0.06353888562390028
+      },
+      "heldOut": {
+        "count": 32,
+        "rmspePercent": 5.844890106377772,
+        "mapePercent": 5.279904574433364,
+        "maeMm": 0.037257677128300436,
+        "rmseMm": 0.043030461230398734,
+        "biasPercent": 3.721339625294716,
+        "biasMm": 0.030142134000851736
+      }
+    },
+    {
+      "family": "Gutermann Top Stitch 1000",
+      "trainingRows": 126,
+      "heldOutRows": 2,
+      "coefficients": {
+        "c0": -0.8839163968675302,
+        "c1": 0.6321413560751652,
+        "c2": 0.5433497572688654,
+        "c3": -0.06139694170320113
+      },
+      "heldOut": {
+        "count": 2,
+        "rmspePercent": 0.8420501984666953,
+        "mapePercent": 0.7450215922934468,
+        "maeMm": 0.0066213057232912265,
+        "rmseMm": 0.007069879270188462,
+        "biasPercent": 0.7450215922934468,
+        "biasMm": 0.0066213057232912265
+      }
+    },
+    {
+      "family": "HUF 0.04",
+      "trainingRows": 127,
+      "heldOutRows": 1,
+      "coefficients": {
+        "c0": -0.884347749392656,
+        "c1": 0.6364574311051118,
+        "c2": 0.5442777602040723,
+        "c3": -0.06509293966640171
+      },
+      "heldOut": {
+        "count": 1,
+        "rmspePercent": 24.760957675484217,
+        "mapePercent": 24.760957675484217,
+        "maeMm": 0.024513348098729376,
+        "rmseMm": 0.024513348098729376,
+        "biasPercent": -24.760957675484217,
+        "biasMm": -0.024513348098729376
+      }
+    },
+    {
+      "family": "M202 extra fine",
+      "trainingRows": 123,
+      "heldOutRows": 5,
+      "coefficients": {
+        "c0": -0.8878161429166594,
+        "c1": 0.6346156973331029,
+        "c2": 0.5433447762918556,
+        "c3": -0.060300510362509836
+      },
+      "heldOut": {
+        "count": 5,
+        "rmspePercent": 8.583731879071067,
+        "mapePercent": 8.54941490003382,
+        "maeMm": 0.05081553793152055,
+        "rmseMm": 0.05224043720280253,
+        "biasPercent": -8.54941490003382,
+        "biasMm": -0.05081553793152055
+      }
+    },
+    {
+      "family": "Mara 100",
+      "trainingRows": 127,
+      "heldOutRows": 1,
+      "coefficients": {
+        "c0": -0.8841717148828463,
+        "c1": 0.6318534145500622,
+        "c2": 0.5435778282520679,
+        "c3": -0.06147179493650601
+      },
+      "heldOut": {
+        "count": 1,
+        "rmspePercent": 0.0691878771954535,
+        "mapePercent": 0.0691878771954535,
+        "maeMm": 0.0005189090789659012,
+        "rmseMm": 0.0005189090789659012,
+        "biasPercent": 0.0691878771954535,
+        "biasMm": 0.0005189090789659012
+      }
+    },
+    {
+      "family": "Maraflex N.120",
+      "trainingRows": 123,
+      "heldOutRows": 5,
+      "coefficients": {
+        "c0": -0.8863578068136183,
+        "c1": 0.6316168057295686,
+        "c2": 0.5448730898294998,
+        "c3": -0.06101213121189225
+      },
+      "heldOut": {
+        "count": 5,
+        "rmspePercent": 3.251086387580282,
+        "mapePercent": 2.813869159701192,
+        "maeMm": 0.02067924752826873,
+        "rmseMm": 0.02310770860442639,
+        "biasPercent": -2.213631212372084,
+        "biasMm": -0.014676868054977654
+      }
+    },
+    {
+      "family": "Skala 200",
+      "trainingRows": 125,
+      "heldOutRows": 3,
+      "coefficients": {
+        "c0": -0.8856546797865219,
+        "c1": 0.6331358985462334,
+        "c2": 0.5439593469638785,
+        "c3": -0.06118052254581968
+      },
+      "heldOut": {
+        "count": 3,
+        "rmspePercent": 6.128022011300733,
+        "mapePercent": 4.4163297955745255,
+        "maeMm": 0.01862723059705827,
+        "rmseMm": 0.0258752712651618,
+        "biasPercent": -4.4163297955745255,
+        "biasMm": -0.01862723059705827
+      }
+    },
+    {
+      "family": "Skala 240",
+      "trainingRows": 124,
+      "heldOutRows": 4,
+      "coefficients": {
+        "c0": -0.8849374498297099,
+        "c1": 0.6363315167762582,
+        "c2": 0.5413502139172235,
+        "c3": -0.06172378753133648
+      },
+      "heldOut": {
+        "count": 4,
+        "rmspePercent": 11.005750294528232,
+        "mapePercent": 9.594939470051239,
+        "maeMm": 0.042646853070586105,
+        "rmseMm": 0.04964057428913723,
+        "biasPercent": -9.594939470051239,
+        "biasMm": -0.042646853070586105
+      }
+    },
+    {
+      "family": "Skala 360",
+      "trainingRows": 123,
+      "heldOutRows": 5,
+      "coefficients": {
+        "c0": -0.8807025770408354,
+        "c1": 0.6476836403588127,
+        "c2": 0.5341475215215115,
+        "c3": -0.06690655294377722
+      },
+      "heldOut": {
+        "count": 5,
+        "rmspePercent": 22.989142074208,
+        "mapePercent": 22.529700842236295,
+        "maeMm": 0.08573110119178004,
+        "rmseMm": 0.09427192351345588,
+        "biasPercent": -22.529700842236295,
+        "biasMm": -0.08573110119178004
+      }
+    },
+    {
+      "family": "TMC 16/0 W",
+      "trainingRows": 127,
+      "heldOutRows": 1,
+      "coefficients": {
+        "c0": -0.8824255736299473,
+        "c1": 0.6260291329662029,
+        "c2": 0.5416347473240416,
+        "c3": -0.05787231262975586
+      },
+      "heldOut": {
+        "count": 1,
+        "rmspePercent": 21.927495279193153,
+        "mapePercent": 21.927495279193153,
+        "maeMm": 0.016664896412186797,
+        "rmseMm": 0.016664896412186797,
+        "biasPercent": 21.927495279193153,
+        "biasMm": 0.016664896412186797
+      }
+    },
+    {
+      "family": "Tera 10",
+      "trainingRows": 126,
+      "heldOutRows": 2,
+      "coefficients": {
+        "c0": -0.8823873832877622,
+        "c1": 0.6274479915878661,
+        "c2": 0.5428403919567066,
+        "c3": -0.06478794495492667
+      },
+      "heldOut": {
+        "count": 2,
+        "rmspePercent": 5.513113837151337,
+        "mapePercent": 5.394419215832846,
+        "maeMm": 0.09103065910328823,
+        "rmseMm": 0.09777892050874876,
+        "biasPercent": -5.394419215832846,
+        "biasMm": -0.09103065910328823
+      }
+    },
+    {
+      "family": "Tera 20",
+      "trainingRows": 126,
+      "heldOutRows": 2,
+      "coefficients": {
+        "c0": -0.8843360531802898,
+        "c1": 0.629427103964928,
+        "c2": 0.5438419093300854,
+        "c3": -0.06271674793428952
+      },
+      "heldOut": {
+        "count": 2,
+        "rmspePercent": 4.8718666299865525,
+        "mapePercent": 4.678668313245277,
+        "maeMm": 0.06187925887136486,
+        "rmseMm": 0.06820093012844937,
+        "biasPercent": -4.678668313245277,
+        "biasMm": -0.06187925887136486
+      }
+    },
+    {
+      "family": "Tera 30",
+      "trainingRows": 126,
+      "heldOutRows": 2,
+      "coefficients": {
+        "c0": -0.8811212387892049,
+        "c1": 0.6350254226608021,
+        "c2": 0.5408888993113026,
+        "c3": -0.060700685449806856
+      },
+      "heldOut": {
+        "count": 2,
+        "rmspePercent": 9.41975424064764,
+        "mapePercent": 7.511417255768661,
+        "maeMm": 0.06075146659803604,
+        "rmseMm": 0.06974447725746354,
+        "biasPercent": 7.511417255768661,
+        "biasMm": 0.06075146659803604
+      }
+    },
+    {
+      "family": "Tera 40",
+      "trainingRows": 125,
+      "heldOutRows": 3,
+      "coefficients": {
+        "c0": -0.8794061776525142,
+        "c1": 0.6354569438317149,
+        "c2": 0.54007210760403,
+        "c3": -0.06117259507665462
+      },
+      "heldOut": {
+        "count": 3,
+        "rmspePercent": 9.316201839771734,
+        "mapePercent": 8.013685821961632,
+        "maeMm": 0.06310940827886535,
+        "rmseMm": 0.06808519123159597,
+        "biasPercent": 8.013685821961632,
+        "biasMm": 0.06310940827886535
+      }
+    },
+    {
+      "family": "Tera 60",
+      "trainingRows": 125,
+      "heldOutRows": 3,
+      "coefficients": {
+        "c0": -0.8858771428474761,
+        "c1": 0.6321072895834132,
+        "c2": 0.5457906195684632,
+        "c3": -0.06116030941492977
+      },
+      "heldOut": {
+        "count": 3,
+        "rmspePercent": 7.5676630640730504,
+        "mapePercent": 7.319866004106594,
+        "maeMm": 0.056204387685502954,
+        "rmseMm": 0.05781240534517476,
+        "biasPercent": 0.9211818622999907,
+        "biasMm": 0.016532546006302013
+      }
+    },
+    {
+      "family": "Tera 80",
+      "trainingRows": 125,
+      "heldOutRows": 3,
+      "coefficients": {
+        "c0": -0.8818883903521016,
+        "c1": 0.6319376885819581,
+        "c2": 0.5418098775331767,
+        "c3": -0.06193339229545777
+      },
+      "heldOut": {
+        "count": 3,
+        "rmspePercent": 3.766671182677274,
+        "mapePercent": 3.2186951462244635,
+        "maeMm": 0.017567918248671505,
+        "rmseMm": 0.01848271056106504,
+        "biasPercent": 2.1372901156955693,
+        "biasMm": 0.008484115992228794
+      }
+    },
+    {
+      "family": "UNI-C 20D",
+      "trainingRows": 126,
+      "heldOutRows": 2,
+      "coefficients": {
+        "c0": -0.8812008779351537,
+        "c1": 0.6341237522507596,
+        "c2": 0.5411210833488366,
+        "c3": -0.06435928883880541
+      },
+      "heldOut": {
+        "count": 2,
+        "rmspePercent": 9.406579645676988,
+        "mapePercent": 7.919459559449208,
+        "maeMm": 0.006298914715258116,
+        "rmseMm": 0.00796638685336483,
+        "biasPercent": -5.076012304625865,
+        "biasMm": -0.004877191087846445
+      }
+    },
+    {
+      "family": "UNI-T 8/0 W",
+      "trainingRows": 126,
+      "heldOutRows": 2,
+      "coefficients": {
+        "c0": -0.8623221008295215,
+        "c1": 0.6070875135825688,
+        "c2": 0.5300975269567647,
+        "c3": -0.0589385158905627
+      },
+      "heldOut": {
+        "count": 2,
+        "rmspePercent": 51.53183692625577,
+        "mapePercent": 51.32753788664601,
+        "maeMm": 0.06987610641949013,
+        "rmseMm": 0.07040981523435554,
+        "biasPercent": 51.32753788664601,
+        "biasMm": 0.06987610641949013
+      }
+    },
+    {
+      "family": "seta",
+      "trainingRows": 123,
+      "heldOutRows": 5,
+      "coefficients": {
+        "c0": -0.8873940047344189,
+        "c1": 0.632101063661581,
+        "c2": 0.5451178767049072,
+        "c3": -0.06064536660416073
+      },
+      "heldOut": {
+        "count": 5,
+        "rmspePercent": 4.605734775484962,
+        "mapePercent": 3.8579521395467014,
+        "maeMm": 0.024308051028176746,
+        "rmseMm": 0.025909180291306125,
+        "biasPercent": -3.8579521395467014,
+        "biasMm": -0.024308051028176746
+      }
+    }
+  ],
+  "fixtureFacts": {
+    "measuredUniC": {
+      "1": {
+        "excelRows": [
+          183
+        ],
+        "measuredMm": 0.05,
+        "publishedMm": 0.05,
+        "matches": true
+      },
+      "2": {
+        "excelRows": [
+          182
+        ],
+        "measuredMm": 0.086,
+        "publishedMm": 0.086,
+        "matches": true
+      }
+    },
+    "prediction": {
+      "dtex": 22.22,
+      "n": 1,
+      "publishedMm": 0.05259208341950491,
+      "fittedMm": 0.05259208319121356,
+      "specMm": 0.05259208341950491,
+      "fittedRelativeDeviation": 4.340793067274664e-09,
+      "specMatches": true
+    }
+  },
+  "residuals": [
+    {
+      "rowId": 1,
+      "excelRows": [
+        2,
+        3
+      ],
+      "identity": "Skala 360",
+      "dtex": 80.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.185,
+      "family": "Skala 360",
+      "isNew": false,
+      "trainingPredictedMm": 0.16094002372387933,
+      "trainingErrorMm": -0.024059976276120665,
+      "trainingRelErrorPercent": -13.005392581686845,
+      "lofoPredictedMm": 0.1566610796992064,
+      "lofoErrorMm": -0.028338920300793602,
+      "lofoRelErrorPercent": -15.318335297726271
+    },
+    {
+      "rowId": 2,
+      "excelRows": [
+        4,
+        5
+      ],
+      "identity": "Skala 240",
+      "dtex": 120.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.22,
+      "family": "Skala 240",
+      "isNew": false,
+      "trainingPredictedMm": 0.21986367751158814,
+      "trainingErrorMm": -0.0001363224884118608,
+      "trainingRelErrorPercent": -0.061964767459936725,
+      "lofoPredictedMm": 0.2187502270259569,
+      "lofoErrorMm": -0.0012497729740431063,
+      "lofoRelErrorPercent": -0.5680786245650483
+    },
+    {
+      "rowId": 3,
+      "excelRows": [
+        6
+      ],
+      "identity": "Skala 200",
+      "dtex": 150.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.26,
+      "family": "Skala 200",
+      "isNew": false,
+      "trainingPredictedMm": 0.2588058200650314,
+      "trainingErrorMm": -0.00119417993496862,
+      "trainingRelErrorPercent": -0.45929997498793074,
+      "lofoPredictedMm": 0.2582297957641348,
+      "lofoErrorMm": -0.0017702042358652137,
+      "lofoRelErrorPercent": -0.6808477830250822
+    },
+    {
+      "rowId": 4,
+      "excelRows": [
+        7,
+        8
+      ],
+      "identity": "Skala 360",
+      "dtex": 80.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.28,
+      "family": "Skala 360",
+      "isNew": false,
+      "trainingPredictedMm": 0.23458290863897477,
+      "trainingErrorMm": -0.04541709136102526,
+      "trainingRelErrorPercent": -16.220389771794732,
+      "lofoPredictedMm": 0.2268587534804339,
+      "lofoErrorMm": -0.053141246519566115,
+      "lofoRelErrorPercent": -18.979016614130753
+    },
+    {
+      "rowId": 5,
+      "excelRows": [
+        9
+      ],
+      "identity": "4008015066284",
+      "dtex": 200.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.35,
+      "family": "M202 extra fine",
+      "isNew": false,
+      "trainingPredictedMm": 0.3164859774840242,
+      "trainingErrorMm": -0.033514022515975794,
+      "trainingRelErrorPercent": -9.575435004564513,
+      "lofoPredictedMm": 0.31504361577389606,
+      "lofoErrorMm": -0.03495638422610392,
+      "lofoRelErrorPercent": -9.987538350315406
+    },
+    {
+      "rowId": 6,
+      "excelRows": [
+        10,
+        12
+      ],
+      "identity": "Skala 240",
+      "dtex": 120.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.3625,
+      "family": "Skala 240",
+      "isNew": false,
+      "trainingPredictedMm": 0.32046882920321895,
+      "trainingErrorMm": -0.04203117079678104,
+      "trainingRelErrorPercent": -11.594805737043044,
+      "lofoPredictedMm": 0.31835462600271935,
+      "lofoErrorMm": -0.044145373997280635,
+      "lofoRelErrorPercent": -12.178034206146382
+    },
+    {
+      "rowId": 7,
+      "excelRows": [
+        13,
+        14
+      ],
+      "identity": "Skala 360",
+      "dtex": 80.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.3775,
+      "family": "Skala 360",
+      "isNew": false,
+      "trainingPredictedMm": 0.2924254249725659,
+      "trainingErrorMm": -0.0850745750274341,
+      "trainingRelErrorPercent": -22.536311265545457,
+      "lofoPredictedMm": 0.28171777586702235,
+      "lofoErrorMm": -0.09578222413297766,
+      "lofoRelErrorPercent": -25.372774604762295
+    },
+    {
+      "rowId": 8,
+      "excelRows": [
+        16
+      ],
+      "identity": "4008015033385",
+      "dtex": 300.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.4,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.4130545566414621,
+      "trainingErrorMm": 0.0130545566414621,
+      "trainingRelErrorPercent": 3.2636391603655253,
+      "lofoPredictedMm": 0.4130822487015816,
+      "lofoErrorMm": 0.01308224870158159,
+      "lofoRelErrorPercent": 3.2705621753953973
+    },
+    {
+      "rowId": 9,
+      "excelRows": [
+        17
+      ],
+      "identity": "4008015033125",
+      "dtex": 300.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.4,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.4130545566414621,
+      "trainingErrorMm": 0.0130545566414621,
+      "trainingRelErrorPercent": 3.2636391603655253,
+      "lofoPredictedMm": 0.4130822487015816,
+      "lofoErrorMm": 0.01308224870158159,
+      "lofoRelErrorPercent": 3.2705621753953973
+    },
+    {
+      "rowId": 10,
+      "excelRows": [
+        18
+      ],
+      "identity": "4008015159665",
+      "dtex": 300.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.4,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.4130545566414621,
+      "trainingErrorMm": 0.0130545566414621,
+      "trainingRelErrorPercent": 3.2636391603655253,
+      "lofoPredictedMm": 0.4130822487015816,
+      "lofoErrorMm": 0.01308224870158159,
+      "lofoRelErrorPercent": 3.2705621753953973
+    },
+    {
+      "rowId": 11,
+      "excelRows": [
+        19
+      ],
+      "identity": "Skala 200",
+      "dtex": 150.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.42,
+      "family": "Skala 200",
+      "isNew": false,
+      "trainingPredictedMm": 0.3772301049719691,
+      "trainingErrorMm": -0.04276989502803086,
+      "trainingRelErrorPercent": -10.183308340007349,
+      "lofoPredictedMm": 0.37649085500289764,
+      "lofoErrorMm": -0.043509144997102345,
+      "lofoRelErrorPercent": -10.35932023740532
+    },
+    {
+      "rowId": 12,
+      "excelRows": [
+        21
+      ],
+      "identity": "4003760116703",
+      "dtex": 270.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.425,
+      "family": "9125 No.120",
+      "isNew": false,
+      "trainingPredictedMm": 0.3861881933713538,
+      "trainingErrorMm": -0.038811806628646195,
+      "trainingRelErrorPercent": -9.132189794975575,
+      "lofoPredictedMm": 0.38489354330136744,
+      "lofoErrorMm": -0.04010645669863255,
+      "lofoRelErrorPercent": -9.43681334085472
+    },
+    {
+      "rowId": 13,
+      "excelRows": [
+        22
+      ],
+      "identity": "4008015159948",
+      "dtex": 300.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.425,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.4130545566414621,
+      "trainingErrorMm": -0.011945443358537866,
+      "trainingRelErrorPercent": -2.8106925549500863,
+      "lofoPredictedMm": 0.4130822487015816,
+      "lofoErrorMm": -0.011917751298418378,
+      "lofoRelErrorPercent": -2.804176776098442
+    },
+    {
+      "rowId": 14,
+      "excelRows": [
+        23
+      ],
+      "identity": "Tera 80",
+      "dtex": 350.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.43,
+      "family": "Tera 80",
+      "isNew": false,
+      "trainingPredictedMm": 0.45464632299424274,
+      "trainingErrorMm": 0.024646322994242742,
+      "trainingRelErrorPercent": 5.731703021916917,
+      "lofoPredictedMm": 0.45568820966008655,
+      "lofoErrorMm": 0.02568820966008656,
+      "lofoRelErrorPercent": 5.974002246531758
+    },
+    {
+      "rowId": 15,
+      "excelRows": [
+        24
+      ],
+      "identity": "4008015027520",
+      "dtex": 300.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.435,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.4130545566414621,
+      "trainingErrorMm": -0.021945443358537875,
+      "trainingRelErrorPercent": -5.044929507709856,
+      "lofoPredictedMm": 0.4130822487015816,
+      "lofoErrorMm": -0.021917751298418386,
+      "lofoRelErrorPercent": -5.03856351687779
+    },
+    {
+      "rowId": 16,
+      "excelRows": [
+        25
+      ],
+      "identity": "4606080151616",
+      "dtex": 315.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.45,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.4259243033912315,
+      "trainingErrorMm": -0.024075696608768515,
+      "trainingRelErrorPercent": -5.350154801948559,
+      "lofoPredictedMm": 0.41812802084201234,
+      "lofoErrorMm": -0.03187197915798767,
+      "lofoRelErrorPercent": -7.082662035108371
+    },
+    {
+      "rowId": 17,
+      "excelRows": [
+        26
+      ],
+      "identity": "4606080152361",
+      "dtex": 315.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.45,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.4259243033912315,
+      "trainingErrorMm": -0.024075696608768515,
+      "trainingRelErrorPercent": -5.350154801948559,
+      "lofoPredictedMm": 0.41812802084201234,
+      "lofoErrorMm": -0.03187197915798767,
+      "lofoRelErrorPercent": -7.082662035108371
+    },
+    {
+      "rowId": 18,
+      "excelRows": [
+        27,
+        37
+      ],
+      "identity": "Skala 240",
+      "dtex": 120.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.465,
+      "family": "Skala 240",
+      "isNew": false,
+      "trainingPredictedMm": 0.3994887526713954,
+      "trainingErrorMm": -0.06551124732860464,
+      "trainingRelErrorPercent": -14.088440285721425,
+      "lofoPredictedMm": 0.39649544799907743,
+      "lofoErrorMm": -0.06850455200092259,
+      "lofoRelErrorPercent": -14.732161720628515
+    },
+    {
+      "rowId": 19,
+      "excelRows": [
+        28
+      ],
+      "identity": "Skala 360",
+      "dtex": 80.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.45,
+      "family": "Skala 360",
+      "isNew": false,
+      "trainingPredictedMm": 0.3419232814326763,
+      "trainingErrorMm": -0.1080767185673237,
+      "trainingRelErrorPercent": -24.017048570516376,
+      "lofoPredictedMm": 0.3285110387947684,
+      "lofoErrorMm": -0.12148896120523162,
+      "lofoRelErrorPercent": -26.997546934495915
+    },
+    {
+      "rowId": 20,
+      "excelRows": [
+        29
+      ],
+      "identity": "4008015161163",
+      "dtex": 300.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.45,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.4130545566414621,
+      "trainingErrorMm": -0.03694544335853789,
+      "trainingRelErrorPercent": -8.21009852411953,
+      "lofoPredictedMm": 0.4130822487015816,
+      "lofoErrorMm": -0.0369177512984184,
+      "lofoRelErrorPercent": -8.203944732981865
+    },
+    {
+      "rowId": 21,
+      "excelRows": [
+        30
+      ],
+      "identity": "4008015027445",
+      "dtex": 300.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.45,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.4130545566414621,
+      "trainingErrorMm": -0.03694544335853789,
+      "trainingRelErrorPercent": -8.21009852411953,
+      "lofoPredictedMm": 0.4130822487015816,
+      "lofoErrorMm": -0.0369177512984184,
+      "lofoRelErrorPercent": -8.203944732981865
+    },
+    {
+      "rowId": 22,
+      "excelRows": [
+        31
+      ],
+      "identity": "4008015049102",
+      "dtex": 300.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.45,
+      "family": "seta",
+      "isNew": false,
+      "trainingPredictedMm": 0.4130545566414621,
+      "trainingErrorMm": -0.03694544335853789,
+      "trainingRelErrorPercent": -8.21009852411953,
+      "lofoPredictedMm": 0.41172731533687884,
+      "lofoErrorMm": -0.03827268466312117,
+      "lofoRelErrorPercent": -8.505041036249148
+    },
+    {
+      "rowId": 23,
+      "excelRows": [
+        32
+      ],
+      "identity": "4606080152644",
+      "dtex": 315.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.46,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.4259243033912315,
+      "trainingErrorMm": -0.034075696608768524,
+      "trainingRelErrorPercent": -7.407760132340983,
+      "lofoPredictedMm": 0.41812802084201234,
+      "lofoErrorMm": -0.04187197915798768,
+      "lofoRelErrorPercent": -9.10260416477993
+    },
+    {
+      "rowId": 24,
+      "excelRows": [
+        33
+      ],
+      "identity": "4606080152873",
+      "dtex": 315.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.46,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.4259243033912315,
+      "trainingErrorMm": -0.034075696608768524,
+      "trainingRelErrorPercent": -7.407760132340983,
+      "lofoPredictedMm": 0.41812802084201234,
+      "lofoErrorMm": -0.04187197915798768,
+      "lofoRelErrorPercent": -9.10260416477993
+    },
+    {
+      "rowId": 25,
+      "excelRows": [
+        34
+      ],
+      "identity": "4606080151661",
+      "dtex": 315.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.475,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.4259243033912315,
+      "trainingErrorMm": -0.04907569660876848,
+      "trainingRelErrorPercent": -10.331725601845996,
+      "lofoPredictedMm": 0.41812802084201234,
+      "lofoErrorMm": -0.05687197915798764,
+      "lofoRelErrorPercent": -11.973048243786872
+    },
+    {
+      "rowId": 26,
+      "excelRows": [
+        35
+      ],
+      "identity": "4606080153061",
+      "dtex": 315.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.475,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.4259243033912315,
+      "trainingErrorMm": -0.04907569660876848,
+      "trainingRelErrorPercent": -10.331725601845996,
+      "lofoPredictedMm": 0.41812802084201234,
+      "lofoErrorMm": -0.05687197915798764,
+      "lofoRelErrorPercent": -11.973048243786872
+    },
+    {
+      "rowId": 27,
+      "excelRows": [
+        36
+      ],
+      "identity": "Skala 200",
+      "dtex": 150.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.48,
+      "family": "Skala 200",
+      "isNew": false,
+      "trainingPredictedMm": 0.47024599702889847,
+      "trainingErrorMm": -0.009754002971101516,
+      "trainingRelErrorPercent": -2.032083952312816,
+      "lofoPredictedMm": 0.46939765744179274,
+      "lofoErrorMm": -0.010602342558207245,
+      "lofoRelErrorPercent": -2.208821366293176
+    },
+    {
+      "rowId": 28,
+      "excelRows": [
+        38
+      ],
+      "identity": "4008015066284",
+      "dtex": 200.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.5,
+      "family": "M202 extra fine",
+      "isNew": false,
+      "trainingPredictedMm": 0.46130353049423495,
+      "trainingErrorMm": -0.03869646950576505,
+      "trainingRelErrorPercent": -7.73929390115301,
+      "lofoPredictedMm": 0.459127978644468,
+      "lofoErrorMm": -0.04087202135553197,
+      "lofoRelErrorPercent": -8.174404271106395
+    },
+    {
+      "rowId": 29,
+      "excelRows": [
+        39
+      ],
+      "identity": "4029394998430",
+      "dtex": 380.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.5,
+      "family": "Maraflex N.120",
+      "isNew": false,
+      "trainingPredictedMm": 0.47795092951501894,
+      "trainingErrorMm": -0.02204907048498106,
+      "trainingRelErrorPercent": -4.409814096996212,
+      "lofoPredictedMm": 0.4768944846688855,
+      "lofoErrorMm": -0.02310551533111449,
+      "lofoRelErrorPercent": -4.621103066222898
+    },
+    {
+      "rowId": 30,
+      "excelRows": [
+        40
+      ],
+      "identity": "Skala 360",
+      "dtex": 80.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 0.5,
+      "family": "Skala 360",
+      "isNew": false,
+      "trainingPredictedMm": 0.38601706936499275,
+      "trainingErrorMm": -0.11398293063500725,
+      "trainingRelErrorPercent": -22.79658612700145,
+      "lofoPredictedMm": 0.3700958461996688,
+      "lofoErrorMm": -0.1299041538003312,
+      "lofoRelErrorPercent": -25.980830760066244
+    },
+    {
+      "rowId": 31,
+      "excelRows": [
+        41
+      ],
+      "identity": "Skala 240",
+      "dtex": 120.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.52,
+      "family": "Skala 240",
+      "isNew": false,
+      "trainingPredictedMm": 0.46710885423750365,
+      "trainingErrorMm": -0.05289114576249637,
+      "trainingRelErrorPercent": -10.171374185095456,
+      "lofoPredictedMm": 0.46331228668990193,
+      "lofoErrorMm": -0.05668771331009809,
+      "lofoRelErrorPercent": -10.901483328865016
+    },
+    {
+      "rowId": 32,
+      "excelRows": [
+        45
+      ],
+      "identity": "4008015033125",
+      "dtex": 300.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.55,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.6020599294167965,
+      "trainingErrorMm": 0.05205992941679649,
+      "trainingRelErrorPercent": 9.465441712144816,
+      "lofoPredictedMm": 0.6076365129612211,
+      "lofoErrorMm": 0.057636512961221076,
+      "lofoRelErrorPercent": 10.479365992949285
+    },
+    {
+      "rowId": 33,
+      "excelRows": [
+        46
+      ],
+      "identity": "4003760116703",
+      "dtex": 270.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.575,
+      "family": "9125 No.120",
+      "isNew": false,
+      "trainingPredictedMm": 0.5629000641786368,
+      "trainingErrorMm": -0.01209993582136315,
+      "trainingRelErrorPercent": -2.104336664584896,
+      "lofoPredictedMm": 0.5614331444171082,
+      "lofoErrorMm": -0.013566855582891724,
+      "lofoRelErrorPercent": -2.3594531448507348
+    },
+    {
+      "rowId": 34,
+      "excelRows": [
+        47
+      ],
+      "identity": "4008015033385",
+      "dtex": 300.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.575,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.6020599294167965,
+      "trainingErrorMm": 0.02705992941679658,
+      "trainingRelErrorPercent": 4.706074681182014,
+      "lofoPredictedMm": 0.6076365129612211,
+      "lofoErrorMm": 0.032636512961221165,
+      "lofoRelErrorPercent": 5.675915297603681
+    },
+    {
+      "rowId": 35,
+      "excelRows": [
+        48
+      ],
+      "identity": "4008015159665",
+      "dtex": 300.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.575,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.6020599294167965,
+      "trainingErrorMm": 0.02705992941679658,
+      "trainingRelErrorPercent": 4.706074681182014,
+      "lofoPredictedMm": 0.6076365129612211,
+      "lofoErrorMm": 0.032636512961221165,
+      "lofoRelErrorPercent": 5.675915297603681
+    },
+    {
+      "rowId": 36,
+      "excelRows": [
+        49
+      ],
+      "identity": "4008015027445",
+      "dtex": 300.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.575,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.6020599294167965,
+      "trainingErrorMm": 0.02705992941679658,
+      "trainingRelErrorPercent": 4.706074681182014,
+      "lofoPredictedMm": 0.6076365129612211,
+      "lofoErrorMm": 0.032636512961221165,
+      "lofoRelErrorPercent": 5.675915297603681
+    },
+    {
+      "rowId": 37,
+      "excelRows": [
+        50
+      ],
+      "identity": "4008015027520",
+      "dtex": 300.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.575,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.6020599294167965,
+      "trainingErrorMm": 0.02705992941679658,
+      "trainingRelErrorPercent": 4.706074681182014,
+      "lofoPredictedMm": 0.6076365129612211,
+      "lofoErrorMm": 0.032636512961221165,
+      "lofoRelErrorPercent": 5.675915297603681
+    },
+    {
+      "rowId": 38,
+      "excelRows": [
+        52
+      ],
+      "identity": "4606080151661",
+      "dtex": 315.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.6,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.6208186107948206,
+      "trainingErrorMm": 0.020818610794820613,
+      "trainingRelErrorPercent": 3.4697684658034356,
+      "lofoPredictedMm": 0.6166122874473143,
+      "lofoErrorMm": 0.016612287447314356,
+      "lofoRelErrorPercent": 2.768714574552393
+    },
+    {
+      "rowId": 39,
+      "excelRows": [
+        53
+      ],
+      "identity": "4606080152361",
+      "dtex": 315.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.6,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.6208186107948206,
+      "trainingErrorMm": 0.020818610794820613,
+      "trainingRelErrorPercent": 3.4697684658034356,
+      "lofoPredictedMm": 0.6166122874473143,
+      "lofoErrorMm": 0.016612287447314356,
+      "lofoRelErrorPercent": 2.768714574552393
+    },
+    {
+      "rowId": 40,
+      "excelRows": [
+        55
+      ],
+      "identity": "4008015159948",
+      "dtex": 300.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.6,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.6020599294167965,
+      "trainingErrorMm": 0.0020599294167965576,
+      "trainingRelErrorPercent": 0.34332156946609294,
+      "lofoPredictedMm": 0.6076365129612211,
+      "lofoErrorMm": 0.007636512961221142,
+      "lofoRelErrorPercent": 1.2727521602035239
+    },
+    {
+      "rowId": 41,
+      "excelRows": [
+        56
+      ],
+      "identity": "4008015161163",
+      "dtex": 300.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.6,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.6020599294167965,
+      "trainingErrorMm": 0.0020599294167965576,
+      "trainingRelErrorPercent": 0.34332156946609294,
+      "lofoPredictedMm": 0.6076365129612211,
+      "lofoErrorMm": 0.007636512961221142,
+      "lofoRelErrorPercent": 1.2727521602035239
+    },
+    {
+      "rowId": 42,
+      "excelRows": [
+        57
+      ],
+      "identity": "Tera 40",
+      "dtex": 750.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.62,
+      "family": "Tera 40",
+      "isNew": false,
+      "trainingPredictedMm": 0.699896551327781,
+      "trainingErrorMm": 0.07989655132778095,
+      "trainingRelErrorPercent": 12.886540536738863,
+      "lofoPredictedMm": 0.7057440169822531,
+      "lofoErrorMm": 0.08574401698225309,
+      "lofoRelErrorPercent": 13.829680158427918
+    },
+    {
+      "rowId": 43,
+      "excelRows": [
+        58
+      ],
+      "identity": "Tera 60",
+      "dtex": 500.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.62,
+      "family": "Tera 60",
+      "isNew": false,
+      "trainingPredictedMm": 0.5613288846083774,
+      "trainingErrorMm": -0.05867111539162262,
+      "trainingRelErrorPercent": -9.463083127681067,
+      "lofoPredictedMm": 0.5604922374811986,
+      "lofoErrorMm": -0.05950776251880141,
+      "lofoRelErrorPercent": -9.598026212709906
+    },
+    {
+      "rowId": 44,
+      "excelRows": [
+        59
+      ],
+      "identity": "4606080151616",
+      "dtex": 315.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.625,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.6208186107948206,
+      "trainingErrorMm": -0.004181389205179409,
+      "trainingRelErrorPercent": -0.6690222728287054,
+      "lofoPredictedMm": 0.6166122874473143,
+      "lofoErrorMm": -0.008387712552685667,
+      "lofoRelErrorPercent": -1.3420340084297067
+    },
+    {
+      "rowId": 45,
+      "excelRows": [
+        60
+      ],
+      "identity": "4606080152644",
+      "dtex": 315.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.625,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.6208186107948206,
+      "trainingErrorMm": -0.004181389205179409,
+      "trainingRelErrorPercent": -0.6690222728287054,
+      "lofoPredictedMm": 0.6166122874473143,
+      "lofoErrorMm": -0.008387712552685667,
+      "lofoRelErrorPercent": -1.3420340084297067
+    },
+    {
+      "rowId": 46,
+      "excelRows": [
+        61
+      ],
+      "identity": "4606080153061",
+      "dtex": 315.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.625,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.6208186107948206,
+      "trainingErrorMm": -0.004181389205179409,
+      "trainingRelErrorPercent": -0.6690222728287054,
+      "lofoPredictedMm": 0.6166122874473143,
+      "lofoErrorMm": -0.008387712552685667,
+      "lofoRelErrorPercent": -1.3420340084297067
+    },
+    {
+      "rowId": 47,
+      "excelRows": [
+        62
+      ],
+      "identity": "4008015066284",
+      "dtex": 200.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.625,
+      "family": "M202 extra fine",
+      "isNew": false,
+      "trainingPredictedMm": 0.5750499119001427,
+      "trainingErrorMm": -0.04995008809985735,
+      "trainingRelErrorPercent": -7.992014095977177,
+      "lofoPredictedMm": 0.5722845542993595,
+      "lofoErrorMm": -0.05271544570064046,
+      "lofoRelErrorPercent": -8.434471312102474
+    },
+    {
+      "rowId": 48,
+      "excelRows": [
+        63
+      ],
+      "identity": "4008015049102",
+      "dtex": 300.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.625,
+      "family": "seta",
+      "isNew": false,
+      "trainingPredictedMm": 0.6020599294167965,
+      "trainingErrorMm": -0.022940070583203465,
+      "trainingRelErrorPercent": -3.670411293312555,
+      "lofoPredictedMm": 0.6007676136125936,
+      "lofoErrorMm": -0.024232386387406435,
+      "lofoRelErrorPercent": -3.8771818219850296
+    },
+    {
+      "rowId": 49,
+      "excelRows": [
+        64
+      ],
+      "identity": "4606080152873",
+      "dtex": 315.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.65,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.6208186107948206,
+      "trainingErrorMm": -0.02918138920517943,
+      "trainingRelErrorPercent": -4.489444493104528,
+      "lofoPredictedMm": 0.6166122874473143,
+      "lofoErrorMm": -0.03338771255268569,
+      "lofoRelErrorPercent": -5.136571161951644
+    },
+    {
+      "rowId": 50,
+      "excelRows": [
+        65
+      ],
+      "identity": "Tera 80",
+      "dtex": 350.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.65,
+      "family": "Tera 80",
+      "isNew": false,
+      "trainingPredictedMm": 0.6626832430010375,
+      "trainingErrorMm": 0.012683243001037514,
+      "trainingRelErrorPercent": 1.9512681540057715,
+      "lofoPredictedMm": 0.6633898417012639,
+      "lofoErrorMm": 0.013389841701263894,
+      "lofoRelErrorPercent": 2.059975646348291
+    },
+    {
+      "rowId": 51,
+      "excelRows": [
+        68
+      ],
+      "identity": "4008015033385",
+      "dtex": 300.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.7,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.7505134612752798,
+      "trainingErrorMm": 0.05051346127527989,
+      "trainingRelErrorPercent": 7.216208753611414,
+      "lofoPredictedMm": 0.7615314888314053,
+      "lofoErrorMm": 0.061531488831405357,
+      "lofoRelErrorPercent": 8.790212690200766
+    },
+    {
+      "rowId": 52,
+      "excelRows": [
+        69
+      ],
+      "identity": "Tera 30",
+      "dtex": 1000.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.72,
+      "family": "Tera 30",
+      "isNew": false,
+      "trainingPredictedMm": 0.8085248125693936,
+      "trainingErrorMm": 0.0885248125693936,
+      "trainingRelErrorPercent": 12.295112856860223,
+      "lofoPredictedMm": 0.8150086032866818,
+      "lofoErrorMm": 0.09500860328668181,
+      "lofoRelErrorPercent": 13.195639345372475
+    },
+    {
+      "rowId": 53,
+      "excelRows": [
+        70
+      ],
+      "identity": "4008015066284",
+      "dtex": 200.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.725,
+      "family": "M202 extra fine",
+      "isNew": false,
+      "trainingPredictedMm": 0.6723866533934747,
+      "trainingErrorMm": -0.05261334660652528,
+      "trainingRelErrorPercent": -7.25701332503797,
+      "lofoPredictedMm": 0.6691089430786727,
+      "lofoErrorMm": -0.05589105692132723,
+      "lofoRelErrorPercent": -7.7091112994934115
+    },
+    {
+      "rowId": 54,
+      "excelRows": [
+        71
+      ],
+      "identity": "4029394998430",
+      "dtex": 380.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.725,
+      "family": "Maraflex N.120",
+      "isNew": false,
+      "trainingPredictedMm": 0.6966515639682933,
+      "trainingErrorMm": -0.02834843603170667,
+      "trainingRelErrorPercent": -3.91012910782161,
+      "lofoPredictedMm": 0.6957375502537873,
+      "lofoErrorMm": -0.029262449746212726,
+      "lofoRelErrorPercent": -4.036199964994859
+    },
+    {
+      "rowId": 55,
+      "excelRows": [
+        72
+      ],
+      "identity": "4008015159665",
+      "dtex": 300.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.725,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.7505134612752798,
+      "trainingErrorMm": 0.02551346127527987,
+      "trainingRelErrorPercent": 3.519098106935155,
+      "lofoPredictedMm": 0.7615314888314053,
+      "lofoErrorMm": 0.036531488831405334,
+      "lofoRelErrorPercent": 5.0388260457110805
+    },
+    {
+      "rowId": 56,
+      "excelRows": [
+        73
+      ],
+      "identity": "4008015027445",
+      "dtex": 300.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.725,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.7505134612752798,
+      "trainingErrorMm": 0.02551346127527987,
+      "trainingRelErrorPercent": 3.519098106935155,
+      "lofoPredictedMm": 0.7615314888314053,
+      "lofoErrorMm": 0.036531488831405334,
+      "lofoRelErrorPercent": 5.0388260457110805
+    },
+    {
+      "rowId": 57,
+      "excelRows": [
+        74
+      ],
+      "identity": "4008015033125",
+      "dtex": 300.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.725,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.7505134612752798,
+      "trainingErrorMm": 0.02551346127527987,
+      "trainingRelErrorPercent": 3.519098106935155,
+      "lofoPredictedMm": 0.7615314888314053,
+      "lofoErrorMm": 0.036531488831405334,
+      "lofoRelErrorPercent": 5.0388260457110805
+    },
+    {
+      "rowId": 58,
+      "excelRows": [
+        76
+      ],
+      "identity": "4606080151616",
+      "dtex": 315.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.75,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.7738975833569782,
+      "trainingErrorMm": 0.023897583356978225,
+      "trainingRelErrorPercent": 3.186344447597097,
+      "lofoPredictedMm": 0.7739217396637286,
+      "lofoErrorMm": 0.02392173966372857,
+      "lofoRelErrorPercent": 3.1895652884971426
+    },
+    {
+      "rowId": 59,
+      "excelRows": [
+        77,
+        82
+      ],
+      "identity": "4606080151661",
+      "dtex": 315.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.7625,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.7738975833569782,
+      "trainingErrorMm": 0.01139758335697827,
+      "trainingRelErrorPercent": 1.4947650304233795,
+      "lofoPredictedMm": 0.7739217396637286,
+      "lofoErrorMm": 0.011421739663728614,
+      "lofoRelErrorPercent": 1.497933070652933
+    },
+    {
+      "rowId": 60,
+      "excelRows": [
+        78
+      ],
+      "identity": "4003760116703",
+      "dtex": 270.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.75,
+      "family": "9125 No.120",
+      "isNew": false,
+      "trainingPredictedMm": 0.7016977129303698,
+      "trainingErrorMm": -0.048302287069630245,
+      "trainingRelErrorPercent": -6.440304942617366,
+      "lofoPredictedMm": 0.7001756309285979,
+      "lofoErrorMm": -0.049824369071402086,
+      "lofoRelErrorPercent": -6.643249209520278
+    },
+    {
+      "rowId": 61,
+      "excelRows": [
+        79
+      ],
+      "identity": "4008015161002",
+      "dtex": 750.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.75,
+      "family": "Gutermann Extra Strong 750",
+      "isNew": false,
+      "trainingPredictedMm": 0.699896551327781,
+      "trainingErrorMm": -0.05010344867221905,
+      "trainingRelErrorPercent": -6.680459822962541,
+      "lofoPredictedMm": 0.6945894836553477,
+      "lofoErrorMm": -0.05541051634465233,
+      "lofoRelErrorPercent": -7.388068845953644
+    },
+    {
+      "rowId": 62,
+      "excelRows": [
+        80
+      ],
+      "identity": "4008015161163",
+      "dtex": 300.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.75,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.7505134612752798,
+      "trainingErrorMm": 0.0005134612752798473,
+      "trainingRelErrorPercent": 0.0684615033706463,
+      "lofoPredictedMm": 0.7615314888314053,
+      "lofoErrorMm": 0.011531488831405312,
+      "lofoRelErrorPercent": 1.537531844187375
+    },
+    {
+      "rowId": 63,
+      "excelRows": [
+        81
+      ],
+      "identity": "4008015027520",
+      "dtex": 300.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.75,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.7505134612752798,
+      "trainingErrorMm": 0.0005134612752798473,
+      "trainingRelErrorPercent": 0.0684615033706463,
+      "lofoPredictedMm": 0.7615314888314053,
+      "lofoErrorMm": 0.011531488831405312,
+      "lofoRelErrorPercent": 1.537531844187375
+    },
+    {
+      "rowId": 64,
+      "excelRows": [
+        83
+      ],
+      "identity": "4606080152361",
+      "dtex": 315.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.775,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.7738975833569782,
+      "trainingErrorMm": -0.0011024166430217974,
+      "trainingRelErrorPercent": -0.14224730877700612,
+      "lofoPredictedMm": 0.7739217396637286,
+      "lofoErrorMm": -0.0010782603362714527,
+      "lofoRelErrorPercent": -0.13913036597051
+    },
+    {
+      "rowId": 65,
+      "excelRows": [
+        84
+      ],
+      "identity": "4606080152644",
+      "dtex": 315.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.775,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.7738975833569782,
+      "trainingErrorMm": -0.0011024166430217974,
+      "trainingRelErrorPercent": -0.14224730877700612,
+      "lofoPredictedMm": 0.7739217396637286,
+      "lofoErrorMm": -0.0010782603362714527,
+      "lofoRelErrorPercent": -0.13913036597051
+    },
+    {
+      "rowId": 66,
+      "excelRows": [
+        85
+      ],
+      "identity": "4606080152873",
+      "dtex": 315.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.775,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.7738975833569782,
+      "trainingErrorMm": -0.0011024166430217974,
+      "trainingRelErrorPercent": -0.14224730877700612,
+      "lofoPredictedMm": 0.7739217396637286,
+      "lofoErrorMm": -0.0010782603362714527,
+      "lofoRelErrorPercent": -0.13913036597051
+    },
+    {
+      "rowId": 67,
+      "excelRows": [
+        88
+      ],
+      "identity": "4008015160982",
+      "dtex": 750.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.775,
+      "family": "Gutermann Extra Strong 750",
+      "isNew": false,
+      "trainingPredictedMm": 0.699896551327781,
+      "trainingErrorMm": -0.07510344867221908,
+      "trainingRelErrorPercent": -9.690767570608912,
+      "lofoPredictedMm": 0.6945894836553477,
+      "lofoErrorMm": -0.08041051634465235,
+      "lofoRelErrorPercent": -10.375550496084173
+    },
+    {
+      "rowId": 68,
+      "excelRows": [
+        89
+      ],
+      "identity": "4008015049102",
+      "dtex": 300.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.775,
+      "family": "seta",
+      "isNew": false,
+      "trainingPredictedMm": 0.7505134612752798,
+      "trainingErrorMm": -0.024486538724720175,
+      "trainingRelErrorPercent": -3.1595533838348615,
+      "lofoPredictedMm": 0.7493712131079153,
+      "lofoErrorMm": -0.0256287868920847,
+      "lofoRelErrorPercent": -3.3069402441399607
+    },
+    {
+      "rowId": 69,
+      "excelRows": [
+        90
+      ],
+      "identity": "Tera 60",
+      "dtex": 500.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.78,
+      "family": "Tera 60",
+      "isNew": false,
+      "trainingPredictedMm": 0.818181577259001,
+      "trainingErrorMm": 0.038181577259000954,
+      "trainingRelErrorPercent": 4.895074007564225,
+      "lofoPredictedMm": 0.8182178506805728,
+      "lofoErrorMm": 0.03821785068057282,
+      "lofoRelErrorPercent": 4.899724446227284
+    },
+    {
+      "rowId": 70,
+      "excelRows": [
+        91
+      ],
+      "identity": "4606080153061",
+      "dtex": 315.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.79,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.7738975833569782,
+      "trainingErrorMm": -0.01610241664302181,
+      "trainingRelErrorPercent": -2.03828058772428,
+      "lofoPredictedMm": 0.7739217396637286,
+      "lofoErrorMm": -0.016078260336271466,
+      "lofoRelErrorPercent": -2.035222827376135
+    },
+    {
+      "rowId": 71,
+      "excelRows": [
+        92
+      ],
+      "identity": "4008015043766",
+      "dtex": 1000.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.8,
+      "family": "Gutermann Top Stitch 1000",
+      "isNew": false,
+      "trainingPredictedMm": 0.8085248125693936,
+      "trainingErrorMm": 0.008524812569393525,
+      "trainingRelErrorPercent": 1.0656015711741906,
+      "lofoPredictedMm": 0.8090995114076023,
+      "lofoErrorMm": 0.009099511407602234,
+      "lofoRelErrorPercent": 1.1374389259502793
+    },
+    {
+      "rowId": 72,
+      "excelRows": [
+        94
+      ],
+      "identity": "4008015066284",
+      "dtex": 200.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 0.825,
+      "family": "M202 extra fine",
+      "isNew": false,
+      "trainingPredictedMm": 0.7590963807306272,
+      "trainingErrorMm": -0.06590361926937272,
+      "trainingRelErrorPercent": -7.988317487196693,
+      "lofoPredictedMm": 0.7553572185460008,
+      "lofoErrorMm": -0.06964278145399916,
+      "lofoRelErrorPercent": -8.441549267151412
+    },
+    {
+      "rowId": 74,
+      "excelRows": [
+        96
+      ],
+      "identity": "4008015161163",
+      "dtex": 300.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.825,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.8775503206081152,
+      "trainingErrorMm": 0.052550320608115264,
+      "trainingRelErrorPercent": 6.369735831286699,
+      "lofoPredictedMm": 0.8938223151544944,
+      "lofoErrorMm": 0.06882231515449444,
+      "lofoRelErrorPercent": 8.342098806605387
+    },
+    {
+      "rowId": 75,
+      "excelRows": [
+        97
+      ],
+      "identity": "4008015027445",
+      "dtex": 300.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.825,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.8775503206081152,
+      "trainingErrorMm": 0.052550320608115264,
+      "trainingRelErrorPercent": 6.369735831286699,
+      "lofoPredictedMm": 0.8938223151544944,
+      "lofoErrorMm": 0.06882231515449444,
+      "lofoRelErrorPercent": 8.342098806605387
+    },
+    {
+      "rowId": 76,
+      "excelRows": [
+        99
+      ],
+      "identity": "Tera 80",
+      "dtex": 350.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.84,
+      "family": "Tera 80",
+      "isNew": false,
+      "trainingPredictedMm": 0.8260850293020028,
+      "trainingErrorMm": -0.013914970697997187,
+      "trainingRelErrorPercent": -1.6565441307139508,
+      "lofoPredictedMm": 0.8263742966153359,
+      "lofoErrorMm": -0.013625703384664067,
+      "lofoRelErrorPercent": -1.6221075457933414
+    },
+    {
+      "rowId": 77,
+      "excelRows": [
+        100
+      ],
+      "identity": "4606080151616",
+      "dtex": 315.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.85,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.9048925934503167,
+      "trainingErrorMm": 0.05489259345031672,
+      "trainingRelErrorPercent": 6.457952170625496,
+      "lofoPredictedMm": 0.9093165109225487,
+      "lofoErrorMm": 0.05931651092254875,
+      "lofoRelErrorPercent": 6.978413049711618
+    },
+    {
+      "rowId": 78,
+      "excelRows": [
+        101
+      ],
+      "identity": "4003760116703",
+      "dtex": 270.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.85,
+      "family": "9125 No.120",
+      "isNew": false,
+      "trainingPredictedMm": 0.82047169667776,
+      "trainingErrorMm": -0.02952830332223999,
+      "trainingRelErrorPercent": -3.4739180379105874,
+      "lofoPredictedMm": 0.8189463843597857,
+      "lofoErrorMm": -0.03105361564021425,
+      "lofoRelErrorPercent": -3.653366545907559
+    },
+    {
+      "rowId": 79,
+      "excelRows": [
+        103
+      ],
+      "identity": "4008015159665",
+      "dtex": 300.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.85,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.8775503206081152,
+      "trainingErrorMm": 0.027550320608115242,
+      "trainingRelErrorPercent": 3.241214189190029,
+      "lofoPredictedMm": 0.8938223151544944,
+      "lofoErrorMm": 0.04382231515449442,
+      "lofoRelErrorPercent": 5.155566488764049
+    },
+    {
+      "rowId": 80,
+      "excelRows": [
+        104
+      ],
+      "identity": "4008015027520",
+      "dtex": 300.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.85,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.8775503206081152,
+      "trainingErrorMm": 0.027550320608115242,
+      "trainingRelErrorPercent": 3.241214189190029,
+      "lofoPredictedMm": 0.8938223151544944,
+      "lofoErrorMm": 0.04382231515449442,
+      "lofoRelErrorPercent": 5.155566488764049
+    },
+    {
+      "rowId": 81,
+      "excelRows": [
+        105
+      ],
+      "identity": "4008015033125",
+      "dtex": 300.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.85,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.8775503206081152,
+      "trainingErrorMm": 0.027550320608115242,
+      "trainingRelErrorPercent": 3.241214189190029,
+      "lofoPredictedMm": 0.8938223151544944,
+      "lofoErrorMm": 0.04382231515449442,
+      "lofoRelErrorPercent": 5.155566488764049
+    },
+    {
+      "rowId": 82,
+      "excelRows": [
+        107
+      ],
+      "identity": "4606080151661",
+      "dtex": 315.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.9,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.9048925934503167,
+      "trainingErrorMm": 0.0048925934503166735,
+      "trainingRelErrorPercent": 0.5436214944796304,
+      "lofoPredictedMm": 0.9093165109225487,
+      "lofoErrorMm": 0.009316510922548704,
+      "lofoRelErrorPercent": 1.0351678802831892
+    },
+    {
+      "rowId": 83,
+      "excelRows": [
+        108
+      ],
+      "identity": "4606080152361",
+      "dtex": 315.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.9,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.9048925934503167,
+      "trainingErrorMm": 0.0048925934503166735,
+      "trainingRelErrorPercent": 0.5436214944796304,
+      "lofoPredictedMm": 0.9093165109225487,
+      "lofoErrorMm": 0.009316510922548704,
+      "lofoRelErrorPercent": 1.0351678802831892
+    },
+    {
+      "rowId": 84,
+      "excelRows": [
+        109
+      ],
+      "identity": "4606080152873",
+      "dtex": 315.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.9,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.9048925934503167,
+      "trainingErrorMm": 0.0048925934503166735,
+      "trainingRelErrorPercent": 0.5436214944796304,
+      "lofoPredictedMm": 0.9093165109225487,
+      "lofoErrorMm": 0.009316510922548704,
+      "lofoRelErrorPercent": 1.0351678802831892
+    },
+    {
+      "rowId": 85,
+      "excelRows": [
+        110
+      ],
+      "identity": "4606080153061",
+      "dtex": 315.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.9,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.9048925934503167,
+      "trainingErrorMm": 0.0048925934503166735,
+      "trainingRelErrorPercent": 0.5436214944796304,
+      "lofoPredictedMm": 0.9093165109225487,
+      "lofoErrorMm": 0.009316510922548704,
+      "lofoRelErrorPercent": 1.0351678802831892
+    },
+    {
+      "rowId": 86,
+      "excelRows": [
+        111
+      ],
+      "identity": "4029394998430",
+      "dtex": 380.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.9,
+      "family": "Maraflex N.120",
+      "isNew": false,
+      "trainingPredictedMm": 0.8684291231325623,
+      "trainingErrorMm": -0.03157087686743776,
+      "trainingRelErrorPercent": -3.5078752074930843,
+      "lofoPredictedMm": 0.8677464229536707,
+      "lofoErrorMm": -0.03225357704632936,
+      "lofoRelErrorPercent": -3.5837307829254845
+    },
+    {
+      "rowId": 87,
+      "excelRows": [
+        112
+      ],
+      "identity": "4008015033385",
+      "dtex": 300.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.9,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.8775503206081152,
+      "trainingErrorMm": -0.022449679391884803,
+      "trainingRelErrorPercent": -2.4944088213205333,
+      "lofoPredictedMm": 0.8938223151544944,
+      "lofoErrorMm": -0.006177684845505627,
+      "lofoRelErrorPercent": -0.6864094272784029
+    },
+    {
+      "rowId": 88,
+      "excelRows": [
+        113
+      ],
+      "identity": "4008015049102",
+      "dtex": 300.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.9,
+      "family": "seta",
+      "isNew": false,
+      "trainingPredictedMm": 0.8775503206081152,
+      "trainingErrorMm": -0.022449679391884803,
+      "trainingRelErrorPercent": -2.4944088213205333,
+      "lofoPredictedMm": 0.8766037912021,
+      "lofoErrorMm": -0.023396208797900053,
+      "lofoRelErrorPercent": -2.599578755322228
+    },
+    {
+      "rowId": 89,
+      "excelRows": [
+        115
+      ],
+      "identity": "4606080152644",
+      "dtex": 315.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 0.925,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 0.9048925934503167,
+      "trainingErrorMm": -0.02010740654968335,
+      "trainingRelErrorPercent": -2.1737736810468484,
+      "lofoPredictedMm": 0.9093165109225487,
+      "lofoErrorMm": -0.015683489077451318,
+      "lofoRelErrorPercent": -1.6955123326974397
+    },
+    {
+      "rowId": 90,
+      "excelRows": [
+        116
+      ],
+      "identity": "4008015033385",
+      "dtex": 300.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 0.925,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.9907175713864141,
+      "trainingErrorMm": 0.0657175713864141,
+      "trainingRelErrorPercent": 7.104602312044767,
+      "lofoPredictedMm": 1.012065688745373,
+      "lofoErrorMm": 0.0870656887453729,
+      "lofoRelErrorPercent": 9.412506891391665
+    },
+    {
+      "rowId": 91,
+      "excelRows": [
+        117
+      ],
+      "identity": "4003760116703",
+      "dtex": 270.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 0.95,
+      "family": "9125 No.120",
+      "isNew": false,
+      "trainingPredictedMm": 0.9262781946915558,
+      "trainingErrorMm": -0.023721805308444144,
+      "trainingRelErrorPercent": -2.4970321377309626,
+      "lofoPredictedMm": 0.924779023837809,
+      "lofoErrorMm": -0.02522097616219099,
+      "lofoRelErrorPercent": -2.6548395960201043
+    },
+    {
+      "rowId": 92,
+      "excelRows": [
+        118
+      ],
+      "identity": "Tera 40",
+      "dtex": 750.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.95,
+      "family": "Tera 40",
+      "isNew": false,
+      "trainingPredictedMm": 1.0201549928844564,
+      "trainingErrorMm": 0.07015499288445648,
+      "trainingRelErrorPercent": 7.384736093100683,
+      "lofoPredictedMm": 1.026183693548086,
+      "lofoErrorMm": 0.07618369354808596,
+      "lofoRelErrorPercent": 8.019336162956417
+    },
+    {
+      "rowId": 93,
+      "excelRows": [
+        119
+      ],
+      "identity": "Tera 60",
+      "dtex": 500.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.95,
+      "family": "Tera 60",
+      "isNew": false,
+      "trainingPredictedMm": 1.0199255215259797,
+      "trainingErrorMm": 0.06992552152597975,
+      "trainingRelErrorPercent": 7.360581213261026,
+      "lofoPredictedMm": 1.0208875498571346,
+      "lofoErrorMm": 0.07088754985713464,
+      "lofoRelErrorPercent": 7.461847353382593
+    },
+    {
+      "rowId": 94,
+      "excelRows": [
+        121
+      ],
+      "identity": "4008015159665",
+      "dtex": 300.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 0.95,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.9907175713864141,
+      "trainingErrorMm": 0.040717571386414186,
+      "trainingRelErrorPercent": 4.286060145938335,
+      "lofoPredictedMm": 1.012065688745373,
+      "lofoErrorMm": 0.06206568874537299,
+      "lofoRelErrorPercent": 6.53323039424979
+    },
+    {
+      "rowId": 95,
+      "excelRows": [
+        122
+      ],
+      "identity": "4008015027445",
+      "dtex": 300.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 0.95,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.9907175713864141,
+      "trainingErrorMm": 0.040717571386414186,
+      "trainingRelErrorPercent": 4.286060145938335,
+      "lofoPredictedMm": 1.012065688745373,
+      "lofoErrorMm": 0.06206568874537299,
+      "lofoRelErrorPercent": 6.53323039424979
+    },
+    {
+      "rowId": 96,
+      "excelRows": [
+        123
+      ],
+      "identity": "4008015027520",
+      "dtex": 300.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 0.95,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.9907175713864141,
+      "trainingErrorMm": 0.040717571386414186,
+      "trainingRelErrorPercent": 4.286060145938335,
+      "lofoPredictedMm": 1.012065688745373,
+      "lofoErrorMm": 0.06206568874537299,
+      "lofoRelErrorPercent": 6.53323039424979
+    },
+    {
+      "rowId": 97,
+      "excelRows": [
+        124
+      ],
+      "identity": "4008015033125",
+      "dtex": 300.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 0.95,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.9907175713864141,
+      "trainingErrorMm": 0.040717571386414186,
+      "trainingRelErrorPercent": 4.286060145938335,
+      "lofoPredictedMm": 1.012065688745373,
+      "lofoErrorMm": 0.06206568874537299,
+      "lofoRelErrorPercent": 6.53323039424979
+    },
+    {
+      "rowId": 98,
+      "excelRows": [
+        125
+      ],
+      "identity": "4606080151616",
+      "dtex": 315.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 0.975,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 1.021585852680687,
+      "trainingErrorMm": 0.046585852680686934,
+      "trainingRelErrorPercent": 4.7780361723781475,
+      "lofoPredictedMm": 1.0304461020126203,
+      "lofoErrorMm": 0.055446102012620346,
+      "lofoRelErrorPercent": 5.686779693602087
+    },
+    {
+      "rowId": 99,
+      "excelRows": [
+        126
+      ],
+      "identity": "4008015161163",
+      "dtex": 300.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 0.975,
+      "family": "Gutermann Sew-all 300",
+      "isNew": false,
+      "trainingPredictedMm": 0.9907175713864141,
+      "trainingErrorMm": 0.015717571386414164,
+      "trainingRelErrorPercent": 1.612058603734786,
+      "lofoPredictedMm": 1.012065688745373,
+      "lofoErrorMm": 0.03706568874537297,
+      "lofoRelErrorPercent": 3.8016091020895355
+    },
+    {
+      "rowId": 100,
+      "excelRows": [
+        127
+      ],
+      "identity": "4606080153061",
+      "dtex": 315.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 1.0,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 1.021585852680687,
+      "trainingErrorMm": 0.021585852680686912,
+      "trainingRelErrorPercent": 2.158585268068691,
+      "lofoPredictedMm": 1.0304461020126203,
+      "lofoErrorMm": 0.030446102012620324,
+      "lofoRelErrorPercent": 3.0446102012620324
+    },
+    {
+      "rowId": 101,
+      "excelRows": [
+        129
+      ],
+      "identity": "4606080151661",
+      "dtex": 315.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 1.0,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 1.021585852680687,
+      "trainingErrorMm": 0.021585852680686912,
+      "trainingRelErrorPercent": 2.158585268068691,
+      "lofoPredictedMm": 1.0304461020126203,
+      "lofoErrorMm": 0.030446102012620324,
+      "lofoRelErrorPercent": 3.0446102012620324
+    },
+    {
+      "rowId": 102,
+      "excelRows": [
+        130
+      ],
+      "identity": "4606080152873",
+      "dtex": 315.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 1.0,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 1.021585852680687,
+      "trainingErrorMm": 0.021585852680686912,
+      "trainingRelErrorPercent": 2.158585268068691,
+      "lofoPredictedMm": 1.0304461020126203,
+      "lofoErrorMm": 0.030446102012620324,
+      "lofoRelErrorPercent": 3.0446102012620324
+    },
+    {
+      "rowId": 103,
+      "excelRows": [
+        131
+      ],
+      "identity": "4029394998430",
+      "dtex": 380.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 1.0,
+      "family": "Maraflex N.120",
+      "isNew": false,
+      "trainingPredictedMm": 1.0154251652401451,
+      "trainingErrorMm": 0.015425165240145144,
+      "trainingRelErrorPercent": 1.5425165240145144,
+      "lofoPredictedMm": 1.0150059486832277,
+      "lofoErrorMm": 0.015005948683227688,
+      "lofoRelErrorPercent": 1.5005948683227688
+    },
+    {
+      "rowId": 104,
+      "excelRows": [
+        132
+      ],
+      "identity": "Tera 20",
+      "dtex": 1500.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 1.0,
+      "family": "Tera 20",
+      "isNew": false,
+      "trainingPredictedMm": 0.9738769706412105,
+      "trainingErrorMm": -0.026123029358789518,
+      "trainingRelErrorPercent": -2.612302935878952,
+      "lofoPredictedMm": 0.9667969366907428,
+      "lofoErrorMm": -0.03320306330925715,
+      "lofoRelErrorPercent": -3.3203063309257153
+    },
+    {
+      "rowId": 106,
+      "excelRows": [
+        134
+      ],
+      "identity": "4008015049102",
+      "dtex": 300.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 1.0,
+      "family": "seta",
+      "isNew": false,
+      "trainingPredictedMm": 0.9907175713864141,
+      "trainingErrorMm": -0.009282428613585858,
+      "trainingRelErrorPercent": -0.9282428613585858,
+      "lofoPredictedMm": 0.9899898115996286,
+      "lofoErrorMm": -0.010010188400371378,
+      "lofoRelErrorPercent": -1.0010188400371378
+    },
+    {
+      "rowId": 107,
+      "excelRows": [
+        135
+      ],
+      "identity": "4606080152361",
+      "dtex": 315.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 1.025,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 1.021585852680687,
+      "trainingErrorMm": -0.003414147319312999,
+      "trainingRelErrorPercent": -0.33308754334760965,
+      "lofoPredictedMm": 1.0304461020126203,
+      "lofoErrorMm": 0.005446102012620413,
+      "lofoRelErrorPercent": 0.5313270256215037
+    },
+    {
+      "rowId": 108,
+      "excelRows": [
+        137
+      ],
+      "identity": "4606080152644",
+      "dtex": 315.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 1.05,
+      "family": "Gamma 40/2",
+      "isNew": false,
+      "trainingPredictedMm": 1.021585852680687,
+      "trainingErrorMm": -0.028414147319313132,
+      "trainingRelErrorPercent": -2.7061092685060126,
+      "lofoPredictedMm": 1.0304461020126203,
+      "lofoErrorMm": -0.01955389798737972,
+      "lofoRelErrorPercent": -1.8622759987980686
+    },
+    {
+      "rowId": 109,
+      "excelRows": [
+        139
+      ],
+      "identity": "4008015161002",
+      "dtex": 750.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 1.05,
+      "family": "Gutermann Extra Strong 750",
+      "isNew": false,
+      "trainingPredictedMm": 1.0201549928844564,
+      "trainingErrorMm": -0.02984500711554361,
+      "trainingRelErrorPercent": -2.842381630051772,
+      "lofoPredictedMm": 1.0154025735917476,
+      "lofoErrorMm": -0.034597426408252474,
+      "lofoRelErrorPercent": -3.2949929912621405
+    },
+    {
+      "rowId": 110,
+      "excelRows": [
+        140
+      ],
+      "identity": "4008015160982",
+      "dtex": 750.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 1.05,
+      "family": "Gutermann Extra Strong 750",
+      "isNew": false,
+      "trainingPredictedMm": 1.0201549928844564,
+      "trainingErrorMm": -0.02984500711554361,
+      "trainingRelErrorPercent": -2.842381630051772,
+      "lofoPredictedMm": 1.0154025735917476,
+      "lofoErrorMm": -0.034597426408252474,
+      "lofoRelErrorPercent": -3.2949929912621405
+    },
+    {
+      "rowId": 111,
+      "excelRows": [
+        141
+      ],
+      "identity": "4029394998430",
+      "dtex": 380.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 1.15,
+      "family": "Maraflex N.120",
+      "isNew": false,
+      "trainingPredictedMm": 1.1463724985414379,
+      "trainingErrorMm": -0.0036275014585620546,
+      "trainingRelErrorPercent": -0.3154349094401787,
+      "lofoPredictedMm": 1.1462312531655405,
+      "lofoErrorMm": -0.00376874683445938,
+      "lofoRelErrorPercent": -0.32771711603994613
+    },
+    {
+      "rowId": 112,
+      "excelRows": [
+        143
+      ],
+      "identity": "4008015043766",
+      "dtex": 1000.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 1.175,
+      "family": "Gutermann Top Stitch 1000",
+      "isNew": false,
+      "trainingPredictedMm": 1.1784893393871716,
+      "trainingErrorMm": 0.003489339387171553,
+      "trainingRelErrorPercent": 0.2969650542273662,
+      "lofoPredictedMm": 1.1791431000389803,
+      "lofoErrorMm": 0.004143100038980219,
+      "lofoRelErrorPercent": 0.3526042586366143
+    },
+    {
+      "rowId": 113,
+      "excelRows": [
+        147
+      ],
+      "identity": "Tera 40",
+      "dtex": 750.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 1.25,
+      "family": "Tera 40",
+      "isNew": false,
+      "trainingPredictedMm": 1.2717007349893428,
+      "trainingErrorMm": 0.021700734989342774,
+      "trainingRelErrorPercent": 1.736058799147422,
+      "lofoPredictedMm": 1.277400514306257,
+      "lofoErrorMm": 0.027400514306257007,
+      "lofoRelErrorPercent": 2.1920411445005605
+    },
+    {
+      "rowId": 114,
+      "excelRows": [
+        148
+      ],
+      "identity": "4008015160982",
+      "dtex": 750.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 1.25,
+      "family": "Gutermann Extra Strong 750",
+      "isNew": false,
+      "trainingPredictedMm": 1.2717007349893428,
+      "trainingErrorMm": 0.021700734989342774,
+      "trainingRelErrorPercent": 1.736058799147422,
+      "lofoPredictedMm": 1.2679568044436875,
+      "lofoErrorMm": 0.017956804443687524,
+      "lofoRelErrorPercent": 1.436544355495002
+    },
+    {
+      "rowId": 115,
+      "excelRows": [
+        149
+      ],
+      "identity": "Tera 10",
+      "dtex": 3000.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 1.3,
+      "family": "Tera 10",
+      "isNew": false,
+      "trainingPredictedMm": 1.277385235752977,
+      "trainingErrorMm": -0.022614764247023134,
+      "trainingRelErrorPercent": -1.7395972497710102,
+      "lofoPredictedMm": 1.2446643881592823,
+      "lofoErrorMm": -0.05533561184071778,
+      "lofoRelErrorPercent": -4.25658552620906
+    },
+    {
+      "rowId": 116,
+      "excelRows": [
+        150
+      ],
+      "identity": "4008015161002",
+      "dtex": 750.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 1.3,
+      "family": "Gutermann Extra Strong 750",
+      "isNew": false,
+      "trainingPredictedMm": 1.2717007349893428,
+      "trainingErrorMm": -0.02829926501065727,
+      "trainingRelErrorPercent": -2.1768665392813284,
+      "lofoPredictedMm": 1.2679568044436875,
+      "lofoErrorMm": -0.03204319555631252,
+      "lofoRelErrorPercent": -2.4648611966394247
+    },
+    {
+      "rowId": 117,
+      "excelRows": [
+        152
+      ],
+      "identity": "4008015160982",
+      "dtex": 750.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 1.425,
+      "family": "Gutermann Extra Strong 750",
+      "isNew": false,
+      "trainingPredictedMm": 1.4869571903629644,
+      "trainingErrorMm": 0.06195719036296432,
+      "trainingRelErrorPercent": 4.347873007927321,
+      "lofoPredictedMm": 1.4843910118402301,
+      "lofoErrorMm": 0.0593910118402301,
+      "lofoRelErrorPercent": 4.167790304577551
+    },
+    {
+      "rowId": 118,
+      "excelRows": [
+        153
+      ],
+      "identity": "Tera 30",
+      "dtex": 1000.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 1.45,
+      "family": "Tera 30",
+      "isNew": false,
+      "trainingPredictedMm": 1.469076532026064,
+      "trainingErrorMm": 0.019076532026063964,
+      "trainingRelErrorPercent": 1.3156228983492388,
+      "lofoPredictedMm": 1.4764943299093902,
+      "lofoErrorMm": 0.02649432990939027,
+      "lofoRelErrorPercent": 1.8271951661648462
+    },
+    {
+      "rowId": 119,
+      "excelRows": [
+        154
+      ],
+      "identity": "Tera 20",
+      "dtex": 1500.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 1.5,
+      "family": "Tera 20",
+      "isNew": false,
+      "trainingPredictedMm": 1.4195032854070087,
+      "trainingErrorMm": -0.08049671459299135,
+      "trainingRelErrorPercent": -5.3664476395327565,
+      "lofoPredictedMm": 1.4094445455665274,
+      "lofoErrorMm": -0.09055545443347257,
+      "lofoRelErrorPercent": -6.037030295564838
+    },
+    {
+      "rowId": 120,
+      "excelRows": [
+        156
+      ],
+      "identity": "4008015161002",
+      "dtex": 750.0,
+      "threadsPerStrand": 4,
+      "measuredMm": 1.5,
+      "family": "Gutermann Extra Strong 750",
+      "isNew": false,
+      "trainingPredictedMm": 1.4869571903629644,
+      "trainingErrorMm": -0.013042809637035635,
+      "trainingRelErrorPercent": -0.8695206424690424,
+      "lofoPredictedMm": 1.4843910118402301,
+      "lofoErrorMm": -0.015608988159769854,
+      "lofoRelErrorPercent": -1.0405992106513238
+    },
+    {
+      "rowId": 121,
+      "excelRows": [
+        157
+      ],
+      "identity": "4008015160982",
+      "dtex": 750.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 1.65,
+      "family": "Gutermann Extra Strong 750",
+      "isNew": false,
+      "trainingPredictedMm": 1.6787124131766156,
+      "trainingErrorMm": 0.02871241317661566,
+      "trainingRelErrorPercent": 1.740146253128222,
+      "lofoPredictedMm": 1.6774033120123608,
+      "lofoErrorMm": 0.027403312012360903,
+      "lofoRelErrorPercent": 1.6608067886279336
+    },
+    {
+      "rowId": 122,
+      "excelRows": [
+        160
+      ],
+      "identity": "4008015161002",
+      "dtex": 750.0,
+      "threadsPerStrand": 5,
+      "measuredMm": 1.7,
+      "family": "Gutermann Extra Strong 750",
+      "isNew": false,
+      "trainingPredictedMm": 1.6787124131766156,
+      "trainingErrorMm": -0.021287586823384386,
+      "trainingRelErrorPercent": -1.2522109896108462,
+      "lofoPredictedMm": 1.6774033120123608,
+      "lofoErrorMm": -0.02259668798763914,
+      "lofoRelErrorPercent": -1.3292169404493615
+    },
+    {
+      "rowId": 123,
+      "excelRows": [
+        163
+      ],
+      "identity": "Tera 10",
+      "dtex": 3000.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 1.94,
+      "family": "Tera 10",
+      "isNew": false,
+      "trainingPredictedMm": 1.8618907660255002,
+      "trainingErrorMm": -0.07810923397449976,
+      "trainingRelErrorPercent": -4.026249173943286,
+      "lofoPredictedMm": 1.8132742936341413,
+      "lofoErrorMm": -0.12672570636585867,
+      "lofoRelErrorPercent": -6.532252905456633
+    },
+    {
+      "rowId": 124,
+      "excelRows": [
+        175
+      ],
+      "identity": "4008015028046",
+      "dtex": 300.0,
+      "threadsPerStrand": 3,
+      "measuredMm": 0.75,
+      "family": "Mara 100",
+      "isNew": true,
+      "trainingPredictedMm": 0.7505134612752798,
+      "trainingErrorMm": 0.0005134612752798473,
+      "trainingRelErrorPercent": 0.0684615033706463,
+      "lofoPredictedMm": 0.7505189090789659,
+      "lofoErrorMm": 0.0005189090789659012,
+      "lofoRelErrorPercent": 0.0691878771954535
+    },
+    {
+      "rowId": 125,
+      "excelRows": [
+        176
+      ],
+      "identity": "HUF 0.04",
+      "dtex": 33.33,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.099,
+      "family": "HUF 0.04",
+      "isNew": true,
+      "trainingPredictedMm": 0.07658478338555559,
+      "trainingErrorMm": -0.022415216614444414,
+      "trainingRelErrorPercent": -22.641632943883245,
+      "lofoPredictedMm": 0.07448665190127063,
+      "lofoErrorMm": -0.024513348098729376,
+      "lofoRelErrorPercent": -24.760957675484217
+    },
+    {
+      "rowId": 126,
+      "excelRows": [
+        177,
+        178
+      ],
+      "identity": "TMC 16/0 W",
+      "dtex": 40.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.076,
+      "family": "TMC 16/0 W",
+      "isNew": true,
+      "trainingPredictedMm": 0.09009781795047167,
+      "trainingErrorMm": 0.014097817950471672,
+      "trainingRelErrorPercent": 18.54976046114694,
+      "lofoPredictedMm": 0.0926648964121868,
+      "lofoErrorMm": 0.016664896412186797,
+      "lofoRelErrorPercent": 21.927495279193153
+    },
+    {
+      "rowId": 127,
+      "excelRows": [
+        182
+      ],
+      "identity": "UNI-C 20D",
+      "dtex": 22.22,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.086,
+      "family": "UNI-C 20D",
+      "isNew": true,
+      "trainingPredictedMm": 0.07665715190613141,
+      "trainingErrorMm": -0.00934284809386858,
+      "trainingRelErrorPercent": -10.863776853335558,
+      "lofoPredictedMm": 0.07482389419689543,
+      "lofoErrorMm": -0.01117610580310456,
+      "lofoRelErrorPercent": -12.995471864075073
+    },
+    {
+      "rowId": 128,
+      "excelRows": [
+        183
+      ],
+      "identity": "UNI-C 20D",
+      "dtex": 22.22,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.05,
+      "family": "UNI-C 20D",
+      "isNew": true,
+      "trainingPredictedMm": 0.05259208319121356,
+      "trainingErrorMm": 0.002592083191213554,
+      "trainingRelErrorPercent": 5.184166382427108,
+      "lofoPredictedMm": 0.051421723627411674,
+      "lofoErrorMm": 0.001421723627411671,
+      "lofoRelErrorPercent": 2.843447254823342
+    },
+    {
+      "rowId": 129,
+      "excelRows": [
+        184,
+        186
+      ],
+      "identity": "UNI-T 8/0 W",
+      "dtex": 80.0,
+      "threadsPerStrand": 1,
+      "measuredMm": 0.1095,
+      "family": "UNI-T 8/0 W",
+      "isNew": true,
+      "trainingPredictedMm": 0.16094002372387933,
+      "trainingErrorMm": 0.05144002372387933,
+      "trainingRelErrorPercent": 46.97719061541491,
+      "lofoPredictedMm": 0.17072325527156348,
+      "lofoErrorMm": 0.061223255271563484,
+      "lofoRelErrorPercent": 55.91164864982967
+    },
+    {
+      "rowId": 130,
+      "excelRows": [
+        185,
+        187
+      ],
+      "identity": "UNI-T 8/0 W",
+      "dtex": 80.0,
+      "threadsPerStrand": 2,
+      "measuredMm": 0.168,
+      "family": "UNI-T 8/0 W",
+      "isNew": true,
+      "trainingPredictedMm": 0.23458290863897477,
+      "trainingErrorMm": 0.06658290863897476,
+      "trainingRelErrorPercent": 39.63268371367545,
+      "lofoPredictedMm": 0.24652895756741677,
+      "lofoErrorMm": 0.07852895756741676,
+      "lofoRelErrorPercent": 46.743427123462354
+    }
+  ],
+  "validation": {
+    "ok": true,
+    "tolerances": {
+      "coefficientsRelative": 1e-06,
+      "percentagePoints": 0.02,
+      "millimetresRelative": 0.0002
+    },
+    "comparison": [
+      {
+        "kind": "coefficient",
+        "name": "c0",
+        "reproduced": -0.8841755963398531,
+        "expected": -0.8841755979848913,
+        "delta": 1.645038216757655e-09,
+        "relative": 1.86053338330851e-09,
+        "tolerance": 1e-06,
+        "ok": true
+      },
+      {
+        "kind": "coefficient",
+        "name": "c1",
+        "reproduced": 0.6318544941078147,
+        "expected": 0.6318544934210768,
+        "delta": 6.867378887775999e-10,
+        "relative": 1.086860813570171e-09,
+        "tolerance": 1e-06,
+        "ok": true
+      },
+      {
+        "kind": "coefficient",
+        "name": "c2",
+        "reproduced": 0.5435747541143862,
+        "expected": 0.5435747556354212,
+        "delta": -1.5210350756689195e-09,
+        "relative": 2.7982077164177332e-09,
+        "tolerance": 1e-06,
+        "ok": true
+      },
+      {
+        "kind": "coefficient",
+        "name": "c3",
+        "reproduced": -0.061470049387915754,
+        "expected": -0.061470048768181726,
+        "delta": -6.19734027984542e-10,
+        "relative": 1.0081886063271358e-08,
+        "tolerance": 1e-06,
+        "ok": true
+      },
+      {
+        "kind": "metric",
+        "name": "training.all.rmspePercent",
+        "reproduced": 8.865942754374176,
+        "expected": 8.87,
+        "delta": -0.004057245625823214,
+        "unit": "pp",
+        "tolerance": 0.02,
+        "ok": true
+      },
+      {
+        "kind": "metric",
+        "name": "lofo.all.rmspePercent",
+        "reproduced": 10.198992896212745,
+        "expected": 10.2,
+        "delta": -0.0010071037872538824,
+        "unit": "pp",
+        "tolerance": 0.02,
+        "ok": true
+      },
+      {
+        "kind": "metric",
+        "name": "lofo.all.mapePercent",
+        "reproduced": 6.53355162455662,
+        "expected": 6.53,
+        "delta": 0.0035516245566196147,
+        "unit": "pp",
+        "tolerance": 0.02,
+        "ok": true
+      },
+      {
+        "kind": "metric",
+        "name": "lofo.all.maeMm",
+        "reproduced": 0.03596206727184359,
+        "expected": 0.03596,
+        "delta": 2.0672718435907345e-06,
+        "unit": "mm",
+        "tolerance": 7.192e-06,
+        "ok": true
+      },
+      {
+        "kind": "metric",
+        "name": "lofo.all.rmseMm",
+        "reproduced": 0.04496286389559252,
+        "expected": 0.04496,
+        "delta": 2.8638955925225362e-06,
+        "unit": "mm",
+        "tolerance": 8.992e-06,
+        "ok": true
+      },
+      {
+        "kind": "metric",
+        "name": "lofo.new.rmspePercent",
+        "reproduced": 30.663968563487565,
+        "expected": 30.66,
+        "delta": 0.00396856348756458,
+        "unit": "pp",
+        "tolerance": 0.02,
+        "ok": true
+      },
+      {
+        "kind": "metric",
+        "name": "lofo.new.mapePercent",
+        "reproduced": 23.607376532009035,
+        "expected": 23.61,
+        "delta": -0.0026234679909649117,
+        "unit": "pp",
+        "tolerance": 0.02,
+        "ok": true
+      },
+      {
+        "kind": "metric",
+        "name": "lofo.old.rmspePercent",
+        "reproduced": 7.459276549669227,
+        "expected": 7.46,
+        "delta": -0.0007234503307733675,
+        "unit": "pp",
+        "tolerance": 0.02,
+        "ok": true
+      },
+      {
+        "kind": "metric",
+        "name": "lofo.old.mapePercent",
+        "reproduced": 5.545809687761852,
+        "expected": 5.55,
+        "delta": -0.004190312238147698,
+        "unit": "pp",
+        "tolerance": 0.02,
+        "ok": true
+      },
+      {
+        "kind": "metric",
+        "name": "oldOnlyToNew.rmspePercent",
+        "reproduced": 58.638127890524906,
+        "expected": 58.64,
+        "delta": -0.001872109475094419,
+        "unit": "pp",
+        "tolerance": 0.02,
+        "ok": true
+      }
+    ]
+  }
+}

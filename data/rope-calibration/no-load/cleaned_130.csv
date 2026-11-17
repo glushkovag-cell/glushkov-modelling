@@ -1,0 +1,131 @@
+rowId,excelRows,identityKind,identity,manufacturer,series,identifier,dtex,threadsPerStrand,diameterMm,family,isNew,aggregated,sourceRowCount,weight,loadGrams,source,position
+1,2;3,series,Skala 360,Gutermann,Skala 360,,80,1,0.185,Skala 360,False,True,2,1,300,PDF,1:1
+2,4;5,series,Skala 240,Gutermann,Skala 240,,120,1,0.22,Skala 240,False,True,2,1,200,CSV,4
+3,6,series,Skala 200,,Skala 200,,150,1,0.26,Skala 200,False,False,1,1,200,CSV,7
+4,7;8,series,Skala 360,Gutermann,Skala 360,,80,2,0.28,Skala 360,False,True,2,1,200,CSV,2
+5,9,barcode,4008015066284,Gutermann,M202 extra fine,4008015066284,200,1,0.35,M202 extra fine,False,False,1,1,300,PDF,1:4
+6,10;12,series,Skala 240,Gutermann,Skala 240,,120,2,0.3625,Skala 240,False,True,2,1,200,CSV,5
+7,13;14,series,Skala 360,Gutermann,Skala 360,,80,3,0.3775,Skala 360,False,True,2,1,300,PDF,1:6
+8,16,barcode,4008015033385,Gutermann,N100,4008015033385,300,1,0.4,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:9
+9,17,barcode,4008015033125,Gutermann,poliestere,4008015033125,300,1,0.4,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:11
+10,18,barcode,4008015159665,Gutermann,poliestere,4008015159665,300,1,0.4,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:8
+11,19,series,Skala 200,,Skala 200,,150,2,0.42,Skala 200,False,False,1,1,200,CSV,8
+12,21,barcode,4003760116703,Aerofil Madeira,9125 No.120,4003760116703,270,1,0.425,9125 No.120,False,False,1,1,300,PDF,1:13
+13,22,barcode,4008015159948,Gutermann,poliestere,4008015159948,300,1,0.425,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:14
+14,23,series,Tera 80,,Tera 80,,350,1,0.43,Tera 80,False,False,1,1,200,CSV,10
+15,24,barcode,4008015027520,Gutermann,poliestere,4008015027520,300,1,0.435,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:15
+16,25,barcode,4606080151616,Gamma,40/2,4606080151616,315,1,0.45,Gamma 40/2,False,False,1,1,300,PDF,1:16
+17,26,barcode,4606080152361,Gamma,40/2,4606080152361,315,1,0.45,Gamma 40/2,False,False,1,1,300,PDF,1:17
+18,27;37,series,Skala 240,Gutermann,Skala 240,,120,3,0.465,Skala 240,False,True,2,1,300,PDF,1:19
+19,28,series,Skala 360,Gutermann,Skala 360,,80,4,0.45,Skala 360,False,False,1,1,300,PDF,1:18
+20,29,barcode,4008015161163,Gutermann,poliestere,4008015161163,300,1,0.45,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:20
+21,30,barcode,4008015027445,Gutermann,poliestere,4008015027445,300,1,0.45,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:21
+22,31,barcode,4008015049102,Gutermann,seta,4008015049102,300,1,0.45,seta,False,False,1,1,300,PDF,1:22
+23,32,barcode,4606080152644,Gamma,40/2,4606080152644,315,1,0.46,Gamma 40/2,False,False,1,1,300,PDF,1:23
+24,33,barcode,4606080152873,Gamma,40/2,4606080152873,315,1,0.46,Gamma 40/2,False,False,1,1,300,PDF,1:24
+25,34,barcode,4606080151661,Gamma,40/2,4606080151661,315,1,0.475,Gamma 40/2,False,False,1,1,300,PDF,1:25
+26,35,barcode,4606080153061,Gamma,40/2,4606080153061,315,1,0.475,Gamma 40/2,False,False,1,1,300,PDF,1:26
+27,36,series,Skala 200,,Skala 200,,150,3,0.48,Skala 200,False,False,1,1,200,CSV,9
+28,38,barcode,4008015066284,Gutermann,M202 extra fine,4008015066284,200,2,0.5,M202 extra fine,False,False,1,1,300,PDF,1:28
+29,39,barcode,4029394998430,Gutermann,Maraflex N.120,4029394998430,380,1,0.5,Maraflex N.120,False,False,1,1,300,PDF,1:29
+30,40,series,Skala 360,Gutermann,Skala 360,,80,5,0.5,Skala 360,False,False,1,1,300,PDF,1:27
+31,41,series,Skala 240,Gutermann,Skala 240,,120,4,0.52,Skala 240,False,False,1,1,300,PDF,1:30
+32,45,barcode,4008015033125,Gutermann,poliestere,4008015033125,300,2,0.55,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:34
+33,46,barcode,4003760116703,Aerofil Madeira,9125 No.120,4003760116703,270,2,0.575,9125 No.120,False,False,1,1,300,PDF,1:35
+34,47,barcode,4008015033385,Gutermann,N100,4008015033385,300,2,0.575,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:37
+35,48,barcode,4008015159665,Gutermann,poliestere,4008015159665,300,2,0.575,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:36
+36,49,barcode,4008015027445,Gutermann,poliestere,4008015027445,300,2,0.575,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:38
+37,50,barcode,4008015027520,Gutermann,poliestere,4008015027520,300,2,0.575,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:39
+38,52,barcode,4606080151661,Gamma,40/2,4606080151661,315,2,0.6,Gamma 40/2,False,False,1,1,300,PDF,1:41
+39,53,barcode,4606080152361,Gamma,40/2,4606080152361,315,2,0.6,Gamma 40/2,False,False,1,1,300,PDF,1:42
+40,55,barcode,4008015159948,Gutermann,poliestere,4008015159948,300,2,0.6,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:43
+41,56,barcode,4008015161163,Gutermann,poliestere,4008015161163,300,2,0.6,Gutermann Sew-all 300,False,False,1,1,300,PDF,1:44
+42,57,series,Tera 40,,Tera 40,,750,1,0.62,Tera 40,False,False,1,1,200,CSV,16
+43,58,series,Tera 60,,Tera 60,,500,1,0.62,Tera 60,False,False,1,1,200,CSV,13
+44,59,barcode,4606080151616,Gamma,40/2,4606080151616,315,2,0.625,Gamma 40/2,False,False,1,1,300,PDF,1:46
+45,60,barcode,4606080152644,Gamma,40/2,4606080152644,315,2,0.625,Gamma 40/2,False,False,1,1,300,PDF,1:47
+46,61,barcode,4606080153061,Gamma,40/2,4606080153061,315,2,0.625,Gamma 40/2,False,False,1,1,300,PDF,1:48
+47,62,barcode,4008015066284,Gutermann,M202 extra fine,4008015066284,200,3,0.625,M202 extra fine,False,False,1,1,300,PDF,1:49
+48,63,barcode,4008015049102,Gutermann,seta,4008015049102,300,2,0.625,seta,False,False,1,1,300,PDF,1:50
+49,64,barcode,4606080152873,Gamma,40/2,4606080152873,315,2,0.65,Gamma 40/2,False,False,1,1,300,PDF,2:1
+50,65,series,Tera 80,,Tera 80,,350,2,0.65,Tera 80,False,False,1,1,200,CSV,11
+51,68,barcode,4008015033385,Gutermann,N100,4008015033385,300,3,0.7,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:4
+52,69,series,Tera 30,,Tera 30,,1000,1,0.72,Tera 30,False,False,1,1,200,CSV,19
+53,70,barcode,4008015066284,Gutermann,M202 extra fine,4008015066284,200,4,0.725,M202 extra fine,False,False,1,1,300,PDF,2:6
+54,71,barcode,4029394998430,Gutermann,Maraflex N.120,4029394998430,380,2,0.725,Maraflex N.120,False,False,1,1,300,PDF,2:7
+55,72,barcode,4008015159665,Gutermann,poliestere,4008015159665,300,3,0.725,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:5
+56,73,barcode,4008015027445,Gutermann,poliestere,4008015027445,300,3,0.725,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:8
+57,74,barcode,4008015033125,Gutermann,poliestere,4008015033125,300,3,0.725,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:9
+58,76,barcode,4606080151616,Gamma,40/2,4606080151616,315,3,0.75,Gamma 40/2,False,False,1,1,300,PDF,2:11
+59,77;82,barcode,4606080151661,Gamma,40/2,4606080151661,315,3,0.7625,Gamma 40/2,False,True,2,1,300,PDF,2:12
+60,78,barcode,4003760116703,Aerofil Madeira,9125 No.120,4003760116703,270,3,0.75,9125 No.120,False,False,1,1,300,PDF,2:13
+61,79,barcode,4008015161002,Gutermann,extra strong M702,4008015161002,750,1,0.75,Gutermann Extra Strong 750,False,False,1,1,300,PDF,2:15
+62,80,barcode,4008015161163,Gutermann,poliestere,4008015161163,300,3,0.75,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:14
+63,81,barcode,4008015027520,Gutermann,poliestere,4008015027520,300,3,0.75,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:16
+64,83,barcode,4606080152361,Gamma,40/2,4606080152361,315,3,0.775,Gamma 40/2,False,False,1,1,300,PDF,2:18
+65,84,barcode,4606080152644,Gamma,40/2,4606080152644,315,3,0.775,Gamma 40/2,False,False,1,1,300,PDF,2:19
+66,85,barcode,4606080152873,Gamma,40/2,4606080152873,315,3,0.775,Gamma 40/2,False,False,1,1,300,PDF,2:20
+67,88,barcode,4008015160982,Gutermann,extra strong M782,4008015160982,750,1,0.775,Gutermann Extra Strong 750,False,False,1,1,300,PDF,2:21
+68,89,barcode,4008015049102,Gutermann,seta,4008015049102,300,3,0.775,seta,False,False,1,1,300,PDF,2:24
+69,90,series,Tera 60,,Tera 60,,500,2,0.78,Tera 60,False,False,1,1,200,CSV,14
+70,91,barcode,4606080153061,Gamma,40/2,4606080153061,315,3,0.79,Gamma 40/2,False,False,1,1,300,PDF,2:25
+71,92,barcode,4008015043766,Gutermann,poliestere,4008015043766,1000,1,0.8,Gutermann Top Stitch 1000,False,False,1,1,300,PDF,2:26
+72,94,barcode,4008015066284,Gutermann,M202 extra fine,4008015066284,200,5,0.825,M202 extra fine,False,False,1,1,300,PDF,2:30
+73,95,series,Skala 240,Gutermann,Skala 240,,120,5,0.825,Skala 240,False,False,1,1,300,PDF,2:28
+74,96,barcode,4008015161163,Gutermann,poliestere,4008015161163,300,4,0.825,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:29
+75,97,barcode,4008015027445,Gutermann,poliestere,4008015027445,300,4,0.825,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:31
+76,99,series,Tera 80,,Tera 80,,350,3,0.84,Tera 80,False,False,1,1,200,CSV,12
+77,100,barcode,4606080151616,Gamma,40/2,4606080151616,315,4,0.85,Gamma 40/2,False,False,1,1,300,PDF,2:33
+78,101,barcode,4003760116703,Aerofil Madeira,9125 No.120,4003760116703,270,4,0.85,9125 No.120,False,False,1,1,300,PDF,2:34
+79,103,barcode,4008015159665,Gutermann,poliestere,4008015159665,300,4,0.85,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:35
+80,104,barcode,4008015027520,Gutermann,poliestere,4008015027520,300,4,0.85,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:36
+81,105,barcode,4008015033125,Gutermann,poliestere,4008015033125,300,4,0.85,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:37
+82,107,barcode,4606080151661,Gamma,40/2,4606080151661,315,4,0.9,Gamma 40/2,False,False,1,1,300,PDF,2:40
+83,108,barcode,4606080152361,Gamma,40/2,4606080152361,315,4,0.9,Gamma 40/2,False,False,1,1,300,PDF,2:41
+84,109,barcode,4606080152873,Gamma,40/2,4606080152873,315,4,0.9,Gamma 40/2,False,False,1,1,300,PDF,2:42
+85,110,barcode,4606080153061,Gamma,40/2,4606080153061,315,4,0.9,Gamma 40/2,False,False,1,1,300,PDF,2:43
+86,111,barcode,4029394998430,Gutermann,Maraflex N.120,4029394998430,380,3,0.9,Maraflex N.120,False,False,1,1,300,PDF,2:45
+87,112,barcode,4008015033385,Gutermann,N100,4008015033385,300,4,0.9,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:44
+88,113,barcode,4008015049102,Gutermann,seta,4008015049102,300,4,0.9,seta,False,False,1,1,300,PDF,2:46
+89,115,barcode,4606080152644,Gamma,40/2,4606080152644,315,4,0.925,Gamma 40/2,False,False,1,1,300,PDF,2:48
+90,116,barcode,4008015033385,Gutermann,N100,4008015033385,300,5,0.925,Gutermann Sew-all 300,False,False,1,1,300,PDF,2:49
+91,117,barcode,4003760116703,Aerofil Madeira,9125 No.120,4003760116703,270,5,0.95,9125 No.120,False,False,1,1,300,PDF,2:51
+92,118,series,Tera 40,,Tera 40,,750,2,0.95,Tera 40,False,False,1,1,200,CSV,17
+93,119,series,Tera 60,,Tera 60,,500,3,0.95,Tera 60,False,False,1,1,200,CSV,15
+94,121,barcode,4008015159665,Gutermann,poliestere,4008015159665,300,5,0.95,Gutermann Sew-all 300,False,False,1,1,300,PDF,3:1
+95,122,barcode,4008015027445,Gutermann,poliestere,4008015027445,300,5,0.95,Gutermann Sew-all 300,False,False,1,1,300,PDF,3:2
+96,123,barcode,4008015027520,Gutermann,poliestere,4008015027520,300,5,0.95,Gutermann Sew-all 300,False,False,1,1,300,PDF,3:3
+97,124,barcode,4008015033125,Gutermann,poliestere,4008015033125,300,5,0.95,Gutermann Sew-all 300,False,False,1,1,300,PDF,3:4
+98,125,barcode,4606080151616,Gamma,40/2,4606080151616,315,5,0.975,Gamma 40/2,False,False,1,1,300,PDF,3:5
+99,126,barcode,4008015161163,Gutermann,poliestere,4008015161163,300,5,0.975,Gutermann Sew-all 300,False,False,1,1,300,PDF,3:6
+100,127,barcode,4606080153061,Gamma,40/2,4606080153061,315,5,1,Gamma 40/2,False,False,1,1,300,PDF,3:10
+101,129,barcode,4606080151661,Gamma,40/2,4606080151661,315,5,1,Gamma 40/2,False,False,1,1,300,PDF,3:8
+102,130,barcode,4606080152873,Gamma,40/2,4606080152873,315,5,1,Gamma 40/2,False,False,1,1,300,PDF,3:9
+103,131,barcode,4029394998430,Gutermann,Maraflex N.120,4029394998430,380,4,1,Maraflex N.120,False,False,1,1,300,PDF,3:11
+104,132,series,Tera 20,,Tera 20,,1500,1,1,Tera 20,False,False,1,1,200,CSV,22
+105,133,series,Tera 30,,Tera 30,,1000,2,1,Tera 30,False,False,1,1,200,CSV,20
+106,134,barcode,4008015049102,Gutermann,seta,4008015049102,300,5,1,seta,False,False,1,1,300,PDF,3:12
+107,135,barcode,4606080152361,Gamma,40/2,4606080152361,315,5,1.025,Gamma 40/2,False,False,1,1,300,PDF,3:13
+108,137,barcode,4606080152644,Gamma,40/2,4606080152644,315,5,1.05,Gamma 40/2,False,False,1,1,300,PDF,3:15
+109,139,barcode,4008015161002,Gutermann,extra strong M702,4008015161002,750,2,1.05,Gutermann Extra Strong 750,False,False,1,1,300,PDF,3:16
+110,140,barcode,4008015160982,Gutermann,extra strong M782,4008015160982,750,2,1.05,Gutermann Extra Strong 750,False,False,1,1,300,PDF,3:18
+111,141,barcode,4029394998430,Gutermann,Maraflex N.120,4029394998430,380,5,1.15,Maraflex N.120,False,False,1,1,300,PDF,3:19
+112,143,barcode,4008015043766,Gutermann,poliestere,4008015043766,1000,2,1.175,Gutermann Top Stitch 1000,False,False,1,1,300,PDF,3:21
+113,147,series,Tera 40,,Tera 40,,750,3,1.25,Tera 40,False,False,1,1,200,CSV,18
+114,148,barcode,4008015160982,Gutermann,extra strong M782,4008015160982,750,3,1.25,Gutermann Extra Strong 750,False,False,1,1,300,PDF,3:25
+115,149,series,Tera 10,,Tera 10,,3000,1,1.3,Tera 10,False,False,1,1,200,CSV,24
+116,150,barcode,4008015161002,Gutermann,extra strong M702,4008015161002,750,3,1.3,Gutermann Extra Strong 750,False,False,1,1,300,PDF,3:26
+117,152,barcode,4008015160982,Gutermann,extra strong M782,4008015160982,750,4,1.425,Gutermann Extra Strong 750,False,False,1,1,300,PDF,3:28
+118,153,series,Tera 30,,Tera 30,,1000,3,1.45,Tera 30,False,False,1,1,200,CSV,21
+119,154,series,Tera 20,,Tera 20,,1500,2,1.5,Tera 20,False,False,1,1,200,CSV,23
+120,156,barcode,4008015161002,Gutermann,extra strong M702,4008015161002,750,4,1.5,Gutermann Extra Strong 750,False,False,1,1,300,PDF,3:30
+121,157,barcode,4008015160982,Gutermann,extra strong M782,4008015160982,750,5,1.65,Gutermann Extra Strong 750,False,False,1,1,300,PDF,3:31
+122,160,barcode,4008015161002,Gutermann,extra strong M702,4008015161002,750,5,1.7,Gutermann Extra Strong 750,False,False,1,1,300,PDF,3:34
+123,163,series,Tera 10,,Tera 10,,3000,2,1.94,Tera 10,False,False,1,1,200,CSV,25
+124,175,barcode,4008015028046,Gutermann,Mara 100,4008015028046,300,3,0.75,Mara 100,True,False,1,1,200,MEA,
+125,176,manufacturer,HUF 0.04,HUF 0.04,,,33.33,1,0.099,HUF 0.04,True,False,1,1,30,XLS,
+126,177;178,manufacturer,TMC 16/0 W,TMC 16/0 W,,,40,1,0.076,TMC 16/0 W,True,True,2,1,30,XLS,
+127,182,manufacturer,UNI-C 20D,UNI-C 20D,,,22.22,2,0.086,UNI-C 20D,True,False,1,1,30,XLS,
+128,183,manufacturer,UNI-C 20D,UNI-C 20D,,,22.22,1,0.05,UNI-C 20D,True,False,1,1,30,XLS,
+129,184;186,manufacturer,UNI-T 8/0 W,UNI-T 8/0 W,,,80,1,0.1095,UNI-T 8/0 W,True,True,2,1,30,XLS,
+130,185;187,manufacturer,UNI-T 8/0 W,UNI-T 8/0 W,,,80,2,0.168,UNI-T 8/0 W,True,True,2,1,30,XLS,

@@ -1,0 +1,11 @@
+groupId,identityKind,identity,dtex,threadsPerStrand,sourceExcelRows,rawDiametersMm,meanDiameterMm,minDiameterMm,maxDiameterMm,spreadRelative,spreadPercent,spreadLimit,qualifiesBySpread,decision,weight,family,isNew,note
+1,series,Skala 360,80,1,2;3,0.18;0.19,0.185,0.18,0.19,0.05555555555555561,5.555555555555561,0.15,True,averaged,1,Skala 360,False,
+2,series,Skala 240,120,1,4;5,0.22;0.22,0.22,0.22,0.22,0,0,0.15,True,averaged,1,Skala 240,False,
+3,series,Skala 360,80,2,7;8,0.26;0.3,0.28,0.26,0.3,0.15384615384615377,15.384615384615378,0.15,True,averaged-by-explicit-decision,1,Skala 360,False,averaged by explicit user decision (within-group spread 15.4 % exceeds the 15 % limit)
+4,series,Skala 240,120,2,10;12,0.35;0.375,0.3625,0.35,0.375,0.0714285714285715,7.1428571428571495,0.15,True,averaged,1,Skala 240,False,
+5,series,Skala 360,80,3,13;14,0.375;0.38,0.3775,0.375,0.38,0.013333333333333345,1.3333333333333344,0.15,True,averaged,1,Skala 360,False,
+6,series,Skala 240,120,3,27;37,0.45;0.48,0.465,0.45,0.48,0.0666666666666666,6.66666666666666,0.15,True,averaged,1,Skala 240,False,
+7,barcode,4606080151661,315,3,77;82,0.75;0.775,0.7625,0.75,0.775,0.03333333333333336,3.333333333333336,0.15,True,averaged,1,Gamma 40/2,False,
+8,manufacturer,TMC 16/0 W,40,1,177;178,0.075;0.077,0.076,0.075,0.077,0.026666666666666693,2.666666666666669,0.15,True,averaged,1,TMC 16/0 W,True,
+9,manufacturer,UNI-T 8/0 W,80,1,184;186,0.11;0.109,0.1095,0.109,0.11,0.009174311926605512,0.9174311926605512,0.15,True,averaged,1,UNI-T 8/0 W,True,
+10,manufacturer,UNI-T 8/0 W,80,2,185;187,0.172;0.164,0.168,0.164,0.172,0.04878048780487792,4.8780487804877914,0.15,True,averaged,1,UNI-T 8/0 W,True,

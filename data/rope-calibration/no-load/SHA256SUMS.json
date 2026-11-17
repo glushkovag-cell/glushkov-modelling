@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "algorithm": "sha256",
+  "generatedBy": "data/rope-calibration/calibrate_no_load.py",
+  "pathsRelativeTo": "data/rope-calibration",
+  "files": {
+    "threads_merged.xlsx": "4924e12a2046b9fb034cee444b285fb22da43904ce6e923564ecdd24ebb056eb",
+    "normalized.csv": "4b015f8991f4fc816dd4618fdd635715f6ae4bb056ecd132751b0c488b0dc0db",
+    "no-load/cleaned_130.csv": "5b16faf0c34437e56a9b8e3bd11304358720f39936328b9d1c523e3567079baa",
+    "no-load/training_128.csv": "f0b156c47c2b99679940356e44b691246c27972d45dedc40e9bc579d45fab4f2",
+    "no-load/averaging-log.csv": "11f139873d5b921ba8ca21cb7212192401baca38d107819771b025e14e60c70d",
+    "no-load/coefficients.json": "b255b0ad44636bedb5b99000e8f852c8c0608fb252c99d3643f2591fc9d81cfd",
+    "no-load/results.json": "6486b2152df5ef8962814b3d7d76346d5cbacaaa497d173acd792815ab3cb8d9"
+  },
+  "note": "threads_merged.xlsx and normalized.csv are inputs and must match data/rope-calibration/README.md exactly. The no-load/* JSON hashes include toolchain versions and full-precision floats, so they can differ across numpy/scipy/BLAS builds; calibrate_no_load.py --check compares coefficients and metrics with explicit tolerances instead."
+}

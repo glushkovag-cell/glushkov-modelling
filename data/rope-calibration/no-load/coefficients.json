@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "model": "rope-diameter-no-load",
+  "formula": "D = exp(c0 + c1*u + c2*v + c3*u^2), u = ln(x/300), v = ln(n)",
+  "variables": {
+    "D": "finished rope diameter, mm",
+    "x": "purchased thread linear density, dTex",
+    "n": "threads per strand (strands are always 3)",
+    "u": "ln(x / 300)",
+    "v": "ln(n)"
+  },
+  "objective": "minimise sum((D_calc - D_measured) / D_measured)^2 over the 128 training rows; every aggregated row has weight 1; no load term and no load weight",
+  "fitted": {
+    "c0": -0.8841755963398531,
+    "c1": 0.6318544941078147,
+    "c2": 0.5435747541143862,
+    "c3": -0.061470049387915754
+  },
+  "spec": {
+    "c0": -0.8841755979848913,
+    "c1": 0.6318544934210768,
+    "c2": 0.5435747556354212,
+    "c3": -0.061470048768181726
+  },
+  "maxRelativeDeviationFromSpec": 1.0081886063271358e-08,
+  "support": {
+    "threadsPerStrand": {
+      "min": 1,
+      "max": 5,
+      "values": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "customDtexRange": {
+      "min": 22.22,
+      "max": 6000
+    },
+    "measuredDtexRange": {
+      "min": 22.22,
+      "max": 3000
+    },
+    "diameterTolerance": 0.1
+  },
+  "versions": {
+    "model": "1.0.0",
+    "calibration": "1.0.0",
+    "python": "3.13.5",
+    "numpy": "2.3.2",
+    "scipy": "1.16.1"
+  },
+  "sample": {
+    "aggregatedRows": 130,
+    "trainingRows": 128,
+    "families": 22
+  },
+  "source": {
+    "file": "threads_merged.xlsx",
+    "sheet": "Общая таблица",
+    "sha256": "4924e12a2046b9fb034cee444b285fb22da43904ce6e923564ecdd24ebb056eb",
+    "normalizedCsvSha256": "4b015f8991f4fc816dd4618fdd635715f6ae4bb056ecd132751b0c488b0dc0db"
+  }
+}
