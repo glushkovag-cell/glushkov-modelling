@@ -4,6 +4,7 @@ import type { Env } from '../src/catalog/client';
 import { handleRequest } from '../src/http/app';
 import type { CatalogThread } from '../src/core/types';
 import { catalog, relativeDifference } from './helpers';
+import { computeForwardV2, findMatchesV2 } from '../src/core/v2';
 
 const env: Env = {
   WP_GRAPHQL_URL: 'https://cms.example.test/graphql',
@@ -148,9 +149,9 @@ describe('rope API', () => {
     const body = await json(response);
 
     expect(response.status).toBe(200);
-    expect(body.results).toHaveLength(16);
+    expect(body.results).toHaveLength(8);
     expect(body.results[0].threadId).toBe('mara-100');
-    expect(body.input.tolerance).toBe(0.15);
+    expect(body.input.tolerance).toBe(0.1);
     expect(body.input.threadIds).toBeNull();
   });
 
@@ -331,5 +332,157 @@ describe('rope API', () => {
     );
 
     expect((await json(response)).requestId).toBe('8f3c1a7b2e40-HEL');
+  });
+});
+
+describe('rope API v2', () => {
+  beforeEach(async () => {
+    await resetCatalogCache();
+  });
+
+  const VERSIONS = { apiVersion: '2', algorithmVersion: '3.0.0', loadRecommendationVersion: '1.0.0' };
+
+  it('health отдаёт версии v2', async () => {
+    const response = await handleRequest(get('/api/rope/v2/health'), env);
+    expect(response.status).toBe(200);
+    expect(await json(response)).toEqual({ ok: true, ...VERSIONS });
+  });
+
+  it('catalog v2 содержит версии и каталог', async () => {
+    const fn = fetchMock(async () => cmsResponse());
+    const body = await json(
+      await handleRequest(get('/api/rope/v2/catalog'), env, { fetchImpl: fn as unknown as typeof fetch }),
+    );
+    expect(body).toMatchObject(VERSIONS);
+    expect(body.catalogVersion).toBe('0b24290aff0e');
+    expect(body.threads).toHaveLength(catalog.length);
+  });
+
+  it('forward по dTex: CMS не запрашивается, catalogVersion = null', async () => {
+    const fn = fetchMock(async () => cmsResponse());
+    const response = await handleRequest(
+      post('/api/rope/v2/forward', { basis: 'dtex', dtex: 80, threadsPerStrand: 2 }),
+      env,
+      { fetchImpl: fn as unknown as typeof fetch },
+    );
+    const body = await json(response);
+
+    expect(response.status).toBe(200);
+    expect(fn).not.toHaveBeenCalled();
+    expect(body).toMatchObject({ ...VERSIONS, catalogVersion: null, fetchedAt: null, basis: 'dtex' });
+    expect(body.input).toEqual({ dtex: 80, threadsPerStrand: 2, loadMode: 'auto', loadGrams: null });
+    expect(body.result).toMatchObject({
+      totalDtex: 480,
+      loadMode: 'auto',
+      recommendedLoadGrams: 150,
+      appliedLoadGrams: 150,
+    });
+    expect(relativeDifference(body.result.diameterMm, 0.24069446380613793)).toBeLessThan(1e-12);
+    expect(body.warnings.map((warning: { code: string }) => warning.code)).toContain('EMPIRICAL_MODEL');
+  });
+
+  it('forward по каталогу, manual', async () => {
+    const fn = fetchMock(async () => cmsResponse());
+    const body = await json(
+      await handleRequest(
+        post('/api/rope/v2/forward', {
+          basis: 'catalog',
+          threadId: 'tera-40',
+          threadsPerStrand: 2,
+          loadMode: 'manual',
+          loadGrams: 300,
+        }),
+        env,
+        { fetchImpl: fn as unknown as typeof fetch },
+      ),
+    );
+
+    expect(body.catalogVersion).toBe('0b24290aff0e');
+    expect(body.input).toEqual({ threadId: 'tera-40', dtex: 750, threadsPerStrand: 2, loadMode: 'manual', loadGrams: 300 });
+    expect(relativeDifference(body.result.diameterMm, 1.0182712421634583)).toBeLessThan(1e-12);
+  });
+
+  it.each([
+    [{ basis: 'dtex', dtex: 80, threadsPerStrand: 2, loadMode: 'manual' }, 'loadGrams'],
+    [{ basis: 'dtex', dtex: 80, threadsPerStrand: 2, loadMode: 'auto', loadGrams: 50 }, 'loadGrams'],
+    [{ basis: 'dtex', dtex: 80, threadsPerStrand: 2, loadMode: 'manual', loadGrams: 120 }, 'loadGrams'],
+    [{ basis: 'dtex', dtex: 80, threadsPerStrand: 2, loadMode: 'fixed' }, 'loadMode'],
+    [{ basis: 'dtex', dtex: 19, threadsPerStrand: 2 }, 'dtex'],
+    [{ basis: 'dtex', dtex: 80, threadsPerStrand: 6 }, 'threadsPerStrand'],
+    [{ basis: 'dtex', dtex: 80, threadsPerStrand: 0 }, 'threadsPerStrand'],
+  ])('forward 422 INVALID_PARAMS: %j', async (payload, field) => {
+    const response = await handleRequest(post('/api/rope/v2/forward', payload), env);
+    const body = await json(response);
+    expect(response.status).toBe(422);
+    expect(body.error.code).toBe('INVALID_PARAMS');
+    expect(body.error.fields).toContain(field);
+  });
+
+  it('reverse auto, совпадает с ядром', async () => {
+    const fn = fetchMock(async () => cmsResponse());
+    const body = await json(
+      await handleRequest(post('/api/rope/v2/reverse', { targetDiameterMm: 1 }), env, {
+        fetchImpl: fn as unknown as typeof fetch,
+      }),
+    );
+    const core = findMatchesV2({ targetDiameterMm: 1, loadMode: 'auto' }, catalog);
+
+    expect(body).toMatchObject(VERSIONS);
+    expect(body.input).toEqual({ targetDiameterMm: 1, tolerance: 0.1, threadIds: null, loadMode: 'auto', loadGrams: null });
+    expect(body.results).toEqual(JSON.parse(JSON.stringify(core.matches)));
+    expect(body.warnings).toEqual(core.warnings);
+  });
+
+  it('reverse manual: один груз для всех', async () => {
+    const fn = fetchMock(async () => cmsResponse());
+    const body = await json(
+      await handleRequest(
+        post('/api/rope/v2/reverse', { targetDiameterMm: 1, loadMode: 'manual', loadGrams: 200 }),
+        env,
+        { fetchImpl: fn as unknown as typeof fetch },
+      ),
+    );
+    expect(body.input.loadGrams).toBe(200);
+    expect(body.results.length).toBeGreaterThan(0);
+    expect(body.results.every((match: { appliedLoadGrams: number }) => match.appliedLoadGrams === 200)).toBe(true);
+  });
+
+  it('reverse без совпадений — 200 и пустой список', async () => {
+    const fn = fetchMock(async () => cmsResponse());
+    const response = await handleRequest(post('/api/rope/v2/reverse', { targetDiameterMm: 100 }), env, {
+      fetchImpl: fn as unknown as typeof fetch,
+    });
+    expect(response.status).toBe(200);
+    expect((await json(response)).results).toEqual([]);
+  });
+
+  it('reverse 422 при некорректном грузе', async () => {
+    const response = await handleRequest(
+      post('/api/rope/v2/reverse', { targetDiameterMm: 1, loadMode: 'manual', loadGrams: 'heavy' }),
+      env,
+    );
+    expect(response.status).toBe(422);
+    expect((await json(response)).error.code).toBe('INVALID_PARAMS');
+  });
+
+  it('HTTP и ядро дают одинаковые числа для всех нитей, свивок и грузов', async () => {
+    const fn = fetchMock(async () => cmsResponse());
+    for (const thread of catalog.filter((item) => item.enabled)) {
+      for (const threadsPerStrand of [1, 3, 5] as const) {
+        for (const loadGrams of [30, 200, 300] as const) {
+          const payload = { basis: 'catalog', threadId: thread.threadId, threadsPerStrand, loadMode: 'manual', loadGrams } as const;
+          const body = await json(
+            await handleRequest(post('/api/rope/v2/forward', payload), env, { fetchImpl: fn as unknown as typeof fetch }),
+          );
+          const core = computeForwardV2(payload, catalog);
+          expect(body.result.diameterMm).toBe(core.result.diameterMm);
+        }
+      }
+    }
+  });
+
+  it('v1 остаётся доступным', async () => {
+    const response = await handleRequest(get('/api/rope/v1/health'), env);
+    expect(response.status).toBe(200);
   });
 });

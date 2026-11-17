@@ -125,11 +125,11 @@ export interface ModelWarning {
 }
 
 /**
- * Предупреждения к результату. Метрики калибровки не являются гарантией
- * точности или прочности, поэтому первое предупреждение есть всегда.
+ * Общие предупреждения. Метрики калибровки не являются гарантией точности
+ * или прочности, поэтому они есть в каждом ответе v2.
  */
-export function modelWarnings(dtex: number, load: ResolvedLoad): ModelWarning[] {
-  const warnings: ModelWarning[] = [
+export function baseWarnings(): ModelWarning[] {
+  return [
     {
       code: 'EMPIRICAL_MODEL',
       message: 'Empirical model fitted to measured model ropes. Not a guarantee of accuracy or strength.',
@@ -139,6 +139,11 @@ export function modelWarnings(dtex: number, load: ResolvedLoad): ModelWarning[] 
       message: 'Recommended load is a starting suggestion, not an experimentally established optimum.',
     },
   ];
+}
+
+/** Предупреждения к одному результату: общие плюс груз и диапазон dTex. */
+export function modelWarnings(dtex: number, load: ResolvedLoad): ModelWarning[] {
+  const warnings = baseWarnings();
 
   if (UNVERIFIED_LOAD_GRAMS.includes(load.appliedLoadGrams)) {
     warnings.push({

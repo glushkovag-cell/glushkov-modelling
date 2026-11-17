@@ -2,25 +2,25 @@ import { MAX_CUSTOM_DTEX, MIN_CUSTOM_DTEX, THREAD_COUNTS } from './constants';
 import { invalidParams } from './errors';
 import type { ForwardInput, ReverseInput, ThreadCount } from './types';
 
-function asRecord(value: unknown): Record<string, unknown> {
+export function asRecord(value: unknown): Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     throw invalidParams('Request body must be a JSON object.');
   }
   return value as Record<string, unknown>;
 }
 
-function requireThreadCount(value: unknown): ThreadCount {
+export function requireThreadCount(value: unknown): ThreadCount {
   if (
     typeof value !== 'number' ||
     !Number.isInteger(value) ||
     !THREAD_COUNTS.includes(value as ThreadCount)
   ) {
-    throw invalidParams('threadsPerStrand must be 1, 2 or 3.', ['threadsPerStrand']);
+    throw invalidParams('threadsPerStrand must be an integer from 1 to 5.', ['threadsPerStrand']);
   }
   return value as ThreadCount;
 }
 
-function requireFiniteNumber(value: unknown, field: string): number {
+export function requireFiniteNumber(value: unknown, field: string): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     throw invalidParams(`${field} must be a finite number.`, [field]);
   }
@@ -79,15 +79,21 @@ export function parseReverseInput(raw: unknown): ReverseInput {
     throw invalidParams('targetDiameterMm must be greater than zero.', ['targetDiameterMm']);
   }
 
-  if (body.threadIds === undefined) {
-    return { targetDiameterMm };
+  const threadIds = parseThreadIds(body.threadIds);
+  return threadIds ? { targetDiameterMm, threadIds } : { targetDiameterMm };
+}
+
+/** Разбор `threadIds`: undefined — весь каталог, иначе непустой список без дублей. */
+export function parseThreadIds(raw: unknown): string[] | undefined {
+  if (raw === undefined) {
+    return undefined;
   }
 
-  if (!Array.isArray(body.threadIds)) {
+  if (!Array.isArray(raw)) {
     throw invalidParams('threadIds must be an array of thread ids.', ['threadIds']);
   }
 
-  const ids = body.threadIds.map((value, index) => {
+  const ids = raw.map((value, index) => {
     if (typeof value !== 'string' || value.trim() === '') {
       throw invalidParams(`threadIds[${index}] must be a non-empty string.`, ['threadIds']);
     }
@@ -99,5 +105,5 @@ export function parseReverseInput(raw: unknown): ReverseInput {
     throw invalidParams('threadIds must contain at least one thread id.', ['threadIds']);
   }
 
-  return { targetDiameterMm, threadIds: unique };
+  return unique;
 }

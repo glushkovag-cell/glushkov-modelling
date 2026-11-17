@@ -8,11 +8,11 @@ function pairs(result: { matches: readonly { threadId: string; threadsPerStrand:
 }
 
 describe('обратный подбор', () => {
-  it('на target = 1.0 даёт 16 совпадений в устойчивом порядке', () => {
+  it('на target = 1.0 даёт 8 совпадений в устойчивом порядке (±10%)', () => {
     const result = findMatches({ targetDiameterMm: 1 }, catalog);
 
-    expect(result.matches).toHaveLength(16);
-    expect(result.tolerance).toBe(0.15);
+    expect(result.matches).toHaveLength(8);
+    expect(result.tolerance).toBe(0.1);
     expect(pairs(result)).toEqual([
       'mara-100 × 5',
       'tera-60 × 3',
@@ -22,14 +22,6 @@ describe('обратный подбор', () => {
       'tera-80 × 4',
       'tera-80 × 5',
       'mara-50 × 3',
-      'mara-120 × 5',
-      'mara-100 × 4',
-      'mara-80 × 3',
-      'mara-50 × 2',
-      'mara-15 × 1',
-      'tera-15 × 1',
-      'mara-30 × 2',
-      'tera-30 × 2',
     ]);
   });
 
@@ -55,11 +47,11 @@ describe('обратный подбор', () => {
     const diameter = calculateDiameterMm(750, 2);
 
     const inside = findMatches(
-      { targetDiameterMm: diameter / 1.1499, threadIds: ['tera-40'] },
+      { targetDiameterMm: diameter / 1.0999, threadIds: ['tera-40'] },
       catalog,
     );
     const outside = findMatches(
-      { targetDiameterMm: diameter / 1.1501, threadIds: ['tera-40'] },
+      { targetDiameterMm: diameter / 1.1001, threadIds: ['tera-40'] },
       catalog,
     );
 
@@ -68,10 +60,11 @@ describe('обратный подбор', () => {
   });
 
   it('правило допуска включительно по модулю', () => {
-    expect(withinTolerance(0.15)).toBe(true);
-    expect(withinTolerance(-0.15)).toBe(true);
-    expect(withinTolerance(0.15000000000000002)).toBe(false);
-    expect(withinTolerance(-0.15000000000000002)).toBe(false);
+    expect(withinTolerance(0.1)).toBe(true);
+    expect(withinTolerance(-0.1)).toBe(true);
+    expect(withinTolerance(0.10000000000000002)).toBe(false);
+    expect(withinTolerance(-0.10000000000000002)).toBe(false);
+    expect(withinTolerance(0.15)).toBe(false);
   });
 
   it('возвращает пустой список, если совпадений нет', () => {
@@ -110,6 +103,6 @@ describe('обратный подбор', () => {
     const all = pairs(findMatches({ targetDiameterMm: 1 }, withDisabled));
     expect(all).not.toContain('mara-100 × 5');
     expect(all).not.toContain('mara-100 × 4');
-    expect(all).toHaveLength(14);
+    expect(all).toHaveLength(7);
   });
 });
