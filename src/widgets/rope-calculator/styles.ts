@@ -203,63 +203,9 @@ button:focus-visible {
   font-size: 0.8rem;
 }
 
-.rc-load .rc-load-label {
-  margin-top: 12px;
-}
-
-.rc-segmented {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0;
-  margin-top: 8px;
-  border: 1px solid var(--color-border, #ddd7ce);
-  border-radius: var(--radius-sm, 6px);
-  overflow: hidden;
-}
-
-.rc-segment {
-  position: relative;
-  display: inline-flex;
-  cursor: pointer;
-}
-
-.rc-segment + .rc-segment {
-  border-left: 1px solid var(--color-border, #ddd7ce);
-}
-
-.rc-segment input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.rc-segment span {
-  display: inline-flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 8px 16px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  background: var(--color-surface-2, #fbfbf9);
-}
-
-.rc-segment input:checked + span {
-  background: var(--color-primary, #01696f);
-  color: var(--color-text-inverse, #ffffff);
-}
-
-.rc-segment input:focus-visible + span {
-  outline: 2px solid var(--color-primary, #01696f);
-  outline-offset: -4px;
-}
-
 .rc-details {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px 16px;
   margin: 12px 0 0;
 }
@@ -278,12 +224,6 @@ button:focus-visible {
   font-weight: 600;
   font-size: 0.92rem;
   overflow-wrap: anywhere;
-}
-
-.rc-result-note {
-  margin: 10px 0 0;
-  font-size: 0.8rem;
-  color: var(--color-text-muted, #7a7974);
 }
 
 .rc-warnings {

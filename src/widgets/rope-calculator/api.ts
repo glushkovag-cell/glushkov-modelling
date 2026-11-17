@@ -1,29 +1,14 @@
 /**
- * Типы и клиент JSON API калькулятора: API v2 с учётом груза натяжения.
- * Контракт — docs/rope-calculator/spec.md, раздел 16. Формулы и порогов
- * рекомендации здесь нет: груз и диаметр приходят только из ответа Worker.
+ * Типы и клиент JSON API калькулятора (актуальный контракт v2, без груза).
+ * Контракт — docs/rope-calculator/spec.md. Формулы здесь нет: диаметр и
+ * предупреждения приходят только из ответа Worker.
  */
 
-export type LoadMode = 'auto' | 'manual';
-
-/** Допустимые грузы, г — список значений селектора, а не правило расчёта. */
-export const LOAD_OPTIONS_GRAMS = [30, 50, 100, 150, 200, 250, 300] as const;
-export type LoadGrams = (typeof LOAD_OPTIONS_GRAMS)[number];
-
-export type LoadSelection =
-  | { loadMode: 'auto' }
-  | { loadMode: 'manual'; loadGrams: LoadGrams };
-
+/** Машинно-читаемое предупреждение Worker'а. */
 export interface ApiWarning {
   code: string;
   message: string;
-}
-
-export interface LoadFields {
-  totalDtex: number;
-  loadMode: LoadMode;
-  recommendedLoadGrams: number;
-  appliedLoadGrams: number;
+  fields: string[];
 }
 
 export interface CatalogThread {
@@ -38,12 +23,15 @@ export interface CatalogThread {
 export interface CatalogResponse {
   apiVersion: string;
   algorithmVersion: string;
+  modelId: string;
   catalogVersion: string;
   fetchedAt: string;
   threads: CatalogThread[];
 }
 
-export interface ForwardResult extends LoadFields {
+export interface ForwardResult {
+  basis: 'catalog' | 'dtex';
+  threadId: string | null;
   dtex: number;
   diameterMm: number;
   threadsPerStrand: number;
@@ -54,14 +42,17 @@ export interface ForwardResult extends LoadFields {
 export interface ForwardResponse {
   apiVersion: string;
   algorithmVersion: string;
+  modelId: string;
   catalogVersion: string | null;
   fetchedAt: string | null;
-  loadRecommendationVersion: string;
+  /** Пустой массив или отсутствие поля — предупреждений нет. */
+  warnings?: ApiWarning[];
+  basis: 'catalog' | 'dtex';
+  input: { threadId?: string; dtex: number; threadsPerStrand: number };
   result: ForwardResult;
-  warnings: ApiWarning[];
 }
 
-export interface ReverseMatch extends LoadFields {
+export interface ReverseMatch {
   threadId: string;
   brand: string;
   number: string;
@@ -75,23 +66,23 @@ export interface ReverseMatch extends LoadFields {
 export interface ReverseResponse {
   apiVersion: string;
   algorithmVersion: string;
+  modelId: string;
   catalogVersion: string;
   fetchedAt: string;
-  loadRecommendationVersion: string;
-  input: { loadMode: LoadMode; loadGrams: number | null; tolerance: number };
+  /** Уникальные предупреждения по выданным совпадениям. */
+  warnings?: ApiWarning[];
+  input: { targetDiameterMm: number; tolerance: number; threadIds: string[] | null };
   results: ReverseMatch[];
-  warnings: ApiWarning[];
 }
 
-export type ForwardBody = (
+export type ForwardBody =
   | { basis: 'catalog'; threadId: string; threadsPerStrand: number }
-  | { basis: 'dtex'; dtex: number; threadsPerStrand: number }
-) & LoadSelection;
+  | { basis: 'dtex'; dtex: number; threadsPerStrand: number };
 
-export type ReverseBody = {
+export interface ReverseBody {
   targetDiameterMm: number;
   threadIds: string[];
-} & LoadSelection;
+}
 
 const API_PREFIX = '/api/rope/v2';
 

@@ -3,47 +3,27 @@ import type {
   CatalogResponse,
   ForwardBody,
   ForwardResponse,
-  LoadGrams,
-  LoadMode,
-  LoadSelection,
   ReverseMatch,
   ReverseResponse,
 } from './api';
-import {
-  ApiError,
-  LOAD_OPTIONS_GRAMS,
-  fetchCatalog,
-  isAbortError,
-  postForward,
-  postReverse,
-} from './api';
+import { ApiError, fetchCatalog, isAbortError, postForward, postReverse } from './api';
 import {
   MAX_CUSTOM_DTEX,
+  MEASURED_DTEX_MAX,
   MIN_CUSTOM_DTEX,
+  TOLERANCE_PERCENT,
   formatConstruction,
   formatDeviation,
   formatDiameter,
-  formatLoad,
   formatSelectionSummary,
   formatThreadLabel,
-  formatTotalDtex,
   parseCustomDtex,
+  parseTargetDiameter,
 } from './format';
 import { styles } from './styles';
 
 const DEFAULT_API_BASE = 'https://api.glushkov-modelling.com';
 const DEBOUNCE_MS = 250;
-const DEFAULT_MANUAL_LOAD: LoadGrams = 200;
-
-/**
- * Предупреждения, которые уже показаны постоянным текстом компонента; в
- * списке выводятся только условные (непроверенный груз, dTex вне диапазона).
- */
-const STATIC_WARNINGS = new Set(['EMPIRICAL_MODEL', 'RECOMMENDED_LOAD_STARTING_SUGGESTION']);
-
-const loadOptions = LOAD_OPTIONS_GRAMS.map(
-  (grams) => `<option value="${grams}">${formatLoad(grams)}</option>`,
-).join('');
 
 /**
  * Каталог общий для всех экземпляров на странице: два калькулятора не должны
@@ -83,26 +63,6 @@ const template = `
     <p class="rc-status" data-catalog-status role="status" aria-live="polite"></p>
   </div>
 
-  <fieldset class="rc-fieldset rc-load">
-    <legend class="rc-legend">Tension load</legend>
-    <div class="rc-segmented">
-      <label class="rc-segment">
-        <input type="radio" name="load-mode" value="auto" checked>
-        <span>Automatic</span>
-      </label>
-      <label class="rc-segment">
-        <input type="radio" name="load-mode" value="manual">
-        <span>Manual</span>
-      </label>
-    </div>
-    <label class="rc-label rc-load-label" for="load">Load</label>
-    <select id="load" class="rc-control" aria-describedby="load-hint">
-      <option value="" data-load-placeholder hidden disabled>Loading…</option>
-      ${loadOptions}
-    </select>
-    <p class="rc-hint" id="load-hint" data-load-hint></p>
-  </fieldset>
-
   <div data-panel="forward">
     <div class="rc-field">
       <label class="rc-label" for="basis">Calculation basis</label>
@@ -122,15 +82,16 @@ const template = `
       <input
         id="dtex"
         class="rc-control"
-        type="number"
-        min="${MIN_CUSTOM_DTEX}"
-        max="${MAX_CUSTOM_DTEX}"
-        step="any"
+        type="text"
         inputmode="decimal"
+        autocomplete="off"
+        spellcheck="false"
         value="750"
         aria-invalid="false"
       >
-      <p class="rc-hint">Enter a value from ${MIN_CUSTOM_DTEX} to ${MAX_CUSTOM_DTEX} dTex.</p>
+      <p class="rc-hint">
+        Enter a value from ${MIN_CUSTOM_DTEX} to ${MAX_CUSTOM_DTEX} dTex. A decimal comma is accepted.
+      </p>
     </div>
 
     <div class="rc-field">
@@ -155,12 +116,7 @@ const template = `
       <output class="rc-result-value" data-result>—</output>
       <dl class="rc-details">
         <div><dt>Construction</dt><dd data-detail="construction">—</dd></div>
-        <div><dt>Total dTex</dt><dd data-detail="total">—</dd></div>
-        <div><dt>Load</dt><dd data-detail="load">—</dd></div>
       </dl>
-      <p class="rc-result-note">
-        Recommended starting load. Not an experimentally established optimum.
-      </p>
     </div>
     <ul class="rc-warnings" data-warnings="forward" hidden></ul>
   </div>
@@ -171,16 +127,16 @@ const template = `
       <input
         id="target"
         class="rc-control"
-        type="number"
-        min="0"
-        step="any"
+        type="text"
         inputmode="decimal"
+        autocomplete="off"
+        spellcheck="false"
         value="1.00"
         aria-invalid="false"
       >
       <p class="rc-hint">
-        Enter a diameter greater than zero. Only matches within ±10% of the
-        target are shown.
+        Enter a diameter greater than zero. Only matches within ±${TOLERANCE_PERCENT}% of the
+        target are shown. A decimal comma is accepted.
       </p>
     </div>
 
@@ -222,7 +178,6 @@ const template = `
             <th scope="col">Number</th>
             <th scope="col">dTex</th>
             <th scope="col">Construction</th>
-            <th scope="col">Load (g)</th>
             <th scope="col">Diameter (mm)</th>
             <th scope="col">Deviation</th>
             <th scope="col" data-select-column hidden>Use</th>
@@ -234,8 +189,9 @@ const template = `
   </div>
 
   <p class="rc-note">
-    All diameters are calculated estimates, not measured values. Actual
-    diameter may vary with material, tension and twist.
+    Diameters are calculated estimates, not measured values. The model is
+    empirical: it was fitted on measurements from ${MIN_CUSTOM_DTEX} to ${MEASURED_DTEX_MAX} dTex,
+    so very thin and very thick threads carry the largest uncertainty.
   </p>
 </section>
 `;
@@ -246,6 +202,9 @@ const template = `
  * Формулы и каталога внутри нет: только запросы к JSON API Worker. Тема
  * наследуется через CSS-переменные сайта, поэтому компонент одинаково
  * работает в светлой и тёмной теме и вне сайта (за счёт fallback-значений).
+ *
+ * Груза в интерфейсе нет: модель без нагрузки, состояния loadMode/loadGrams
+ * не существует, в запросы и localStorage они не попадают.
  */
 export class RopeCalculatorElement extends HTMLElement {
   static observedAttributes = ['api-base', 'selectable'];
@@ -273,24 +232,12 @@ export class RopeCalculatorElement extends HTMLElement {
   #result: HTMLOutputElement;
   #tableWrap: HTMLElement;
   #results: HTMLElement;
-  #loadSelect: HTMLSelectElement;
-  #loadPlaceholder: HTMLOptionElement;
-  #loadHint: HTMLElement;
-  #loadRadios: HTMLInputElement[];
   #detailConstruction: HTMLElement;
-  #detailTotal: HTMLElement;
-  #detailLoad: HTMLElement;
   #forwardWarnings: HTMLElement;
   #reverseWarnings: HTMLElement;
   #selectionSummary: HTMLElement;
   #catalogToggle: HTMLButtonElement;
   #threadPanel: HTMLElement;
-
-  /** Режим нагрузки — отдельная ось, общая для прямого и обратного расчёта. */
-  #loadMode: LoadMode = 'auto';
-  #manualLoad: LoadGrams = DEFAULT_MANUAL_LOAD;
-  /** Применённый груз из последнего актуального ответа forward; null — ждём ответ. */
-  #forwardApplied: number | null = null;
 
   #catalog: CatalogResponse['threads'] | null = null;
   #lastReverse: ReverseResponse | null = null;
@@ -332,15 +279,7 @@ export class RopeCalculatorElement extends HTMLElement {
     this.#result = must(this.#root, '[data-result]');
     this.#tableWrap = must(this.#root, '[data-table-wrap]');
     this.#results = must(this.#root, '[data-results]');
-    this.#loadSelect = must(this.#root, '#load');
-    this.#loadPlaceholder = must(this.#root, '[data-load-placeholder]');
-    this.#loadHint = must(this.#root, '[data-load-hint]');
-    this.#loadRadios = Array.from(
-      this.#root.querySelectorAll<HTMLInputElement>('input[name="load-mode"]'),
-    );
     this.#detailConstruction = must(this.#root, '[data-detail="construction"]');
-    this.#detailTotal = must(this.#root, '[data-detail="total"]');
-    this.#detailLoad = must(this.#root, '[data-detail="load"]');
     this.#forwardWarnings = must(this.#root, '[data-warnings="forward"]');
     this.#reverseWarnings = must(this.#root, '[data-warnings="reverse"]');
     this.#selectionSummary = must(this.#root, '[data-selection-summary]');
@@ -350,7 +289,6 @@ export class RopeCalculatorElement extends HTMLElement {
     this.#bindListeners();
     this.#syncPanels();
     this.#syncBasisFields();
-    this.#syncLoadControls();
   }
 
   connectedCallback(): void {
@@ -412,24 +350,6 @@ export class RopeCalculatorElement extends HTMLElement {
 
     this.#mode.addEventListener('change', () => {
       this.#syncPanels();
-      this.#syncLoadControls();
-      this.#runCurrent();
-    });
-
-    for (const radio of this.#loadRadios) {
-      radio.addEventListener('change', () => {
-        if (!radio.checked) return;
-        this.#setLoadMode(radio.value === 'manual' ? 'manual' : 'auto');
-      });
-    }
-
-    // Выбор груза пользователем всегда означает ручной режим.
-    this.#loadSelect.addEventListener('change', () => {
-      const grams = Number(this.#loadSelect.value);
-      if (!(LOAD_OPTIONS_GRAMS as readonly number[]).includes(grams)) return;
-      this.#manualLoad = grams as LoadGrams;
-      this.#loadMode = 'manual';
-      this.#syncLoadControls();
       this.#runCurrent();
     });
 
@@ -491,59 +411,15 @@ export class RopeCalculatorElement extends HTMLElement {
     }
   }
 
-  #setLoadMode(mode: LoadMode): void {
-    if (mode === this.#loadMode) return;
-
-    if (mode === 'manual' && this.#mode.value === 'forward' && this.#forwardApplied !== null) {
-      // Переход в Manual начинается с груза, который сейчас применён.
-      const applied = this.#forwardApplied;
-      if ((LOAD_OPTIONS_GRAMS as readonly number[]).includes(applied)) {
-        this.#manualLoad = applied as LoadGrams;
-      }
-    }
-
-    this.#loadMode = mode;
-    this.#syncLoadControls();
-    this.#runCurrent();
-  }
-
-  /** Состояние переключателя и селектора без собственных расчётов груза. */
-  #syncLoadControls(): void {
-    const manual = this.#loadMode === 'manual';
-    for (const radio of this.#loadRadios) {
-      radio.checked = radio.value === this.#loadMode;
-    }
-
-    if (manual) {
-      this.#loadSelect.value = String(this.#manualLoad);
-      this.#loadHint.textContent = 'Manual: the selected load is applied to every construction.';
-      return;
-    }
-
-    const reverse = this.#mode.value === 'reverse';
-    if (!reverse && this.#forwardApplied !== null) {
-      this.#loadSelect.value = String(this.#forwardApplied);
-    } else {
-      this.#loadPlaceholder.textContent = reverse ? 'Per construction' : 'Loading…';
-      this.#loadSelect.value = '';
-    }
-    this.#loadHint.textContent = reverse
-      ? 'Automatic: a recommended starting load is chosen for each construction. Choose a load to switch to Manual.'
-      : 'Automatic: the recommended starting load is applied. Choose a load to switch to Manual.';
-  }
-
-  #loadSelection(): LoadSelection {
-    return this.#loadMode === 'manual'
-      ? { loadMode: 'manual', loadGrams: this.#manualLoad }
-      : { loadMode: 'auto' };
-  }
-
   #setCatalogOpen(open: boolean): void {
+    // Свёрнутость — только отображение: выбор нитей живёт в DOM и не
+    // сбрасывается при открытии и закрытии панели.
     this.#threadPanel.hidden = !open;
     this.#catalogToggle.setAttribute('aria-expanded', String(open));
     this.#catalogToggle.textContent = open ? 'Hide catalog' : 'Show catalog';
   }
 
+  /** Сводка выбора по фактически отмеченным нитям. */
   #updateSelectionSummary(): void {
     if (!this.#catalog) return;
     const selected = new Set(this.#selectedThreadIds());
@@ -553,43 +429,32 @@ export class RopeCalculatorElement extends HTMLElement {
     this.#selectionSummary.textContent = formatSelectionSummary(selected.size, brands.size);
   }
 
+  /** Предупреждения Worker'а выводятся у результата и не блокируют расчёт. */
   #renderWarnings(list: HTMLElement, warnings: readonly ApiWarning[] | undefined): void {
-    const visible = (warnings ?? []).filter((warning) => !STATIC_WARNINGS.has(warning.code));
+    const items = (warnings ?? [])
+      .map((warning) => warning.message.trim())
+      .filter((message) => message !== '');
+
     list.replaceChildren(
-      ...visible.map((warning) => {
+      ...items.map((message) => {
         const item = document.createElement('li');
-        item.textContent = warning.message;
+        item.textContent = message;
         return item;
       }),
     );
-    list.hidden = visible.length === 0;
-  }
-
-  #setForwardDetails(construction: string, total: string, load: string): void {
-    this.#detailConstruction.textContent = construction;
-    this.#detailTotal.textContent = total;
-    this.#detailLoad.textContent = load;
+    list.hidden = items.length === 0;
   }
 
   #renderForward(response: ForwardResponse): void {
     const { result } = response;
     this.#result.textContent = formatDiameter(result.diameterMm);
-
-    const load =
-      result.loadMode === 'manual'
-        ? `${formatLoad(result.appliedLoadGrams)} · manual (recommended ${formatLoad(result.recommendedLoadGrams)})`
-        : `${formatLoad(result.appliedLoadGrams)} · recommended`;
-
-    this.#setForwardDetails(formatConstruction(result.threadsPerStrand), formatTotalDtex(result.totalDtex), load);
+    this.#detailConstruction.textContent = formatConstruction(result.threadsPerStrand);
     this.#renderWarnings(this.#forwardWarnings, response.warnings);
-
-    this.#forwardApplied = result.appliedLoadGrams;
-    this.#syncLoadControls();
   }
 
   #clearForward(placeholder: string): void {
     this.#result.textContent = placeholder;
-    this.#setForwardDetails(placeholder, placeholder, placeholder);
+    this.#detailConstruction.textContent = '—';
     this.#renderWarnings(this.#forwardWarnings, []);
   }
 
@@ -757,21 +622,19 @@ export class RopeCalculatorElement extends HTMLElement {
 
     this.#clearForwardError();
 
-    // Груз прошлого ответа больше не актуален: до нового ответа — загрузка.
-    this.#forwardApplied = null;
-    this.#syncLoadControls();
-
-    const load = this.#loadSelection();
     let body: ForwardBody;
 
     if (custom) {
       const dtex = parseCustomDtex(this.#dtex.value);
       if (dtex === null) {
-        this.#showForwardError(`Enter a dTex value from ${MIN_CUSTOM_DTEX} to ${MAX_CUSTOM_DTEX}.`, true);
+        this.#showForwardError(
+          `Enter a dTex value from ${MIN_CUSTOM_DTEX} to ${MAX_CUSTOM_DTEX}.`,
+          true,
+        );
         this.#clearForward('—');
         return;
       }
-      body = { basis: 'dtex', dtex, threadsPerStrand, ...load };
+      body = { basis: 'dtex', dtex, threadsPerStrand };
     } else {
       if (!this.#catalog) {
         this.#clearForward('—');
@@ -783,7 +646,7 @@ export class RopeCalculatorElement extends HTMLElement {
         this.#clearForward('—');
         return;
       }
-      body = { basis: 'catalog', threadId, threadsPerStrand, ...load };
+      body = { basis: 'catalog', threadId, threadsPerStrand };
     }
 
     this.#clearForward('…');
@@ -802,12 +665,11 @@ export class RopeCalculatorElement extends HTMLElement {
   async #runReverse(): Promise<void> {
     if (this.#mode.value !== 'reverse') return;
 
-    const raw = this.#target.value.trim();
-    const target = Number(raw);
+    const target = parseTargetDiameter(this.#target.value);
 
     this.#clearReverseError();
 
-    if (raw === '' || !Number.isFinite(target) || target <= 0) {
+    if (target === null) {
       this.#showReverseError('Enter a target diameter greater than zero.', true);
       this.#resetReverseOutput();
       return;
@@ -838,12 +700,14 @@ export class RopeCalculatorElement extends HTMLElement {
 
     this.#reverseStatus.textContent = 'Searching…';
     this.#tableWrap.hidden = true;
+    // Предупреждение относится к прежнему набору совпадений и не должно
+    // висеть, пока считается новый.
     this.#renderWarnings(this.#reverseWarnings, []);
 
     try {
       const response = await postReverse(
         this.#apiBase,
-        { targetDiameterMm: target, threadIds, ...this.#loadSelection() },
+        { targetDiameterMm: target, threadIds },
         controller.signal,
       );
       if (sequence !== this.#reverseSeq || controller.signal.aborted) return;
@@ -869,8 +733,8 @@ export class RopeCalculatorElement extends HTMLElement {
   }
 
   #selectThread(match: ReverseMatch): void {
-    const targetMm = Number(this.#target.value.trim().replace(',', '.'));
-    if (!Number.isFinite(targetMm) || targetMm <= 0) return;
+    const targetMm = parseTargetDiameter(this.#target.value);
+    if (targetMm === null) return;
 
     this.dispatchEvent(
       new CustomEvent('thread-select', {
@@ -895,7 +759,6 @@ export class RopeCalculatorElement extends HTMLElement {
         match.number,
         String(match.dtex),
         formatConstruction(match.threadsPerStrand),
-        String(match.appliedLoadGrams),
         match.diameterMm.toFixed(3),
         formatDeviation(match.deviationPercent),
       ];
@@ -930,18 +793,14 @@ export class RopeCalculatorElement extends HTMLElement {
 
     if (response.results.length === 0) {
       this.#reverseStatus.textContent =
-        'No matching combinations found within ±10% of the target. Select additional threads, change the load or the target diameter.';
+        `No matching combinations found within ±${TOLERANCE_PERCENT}% of the target. ` +
+        'Select additional threads or change the target diameter.';
       return;
     }
 
     const suffix = response.results.length === 1 ? '' : 's';
-    const loadNote =
-      response.input?.loadMode === 'manual' && typeof response.input.loadGrams === 'number'
-        ? `Load ${formatLoad(response.input.loadGrams)} for every construction. `
-        : 'Recommended starting load per construction. ';
     this.#reverseStatus.textContent =
-      `${response.results.length} matching combination${suffix} within ±10% of the target. ` +
-      loadNote +
+      `${response.results.length} matching combination${suffix} within ±${TOLERANCE_PERCENT}% of the target. ` +
       'Negative deviation means thinner; positive means thicker.';
   }
 }

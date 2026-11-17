@@ -10,7 +10,7 @@ import '../../styles/tools.css';
  */
 const title = 'Rope diameter calculator — Glushkov Modelling';
 const description =
-    'Estimate the diameter of a three-strand model rope from a thread or dTex, or find threads that match a target diameter.';
+    'Estimate the diameter of a three-strand model rope from a thread or dTex, or find threads within 10% of a target diameter.';
 ---
 
 <BaseLayout title={title} description={description}>
@@ -41,8 +41,7 @@ const description =
         <h1>Rope diameter calculator</h1>
         <p class="tools-lede">
           Estimate the diameter of a three-strand rope from a catalog thread or a
-          custom dTex value at a chosen tension load, or find threads within ±10%
-          of a target diameter.
+          custom dTex value, or find threads within ±10% of a target diameter.
         </p>
       </header>
 
@@ -50,6 +49,13 @@ const description =
         <gm-rope-calculator>
           <noscript>Enable JavaScript to use the rope calculator.</noscript>
         </gm-rope-calculator>
+
+        <p class="tools-note">
+          The model is empirical and does not use tension load. It was fitted on
+          measurements from 22.22 to 3000&nbsp;dTex, so very thin and very thick
+          threads carry the largest uncertainty; above 3000&nbsp;dTex the result is
+          marked as an extrapolation. Diameters are estimates, not measured values.
+        </p>
       </div>
 
       <a class="tools-back" href="/tools">&larr; All tools</a>
