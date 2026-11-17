@@ -7,17 +7,19 @@ process.env.WP_GRAPHQL_URL = "https://cms.example.test/graphql";
 process.env.CMS_GALLERY_URL = "https://cms.example.test/gallery";
 process.env.ROPE_API_BASE_URL = "https://api.example.test/";
 
-const { calculateRope, findRopeThreads, listRopeThreads, RopeApiError, roundTo } = await import("./rope-api.js");
+const { calculateRope, findRopeThreads, listRopeThreads, RopeApiError } = await import("./rope-api.js");
 
 const forwardResponse = {
-    apiVersion: "1",
-    algorithmVersion: "2.0.0",
+    apiVersion: "2",
+    algorithmVersion: "4.0.0",
+    modelId: "log-dtex-quadratic-no-load",
     catalogVersion: "0b24290aff0e",
+    warnings: [],
     fetchedAt: "2026-10-27T06:00:00.000Z",
     basis: "catalog",
     input: { threadId: "tera-40", dtex: 750, threadsPerStrand: 2 },
     result: {
-        diameterMm: 0.9842333087830643,
+        diameterMm: 1.0201549921706878,
         threadsPerStrand: 2,
         strands: 3,
         construction: "2 × 3",
@@ -25,11 +27,13 @@ const forwardResponse = {
 };
 
 const reverseResponse = {
-    apiVersion: "1",
-    algorithmVersion: "2.0.0",
+    apiVersion: "2",
+    algorithmVersion: "4.0.0",
+    modelId: "log-dtex-quadratic-no-load",
     catalogVersion: "0b24290aff0e",
     fetchedAt: "2026-10-27T06:00:00.000Z",
-    input: { targetDiameterMm: 1, tolerance: 0.15, threadIds: null },
+    warnings: [],
+    input: { targetDiameterMm: 1, tolerance: 0.1, threadIds: null },
     results: [
         {
             threadId: "tera-60",
@@ -38,15 +42,16 @@ const reverseResponse = {
             dtex: 500,
             threadsPerStrand: 3,
             construction: "3 × 3",
-            diameterMm: 0.987149903754157,
-            deviationPercent: -1.285009624584299,
+            diameterMm: 1.0199255213596312,
+            deviationPercent: 1.9925521359631215,
         },
     ],
 };
 
 const catalogResponse = {
-    apiVersion: "1",
-    algorithmVersion: "2.0.0",
+    apiVersion: "2",
+    algorithmVersion: "4.0.0",
+    modelId: "log-dtex-quadratic-no-load",
     catalogVersion: "0b24290aff0e",
     fetchedAt: "2026-10-27T06:00:00.000Z",
     threads: [
@@ -85,7 +90,7 @@ describe("calculateRope", () => {
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
         const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-        expect(url).toBe("https://api.example.test/api/rope/v1/forward");
+        expect(url).toBe("https://api.example.test/api/rope/v2/forward");
         expect(init.method).toBe("POST");
         expect(JSON.parse(String(init.body))).toEqual({
             basis: "catalog",
@@ -97,12 +102,10 @@ describe("calculateRope", () => {
             basis: "catalog",
             threadId: "tera-40",
             dtex: 750,
-            diameterMm: 0.984,
+            diameterMm: 1.0201549921706878,
             construction: "2 × 3",
             catalogVersion: "0b24290aff0e",
         });
-        expect(result).not.toHaveProperty("loadMode");
-        expect(result).not.toHaveProperty("warnings");
     });
 
     it("sends a custom dTex calculation without a thread id", async () => {
@@ -130,7 +133,7 @@ describe("calculateRope", () => {
     it("surfaces the API error code and message", async () => {
         fetchMock.mockResolvedValue(
             jsonResponse(
-                { error: { code: "INVALID_PARAMS", message: "dtex must be between 80 and 6000." } },
+                { error: { code: "INVALID_PARAMS", message: "dtex must be between 22.22 and 6000." } },
                 422,
             ),
         );
@@ -140,7 +143,7 @@ describe("calculateRope", () => {
         ).rejects.toMatchObject({
             code: "INVALID_PARAMS",
             status: 422,
-            message: "dtex must be between 80 and 6000.",
+            message: "dtex must be between 22.22 and 6000.",
         });
     });
 
@@ -186,14 +189,11 @@ describe("findRopeThreads", () => {
         const result = await findRopeThreads({ targetDiameterMm: 1 });
 
         const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-        expect(url).toBe("https://api.example.test/api/rope/v1/reverse");
+        expect(url).toBe("https://api.example.test/api/rope/v2/reverse");
         expect(JSON.parse(String(init.body))).toEqual({ targetDiameterMm: 1 });
-        expect(result.tolerancePercent).toBe(15);
+        expect(result.tolerancePercent).toBe(10);
         expect(result.totalMatched).toBe(1);
         expect(result.results[0]?.threadId).toBe("tera-60");
-        expect(result.results[0]?.diameterMm).toBe(0.987);
-        expect(result.results[0]?.deviationPercent).toBe(-1.29);
-        expect(result).not.toHaveProperty("loadMode");
     });
 
     it("passes an explicit thread list through", async () => {
@@ -206,6 +206,38 @@ describe("findRopeThreads", () => {
             targetDiameterMm: 1.5,
             threadIds: ["tera-40", "tera-60"],
         });
+    });
+
+    it("passes model id and warnings through", async () => {
+        fetchMock.mockResolvedValue(
+            jsonResponse({
+                ...reverseResponse,
+                warnings: [
+                    {
+                        code: "EXTRAPOLATION",
+                        message: "Above the measured range.",
+                        fields: ["dtex"],
+                    },
+                ],
+            }),
+        );
+
+        const result = await findRopeThreads({ targetDiameterMm: 3.5 });
+
+        expect(result.modelId).toBe("log-dtex-quadratic-no-load");
+        expect(result.warnings).toEqual([
+            { code: "EXTRAPOLATION", message: "Above the measured range.", fields: ["dtex"] },
+        ]);
+    });
+
+    it("tolerates a worker response without warnings", async () => {
+        const legacy = { ...reverseResponse } as Record<string, unknown>;
+        delete legacy.warnings;
+        fetchMock.mockResolvedValue(jsonResponse(legacy));
+
+        const result = await findRopeThreads({ targetDiameterMm: 1 });
+
+        expect(result.warnings).toEqual([]);
     });
 
     it("returns an empty list when nothing matches", async () => {
@@ -225,7 +257,7 @@ describe("listRopeThreads", () => {
         const result = await listRopeThreads();
 
         const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-        expect(url).toBe("https://api.example.test/api/rope/v1/catalog");
+        expect(url).toBe("https://api.example.test/api/rope/v2/catalog");
         expect(init.method).toBe("GET");
 
         expect(result.totalThreads).toBe(2);
@@ -249,149 +281,5 @@ describe("listRopeThreads", () => {
             code: "CATALOG_UNAVAILABLE",
             status: 503,
         });
-    });
-});
-
-const VERSIONS_V2 = { apiVersion: "2", algorithmVersion: "3.0.0", loadRecommendationVersion: "1.0.0" };
-const WARNINGS = [
-    { code: "EMPIRICAL_MODEL", message: "Empirical model." },
-    { code: "RECOMMENDED_LOAD_STARTING_SUGGESTION", message: "Starting suggestion." },
-];
-
-describe("rope API v2 via loadMode", () => {
-    it("calls v2 forward in auto mode and returns load fields rounded to 3 decimals", async () => {
-        fetchMock.mockResolvedValue(
-            jsonResponse({
-                ...VERSIONS_V2,
-                catalogVersion: null,
-                fetchedAt: null,
-                basis: "dtex",
-                input: { dtex: 80, threadsPerStrand: 2, loadMode: "auto", loadGrams: null },
-                result: {
-                    basis: "dtex", threadId: null, dtex: 80, threadsPerStrand: 2, strands: 3,
-                    construction: "2 × 3", totalDtex: 480, loadMode: "auto",
-                    recommendedLoadGrams: 150, appliedLoadGrams: 150, diameterMm: 0.24069446380613793,
-                },
-                warnings: WARNINGS,
-            }),
-        );
-
-        const result = await calculateRope({ basis: "dtex", dtex: 80, threadsPerStrand: 2, loadMode: "auto" });
-
-        const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-        expect(url).toBe("https://api.example.test/api/rope/v2/forward");
-        expect(JSON.parse(String(init.body))).toEqual({ basis: "dtex", dtex: 80, threadsPerStrand: 2, loadMode: "auto" });
-        expect(result).toEqual({
-            basis: "dtex",
-            threadId: null,
-            dtex: 80,
-            diameterMm: 0.241,
-            threadsPerStrand: 2,
-            strands: 3,
-            construction: "2 × 3",
-            catalogVersion: null,
-            apiVersion: "2",
-            algorithmVersion: "3.0.0",
-            totalDtex: 480,
-            loadMode: "auto",
-            recommendedLoadGrams: 150,
-            appliedLoadGrams: 150,
-            loadRecommendationVersion: "1.0.0",
-            warnings: WARNINGS,
-        });
-    });
-
-    it("sends loadGrams in manual mode", async () => {
-        fetchMock.mockResolvedValue(
-            jsonResponse({
-                ...VERSIONS_V2,
-                catalogVersion: "0b24290aff0e",
-                basis: "catalog",
-                input: { threadId: "tera-40", dtex: 750, threadsPerStrand: 2, loadMode: "manual", loadGrams: 300 },
-                result: {
-                    threadsPerStrand: 2, strands: 3, construction: "2 × 3", totalDtex: 4500,
-                    loadMode: "manual", recommendedLoadGrams: 300, appliedLoadGrams: 300,
-                    diameterMm: 1.0182712421634583,
-                },
-                warnings: WARNINGS,
-            }),
-        );
-
-        const result = await calculateRope({
-            basis: "catalog", threadId: "tera-40", threadsPerStrand: 2, loadMode: "manual", loadGrams: 300,
-        });
-
-        const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-        expect(JSON.parse(String(init.body))).toEqual({
-            basis: "catalog", threadId: "tera-40", threadsPerStrand: 2, loadMode: "manual", loadGrams: 300,
-        });
-        expect(result.diameterMm).toBe(1.018);
-        expect(result.appliedLoadGrams).toBe(300);
-    });
-
-    it("calls v2 reverse and rounds every match", async () => {
-        fetchMock.mockResolvedValue(
-            jsonResponse({
-                ...VERSIONS_V2,
-                catalogVersion: "0b24290aff0e",
-                fetchedAt: "2026-11-17T06:00:00.000Z",
-                input: { targetDiameterMm: 1, tolerance: 0.1, threadIds: null, loadMode: "manual", loadGrams: 200 },
-                results: [
-                    {
-                        threadId: "tera-60", brand: "Tera", number: "60", dtex: 500, threadsPerStrand: 3,
-                        construction: "3 × 3", totalDtex: 4500, loadMode: "manual",
-                        recommendedLoadGrams: 300, appliedLoadGrams: 200,
-                        diameterMm: 0.99995, deviationPercent: -0.004999,
-                    },
-                ],
-                warnings: WARNINGS,
-            }),
-        );
-
-        const result = await findRopeThreads({ targetDiameterMm: 1, loadMode: "manual", loadGrams: 200 });
-
-        const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-        expect(url).toBe("https://api.example.test/api/rope/v2/reverse");
-        expect(JSON.parse(String(init.body))).toEqual({ targetDiameterMm: 1, loadMode: "manual", loadGrams: 200 });
-        expect(result.tolerancePercent).toBe(10);
-        expect(result.loadMode).toBe("manual");
-        expect(result.loadGrams).toBe(200);
-        expect(result.loadRecommendationVersion).toBe("1.0.0");
-        expect(result.warnings).toEqual(WARNINGS);
-        const [match] = result.results;
-        expect(match?.diameterMm).toBe(1);
-        expect(Object.is(match?.deviationPercent, -0)).toBe(false);
-        expect(match?.deviationPercent).toBe(0);
-        expect(match?.appliedLoadGrams).toBe(200);
-        expect(match?.recommendedLoadGrams).toBe(300);
-    });
-
-    it("auto reverse sends only loadMode", async () => {
-        fetchMock.mockResolvedValue(
-            jsonResponse({
-                ...VERSIONS_V2,
-                catalogVersion: "0b24290aff0e",
-                input: { targetDiameterMm: 1, tolerance: 0.1, threadIds: ["tera-40"], loadMode: "auto", loadGrams: null },
-                results: [],
-                warnings: WARNINGS,
-            }),
-        );
-
-        const result = await findRopeThreads({ targetDiameterMm: 1, threadIds: ["tera-40"], loadMode: "auto" });
-
-        const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
-        expect(JSON.parse(String(init.body))).toEqual({ targetDiameterMm: 1, threadIds: ["tera-40"], loadMode: "auto" });
-        expect(result.totalMatched).toBe(0);
-        expect(result.loadGrams).toBeNull();
-    });
-});
-
-describe("roundTo", () => {
-    it("rounds and never returns -0", () => {
-        expect(roundTo(0.24069446380613793, 3)).toBe(0.241);
-        expect(roundTo(-1.285009624584299, 2)).toBe(-1.29);
-        expect(Object.is(roundTo(-0.004, 2), -0)).toBe(false);
-        expect(roundTo(-0.004, 2)).toBe(0);
-        expect(roundTo(9.9999, 3)).toBe(10);
     });
 });

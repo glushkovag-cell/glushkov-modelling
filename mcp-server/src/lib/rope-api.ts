@@ -1,62 +1,36 @@
 import { config } from "./config.js";
 
 /**
- * Клиент JSON API калькулятора канатов (Cloudflare Worker).
+ * Клиент JSON API калькулятора канатов (Cloudflare Worker, контракт v2).
  *
- * Формулы здесь нет намеренно: MCP-сервер только передаёт входы и возвращает
- * результат Worker'а. Контракт — docs/rope-calculator/spec.md.
+ * Формулы здесь нет: MCP-сервер только передаёт входы и возвращает результат
+ * Worker'а, чтобы числа на сайте и в инструментах совпадали. Контракт —
+ * docs/rope-calculator/spec.md.
  *
- * Если задан `loadMode`, используется API v2 (учёт груза, алгоритм 3.0.0);
- * без него — устаревший v1. Числа Worker отдаёт полными, MCP округляет только
- * при выдаче: диаметр — 3 знака, отклонение — 2 знака, без «−0».
+ * Модель не использует нагрузку: полей loadMode/loadGrams нет ни в запросах,
+ * ни в ответах. Числа передаются без округления; округление до трёх знаков
+ * делает только текстовый ответ инструмента (`rope-text.ts`).
  */
 
 export type RopeBasis = "catalog" | "dtex";
-export type RopeLoadMode = "auto" | "manual";
 
-/** Допустимые грузы натяжения, г (контракт v2). */
-export const ROPE_LOAD_GRAMS = [30, 50, 100, 150, 200, 250, 300] as const;
-export type RopeLoadGrams = (typeof ROPE_LOAD_GRAMS)[number];
-
-/** Минимум ручного dTex: v1 — 80, v2 — 20. Максимум в обеих версиях — 6000. */
-export const ROPE_MIN_DTEX_V1 = 80;
-export const ROPE_MIN_DTEX_V2 = 20;
+/** Диапазон ручного dTex актуального контракта. */
+export const ROPE_MIN_DTEX = 22.22;
 export const ROPE_MAX_DTEX = 6000;
 
+/** Машинно-читаемое предупреждение Worker'а. */
 export interface RopeWarning {
   code: string;
   message: string;
+  fields: string[];
 }
 
-export interface RopeLoadInput {
-  loadMode?: RopeLoadMode;
-  loadGrams?: RopeLoadGrams;
-}
-
-export interface CalculateRopeInput extends RopeLoadInput {
+export interface CalculateRopeInput {
   basis: RopeBasis;
   threadId?: string;
   dtex?: number;
   threadsPerStrand: number;
 }
-
-/** Поля, которые есть только в ответах v2. */
-export interface RopeLoadResult {
-  totalDtex: number;
-  loadMode: RopeLoadMode;
-  recommendedLoadGrams: number;
-  appliedLoadGrams: number;
-}
-
-/** Округление для выдачи; `-0` превращается в `0`. */
-export function roundTo(value: number, digits: number): number {
-  const factor = 10 ** digits;
-  const rounded = Math.round(value * factor) / factor;
-  return rounded === 0 ? 0 : rounded;
-}
-
-export const roundDiameter = (value: number): number => roundTo(value, 3);
-export const roundDeviation = (value: number): number => roundTo(value, 2);
 
 export interface CalculateRopeResult {
   basis: RopeBasis;
@@ -69,21 +43,16 @@ export interface CalculateRopeResult {
   catalogVersion: string | null;
   apiVersion: string;
   algorithmVersion: string;
-  /** Только v2. */
-  totalDtex?: number;
-  loadMode?: RopeLoadMode;
-  recommendedLoadGrams?: number;
-  appliedLoadGrams?: number;
-  loadRecommendationVersion?: string;
-  warnings?: RopeWarning[];
+  modelId: string;
+  warnings: RopeWarning[];
 }
 
-export interface FindRopeThreadsInput extends RopeLoadInput {
+export interface FindRopeThreadsInput {
   targetDiameterMm: number;
   threadIds?: string[];
 }
 
-export interface RopeThreadMatch extends Partial<RopeLoadResult> {
+export interface RopeThreadMatch {
   threadId: string;
   brand: string;
   number: string;
@@ -101,11 +70,8 @@ export interface FindRopeThreadsResult {
   catalogVersion: string;
   apiVersion: string;
   algorithmVersion: string;
-  /** Только v2. */
-  loadMode?: RopeLoadMode;
-  loadGrams?: number | null;
-  loadRecommendationVersion?: string;
-  warnings?: RopeWarning[];
+  modelId: string;
+  warnings: RopeWarning[];
   results: RopeThreadMatch[];
 }
 
@@ -125,6 +91,7 @@ export interface ListRopeThreadsResult {
   totalThreads: number;
   apiVersion: string;
   algorithmVersion: string;
+  modelId: string;
   threads: RopeThreadSummary[];
 }
 
@@ -136,33 +103,32 @@ interface RopeApiErrorBody {
 interface ForwardResponse {
   apiVersion: string;
   algorithmVersion: string;
-  loadRecommendationVersion?: string;
+  modelId: string;
   catalogVersion: string | null;
+  fetchedAt: string | null;
+  warnings?: RopeWarning[];
   basis: RopeBasis;
   input: { threadId?: string; dtex: number; threadsPerStrand: number };
-  result: Partial<RopeLoadResult> & {
+  result: {
+    basis: RopeBasis;
+    threadId: string | null;
+    dtex: number;
     diameterMm: number;
     threadsPerStrand: number;
     strands: number;
     construction: string;
   };
-  warnings?: RopeWarning[];
 }
 
 interface ReverseResponse {
   apiVersion: string;
   algorithmVersion: string;
-  loadRecommendationVersion?: string;
+  modelId: string;
   catalogVersion: string;
-  input: {
-    targetDiameterMm: number;
-    tolerance: number;
-    threadIds: string[] | null;
-    loadMode?: RopeLoadMode;
-    loadGrams?: number | null;
-  };
-  results: RopeThreadMatch[];
+  fetchedAt: string;
   warnings?: RopeWarning[];
+  input: { targetDiameterMm: number; tolerance: number; threadIds: string[] | null };
+  results: RopeThreadMatch[];
 }
 
 interface CatalogThread {
@@ -177,6 +143,7 @@ interface CatalogThread {
 interface CatalogResponse {
   apiVersion: string;
   algorithmVersion: string;
+  modelId: string;
   catalogVersion: string;
   fetchedAt: string;
   threads: CatalogThread[];
@@ -278,53 +245,29 @@ function getFromWorker<TResponse>(path: string): Promise<TResponse> {
  * Прямой расчёт диаметра.
  *
  * Для basis = "catalog" Worker берёт dTex из каталога WordPress; для
- * basis = "dtex" каталог не нужен вовсе.
+ * basis = "dtex" каталог не нужен вовсе. Число `diameterMm` возвращается
+ * ровно таким, каким его отдал Worker.
  */
-/** Поля груза для тела запроса v2; пусто, если режим не задан. */
-function loadBody(input: RopeLoadInput): Record<string, unknown> {
-  if (input.loadMode === undefined) return {};
-  return input.loadMode === "manual"
-    ? { loadMode: "manual", loadGrams: input.loadGrams }
-    : { loadMode: "auto" };
-}
-
-function ropePath(input: RopeLoadInput, route: "forward" | "reverse"): string {
-  return input.loadMode === undefined ? `/api/rope/v1/${route}` : `/api/rope/v2/${route}`;
-}
-
 export async function calculateRope(input: CalculateRopeInput): Promise<CalculateRopeResult> {
-  const base =
+  const body =
     input.basis === "catalog"
       ? { basis: "catalog", threadId: input.threadId, threadsPerStrand: input.threadsPerStrand }
       : { basis: "dtex", dtex: input.dtex, threadsPerStrand: input.threadsPerStrand };
 
-  const response = await postToWorker<ForwardResponse>(ropePath(input, "forward"), {
-    ...base,
-    ...loadBody(input),
-  });
+  const response = await postToWorker<ForwardResponse>("/api/rope/v2/forward", body);
 
-  const result: CalculateRopeResult = {
+  return {
     basis: response.basis,
     threadId: response.basis === "catalog" ? response.input.threadId ?? null : null,
     dtex: response.input.dtex,
-    diameterMm: roundDiameter(response.result.diameterMm),
+    diameterMm: response.result.diameterMm,
     threadsPerStrand: response.result.threadsPerStrand,
     strands: response.result.strands,
     construction: response.result.construction,
     catalogVersion: response.catalogVersion,
     apiVersion: response.apiVersion,
     algorithmVersion: response.algorithmVersion,
-  };
-
-  if (input.loadMode === undefined) return result;
-
-  return {
-    ...result,
-    totalDtex: response.result.totalDtex,
-    loadMode: response.result.loadMode,
-    recommendedLoadGrams: response.result.recommendedLoadGrams,
-    appliedLoadGrams: response.result.appliedLoadGrams,
-    loadRecommendationVersion: response.loadRecommendationVersion,
+    modelId: response.modelId,
     warnings: response.warnings ?? [],
   };
 }
@@ -332,46 +275,30 @@ export async function calculateRope(input: CalculateRopeInput): Promise<Calculat
 /**
  * Подбор нитей под целевой диаметр.
  *
- * `threadIds` не задан — проверяется весь активный каталог. Допуск
- * фиксирован (±10% в v1 и v2), поэтому в ответе есть только `tolerancePercent`.
+ * `threadIds` не задан — проверяется весь активный каталог. Допуск фиксирован:
+ * ±10%, поэтому в ответе есть только `tolerancePercent`. Допуск — окно
+ * поиска, а не оценка точности модели.
  */
 export async function findRopeThreads(
   input: FindRopeThreadsInput,
 ): Promise<FindRopeThreadsResult> {
-  const base =
+  const body =
     input.threadIds && input.threadIds.length > 0
       ? { targetDiameterMm: input.targetDiameterMm, threadIds: input.threadIds }
       : { targetDiameterMm: input.targetDiameterMm };
 
-  const response = await postToWorker<ReverseResponse>(ropePath(input, "reverse"), {
-    ...base,
-    ...loadBody(input),
-  });
+  const response = await postToWorker<ReverseResponse>("/api/rope/v2/reverse", body);
 
-  const results = response.results.map((match) => ({
-    ...match,
-    diameterMm: roundDiameter(match.diameterMm),
-    deviationPercent: roundDeviation(match.deviationPercent),
-  }));
-
-  const result: FindRopeThreadsResult = {
+  return {
     targetDiameterMm: response.input.targetDiameterMm,
     tolerancePercent: Math.round(response.input.tolerance * 100),
-    totalMatched: results.length,
+    totalMatched: response.results.length,
     catalogVersion: response.catalogVersion,
     apiVersion: response.apiVersion,
     algorithmVersion: response.algorithmVersion,
-    results,
-  };
-
-  if (input.loadMode === undefined) return result;
-
-  return {
-    ...result,
-    loadMode: response.input.loadMode,
-    loadGrams: response.input.loadGrams ?? null,
-    loadRecommendationVersion: response.loadRecommendationVersion,
+    modelId: response.modelId,
     warnings: response.warnings ?? [],
+    results: response.results,
   };
 }
 
@@ -384,7 +311,7 @@ export async function findRopeThreads(
  * попадают.
  */
 export async function listRopeThreads(): Promise<ListRopeThreadsResult> {
-  const response = await getFromWorker<CatalogResponse>("/api/rope/v1/catalog");
+  const response = await getFromWorker<CatalogResponse>("/api/rope/v2/catalog");
 
   return {
     catalogVersion: response.catalogVersion,
@@ -392,6 +319,7 @@ export async function listRopeThreads(): Promise<ListRopeThreadsResult> {
     totalThreads: response.threads.length,
     apiVersion: response.apiVersion,
     algorithmVersion: response.algorithmVersion,
+    modelId: response.modelId,
     threads: response.threads.map((thread) => ({
       threadId: thread.threadId,
       brand: thread.brand,

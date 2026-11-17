@@ -1,16 +1,17 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { errorResult, jsonResult } from "../lib/tool-result.js";
-import {
-  ROPE_MAX_DTEX,
-  ROPE_MIN_DTEX_V1,
-  ROPE_MIN_DTEX_V2,
-  RopeApiError,
-  calculateRope,
-} from "../lib/rope-api.js";
-import { loadGramsSchema, loadModeSchema, loadSelectionError } from "./rope-load-schema.js";
+import { errorResult, textAndStructuredResult } from "../lib/tool-result.js";
+import { RopeApiError, calculateRope } from "../lib/rope-api.js";
+import { calculateRopeText } from "../lib/rope-text.js";
 
-const inputSchema = {
+/**
+ * Схема строгая: неизвестные аргументы отклоняются валидацией, а не
+ * отбрасываются молча. Это закрывает устаревшие поля нагрузки из снятого ТЗ —
+ * `loadMode`, `loadGrams` и подобные приходят в Worker как 422 INVALID_PARAMS,
+ * если клиент всё же попробует их отправить напрямую.
+ */
+const inputSchema = z
+    .object({
   basis: z
       .enum(["catalog", "dtex"])
       .describe(
@@ -25,11 +26,11 @@ const inputSchema = {
       ),
   dtex: z
       .number()
-      .min(ROPE_MIN_DTEX_V2)
-      .max(ROPE_MAX_DTEX)
+      .min(22.22)
+      .max(6000)
       .optional()
       .describe(
-          "Custom linear density in dTex. Required when basis is 'dtex'. From 20 to 6000 inclusive with loadMode; from 80 to 6000 without loadMode (legacy API v1).",
+          "Custom linear density in dTex, from 22.22 to 6000 inclusive. Required when basis is 'dtex'.",
       ),
   threadsPerStrand: z
       .number()
@@ -39,9 +40,8 @@ const inputSchema = {
       .describe(
           "Threads per strand: 1 to 5. All ropes have three strands, so 2 means the 2 × 3 construction.",
       ),
-  loadMode: loadModeSchema,
-  loadGrams: loadGramsSchema,
-};
+    })
+    .strict();
 
 export function registerCalculateRopeDiameter(server: McpServer): void {
   server.registerTool(
@@ -51,15 +51,15 @@ export function registerCalculateRopeDiameter(server: McpServer): void {
         description:
             "Read-only. Calculates the estimated diameter of a three-strand rope from a thread's linear density and the number of threads per strand. " +
             "Use this tool when the user asks how thick a rope made from a given thread will be, or what diameter a custom dTex produces. " +
-            "Provide basis 'catalog' with threadId for a catalog thread, or basis 'dtex' with a custom value (20 to 6000 with loadMode, 80 to 6000 without). " +
+            "Provide basis 'catalog' with threadId for a catalog thread, or basis 'dtex' with a value between 22.22 and 6000 for a custom thread. " +
             "threadsPerStrand is 1 to 5; because all ropes have three strands, 2 corresponds to the 2 × 3 construction. " +
-            "Pass loadMode 'auto' to use the recommended tension load, or 'manual' with loadGrams (30, 50, 100, 150, 200, 250 or 300) to use a chosen load; the recommended load is a starting suggestion, not an experimentally established optimum. " +
-            "Diameters are empirical model estimates, not measured values. The response includes the diameter in millimetres rounded to 3 decimals, the construction label, the resolved dTex, and API, algorithm and catalog versions; " +
-            "with loadMode it also includes totalDtex, loadMode, recommendedLoadGrams, appliedLoadGrams, loadRecommendationVersion and warnings. " +
+            "The model does not use tension load: there are no load parameters and no load fields in the response. " +
+            "Diameters are model estimates, not measured values; above 3000 dTex the result carries an EXTRAPOLATION warning. " +
+            "The text response shows the diameter with three decimals, structuredContent carries the unrounded numbers plus API, algorithm, model and catalog versions. " +
             "Use find_rope_threads when the user wants threads for a target diameter instead.",
         inputSchema,
       },
-      async ({ basis, threadId, dtex, threadsPerStrand, loadMode, loadGrams }) => {
+      async ({ basis, threadId, dtex, threadsPerStrand }) => {
         if (basis === "catalog" && !threadId) {
           return errorResult("threadId is required when basis is 'catalog'.");
         }
@@ -68,19 +68,13 @@ export function registerCalculateRopeDiameter(server: McpServer): void {
           return errorResult("dtex is required when basis is 'dtex'.");
         }
 
-        if (basis === "dtex" && dtex !== undefined && loadMode === undefined && dtex < ROPE_MIN_DTEX_V1) {
-          return errorResult(
-              `dtex must be at least ${ROPE_MIN_DTEX_V1} without loadMode; pass loadMode to use values from ${ROPE_MIN_DTEX_V2}.`,
-          );
-        }
-
-        const loadError = loadSelectionError(loadMode, loadGrams);
-        if (loadError) return errorResult(loadError);
-
         try {
-          const result = await calculateRope({ basis, threadId, dtex, threadsPerStrand, loadMode, loadGrams });
+          const result = await calculateRope({ basis, threadId, dtex, threadsPerStrand });
 
-          return jsonResult(result);
+          return textAndStructuredResult(
+            calculateRopeText(result),
+            result as unknown as Record<string, unknown>,
+          );
         } catch (error) {
           if (error instanceof RopeApiError) {
             return errorResult(`Rope calculator error (${error.code}): ${error.message}`);

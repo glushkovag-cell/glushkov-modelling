@@ -12,6 +12,27 @@ export function jsonResult(data: unknown): CallToolResult {
   };
 }
 
+/**
+ * Ответ инструмента с текстом для человека и полными данными без округления.
+ *
+ * `structuredContent` — источник числового паритета с HTTP API; текст может
+ * показывать диаметр с тремя знаками, но не заменяет числа.
+ */
+export function textAndStructuredResult(
+  text: string,
+  structuredContent: Record<string, unknown>,
+): CallToolResult {
+  return {
+    content: [
+      {
+        type: "text",
+        text,
+      },
+    ],
+    structuredContent,
+  };
+}
+
 /** Единый формат ошибки инструмента — isError: true, чтобы клиент/модель отличала сбой от данных. */
 export function errorResult(message: string): CallToolResult {
   return {

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 // config.ts читает окружение при импорте; значения нужны до загрузки server.ts.
 process.env.MCP_API_KEY = "test-key";
@@ -8,6 +8,10 @@ process.env.CMS_GALLERY_URL = "https://cms.example.test/gallery";
 const { Client } = await import("@modelcontextprotocol/sdk/client/index.js");
 const { InMemoryTransport } = await import("@modelcontextprotocol/sdk/inMemory.js");
 const { createMcpServer } = await import("./server.js");
+
+afterEach(() => {
+    vi.unstubAllGlobals();
+});
 
 describe("MCP server tools", () => {
     it("registers both rope calculator tools alongside the content tools", async () => {
@@ -37,8 +41,12 @@ describe("MCP server tools", () => {
 
         expect(calculate?.description).toContain("three-strand rope");
         expect(calculate?.inputSchema.required).toContain("threadsPerStrand");
+        expect(calculate?.description).toContain("22.22 and 6000");
+        expect(calculate?.description).toContain("EXTRAPOLATION");
+        expect(calculate?.description).toContain("does not use tension load");
         expect(find?.description).toContain("±10%");
         expect(find?.description).not.toContain("±15%");
+        expect(find?.description).toContain("1, 2, 3, 4 and 5 threads per strand");
         expect(find?.inputSchema.required).toContain("targetDiameterMm");
         expect(list?.description).toContain("active rope thread catalog");
         expect(list?.inputSchema.required).toBeUndefined();
@@ -47,7 +55,7 @@ describe("MCP server tools", () => {
         await server.close();
     });
 
-    it("exposes loadMode/loadGrams in the rope tool schemas and validates them", async () => {
+    it("rejects withdrawn load arguments instead of ignoring them", async () => {
         const server = createMcpServer();
         const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
         const client = new Client({ name: "rope-load-test", version: "1.0.0" });
@@ -60,35 +68,99 @@ describe("MCP server tools", () => {
         const { tools } = await client.listTools();
         for (const name of ["calculate_rope_diameter", "find_rope_threads"]) {
             const tool = tools.find((item) => item.name === name);
-            const properties = tool?.inputSchema.properties as Record<string, any>;
-            expect(properties.loadMode.enum).toEqual(["auto", "manual"]);
-            expect(JSON.stringify(properties.loadGrams)).toContain("300");
-            expect(tool?.inputSchema.required).not.toContain("loadMode");
+            const properties = (tool?.inputSchema.properties ?? {}) as Record<string, unknown>;
+            expect(Object.keys(properties)).not.toContain("loadMode");
+            expect(Object.keys(properties)).not.toContain("loadGrams");
         }
-        const calculate = tools.find((item) => item.name === "calculate_rope_diameter");
-        expect((calculate?.inputSchema.properties as Record<string, any>).dtex.minimum).toBe(20);
 
-        const call = (name: string, args: Record<string, unknown>) => client.callTool({ name, arguments: args });
         const text = (result: any) => String(result.content?.[0]?.text ?? "");
 
-        const manualWithoutLoad = await call("calculate_rope_diameter", {
-            basis: "dtex", dtex: 80, threadsPerStrand: 2, loadMode: "manual",
+        const calculate = await client.callTool({
+            name: "calculate_rope_diameter",
+            arguments: {
+                basis: "dtex",
+                dtex: 750,
+                threadsPerStrand: 2,
+                loadGrams: 200,
+            },
         });
-        expect(manualWithoutLoad.isError).toBe(true);
-        expect(text(manualWithoutLoad)).toContain("loadGrams is required");
+        // Схема строгая: аргумент отклонён валидацией, а не отброшен молча.
+        expect(calculate.isError).toBe(true);
+        expect(text(calculate)).toMatch(/validation error/i);
+        expect(text(calculate)).toContain("loadGrams");
 
-        const autoWithLoad = await call("find_rope_threads", { targetDiameterMm: 1, loadMode: "auto", loadGrams: 200 });
-        expect(autoWithLoad.isError).toBe(true);
-        expect(text(autoWithLoad)).toContain("only when loadMode is 'manual'");
-
-        const legacyLowDtex = await call("calculate_rope_diameter", { basis: "dtex", dtex: 40, threadsPerStrand: 1 });
-        expect(legacyLowDtex.isError).toBe(true);
-        expect(text(legacyLowDtex)).toContain("at least 80");
-
-        const badLoad = await call("calculate_rope_diameter", {
-            basis: "dtex", dtex: 80, threadsPerStrand: 2, loadMode: "manual", loadGrams: 120,
+        const find = await client.callTool({
+            name: "find_rope_threads",
+            arguments: { targetDiameterMm: 1, loadMode: "manual" },
         });
-        expect(badLoad.isError).toBe(true);
+        expect(find.isError).toBe(true);
+        expect(text(find)).toMatch(/validation error/i);
+        expect(text(find)).toContain("loadMode");
+
+        // Нижняя граница ручного dTex — 22.22.
+        const tooThin = await client.callTool({
+            name: "calculate_rope_diameter",
+            arguments: { basis: "dtex", dtex: 22.21, threadsPerStrand: 1 },
+        });
+        expect(tooThin.isError).toBe(true);
+        expect(text(tooThin)).toMatch(/validation error/i);
+
+        await client.close();
+        await server.close();
+    });
+
+    it("returns three-decimal text and unrounded structuredContent", async () => {
+        const workerResponse = {
+            apiVersion: "2",
+            algorithmVersion: "4.0.0",
+            modelId: "log-dtex-quadratic-no-load",
+            catalogVersion: null,
+            fetchedAt: null,
+            warnings: [],
+            basis: "dtex",
+            input: { dtex: 750, threadsPerStrand: 2 },
+            result: {
+                basis: "dtex",
+                threadId: null,
+                dtex: 750,
+                threadsPerStrand: 2,
+                strands: 3,
+                construction: "2 × 3",
+                diameterMm: 1.0201549921706878,
+            },
+        };
+
+        const fetchMock = vi.fn(async () =>
+            new Response(JSON.stringify(workerResponse), {
+                status: 200,
+                headers: { "content-type": "application/json" },
+            }),
+        );
+        vi.stubGlobal("fetch", fetchMock);
+
+        const server = createMcpServer();
+        const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+        const client = new Client({ name: "rope-structured-test", version: "1.0.0" });
+
+        await Promise.all([
+            server.connect(serverTransport),
+            client.connect(clientTransport),
+        ]);
+
+        const result = await client.callTool({
+            name: "calculate_rope_diameter",
+            arguments: { basis: "dtex", dtex: 750, threadsPerStrand: 2 },
+        });
+
+        const text = (result.content as Array<{ text?: string }>)[0]?.text ?? "";
+        expect(text).toContain("Rope diameter: 1.020 mm");
+        expect(text).not.toContain("1.0201549921706878");
+
+        const structured = result.structuredContent as Record<string, unknown>;
+        expect(structured.diameterMm).toBe(1.0201549921706878);
+        expect(structured.algorithmVersion).toBe("4.0.0");
+        expect(structured.modelId).toBe("log-dtex-quadratic-no-load");
+        expect(structured.warnings).toEqual([]);
 
         await client.close();
         await server.close();
