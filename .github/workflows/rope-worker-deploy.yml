@@ -85,41 +85,70 @@ jobs:
           echo "::error::API did not become reachable within 4 minutes"
           exit 1
 
-      - name: Smoke test health
+      - name: Smoke test health (v1 frozen, v2 current)
         run: |
           curl --fail --silent --show-error \
-            https://api.glushkov-modelling.com/api/rope/v1/health -o health.json
-          node -e "const d=require('./health.json');if(!d.ok)process.exit(1);if(d.algorithmVersion!=='2.0.0')process.exit(1);console.log('health',d.apiVersion,d.algorithmVersion)"
+            https://api.glushkov-modelling.com/api/rope/v1/health -o health-v1.json
+          node -e "const d=require('./health-v1.json');if(!d.ok)process.exit(1);if(d.apiVersion!=='1'||d.algorithmVersion!=='2.0.0')process.exit(1);console.log('health v1',d.apiVersion,d.algorithmVersion)"
+
+          curl --fail --silent --show-error \
+            https://api.glushkov-modelling.com/api/rope/v2/health -o health-v2.json
+          node -e "const d=require('./health-v2.json');if(!d.ok)process.exit(1);if(d.apiVersion!=='2'||d.algorithmVersion!=='4.0.0')process.exit(1);if(d.modelId!=='log-dtex-quadratic-no-load')process.exit(1);console.log('health v2',d.apiVersion,d.algorithmVersion,d.modelId)"
 
       - name: Smoke test catalog
         run: |
           curl --fail --silent --show-error \
-            https://api.glushkov-modelling.com/api/rope/v1/catalog -o catalog.json
-          node -e "const d=require('./catalog.json');if(!Array.isArray(d.threads)||d.threads.length===0)process.exit(1);console.log('threads',d.threads.length,'version',d.catalogVersion)"
+            https://api.glushkov-modelling.com/api/rope/v2/catalog -o catalog.json
+          node -e "const d=require('./catalog.json');if(!Array.isArray(d.threads)||d.threads.length===0)process.exit(1);if(d.algorithmVersion!=='4.0.0')process.exit(1);console.log('threads',d.threads.length,'version',d.catalogVersion)"
 
-      - name: Smoke test forward and reverse
+      - name: Smoke test forward (target model)
         run: |
           curl --fail --silent --show-error \
-            -X POST https://api.glushkov-modelling.com/api/rope/v1/forward \
+            -X POST https://api.glushkov-modelling.com/api/rope/v2/forward \
             -H 'content-type: application/json' \
             -d '{"basis":"catalog","threadId":"tera-40","threadsPerStrand":2}' \
             -o forward.json
-          node -e "const d=require('./forward.json');if(Math.abs(d.result.diameterMm-0.9842333087830643)>1e-9)process.exit(1);console.log('forward',d.result.diameterMm)"
+          node -e "const d=require('./forward.json');if(Math.abs(d.result.diameterMm-1.0201549921706878)>1e-9)process.exit(1);if(!Array.isArray(d.warnings)||d.warnings.length!==0)process.exit(1);if('loadMode' in d.result||'appliedLoadGrams' in d.result)process.exit(1);console.log('forward',d.result.diameterMm)"
 
           curl --fail --silent --show-error \
-            -X POST https://api.glushkov-modelling.com/api/rope/v1/reverse \
+            -X POST https://api.glushkov-modelling.com/api/rope/v2/forward \
+            -H 'content-type: application/json' \
+            -d '{"basis":"dtex","dtex":22.22,"threadsPerStrand":1}' \
+            -o forward-thin.json
+          node -e "const d=require('./forward-thin.json');if(Math.abs(d.result.diameterMm-0.05259208341950491)>1e-9)process.exit(1);console.log('forward thin',d.result.diameterMm)"
+
+      - name: Smoke test reverse and warnings
+        run: |
+          curl --fail --silent --show-error \
+            -X POST https://api.glushkov-modelling.com/api/rope/v2/reverse \
             -H 'content-type: application/json' \
             -d '{"targetDiameterMm":1}' \
             -o reverse.json
           # Число совпадений зависит от живого каталога CMS, поэтому проверяем
           # инварианты, а не точное количество: Tera 40 × 2 найден, все
           # результаты в пределах допуска.
-          node -e "const d=require('./reverse.json');const r=d.results;if(!Array.isArray(r)||r.length===0)process.exit(1);if(!r.some(x=>x.threadId==='tera-40'&&x.threadsPerStrand===2))process.exit(1);if(r.some(x=>Math.abs(x.diameterMm-1)>0.15+1e-12))process.exit(1);console.log('reverse',r.length)"
+          node -e "const d=require('./reverse.json');const r=d.results;if(d.input.tolerance!==0.1)process.exit(1);if(!Array.isArray(r)||r.length===0)process.exit(1);if(!r.some(x=>x.threadId==='tera-40'&&x.threadsPerStrand===2))process.exit(1);if(r.some(x=>Math.abs(x.diameterMm-1)>0.1+1e-12))process.exit(1);if('appliedLoadGrams' in r[0])process.exit(1);console.log('reverse',r.length)"
+
+          curl --fail --silent --show-error \
+            -X POST https://api.glushkov-modelling.com/api/rope/v2/reverse \
+            -H 'content-type: application/json' \
+            -d '{"targetDiameterMm":3.5,"threadIds":["tera-5"]}' \
+            -o reverse-thick.json
+          node -e "const d=require('./reverse-thick.json');if(!d.warnings.some(w=>w.code==='EXTRAPOLATION'))process.exit(1);console.log('warnings',d.warnings.map(w=>w.code).join(','))"
+
+      - name: Smoke test rejection of legacy load fields
+        run: |
+          code=$(curl --silent --output load.json --write-out '%{http_code}' \
+            -X POST https://api.glushkov-modelling.com/api/rope/v2/forward \
+            -H 'content-type: application/json' \
+            -d '{"basis":"dtex","dtex":750,"threadsPerStrand":2,"loadMode":"manual","loadGrams":200}')
+          test "${code}" = "422"
+          node -e "const d=require('./load.json');if(d.error.code!=='INVALID_PARAMS')process.exit(1);if(!d.error.fields.includes('loadMode')||!d.error.fields.includes('loadGrams'))process.exit(1);console.log('legacy load rejected',d.error.code)"
 
       - name: Smoke test CORS preflight
         run: |
           code=$(curl --silent --output /dev/null --write-out '%{http_code}' \
-            -X OPTIONS https://api.glushkov-modelling.com/api/rope/v1/forward \
+            -X OPTIONS https://api.glushkov-modelling.com/api/rope/v2/forward \
             -H 'Origin: https://www.glushkov-modelling.com' \
             -H 'Access-Control-Request-Method: POST')
           test "${code}" = "204"
