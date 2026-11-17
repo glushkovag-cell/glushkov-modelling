@@ -51,8 +51,8 @@ describe('каталог CMS', () => {
     expect(await catalogVersion(changedOrder)).not.toBe(snapshot.catalogVersion);
   });
 
-  it('значения совпадают с формулой для каждой нити', async () => {
-    const { calculateDiameterMm } = await import('../src/core/formula');
+  it('значения совпадают с моделью 4.0.0 для каждой нити', async () => {
+    const { calculateDiameterMm } = await import('../src/core/model');
 
     for (const thread of snapshot.threads) {
       for (const key of ['1', '2', '3'] as const) {

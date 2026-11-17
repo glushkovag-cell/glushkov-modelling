@@ -1,50 +1,49 @@
 /**
- * Контракт v2: прямой расчёт и обратный подбор с учётом груза
- * (алгоритм 3.0.0, рекомендация груза 1.0.0).
+ * Актуальный контракт v2: прямой расчёт и обратный подбор без груза.
  *
- * Режим нагрузки — отдельная ось от basis и от прямого/обратного режима:
- * - loadMode отсутствует или 'auto' — груз рекомендуется по S = 3·x·n;
- * - 'manual' — груз задаёт пользователь, только из LOAD_GRAMS.
- * Некорректные сочетания отклоняются с INVALID_PARAMS, без округления и
- * подстановки значений по умолчанию.
+ * Модель — `model.ts` (algorithmVersion 4.0.0, log-dtex-quadratic-no-load).
+ * Полей нагрузки нет: `loadMode`, `loadGrams` и любые их эквиваленты
+ * отклоняются валидацией как неподдержанные.
  */
 
-import { MAX_CUSTOM_DTEX_V2, MAX_DEVIATION, MIN_CUSTOM_DTEX_V2, STRANDS, THREAD_COUNTS } from './constants';
+import {
+  API_VERSION_V2,
+  MAX_DEVIATION,
+  MODEL_ID,
+  STRANDS,
+  TARGET_ALGORITHM_VERSION,
+  TARGET_MAX_CUSTOM_DTEX,
+  TARGET_MIN_CUSTOM_DTEX,
+  THREAD_COUNTS,
+} from './constants';
 import { invalidParams, threadNotFound } from './errors';
 import { construction } from './forward';
-import {
-  LOAD_GRAMS,
-  type LoadGrams,
-  type LoadMode,
-  type LoadSelection,
-  type ModelWarning,
-  UNVERIFIED_LOAD_GRAMS,
-  MEASURED_DTEX_MAX,
-  MEASURED_DTEX_MIN,
-  baseWarnings,
-  calculateDiameterMm,
-  isLoadGrams,
-  modelWarnings,
-  resolveLoad,
-} from './load-model';
+import { calculateDiameterMm } from './model';
 import { compareIds, selectThreads, withinTolerance } from './reverse';
-import { asRecord, parseThreadIds, requireFiniteNumber, requireThreadCount } from './validation';
+import {
+  asRecord,
+  parseThreadIds,
+  rejectLegacyLoadFields,
+  requireFiniteNumber,
+  requireThreadCount,
+} from './validation';
+import { mergeWarnings, warningsForDtex, type ModelWarning } from './warnings';
 import type { CatalogThread, ThreadCount } from './types';
 
+/** Версии в каждом ответе актуального контракта. */
+export const TARGET_VERSIONS = {
+  apiVersion: API_VERSION_V2,
+  algorithmVersion: TARGET_ALGORITHM_VERSION,
+  modelId: MODEL_ID,
+} as const;
+
 export type ForwardInputV2 =
-  | ({ basis: 'catalog'; threadId: string; threadsPerStrand: ThreadCount } & LoadSelection)
-  | ({ basis: 'dtex'; dtex: number; threadsPerStrand: ThreadCount } & LoadSelection);
+  | { basis: 'catalog'; threadId: string; threadsPerStrand: ThreadCount }
+  | { basis: 'dtex'; dtex: number; threadsPerStrand: ThreadCount };
 
-export type ReverseInputV2 = { targetDiameterMm: number; threadIds?: readonly string[] } & LoadSelection;
+export type ReverseInputV2 = { targetDiameterMm: number; threadIds?: readonly string[] };
 
-export interface LoadFields {
-  totalDtex: number;
-  loadMode: LoadMode;
-  recommendedLoadGrams: LoadGrams;
-  appliedLoadGrams: LoadGrams;
-}
-
-export interface ForwardResultV2 extends LoadFields {
+export interface ForwardResultV2 {
   basis: 'catalog' | 'dtex';
   threadId: string | null;
   dtex: number;
@@ -54,7 +53,7 @@ export interface ForwardResultV2 extends LoadFields {
   diameterMm: number;
 }
 
-export interface ReverseMatchV2 extends Omit<LoadFields, 'loadMode'> {
+export interface ReverseMatchV2 {
   threadId: string;
   brand: string;
   number: string;
@@ -69,56 +68,39 @@ export interface ReverseMatchV2 extends Omit<LoadFields, 'loadMode'> {
 export interface ReverseResultV2 {
   targetDiameterMm: number;
   tolerance: number;
-  loadMode: LoadMode;
   matches: ReverseMatchV2[];
   warnings: ModelWarning[];
 }
 
-const LOAD_LIST = LOAD_GRAMS.join(', ');
-
-/** Разбор loadMode/loadGrams. Отсутствие loadMode — auto. */
-export function parseLoadSelection(body: Record<string, unknown>): LoadSelection {
-  const mode = body.loadMode === undefined ? 'auto' : body.loadMode;
-
-  if (mode === 'auto') {
-    if (body.loadGrams !== undefined) {
-      throw invalidParams('loadGrams must be omitted when loadMode is "auto".', ['loadGrams', 'loadMode']);
-    }
-    return { loadMode: 'auto' };
-  }
-
-  if (mode === 'manual') {
-    if (body.loadGrams === undefined) {
-      throw invalidParams('loadGrams is required when loadMode is "manual".', ['loadGrams']);
-    }
-    if (!isLoadGrams(body.loadGrams)) {
-      throw invalidParams(`loadGrams must be one of ${LOAD_LIST}.`, ['loadGrams']);
-    }
-    return { loadMode: 'manual', loadGrams: body.loadGrams };
-  }
-
-  throw invalidParams('loadMode must be "auto" or "manual".', ['loadMode']);
-}
-
 export function parseForwardInputV2(raw: unknown): ForwardInputV2 {
   const body = asRecord(raw);
+  rejectLegacyLoadFields(body);
 
   if (body.basis === 'catalog') {
     const threadId = typeof body.threadId === 'string' ? body.threadId.trim() : '';
     if (threadId === '') {
       throw invalidParams('threadId is required when basis is "catalog".', ['threadId']);
     }
-    const threadsPerStrand = requireThreadCount(body.threadsPerStrand);
-    return { basis: 'catalog', threadId, threadsPerStrand, ...parseLoadSelection(body) };
+    return {
+      basis: 'catalog',
+      threadId,
+      threadsPerStrand: requireThreadCount(body.threadsPerStrand),
+    };
   }
 
   if (body.basis === 'dtex') {
     const dtex = requireFiniteNumber(body.dtex, 'dtex');
-    if (dtex < MIN_CUSTOM_DTEX_V2 || dtex > MAX_CUSTOM_DTEX_V2) {
-      throw invalidParams(`dtex must be between ${MIN_CUSTOM_DTEX_V2} and ${MAX_CUSTOM_DTEX_V2}.`, ['dtex']);
+    if (dtex < TARGET_MIN_CUSTOM_DTEX || dtex > TARGET_MAX_CUSTOM_DTEX) {
+      throw invalidParams(
+        `dtex must be between ${TARGET_MIN_CUSTOM_DTEX} and ${TARGET_MAX_CUSTOM_DTEX}.`,
+        ['dtex'],
+      );
     }
-    const threadsPerStrand = requireThreadCount(body.threadsPerStrand);
-    return { basis: 'dtex', dtex, threadsPerStrand, ...parseLoadSelection(body) };
+    return {
+      basis: 'dtex',
+      dtex,
+      threadsPerStrand: requireThreadCount(body.threadsPerStrand),
+    };
   }
 
   throw invalidParams('basis must be "catalog" or "dtex".', ['basis']);
@@ -126,6 +108,7 @@ export function parseForwardInputV2(raw: unknown): ForwardInputV2 {
 
 export function parseReverseInputV2(raw: unknown): ReverseInputV2 {
   const body = asRecord(raw);
+  rejectLegacyLoadFields(body);
 
   const targetDiameterMm = requireFiniteNumber(body.targetDiameterMm, 'targetDiameterMm');
   if (targetDiameterMm <= 0) {
@@ -133,12 +116,7 @@ export function parseReverseInputV2(raw: unknown): ReverseInputV2 {
   }
 
   const threadIds = parseThreadIds(body.threadIds);
-  const load = parseLoadSelection(body);
-  return threadIds ? { targetDiameterMm, threadIds, ...load } : { targetDiameterMm, ...load };
-}
-
-function loadSelectionOf(input: LoadSelection): LoadSelection {
-  return input.loadMode === 'manual' ? { loadMode: 'manual', loadGrams: input.loadGrams } : { loadMode: 'auto' };
+  return threadIds ? { targetDiameterMm, threadIds } : { targetDiameterMm };
 }
 
 export interface ForwardOutputV2 {
@@ -150,7 +128,10 @@ export interface ForwardOutputV2 {
  * Прямой расчёт v2. Для basis = "catalog" нить ищется в каталоге и должна
  * быть включённой; для basis = "dtex" каталог не нужен.
  */
-export function computeForwardV2(input: ForwardInputV2, catalog: readonly CatalogThread[] = []): ForwardOutputV2 {
+export function computeForwardV2(
+  input: ForwardInputV2,
+  catalog: readonly CatalogThread[] = [],
+): ForwardOutputV2 {
   let dtex: number;
   let threadId: string | null = null;
 
@@ -165,8 +146,6 @@ export function computeForwardV2(input: ForwardInputV2, catalog: readonly Catalo
     dtex = input.dtex;
   }
 
-  const load = resolveLoad({ dtex, threadsPerStrand: input.threadsPerStrand, ...loadSelectionOf(input) });
-
   return {
     result: {
       basis: input.basis,
@@ -175,22 +154,15 @@ export function computeForwardV2(input: ForwardInputV2, catalog: readonly Catalo
       threadsPerStrand: input.threadsPerStrand,
       strands: STRANDS,
       construction: construction(input.threadsPerStrand),
-      totalDtex: load.totalDtex,
-      loadMode: load.loadMode,
-      recommendedLoadGrams: load.recommendedLoadGrams,
-      appliedLoadGrams: load.appliedLoadGrams,
-      diameterMm: calculateDiameterMm(dtex, input.threadsPerStrand, load.appliedLoadGrams),
+      diameterMm: calculateDiameterMm(dtex, input.threadsPerStrand),
     },
-    warnings: modelWarnings(dtex, load),
+    warnings: warningsForDtex(dtex),
   };
 }
 
 interface CandidateV2 {
   thread: CatalogThread;
   threadsPerStrand: ThreadCount;
-  totalDtex: number;
-  recommendedLoadGrams: LoadGrams;
-  appliedLoadGrams: LoadGrams;
   diameterMm: number;
   deviation: number;
 }
@@ -207,64 +179,22 @@ function compareCandidatesV2(a: CandidateV2, b: CandidateV2): number {
 }
 
 /**
- * Сводные предупреждения обратного подбора: по всем найденным вариантам.
- * В manual груз у всех кандидатов одинаков; в auto он у каждого свой.
- */
-function reverseWarnings(matches: readonly CandidateV2[], load: LoadSelection): ModelWarning[] {
-  const base = baseWarnings();
-
-  const unverified = [
-    ...new Set(
-      (load.loadMode === 'manual' ? [load.loadGrams] : matches.map((match) => match.appliedLoadGrams)).filter(
-        (grams) => UNVERIFIED_LOAD_GRAMS.includes(grams),
-      ),
-    ),
-  ].sort((a, b) => a - b);
-
-  if (unverified.length > 0) {
-    base.push({
-      code: 'UNVERIFIED_LOAD',
-      message: `Loads of ${unverified.join(', ')} g were not tested in the calibration data; only 30, 200 and 300 g were measured.`,
-    });
-  }
-
-  if (matches.some((match) => match.thread.dtex < MEASURED_DTEX_MIN || match.thread.dtex > MEASURED_DTEX_MAX)) {
-    base.push({
-      code: 'DTEX_OUTSIDE_MEASURED_RANGE',
-      message: `Some results use threads outside the measured range ${MEASURED_DTEX_MIN}–${MEASURED_DTEX_MAX} dTex.`,
-    });
-  }
-
-  return base;
-}
-
-/**
  * Обратный подбор v2: выбранные нити × 1–5 нитей в пряди.
  *
- * В auto груз и S считаются отдельно для каждой нити и свивки; в manual
- * груз общий. Фильтр ±10% включительно применяется к неокруглённому
- * отклонению, затем детерминированная сортировка.
+ * Допуск ±10% включительно применяется к неокруглённому отклонению, затем
+ * детерминированная сортировка. Предупреждения собираются по выданным
+ * совпадениям и схлопываются по коду.
  */
 export function findMatchesV2(input: ReverseInputV2, catalog: readonly CatalogThread[]): ReverseResultV2 {
   const threads = selectThreads(input, catalog);
-  const selection = loadSelectionOf(input);
   const candidates: CandidateV2[] = [];
 
   for (const thread of threads) {
     for (const threadsPerStrand of THREAD_COUNTS) {
-      const load = resolveLoad({ dtex: thread.dtex, threadsPerStrand, ...selection });
-      const diameterMm = calculateDiameterMm(thread.dtex, threadsPerStrand, load.appliedLoadGrams);
+      const diameterMm = calculateDiameterMm(thread.dtex, threadsPerStrand);
       const deviation = (diameterMm - input.targetDiameterMm) / input.targetDiameterMm;
       if (withinTolerance(deviation)) {
-        candidates.push({
-          thread,
-          threadsPerStrand,
-          totalDtex: load.totalDtex,
-          recommendedLoadGrams: load.recommendedLoadGrams,
-          appliedLoadGrams: load.appliedLoadGrams,
-          diameterMm,
-          deviation,
-        });
+        candidates.push({ thread, threadsPerStrand, diameterMm, deviation });
       }
     }
   }
@@ -274,7 +204,6 @@ export function findMatchesV2(input: ReverseInputV2, catalog: readonly CatalogTh
   return {
     targetDiameterMm: input.targetDiameterMm,
     tolerance: MAX_DEVIATION,
-    loadMode: selection.loadMode,
     matches: candidates.map((candidate) => ({
       threadId: candidate.thread.threadId,
       brand: candidate.thread.brand,
@@ -282,12 +211,11 @@ export function findMatchesV2(input: ReverseInputV2, catalog: readonly CatalogTh
       dtex: candidate.thread.dtex,
       threadsPerStrand: candidate.threadsPerStrand,
       construction: construction(candidate.threadsPerStrand),
-      totalDtex: candidate.totalDtex,
-      recommendedLoadGrams: candidate.recommendedLoadGrams,
-      appliedLoadGrams: candidate.appliedLoadGrams,
       diameterMm: candidate.diameterMm,
       deviationPercent: candidate.deviation * 100,
     })),
-    warnings: reverseWarnings(candidates, selection),
+    warnings: mergeWarnings(
+      candidates.flatMap((candidate) => warningsForDtex(candidate.thread.dtex)),
+    ),
   };
 }

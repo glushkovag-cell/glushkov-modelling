@@ -1,4 +1,4 @@
-import { MAX_CUSTOM_DTEX, MIN_CUSTOM_DTEX, THREAD_COUNTS } from './constants';
+import { LEGACY_LOAD_FIELDS, MAX_CUSTOM_DTEX, MIN_CUSTOM_DTEX, THREAD_COUNTS } from './constants';
 import { invalidParams } from './errors';
 import type { ForwardInput, ReverseInput, ThreadCount } from './types';
 
@@ -20,6 +20,25 @@ export function requireThreadCount(value: unknown): ThreadCount {
   return value as ThreadCount;
 }
 
+/**
+ * Отклоняет поля нагрузки из снятого с эксплуатации контракта.
+ *
+ * Модель не использует нагрузку. Поля были опубликованы в v2 (алгоритм
+ * 3.0.0), поэтому молча игнорировать их нельзя: клиент получил бы результат,
+ * не соответствующий запросу. Запрос падает как INVALID_PARAMS с перечнем
+ * неподдержанных полей.
+ */
+export function rejectLegacyLoadFields(body: Record<string, unknown>): void {
+  const unsupported = LEGACY_LOAD_FIELDS.filter((field) => Object.hasOwn(body, field));
+  if (unsupported.length === 0) return;
+
+  throw invalidParams(
+    `Unsupported load parameters: ${unsupported.join(', ')}. ` +
+      'The diameter model does not use tension load; remove these fields.',
+    unsupported,
+  );
+}
+
 export function requireFiniteNumber(value: unknown, field: string): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     throw invalidParams(`${field} must be a finite number.`, [field]);
@@ -33,6 +52,7 @@ export function requireFiniteNumber(value: unknown, field: string): number {
  */
 export function parseForwardInput(raw: unknown): ForwardInput {
   const body = asRecord(raw);
+  rejectLegacyLoadFields(body);
 
   if (body.basis === 'catalog') {
     const threadId = typeof body.threadId === 'string' ? body.threadId.trim() : '';
@@ -73,6 +93,7 @@ export function parseForwardInput(raw: unknown): ForwardInput {
  */
 export function parseReverseInput(raw: unknown): ReverseInput {
   const body = asRecord(raw);
+  rejectLegacyLoadFields(body);
 
   const targetDiameterMm = requireFiniteNumber(body.targetDiameterMm, 'targetDiameterMm');
   if (targetDiameterMm <= 0) {

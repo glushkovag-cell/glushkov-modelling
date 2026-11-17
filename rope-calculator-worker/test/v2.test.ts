@@ -1,304 +1,334 @@
 import { describe, expect, it } from 'vitest';
-import { calculateDiameterMm, recommendLoadGrams, totalDtex } from '../src/core/load-model';
-import { withinTolerance } from '../src/core/reverse';
 import {
+  TARGET_VERSIONS,
   computeForwardV2,
   findMatchesV2,
   parseForwardInputV2,
-  parseLoadSelection,
   parseReverseInputV2,
 } from '../src/core/v2';
+import { calculateDiameterMm } from '../src/core/model';
+import { withinTolerance } from '../src/core/reverse';
+import { RopeError } from '../src/core/errors';
+import { TARGET_MAX_CUSTOM_DTEX, TARGET_MIN_CUSTOM_DTEX } from '../src/core/constants';
 import { catalog, errorCodeOf } from './helpers';
 
-const LOADS = [30, 50, 100, 150, 200, 250, 300] as const;
+function pairs(result: { matches: readonly { threadId: string; threadsPerStrand: number }[] }): string[] {
+  return result.matches.map((match) => `${match.threadId} × ${match.threadsPerStrand}`);
+}
 
-describe('v2: разбор loadMode / loadGrams', () => {
-  it('отсутствие loadMode означает auto', () => {
-    expect(parseLoadSelection({})).toEqual({ loadMode: 'auto' });
-  });
-
-  it('auto без груза', () => {
-    expect(parseLoadSelection({ loadMode: 'auto' })).toEqual({ loadMode: 'auto' });
-  });
-
-  it.each(LOADS)('manual с грузом %s г', (grams) => {
-    expect(parseLoadSelection({ loadMode: 'manual', loadGrams: grams })).toEqual({
-      loadMode: 'manual',
-      loadGrams: grams,
+describe('v2: версии ответа', () => {
+  it('apiVersion, algorithmVersion и modelId зафиксированы', () => {
+    expect(TARGET_VERSIONS).toEqual({
+      apiVersion: '2',
+      algorithmVersion: '4.0.0',
+      modelId: 'log-dtex-quadratic-no-load',
     });
-  });
-
-  it.each([
-    ['manual без loadGrams', { loadMode: 'manual' }],
-    ['auto вместе с loadGrams', { loadMode: 'auto', loadGrams: 200 }],
-    ['loadGrams без loadMode', { loadGrams: 200 }],
-    ['неизвестный режим', { loadMode: 'optimal' }],
-    ['режим не строкой', { loadMode: 1 }],
-    ['режим null', { loadMode: null }],
-    ['неподдержанный вес', { loadMode: 'manual', loadGrams: 120 }],
-    ['вес без округления', { loadMode: 'manual', loadGrams: 199.9 }],
-    ['нулевой вес', { loadMode: 'manual', loadGrams: 0 }],
-    ['отрицательный вес', { loadMode: 'manual', loadGrams: -30 }],
-    ['NaN', { loadMode: 'manual', loadGrams: Number.NaN }],
-    ['Infinity', { loadMode: 'manual', loadGrams: Number.POSITIVE_INFINITY }],
-    ['вес строкой', { loadMode: 'manual', loadGrams: '200' }],
-    ['вес null', { loadMode: 'manual', loadGrams: null }],
-  ])('отклоняет: %s', (_label, body) => {
-    expect(errorCodeOf(() => parseLoadSelection(body as Record<string, unknown>))).toBe('INVALID_PARAMS');
   });
 });
 
 describe('v2: разбор прямого расчёта', () => {
-  it('ручной dTex 20–6000 включительно', () => {
-    expect(parseForwardInputV2({ basis: 'dtex', dtex: 20, threadsPerStrand: 1 })).toEqual({
-      basis: 'dtex',
-      dtex: 20,
-      threadsPerStrand: 1,
-      loadMode: 'auto',
-    });
-    expect(parseForwardInputV2({ basis: 'dtex', dtex: 22.22, threadsPerStrand: 1 }).basis).toBe('dtex');
-    expect(parseForwardInputV2({ basis: 'dtex', dtex: 6000, threadsPerStrand: 5 }).basis).toBe('dtex');
+  it('принимает каталожный расчёт и обрезает threadId', () => {
+    expect(
+      parseForwardInputV2({ basis: 'catalog', threadId: ' tera-40 ', threadsPerStrand: 2 }),
+    ).toEqual({ basis: 'catalog', threadId: 'tera-40', threadsPerStrand: 2 });
   });
 
-  it.each([19.999, 6000.001, 0, -1, Number.NaN, Number.POSITIVE_INFINITY, '750', null])(
-    'отклоняет dTex %s',
-    (dtex) => {
-      expect(errorCodeOf(() => parseForwardInputV2({ basis: 'dtex', dtex, threadsPerStrand: 2 }))).toBe(
-        'INVALID_PARAMS',
-      );
-    },
-  );
+  it('принимает ручной dTex на границах диапазона', () => {
+    expect(parseForwardInputV2({ basis: 'dtex', dtex: TARGET_MIN_CUSTOM_DTEX, threadsPerStrand: 1 })).toEqual({
+      basis: 'dtex',
+      dtex: 22.22,
+      threadsPerStrand: 1,
+    });
+    expect(parseForwardInputV2({ basis: 'dtex', dtex: TARGET_MAX_CUSTOM_DTEX, threadsPerStrand: 5 })).toEqual({
+      basis: 'dtex',
+      dtex: 6000,
+      threadsPerStrand: 5,
+    });
+  });
 
-  it.each([0, 6, 1.5, -1, '2', null, Number.NaN])('отклоняет threadsPerStrand %s', (threadsPerStrand) => {
-    expect(errorCodeOf(() => parseForwardInputV2({ basis: 'dtex', dtex: 750, threadsPerStrand }))).toBe(
+  it.each([
+    ['ниже минимума', 22.21],
+    ['выше максимума', 6000.01],
+    ['NaN', Number.NaN],
+    ['Infinity', Number.POSITIVE_INFINITY],
+    ['строка вместо числа', '750'],
+  ])('отклоняет dTex: %s', (_label, dtex) => {
+    expect(errorCodeOf(() => parseForwardInputV2({ basis: 'dtex', dtex, threadsPerStrand: 2 }))).toBe(
       'INVALID_PARAMS',
     );
   });
 
-  it('manual-груз в каталожном запросе', () => {
+  it.each([0, 6, 1.5, '2', null])('отклоняет threadsPerStrand = %s', (threadsPerStrand) => {
     expect(
-      parseForwardInputV2({
-        basis: 'catalog',
-        threadId: ' tera-40 ',
-        threadsPerStrand: 2,
-        loadMode: 'manual',
-        loadGrams: 150,
-      }),
-    ).toEqual({ basis: 'catalog', threadId: 'tera-40', threadsPerStrand: 2, loadMode: 'manual', loadGrams: 150 });
+      errorCodeOf(() => parseForwardInputV2({ basis: 'dtex', dtex: 750, threadsPerStrand })),
+    ).toBe('INVALID_PARAMS');
   });
 
-  it('некорректный груз отклоняется и в каталожном запросе', () => {
+  it('отклоняет неизвестный basis и пустой threadId', () => {
+    expect(errorCodeOf(() => parseForwardInputV2({ basis: 'other' }))).toBe('INVALID_PARAMS');
+    expect(
+      errorCodeOf(() => parseForwardInputV2({ basis: 'catalog', threadId: '  ', threadsPerStrand: 2 })),
+    ).toBe('INVALID_PARAMS');
+  });
+
+  it.each([null, [], 'body', 42])('отклоняет тело не-объект: %s', (body) => {
+    expect(errorCodeOf(() => parseForwardInputV2(body))).toBe('INVALID_PARAMS');
+  });
+});
+
+describe('v2: устаревшие поля нагрузки', () => {
+  it.each([
+    'loadMode',
+    'loadGrams',
+    'load',
+    'appliedLoadGrams',
+    'recommendedLoadGrams',
+    'recommendedLoad',
+    'loadRecommendationVersion',
+  ])('отклоняет forward с полем %s', (field) => {
+    const body = { basis: 'dtex', dtex: 750, threadsPerStrand: 2, [field]: 200 };
+    expect(errorCodeOf(() => parseForwardInputV2(body))).toBe('INVALID_PARAMS');
+  });
+
+  it('перечисляет все неподдержанные поля в ошибке', () => {
+    try {
+      parseForwardInputV2({
+        basis: 'dtex',
+        dtex: 750,
+        threadsPerStrand: 2,
+        loadMode: 'manual',
+        loadGrams: 200,
+      });
+      throw new Error('Ожидалась ошибка INVALID_PARAMS.');
+    } catch (error) {
+      expect(error).toBeInstanceOf(RopeError);
+      expect((error as RopeError).code).toBe('INVALID_PARAMS');
+      expect((error as RopeError).fields).toEqual(['loadMode', 'loadGrams']);
+      expect((error as RopeError).message).toContain('loadMode, loadGrams');
+    }
+  });
+
+  it('отклоняет поле нагрузки со значением null, а не игнорирует его', () => {
     expect(
       errorCodeOf(() =>
-        parseForwardInputV2({ basis: 'catalog', threadId: 'tera-40', threadsPerStrand: 2, loadMode: 'manual' }),
+        parseForwardInputV2({ basis: 'dtex', dtex: 750, threadsPerStrand: 2, loadGrams: null }),
       ),
     ).toBe('INVALID_PARAMS');
+  });
+
+  it('отклоняет поля нагрузки в обратном подборе', () => {
+    expect(errorCodeOf(() => parseReverseInputV2({ targetDiameterMm: 1, loadGrams: 300 }))).toBe(
+      'INVALID_PARAMS',
+    );
+    expect(errorCodeOf(() => parseReverseInputV2({ targetDiameterMm: 1, loadMode: 'auto' }))).toBe(
+      'INVALID_PARAMS',
+    );
   });
 });
 
 describe('v2: разбор обратного подбора', () => {
-  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY, '1', null])('отклоняет target %s', (targetDiameterMm) => {
+  it('принимает target без списка нитей', () => {
+    expect(parseReverseInputV2({ targetDiameterMm: 1 })).toEqual({ targetDiameterMm: 1 });
+  });
+
+  it('схлопывает дубли threadIds с сохранением порядка', () => {
+    expect(parseReverseInputV2({ targetDiameterMm: 1.5, threadIds: ['tera-40', 'tera-60', 'tera-40'] })).toEqual({
+      targetDiameterMm: 1.5,
+      threadIds: ['tera-40', 'tera-60'],
+    });
+  });
+
+  it.each([0, -1, Number.NaN, Number.NEGATIVE_INFINITY])('отклоняет targetDiameterMm = %s', (targetDiameterMm) => {
     expect(errorCodeOf(() => parseReverseInputV2({ targetDiameterMm }))).toBe('INVALID_PARAMS');
   });
 
-  it('по умолчанию auto и весь каталог', () => {
-    expect(parseReverseInputV2({ targetDiameterMm: 1 })).toEqual({ targetDiameterMm: 1, loadMode: 'auto' });
-  });
-
-  it('manual и список нитей без дублей', () => {
-    expect(
-      parseReverseInputV2({ targetDiameterMm: 1, threadIds: ['tera-40', 'tera-40'], loadMode: 'manual', loadGrams: 30 }),
-    ).toEqual({ targetDiameterMm: 1, threadIds: ['tera-40'], loadMode: 'manual', loadGrams: 30 });
-  });
-
-  it('auto вместе с loadGrams отклоняется', () => {
-    expect(errorCodeOf(() => parseReverseInputV2({ targetDiameterMm: 1, loadMode: 'auto', loadGrams: 30 }))).toBe(
-      'INVALID_PARAMS',
-    );
+  it.each([
+    ['пустой массив', []],
+    ['строка вместо массива', 'tera-40'],
+    ['пустая строка в массиве', ['']],
+    ['число в массиве', [1]],
+  ])('отклоняет threadIds: %s', (_label, threadIds) => {
+    expect(errorCodeOf(() => parseReverseInputV2({ targetDiameterMm: 1, threadIds }))).toBe('INVALID_PARAMS');
   });
 });
 
 describe('v2: прямой расчёт', () => {
-  it('auto: S, рекомендованный и применённый груз, диаметр', () => {
-    const { result, warnings } = computeForwardV2({ basis: 'dtex', dtex: 80, threadsPerStrand: 2, loadMode: 'auto' });
+  it('считает по каталожной нити', () => {
+    const { result, warnings } = computeForwardV2(
+      { basis: 'catalog', threadId: 'tera-40', threadsPerStrand: 2 },
+      catalog,
+    );
 
     expect(result).toMatchObject({
-      basis: 'dtex',
-      threadId: null,
-      dtex: 80,
+      basis: 'catalog',
+      threadId: 'tera-40',
+      dtex: 750,
       threadsPerStrand: 2,
       strands: 3,
       construction: '2 × 3',
-      totalDtex: 480,
-      loadMode: 'auto',
-      recommendedLoadGrams: 150,
-      appliedLoadGrams: 150,
     });
-    expect(Math.abs(result.diameterMm - 0.24069446380613793)).toBeLessThan(1e-12);
-    expect(warnings.map((warning) => warning.code)).toEqual([
-      'EMPIRICAL_MODEL',
-      'RECOMMENDED_LOAD_STARTING_SUGGESTION',
-      'UNVERIFIED_LOAD',
-    ]);
+    expect(Math.abs(result.diameterMm - 1.0201549921706878)).toBeLessThan(1e-9);
+    expect(warnings).toEqual([]);
   });
 
-  it('manual: применяется выбранный груз, рекомендация сохраняется', () => {
-    const { result } = computeForwardV2({
-      basis: 'catalog',
-      threadId: 'tera-40',
-      threadsPerStrand: 2,
-      loadMode: 'manual',
-      loadGrams: 300,
-    }, catalog);
-
-    expect(result.dtex).toBe(750);
-    expect(result.loadMode).toBe('manual');
-    expect(result.recommendedLoadGrams).toBe(300);
-    expect(result.appliedLoadGrams).toBe(300);
-    expect(Math.abs(result.diameterMm - 1.0182712421634583)).toBeLessThan(1e-12);
+  it('считает по ручному dTex без каталога', () => {
+    const { result } = computeForwardV2({ basis: 'dtex', dtex: 750, threadsPerStrand: 2 }, []);
+    expect(result.threadId).toBeNull();
+    expect(Math.abs(result.diameterMm - 1.0201549921706878)).toBeLessThan(1e-9);
   });
 
-  it('эталоны общего набора через прямой расчёт', () => {
-    const cases: [number, 1 | 2 | 3, (typeof LOADS)[number], number][] = [
-      [80, 1, 30, 0.10854300211917706],
-      [80, 1, 50, 0.12493176673267944],
-      [80, 2, 150, 0.24069446380613793],
-      [300, 3, 300, 0.7500614849457122],
-      [750, 2, 300, 1.0182712421634583],
-      [22.22, 1, 30, 0.05302633236570825],
-    ];
-    for (const [dtex, threadsPerStrand, loadGrams, expected] of cases) {
-      const { result } = computeForwardV2({ basis: 'dtex', dtex, threadsPerStrand, loadMode: 'manual', loadGrams });
-      expect(Math.abs(result.diameterMm - expected)).toBeLessThan(1e-12);
-    }
+  it('не применяет диапазон 22.22–6000 к каталожной нити', () => {
+    const tera5 = computeForwardV2({ basis: 'catalog', threadId: 'tera-5', threadsPerStrand: 3 }, catalog);
+    const tera8 = computeForwardV2({ basis: 'catalog', threadId: 'tera-8', threadsPerStrand: 1 }, catalog);
+
+    expect(Math.abs(tera5.result.diameterMm - 2.869711987982336)).toBeLessThan(1e-9);
+    expect(Math.abs(tera8.result.diameterMm - 1.3765511360992075)).toBeLessThan(1e-9);
+    expect(tera5.warnings.map((warning) => warning.code)).toEqual(['EXTRAPOLATION']);
+    expect(tera8.warnings.map((warning) => warning.code)).toEqual(['EXTRAPOLATION']);
   });
 
-  it('ручной и автоматический режимы совпадают при одинаковом грузе', () => {
-    for (const thread of catalog) {
-      for (const threadsPerStrand of [1, 2, 3, 4, 5] as const) {
-        const auto = computeForwardV2({ basis: 'catalog', threadId: thread.threadId, threadsPerStrand, loadMode: 'auto' }, catalog);
-        const manual = computeForwardV2({
-          basis: 'catalog',
-          threadId: thread.threadId,
-          threadsPerStrand,
-          loadMode: 'manual',
-          loadGrams: auto.result.appliedLoadGrams,
-        }, catalog);
-        expect(Math.abs(auto.result.diameterMm - manual.result.diameterMm)).toBeLessThan(1e-9);
-      }
-    }
+  it('не предупреждает о экстраполяции для тонкой нити', () => {
+    const { warnings } = computeForwardV2({ basis: 'dtex', dtex: 22.22, threadsPerStrand: 1 }, []);
+    expect(warnings).toEqual([]);
   });
 
-  it('предупреждение о dTex вне измеренного диапазона', () => {
-    const { warnings } = computeForwardV2({ basis: 'dtex', dtex: 20, threadsPerStrand: 1, loadMode: 'auto' });
-    expect(warnings.map((warning) => warning.code)).toContain('DTEX_OUTSIDE_MEASURED_RANGE');
-  });
-
-  it('неизвестная нить — THREAD_NOT_FOUND', () => {
+  it('отклоняет неизвестную и отключённую нить', () => {
     expect(
-      errorCodeOf(() => computeForwardV2({ basis: 'catalog', threadId: 'nope', threadsPerStrand: 2, loadMode: 'auto' }, catalog)),
+      errorCodeOf(() =>
+        computeForwardV2({ basis: 'catalog', threadId: 'nope', threadsPerStrand: 2 }, catalog),
+      ),
+    ).toBe('THREAD_NOT_FOUND');
+
+    const withDisabled = catalog.map((thread) =>
+      thread.threadId === 'tera-40' ? { ...thread, enabled: false } : thread,
+    );
+    expect(
+      errorCodeOf(() =>
+        computeForwardV2({ basis: 'catalog', threadId: 'tera-40', threadsPerStrand: 2 }, withDisabled),
+      ),
     ).toBe('THREAD_NOT_FOUND');
   });
 });
 
 describe('v2: обратный подбор', () => {
-  const pairs = (matches: readonly { threadId: string; threadsPerStrand: number }[]) =>
-    matches.map((match) => `${match.threadId} × ${match.threadsPerStrand}`);
+  it('на target = 1.0 даёт 10 совпадений в устойчивом порядке', () => {
+    const result = findMatchesV2({ targetDiameterMm: 1 }, catalog);
 
-  it('auto: груз считается для каждой нити и свивки', () => {
-    const result = findMatchesV2({ targetDiameterMm: 0.5, loadMode: 'auto' }, catalog);
-
+    expect(result.matches).toHaveLength(10);
     expect(result.tolerance).toBe(0.1);
-    expect(result.loadMode).toBe('auto');
-    expect(result.matches.length).toBeGreaterThan(0);
-    for (const match of result.matches) {
-      expect(match.totalDtex).toBe(totalDtex(match.dtex, match.threadsPerStrand));
-      expect(match.recommendedLoadGrams).toBe(recommendLoadGrams(match.dtex, match.threadsPerStrand));
-      expect(match.appliedLoadGrams).toBe(match.recommendedLoadGrams);
-      expect(match.diameterMm).toBe(calculateDiameterMm(match.dtex, match.threadsPerStrand, match.appliedLoadGrams));
-      expect(Math.abs(match.deviationPercent)).toBeLessThanOrEqual(10);
-    }
-  });
-
-  it('auto: у кандидатов могут быть разные грузы', () => {
-    const result = findMatchesV2({ targetDiameterMm: 0.3, loadMode: 'auto' }, catalog);
-    const all = findMatchesV2({ targetDiameterMm: 0.45, loadMode: 'auto' }, catalog);
-    const grams = new Set([...result.matches, ...all.matches].map((match) => match.appliedLoadGrams));
-    expect(grams.size).toBeGreaterThan(1);
-  });
-
-  it('manual: груз одинаков для всех кандидатов, рекомендация у каждого своя', () => {
-    const result = findMatchesV2({ targetDiameterMm: 1, loadMode: 'manual', loadGrams: 200 }, catalog);
-
-    expect(result.matches.length).toBeGreaterThan(0);
-    for (const match of result.matches) {
-      expect(match.appliedLoadGrams).toBe(200);
-      expect(match.recommendedLoadGrams).toBe(recommendLoadGrams(match.dtex, match.threadsPerStrand));
-    }
-  });
-
-  it('target = 1.0, auto: устойчивый порядок', () => {
-    const result = findMatchesV2({ targetDiameterMm: 1, loadMode: 'auto' }, catalog);
-    expect(pairs(result.matches)).toEqual([
+    expect(pairs(result)).toEqual([
+      'mara-100 × 5',
       'tera-60 × 3',
       'tera-40 × 2',
-      'mara-80 × 4',
-      'mara-100 × 5',
-      'tera-80 × 4',
       'tera-20 × 1',
+      'tera-80 × 4',
+      'mara-80 × 4',
       'tera-80 × 5',
+      'mara-50 × 2',
+      'mara-15 × 1',
+      'tera-15 × 1',
     ]);
-    expect(pairs(findMatchesV2({ targetDiameterMm: 1, loadMode: 'auto' }, [...catalog].reverse()).matches)).toEqual(
-      pairs(result.matches),
-    );
   });
 
-  it('включает границу ±10% и исключает выход за неё', () => {
-    const diameter = calculateDiameterMm(750, 2, recommendLoadGrams(750, 2));
-    const inside = findMatchesV2({ targetDiameterMm: diameter / 1.0999, threadIds: ['tera-40'], loadMode: 'auto' }, catalog);
-    const outside = findMatchesV2({ targetDiameterMm: diameter / 1.1001, threadIds: ['tera-40'], loadMode: 'auto' }, catalog);
-    const insideLow = findMatchesV2({ targetDiameterMm: diameter / 0.9001, threadIds: ['tera-40'], loadMode: 'auto' }, catalog);
-    const outsideLow = findMatchesV2({ targetDiameterMm: diameter / 0.8999, threadIds: ['tera-40'], loadMode: 'auto' }, catalog);
+  it('выдаёт диаметр и отклонение в процентах', () => {
+    const [first] = findMatchesV2({ targetDiameterMm: 1 }, catalog).matches;
+    expect(first).toBeDefined();
+    if (!first) return;
 
-    expect(pairs(inside.matches)).toContain('tera-40 × 2');
-    expect(pairs(outside.matches)).not.toContain('tera-40 × 2');
-    expect(pairs(insideLow.matches)).toContain('tera-40 × 2');
-    expect(pairs(outsideLow.matches)).not.toContain('tera-40 × 2');
+    expect(first.threadId).toBe('mara-100');
+    expect(first.construction).toBe('5 × 3');
+    expect(first.diameterMm).toBe(calculateDiameterMm(300, 5));
+    expect(first.deviationPercent).toBeCloseTo(-0.9282427818066208, 12);
+  });
+
+  it('порядок не зависит от порядка входа', () => {
+    const straight = findMatchesV2({ targetDiameterMm: 1 }, catalog);
+    const reversed = findMatchesV2({ targetDiameterMm: 1 }, [...catalog].reverse());
+    expect(pairs(reversed)).toEqual(pairs(straight));
+  });
+
+  it('соблюдает границу допуска 10% включительно', () => {
+    const diameter = calculateDiameterMm(750, 2);
+
+    const inside = findMatchesV2({ targetDiameterMm: diameter / 1.0999, threadIds: ['tera-40'] }, catalog);
+    const outside = findMatchesV2({ targetDiameterMm: diameter / 1.1001, threadIds: ['tera-40'] }, catalog);
+
+    expect(inside.matches).toHaveLength(1);
+    expect(outside.matches).toHaveLength(0);
+  });
+
+  it('фильтрует по неокруглённому отклонению', () => {
+    const diameter = calculateDiameterMm(750, 2);
+
+    const inside = findMatchesV2(
+      { targetDiameterMm: diameter / 1.0999999, threadIds: ['tera-40'] },
+      catalog,
+    );
+    const outside = findMatchesV2(
+      { targetDiameterMm: diameter / 1.1000001, threadIds: ['tera-40'] },
+      catalog,
+    );
+
+    expect(inside.matches).toHaveLength(1);
+    expect(inside.matches[0]?.diameterMm.toFixed(3)).toBe('1.020');
+    expect(outside.matches).toEqual([]);
+  });
+
+  it('правило допуска включительно по модулю', () => {
     expect(withinTolerance(0.1)).toBe(true);
     expect(withinTolerance(-0.1)).toBe(true);
+    expect(withinTolerance(0.10000000000000002)).toBe(false);
+    expect(withinTolerance(-0.10000000000000002)).toBe(false);
   });
 
-  it('фильтр по неокруглённому отклонению и отклонение от target', () => {
-    const result = findMatchesV2({ targetDiameterMm: 0.8, loadMode: 'auto' }, catalog);
-    for (const match of result.matches) {
-      expect(match.deviationPercent).toBe(((match.diameterMm - 0.8) / 0.8) * 100);
+  it('пустой результат — успешный ответ без предупреждений', () => {
+    const result = findMatchesV2({ targetDiameterMm: 100 }, catalog);
+    expect(result.matches).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('собирает предупреждения по выданным совпадениям', () => {
+    const result = findMatchesV2({ targetDiameterMm: 3.5, threadIds: ['tera-5'] }, catalog);
+    expect(result.matches.length).toBeGreaterThan(0);
+    expect(result.warnings.map((warning) => warning.code)).toEqual(['EXTRAPOLATION']);
+  });
+
+  it('проверяет только выбранные нити и свивки 1–5', () => {
+    expect(pairs(findMatchesV2({ targetDiameterMm: 1, threadIds: ['tera-40'] }, catalog))).toEqual([
+      'tera-40 × 2',
+    ]);
+
+    const counts = new Set(
+      findMatchesV2({ targetDiameterMm: 4, threadIds: ['tera-5'] }, catalog).matches.map(
+        (match) => match.threadsPerStrand,
+      ),
+    );
+    for (const count of counts) {
+      expect(count).toBeGreaterThanOrEqual(1);
+      expect(count).toBeLessThanOrEqual(5);
     }
   });
 
-  it('пустой результат — успешный ответ', () => {
-    const result = findMatchesV2({ targetDiameterMm: 100, loadMode: 'auto' }, catalog);
-    expect(result.matches).toEqual([]);
-    expect(result.warnings.map((warning) => warning.code)).toEqual([
-      'EMPIRICAL_MODEL',
-      'RECOMMENDED_LOAD_STARTING_SUGGESTION',
-    ]);
-  });
-
-  it('manual с непроверенным грузом — предупреждение', () => {
-    const result = findMatchesV2({ targetDiameterMm: 1, loadMode: 'manual', loadGrams: 250 }, catalog);
-    expect(result.warnings.map((warning) => warning.code)).toContain('UNVERIFIED_LOAD');
-  });
-
-  it('проверяет свивки 1–5', () => {
-    const result = findMatchesV2({ targetDiameterMm: 1, loadMode: 'auto' }, catalog);
-    const counts = new Set(result.matches.map((match) => match.threadsPerStrand));
-    expect([...counts].every((count) => count >= 1 && count <= 5)).toBe(true);
-    expect(counts.has(5)).toBe(true);
-  });
-
-  it('неизвестная нить — THREAD_NOT_FOUND', () => {
+  it('отклоняет неизвестную и отключённую нить в явном списке', () => {
     expect(
-      errorCodeOf(() => findMatchesV2({ targetDiameterMm: 1, threadIds: ['nope'], loadMode: 'auto' }, catalog)),
+      errorCodeOf(() => findMatchesV2({ targetDiameterMm: 1, threadIds: ['tera-40', 'nope'] }, catalog)),
     ).toBe('THREAD_NOT_FOUND');
+
+    const withDisabled = catalog.map((thread) =>
+      thread.threadId === 'tera-40' ? { ...thread, enabled: false } : thread,
+    );
+    expect(
+      errorCodeOf(() => findMatchesV2({ targetDiameterMm: 1, threadIds: ['tera-40'] }, withDisabled)),
+    ).toBe('THREAD_NOT_FOUND');
+  });
+
+  it('не включает отключённые нити при выборе всех', () => {
+    const withDisabled = catalog.map((thread) =>
+      thread.threadId === 'mara-100' ? { ...thread, enabled: false } : thread,
+    );
+
+    const all = pairs(findMatchesV2({ targetDiameterMm: 1 }, withDisabled));
+    expect(all).not.toContain('mara-100 × 5');
+    expect(all).toHaveLength(9);
   });
 });

@@ -1,9 +1,13 @@
 import referenceFixture from '../../docs/rope-calculator/fixtures/reference.json';
 import snapshotFixture from '../../docs/rope-calculator/fixtures/catalog-snapshot.json';
+import goldenFixture from '../../docs/rope-calculator/fixtures/golden-model.json';
 import type { CatalogThread } from '../src/core/types';
 
-/** Эталонные значения, извлечённые из RopeCalc.html. */
+/** Исторический эталон RopeCalc.html: формула замороженного контракта v1. */
 export const reference = referenceFixture;
+
+/** Приёмочная таблица актуальной модели 4.0.0 (контракт v2). */
+export const golden = goldenFixture;
 
 /** Снимок каталога CMS на 27.10.2026. */
 export const snapshot = snapshotFixture;

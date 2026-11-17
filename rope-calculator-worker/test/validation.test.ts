@@ -2,6 +2,20 @@ import { describe, expect, it } from 'vitest';
 import { parseForwardInput, parseReverseInput } from '../src/core/validation';
 import { errorCodeOf } from './helpers';
 
+describe('устаревшие поля нагрузки в замороженном v1', () => {
+  it.each(['loadMode', 'loadGrams', 'load', 'appliedLoadGrams', 'recommendedLoadGrams', 'recommendedLoad', 'loadRecommendationVersion'])(
+    'отклоняет forward с полем %s',
+    (field) => {
+      const body = { basis: 'dtex', dtex: 750, threadsPerStrand: 2, [field]: 200 };
+      expect(errorCodeOf(() => parseForwardInput(body))).toBe('INVALID_PARAMS');
+    },
+  );
+
+  it('отклоняет поля нагрузки в обратном подборе', () => {
+    expect(errorCodeOf(() => parseReverseInput({ targetDiameterMm: 1, loadGrams: 300 }))).toBe('INVALID_PARAMS');
+  });
+});
+
 describe('parseForwardInput', () => {
   it('принимает каталожный расчёт и обрезает threadId', () => {
     expect(

@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "note": "Приёмочная таблица модели 4.0.0 (контракт v2, без груза). Значения заданы ТЗ, а не сгенерированы из реализации: тест сравнивает их с формулой с абсолютной точностью 1e-9. Поле text — то, что должны показывать UI и текстовый ответ MCP: три знака после запятой.",
+  "model": {
+    "algorithmVersion": "4.0.0",
+    "modelId": "log-dtex-quadratic-no-load",
+    "tolerance": 0.1,
+    "customDtexRange": [
+      22.22,
+      6000
+    ],
+    "measuredDtexRange": [
+      22.22,
+      3000
+    ],
+    "threadsPerStrand": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "strands": 3,
+    "apiVersion": "2"
+  },
+  "rows": [
+    {
+      "dtex": 22.22,
+      "threadsPerStrand": 1,
+      "diameterMm": 0.05259208341950491,
+      "text": "0.053"
+    },
+    {
+      "dtex": 22.22,
+      "threadsPerStrand": 2,
+      "diameterMm": 0.07665715231970396,
+      "text": "0.077"
+    },
+    {
+      "dtex": 40,
+      "threadsPerStrand": 1,
+      "diameterMm": 0.09009781815361427,
+      "text": "0.090"
+    },
+    {
+      "dtex": 80,
+      "threadsPerStrand": 1,
+      "diameterMm": 0.16094002377946168,
+      "text": "0.161"
+    },
+    {
+      "dtex": 80,
+      "threadsPerStrand": 2,
+      "diameterMm": 0.23458290896731152,
+      "text": "0.235"
+    },
+    {
+      "dtex": 300,
+      "threadsPerStrand": 3,
+      "diameterMm": 0.7505134612947855,
+      "text": "0.751"
+    },
+    {
+      "dtex": 750,
+      "threadsPerStrand": 2,
+      "diameterMm": 1.0201549921706878,
+      "text": "1.020"
+    },
+    {
+      "dtex": 3000,
+      "threadsPerStrand": 5,
+      "diameterMm": 3.063827722791156,
+      "text": "3.064"
+    },
+    {
+      "dtex": 6000,
+      "threadsPerStrand": 5,
+      "diameterMm": 3.7881720185143406,
+      "text": "3.788"
+    }
+  ]
+}
