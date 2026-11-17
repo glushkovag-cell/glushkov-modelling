@@ -1,0 +1,187 @@
+excelRow,manufacturer,series,identifier,dtex,threadDiameterMm,ropeType,ropeTypeNormalized,ropeTypeInferred,construction,threadsPerStrand,diameterMm,loadGrams,source,position,isNew,usable,excluded,exclusionReason,inCalibration,family,totalDtex,recommendedLoadGrams
+2,Gutermann,Skala 360,,80,,P,P,False,1×3,1,0.18,300,PDF,1:1,False,True,False,,True,Skala 360,240,50
+3,,Skala 360,,80,,P,P,False,1×3,1,0.19,200,CSV,1,False,True,False,,True,Skala 360,240,50
+4,,Skala 240,,120,,P,P,False,1×3,1,0.22,200,CSV,4,False,True,False,,True,Skala 240,360,100
+5,Gutermann,Skala 240,,120,,P,P,False,1×3,1,0.22,300,PDF,1:2,False,True,False,,True,Skala 240,360,100
+6,,Skala 200,,150,,P,P,False,1×3,1,0.26,200,CSV,7,False,True,False,,True,Skala 200,450,150
+7,,Skala 360,,80,,P,P,False,2×3,2,0.26,200,CSV,2,False,True,False,,True,Skala 360,480,150
+8,Gutermann,Skala 360,,80,,P,P,False,2×3,2,0.3,300,PDF,1:3,False,True,False,,True,Skala 360,480,150
+9,Gutermann,M202 extra fine,4008015066284,200,,P,P,False,1×3,1,0.35,300,PDF,1:4,False,True,False,,True,M202 extra fine,600,200
+10,,Skala 240,,120,,P,P,False,2×3,2,0.35,200,CSV,5,False,True,False,,True,Skala 240,720,250
+11,Sumiko,GFST #50,,,0.2,P,P,False,1×3,1,0.375,,PDF,1:7,False,False,False,,False,,,
+12,Gutermann,Skala 240,,120,,P,P,False,2×3,2,0.375,300,PDF,1:5,False,True,False,,True,Skala 240,720,250
+13,Gutermann,Skala 360,,80,,P,P,False,3×3,3,0.375,300,PDF,1:6,False,True,False,,True,Skala 360,720,250
+14,,Skala 360,,80,,P,P,False,3×3,3,0.38,200,CSV,3,False,True,False,,True,Skala 360,720,250
+15,Sumiko,GFST #50,,,0.2,P,P,False,1×3,1,0.4,,PDF,1:10,False,False,False,,False,,,
+16,Gutermann,N100,4008015033385,300,0.2,P,P,False,1×3,1,0.4,300,PDF,1:9,False,True,False,,True,Gutermann Sew-all 300,900,300
+17,Gutermann,poliestere,4008015033125,300,0.225,P,P,False,1×3,1,0.4,300,PDF,1:11,False,True,False,,True,Gutermann Sew-all 300,900,300
+18,Gutermann,poliestere,4008015159665,300,,P,P,False,1×3,1,0.4,300,PDF,1:8,False,True,False,,True,Gutermann Sew-all 300,900,300
+19,,Skala 200,,150,,P,P,False,2×3,2,0.42,200,CSV,8,False,True,False,,True,Skala 200,900,300
+20,DorTak Taiwan,40/2,Taiwan 36706,,0.2,P,P,False,1×3,1,0.425,,PDF,1:12,False,False,False,,False,,,
+21,Aerofil Madeira,9125 No.120,4003760116703,270,0.2125,P,P,False,1×3,1,0.425,300,PDF,1:13,False,True,False,,True,9125 No.120,810,300
+22,Gutermann,poliestere,4008015159948,300,0.225,P,P,False,1×3,1,0.425,300,PDF,1:14,False,True,False,,True,Gutermann Sew-all 300,900,300
+23,,Tera 80,,350,,P,P,False,1×3,1,0.43,200,CSV,10,False,True,False,,True,Tera 80,1050,300
+24,Gutermann,poliestere,4008015027520,300,0.225,P,P,False,1×3,1,0.435,300,PDF,1:15,False,True,False,,True,Gutermann Sew-all 300,900,300
+25,Gamma,40/2,4606080151616,315,0.225,P,P,False,1×3,1,0.45,300,PDF,1:16,False,True,False,,True,Gamma 40/2,945,300
+26,Gamma,40/2,4606080152361,315,0.225,P,P,False,1×3,1,0.45,300,PDF,1:17,False,True,False,,True,Gamma 40/2,945,300
+27,Gutermann,Skala 240,,120,,P,P,False,3×3,3,0.45,300,PDF,1:19,False,True,False,,True,Skala 240,1080,300
+28,Gutermann,Skala 360,,80,,P,P,False,4×3,4,0.45,300,PDF,1:18,False,True,False,,True,Skala 360,960,300
+29,Gutermann,poliestere,4008015161163,300,0.225,P,P,False,1×3,1,0.45,300,PDF,1:20,False,True,False,,True,Gutermann Sew-all 300,900,300
+30,Gutermann,poliestere,4008015027445,300,0.225,P,P,False,1×3,1,0.45,300,PDF,1:21,False,True,False,,True,Gutermann Sew-all 300,900,300
+31,Gutermann,seta,4008015049102,300,0.2,P,P,False,1×3,1,0.45,300,PDF,1:22,False,True,False,,True,seta,900,300
+32,Gamma,40/2,4606080152644,315,0.225,P,P,False,1×3,1,0.46,300,PDF,1:23,False,True,False,,True,Gamma 40/2,945,300
+33,Gamma,40/2,4606080152873,315,0.225,P,P,False,1×3,1,0.46,300,PDF,1:24,False,True,False,,True,Gamma 40/2,945,300
+34,Gamma,40/2,4606080151661,315,0.225,P,P,False,1×3,1,0.475,300,PDF,1:25,False,True,False,,True,Gamma 40/2,945,300
+35,Gamma,40/2,4606080153061,315,0.225,P,P,False,1×3,1,0.475,300,PDF,1:26,False,True,False,,True,Gamma 40/2,945,300
+36,,Skala 200,,150,,P,P,False,3×3,3,0.48,200,CSV,9,False,True,False,,True,Skala 200,1350,300
+37,,Skala 240,,120,,P,P,False,3×3,3,0.48,200,CSV,6,False,True,False,,True,Skala 240,1080,300
+38,Gutermann,M202 extra fine,4008015066284,200,,P,P,False,2×3,2,0.5,300,PDF,1:28,False,True,False,,True,M202 extra fine,1200,300
+39,Gutermann,Maraflex N.120,4029394998430,380,0.275,P,P,False,1×3,1,0.5,300,PDF,1:29,False,True,False,,True,Maraflex N.120,1140,300
+40,Gutermann,Skala 360,,80,,P,P,False,5×3,5,0.5,300,PDF,1:27,False,True,False,,True,Skala 360,1200,300
+41,Gutermann,Skala 240,,120,,P,P,False,4×3,4,0.52,300,PDF,1:30,False,True,False,,True,Skala 240,1440,300
+42,Gutermann,cotone,,,0.325,P,P,False,1×3,1,0.525,,PDF,1:31,False,False,False,,False,,,
+43,Sumiko,GFST #50,,,0.2,P,P,False,2×3,2,0.55,,PDF,1:32,False,False,False,,False,,,
+44,Sumiko,GFST #50,,,0.2,P,P,False,2×3,2,0.55,,PDF,1:33,False,False,False,,False,,,
+45,Gutermann,poliestere,4008015033125,300,0.225,P,P,False,2×3,2,0.55,300,PDF,1:34,False,True,False,,True,Gutermann Sew-all 300,1800,300
+46,Aerofil Madeira,9125 No.120,4003760116703,270,0.2125,P,P,False,2×3,2,0.575,300,PDF,1:35,False,True,False,,True,9125 No.120,1620,300
+47,Gutermann,N100,4008015033385,300,0.2,P,P,False,2×3,2,0.575,300,PDF,1:37,False,True,False,,True,Gutermann Sew-all 300,1800,300
+48,Gutermann,poliestere,4008015159665,300,,P,P,False,2×3,2,0.575,300,PDF,1:36,False,True,False,,True,Gutermann Sew-all 300,1800,300
+49,Gutermann,poliestere,4008015027445,300,0.225,P,P,False,2×3,2,0.575,300,PDF,1:38,False,True,False,,True,Gutermann Sew-all 300,1800,300
+50,Gutermann,poliestere,4008015027520,300,0.225,P,P,False,2×3,2,0.575,300,PDF,1:39,False,True,False,,True,Gutermann Sew-all 300,1800,300
+51,DorTak Taiwan,40/2,Taiwan 36706,,0.2,P,P,False,2×3,2,0.6,,PDF,1:40,False,False,False,,False,,,
+52,Gamma,40/2,4606080151661,315,0.225,P,P,False,2×3,2,0.6,300,PDF,1:41,False,True,False,,True,Gamma 40/2,1890,300
+53,Gamma,40/2,4606080152361,315,0.225,P,P,False,2×3,2,0.6,300,PDF,1:42,False,True,False,,True,Gamma 40/2,1890,300
+54,Eden Style,Cotone Jeans N°50,8003921171011,,0.325,P,P,False,3×3,3,0.6,,PDF,1:45,False,False,False,,False,,,
+55,Gutermann,poliestere,4008015159948,300,0.225,P,P,False,2×3,2,0.6,300,PDF,1:43,False,True,False,,True,Gutermann Sew-all 300,1800,300
+56,Gutermann,poliestere,4008015161163,300,0.225,P,P,False,2×3,2,0.6,300,PDF,1:44,False,True,False,,True,Gutermann Sew-all 300,1800,300
+57,,Tera 40,,750,,P,P,False,1×3,1,0.62,200,CSV,16,False,True,False,,True,Tera 40,2250,300
+58,,Tera 60,,500,,P,P,False,1×3,1,0.62,200,CSV,13,False,True,False,,True,Tera 60,1500,300
+59,Gamma,40/2,4606080151616,315,0.225,P,P,False,2×3,2,0.625,300,PDF,1:46,False,True,False,,True,Gamma 40/2,1890,300
+60,Gamma,40/2,4606080152644,315,0.225,P,P,False,2×3,2,0.625,300,PDF,1:47,False,True,False,,True,Gamma 40/2,1890,300
+61,Gamma,40/2,4606080153061,315,0.225,P,P,False,2×3,2,0.625,300,PDF,1:48,False,True,False,,True,Gamma 40/2,1890,300
+62,Gutermann,M202 extra fine,4008015066284,200,,P,P,False,3×3,3,0.625,300,PDF,1:49,False,True,False,,True,M202 extra fine,1800,300
+63,Gutermann,seta,4008015049102,300,0.2,P,P,False,2×3,2,0.625,300,PDF,1:50,False,True,False,,True,seta,1800,300
+64,Gamma,40/2,4606080152873,315,0.225,P,P,False,2×3,2,0.65,300,PDF,2:1,False,True,False,,True,Gamma 40/2,1890,300
+65,,Tera 80,,350,,P,P,False,2×3,2,0.65,200,CSV,11,False,True,False,,True,Tera 80,2100,300
+66,Sumiko,GFST #50,,,0.2,P,P,False,3×3,3,0.675,,PDF,2:2,False,False,False,,False,,,
+67,Sumiko,GFST #50,,,0.2,P,P,False,3×3,3,0.675,,PDF,2:3,False,False,False,,False,,,
+68,Gutermann,N100,4008015033385,300,0.2,P,P,False,3×3,3,0.7,300,PDF,2:4,False,True,False,,True,Gutermann Sew-all 300,2700,300
+69,,Tera 30,,1000,,P,P,False,1×3,1,0.72,200,CSV,19,False,True,False,,True,Tera 30,3000,300
+70,Gutermann,M202 extra fine,4008015066284,200,,P,P,False,4×3,4,0.725,300,PDF,2:6,False,True,False,,True,M202 extra fine,2400,300
+71,Gutermann,Maraflex N.120,4029394998430,380,0.275,P,P,False,2×3,2,0.725,300,PDF,2:7,False,True,False,,True,Maraflex N.120,2280,300
+72,Gutermann,poliestere,4008015159665,300,,P,P,False,3×3,3,0.725,300,PDF,2:5,False,True,False,,True,Gutermann Sew-all 300,2700,300
+73,Gutermann,poliestere,4008015027445,300,0.225,P,P,False,3×3,3,0.725,300,PDF,2:8,False,True,False,,True,Gutermann Sew-all 300,2700,300
+74,Gutermann,poliestere,4008015033125,300,0.225,P,P,False,3×3,3,0.725,300,PDF,2:9,False,True,False,,True,Gutermann Sew-all 300,2700,300
+75,DorTak Taiwan,40/2,Taiwan 36706,,0.2,P,P,False,3×3,3,0.75,,PDF,2:10,False,False,False,,False,,,
+76,Gamma,40/2,4606080151616,315,0.225,P,P,False,3×3,3,0.75,300,PDF,2:11,False,True,False,,True,Gamma 40/2,2835,300
+77,Gamma,40/2,4606080151661,315,0.225,P,P,False,3×3,3,0.75,300,PDF,2:12,False,True,False,,True,Gamma 40/2,2835,300
+78,Aerofil Madeira,9125 No.120,4003760116703,270,0.2125,P,P,False,3×3,3,0.75,300,PDF,2:13,False,True,False,,True,9125 No.120,2430,300
+79,Gutermann,extra strong M702,4008015161002,750,,P,P,False,1×3,1,0.75,300,PDF,2:15,False,True,False,,True,Gutermann Extra Strong 750,2250,300
+80,Gutermann,poliestere,4008015161163,300,0.225,P,P,False,3×3,3,0.75,300,PDF,2:14,False,True,False,,True,Gutermann Sew-all 300,2700,300
+81,Gutermann,poliestere,4008015027520,300,0.225,P,P,False,3×3,3,0.75,300,PDF,2:16,False,True,False,,True,Gutermann Sew-all 300,2700,300
+82,Gamma,40/2,4606080151661,315,0.225,P,P,False,3×3,3,0.775,300,PDF,2:17,False,True,False,,True,Gamma 40/2,2835,300
+83,Gamma,40/2,4606080152361,315,0.225,P,P,False,3×3,3,0.775,300,PDF,2:18,False,True,False,,True,Gamma 40/2,2835,300
+84,Gamma,40/2,4606080152644,315,0.225,P,P,False,3×3,3,0.775,300,PDF,2:19,False,True,False,,True,Gamma 40/2,2835,300
+85,Gamma,40/2,4606080152873,315,0.225,P,P,False,3×3,3,0.775,300,PDF,2:20,False,True,False,,True,Gamma 40/2,2835,300
+86,Sumiko,GFST #50,,,0.2,P,P,False,4×3,4,0.775,,PDF,2:22,False,False,False,,False,,,
+87,Sumiko,GFST #50,,,0.2,P,P,False,4×3,4,0.775,,PDF,2:23,False,False,False,,False,,,
+88,Gutermann,extra strong M782,4008015160982,750,0.375,P,P,False,1×3,1,0.775,300,PDF,2:21,False,True,False,,True,Gutermann Extra Strong 750,2250,300
+89,Gutermann,seta,4008015049102,300,0.2,P,P,False,3×3,3,0.775,300,PDF,2:24,False,True,False,,True,seta,2700,300
+90,,Tera 60,,500,,P,P,False,2×3,2,0.78,200,CSV,14,False,True,False,,True,Tera 60,3000,300
+91,Gamma,40/2,4606080153061,315,0.225,P,P,False,3×3,3,0.79,300,PDF,2:25,False,True,False,,True,Gamma 40/2,2835,300
+92,Gutermann,poliestere,4008015043766,1000,0.375,P,P,False,1×3,1,0.8,300,PDF,2:26,False,True,False,,True,Gutermann Top Stitch 1000,3000,300
+93,Gutermann,cotone,,,0.325,P,P,False,2×3,2,0.81,,PDF,2:27,False,False,False,,False,,,
+94,Gutermann,M202 extra fine,4008015066284,200,,P,P,False,5×3,5,0.825,300,PDF,2:30,False,True,False,,True,M202 extra fine,3000,300
+95,Gutermann,Skala 240,,120,,P,P,False,5×3,5,0.825,300,PDF,2:28,False,True,True,"Skala 240 5×3, measured 0.825 mm: earlier outlier",False,Skala 240,1800,300
+96,Gutermann,poliestere,4008015161163,300,0.225,P,P,False,4×3,4,0.825,300,PDF,2:29,False,True,False,,True,Gutermann Sew-all 300,3600,300
+97,Gutermann,poliestere,4008015027445,300,0.225,P,P,False,4×3,4,0.825,300,PDF,2:31,False,True,False,,True,Gutermann Sew-all 300,3600,300
+98,Gutermann,poliestere,4008015033125,300,0.225,T,T,False,3×3×1,,0.83,300,PDF,2:32,False,False,False,,False,,,
+99,,Tera 80,,350,,P,P,False,3×3,3,0.84,200,CSV,12,False,True,False,,True,Tera 80,3150,300
+100,Gamma,40/2,4606080151616,315,0.225,P,P,False,4×3,4,0.85,300,PDF,2:33,False,True,False,,True,Gamma 40/2,3780,300
+101,Aerofil Madeira,9125 No.120,4003760116703,270,0.2125,P,P,False,4×3,4,0.85,300,PDF,2:34,False,True,False,,True,9125 No.120,3240,300
+102,Sumiko,GFST #50,,,0.2,P,P,False,5×3,5,0.85,,PDF,2:38,False,False,False,,False,,,
+103,Gutermann,poliestere,4008015159665,300,,P,P,False,4×3,4,0.85,300,PDF,2:35,False,True,False,,True,Gutermann Sew-all 300,3600,300
+104,Gutermann,poliestere,4008015027520,300,0.225,P,P,False,4×3,4,0.85,300,PDF,2:36,False,True,False,,True,Gutermann Sew-all 300,3600,300
+105,Gutermann,poliestere,4008015033125,300,0.225,P,P,False,4×3,4,0.85,300,PDF,2:37,False,True,False,,True,Gutermann Sew-all 300,3600,300
+106,DorTak Taiwan,40/2,Taiwan 36706,,0.2,P,P,False,4×3,4,0.9,,PDF,2:39,False,False,False,,False,,,
+107,Gamma,40/2,4606080151661,315,0.225,P,P,False,4×3,4,0.9,300,PDF,2:40,False,True,False,,True,Gamma 40/2,3780,300
+108,Gamma,40/2,4606080152361,315,0.225,P,P,False,4×3,4,0.9,300,PDF,2:41,False,True,False,,True,Gamma 40/2,3780,300
+109,Gamma,40/2,4606080152873,315,0.225,P,P,False,4×3,4,0.9,300,PDF,2:42,False,True,False,,True,Gamma 40/2,3780,300
+110,Gamma,40/2,4606080153061,315,0.225,P,P,False,4×3,4,0.9,300,PDF,2:43,False,True,False,,True,Gamma 40/2,3780,300
+111,Gutermann,Maraflex N.120,4029394998430,380,0.275,P,P,False,3×3,3,0.9,300,PDF,2:45,False,True,False,,True,Maraflex N.120,3420,300
+112,Gutermann,N100,4008015033385,300,0.2,P,P,False,4×3,4,0.9,300,PDF,2:44,False,True,False,,True,Gutermann Sew-all 300,3600,300
+113,Gutermann,seta,4008015049102,300,0.2,P,P,False,4×3,4,0.9,300,PDF,2:46,False,True,False,,True,seta,3600,300
+114,Gamma,40/2,4606080153061,315,0.225,T,T,False,3×3×1,,0.917,300,PDF,2:47,False,False,False,,False,,,
+115,Gamma,40/2,4606080152644,315,0.225,P,P,False,4×3,4,0.925,300,PDF,2:48,False,True,False,,True,Gamma 40/2,3780,300
+116,Gutermann,N100,4008015033385,300,0.2,P,P,False,5×3,5,0.925,300,PDF,2:49,False,True,False,,True,Gutermann Sew-all 300,4500,300
+117,Aerofil Madeira,9125 No.120,4003760116703,270,0.2125,P,P,False,5×3,5,0.95,300,PDF,2:51,False,True,False,,True,9125 No.120,4050,300
+118,,Tera 40,,750,,P,P,False,2×3,2,0.95,200,CSV,17,False,True,False,,True,Tera 40,4500,300
+119,,Tera 60,,500,,P,P,False,3×3,3,0.95,200,CSV,15,False,True,False,,True,Tera 60,4500,300
+120,Gamma,cotone,4606080113065,,,P,P,False,1×3,1,0.95,,PDF,2:50,False,False,False,,False,,,
+121,Gutermann,poliestere,4008015159665,300,,P,P,False,5×3,5,0.95,300,PDF,3:1,False,True,False,,True,Gutermann Sew-all 300,4500,300
+122,Gutermann,poliestere,4008015027445,300,0.225,P,P,False,5×3,5,0.95,300,PDF,3:2,False,True,False,,True,Gutermann Sew-all 300,4500,300
+123,Gutermann,poliestere,4008015027520,300,0.225,P,P,False,5×3,5,0.95,300,PDF,3:3,False,True,False,,True,Gutermann Sew-all 300,4500,300
+124,Gutermann,poliestere,4008015033125,300,0.225,P,P,False,5×3,5,0.95,300,PDF,3:4,False,True,False,,True,Gutermann Sew-all 300,4500,300
+125,Gamma,40/2,4606080151616,315,0.225,P,P,False,5×3,5,0.975,300,PDF,3:5,False,True,False,,True,Gamma 40/2,4725,300
+126,Gutermann,poliestere,4008015161163,300,0.225,P,P,False,5×3,5,0.975,300,PDF,3:6,False,True,False,,True,Gutermann Sew-all 300,4500,300
+127,Gamma,40/2,4606080153061,315,0.225,P,P,False,5×3,5,1,300,PDF,3:10,False,True,False,,True,Gamma 40/2,4725,300
+128,DorTak Taiwan,40/2,Taiwan 36706,,0.2,P,P,False,5×3,5,1,,PDF,3:7,False,False,False,,False,,,
+129,Gamma,40/2,4606080151661,315,0.225,P,P,False,5×3,5,1,300,PDF,3:8,False,True,False,,True,Gamma 40/2,4725,300
+130,Gamma,40/2,4606080152873,315,0.225,P,P,False,5×3,5,1,300,PDF,3:9,False,True,False,,True,Gamma 40/2,4725,300
+131,Gutermann,Maraflex N.120,4029394998430,380,0.275,P,P,False,4×3,4,1,300,PDF,3:11,False,True,False,,True,Maraflex N.120,4560,300
+132,,Tera 20,,1500,,P,P,False,1×3,1,1,200,CSV,22,False,True,False,,True,Tera 20,4500,300
+133,,Tera 30,,1000,,P,P,False,2×3,2,1,200,CSV,20,False,True,True,"Tera 30 2×3, measured 1.000 mm: earlier outlier",False,Tera 30,6000,300
+134,Gutermann,seta,4008015049102,300,0.2,P,P,False,5×3,5,1,300,PDF,3:12,False,True,False,,True,seta,4500,300
+135,Gamma,40/2,4606080152361,315,0.225,P,P,False,5×3,5,1.025,300,PDF,3:13,False,True,False,,True,Gamma 40/2,4725,300
+136,Gutermann,cotone,,,0.325,P,P,False,3×3,3,1.03,,PDF,3:14,False,False,False,,False,,,
+137,Gamma,40/2,4606080152644,315,0.225,P,P,False,5×3,5,1.05,300,PDF,3:15,False,True,False,,True,Gamma 40/2,4725,300
+138,Sumiko,GFST #50,,,0.2,P,P,False,5×3,5,1.05,,PDF,3:17,False,False,False,,False,,,
+139,Gutermann,extra strong M702,4008015161002,750,,P,P,False,2×3,2,1.05,300,PDF,3:16,False,True,False,,True,Gutermann Extra Strong 750,4500,300
+140,Gutermann,extra strong M782,4008015160982,750,0.375,P,P,False,2×3,2,1.05,300,PDF,3:18,False,True,False,,True,Gutermann Extra Strong 750,4500,300
+141,Gutermann,Maraflex N.120,4029394998430,380,0.275,P,P,False,5×3,5,1.15,300,PDF,3:19,False,True,False,,True,Maraflex N.120,5700,300
+142,Gutermann,poliestere,4008015033125,300,0.225,T,T,False,3×3×2,,1.16,300,PDF,3:20,False,False,False,,False,,,
+143,Gutermann,poliestere,4008015043766,1000,0.375,P,P,False,2×3,2,1.175,300,PDF,3:21,False,True,False,,True,Gutermann Top Stitch 1000,6000,300
+144,Eden Style,Cotone Jeans N°50,8003921171011,,0.325,T,T,False,3×3×1,,1.18,,PDF,3:22,False,False,False,,False,,,
+145,Gutermann,cotone,,,0.325,P,P,False,4×3,4,1.2,,PDF,3:23,False,False,False,,False,,,
+146,Gamma,40/2,4606080152873,315,0.225,T,T,False,3×3×2,,1.25,300,PDF,3:24,False,False,False,,False,,,
+147,,Tera 40,,750,,P,P,False,3×3,3,1.25,200,CSV,18,False,True,False,,True,Tera 40,6750,300
+148,Gutermann,extra strong M782,4008015160982,750,0.375,P,P,False,3×3,3,1.25,300,PDF,3:25,False,True,False,,True,Gutermann Extra Strong 750,6750,300
+149,,Tera 10,,3000,,P,P,False,1×3,1,1.3,200,CSV,24,False,True,False,,True,Tera 10,9000,300
+150,Gutermann,extra strong M702,4008015161002,750,,P,P,False,3×3,3,1.3,300,PDF,3:26,False,True,False,,True,Gutermann Extra Strong 750,6750,300
+151,Gutermann,cotone,,,0.325,P,P,False,5×3,5,1.425,,PDF,3:27,False,False,False,,False,,,
+152,Gutermann,extra strong M782,4008015160982,750,0.375,P,P,False,4×3,4,1.425,300,PDF,3:28,False,True,False,,True,Gutermann Extra Strong 750,9000,300
+153,,Tera 30,,1000,,P,P,False,3×3,3,1.45,200,CSV,21,False,True,False,,True,Tera 30,9000,300
+154,,Tera 20,,1500,,P,P,False,2×3,2,1.5,200,CSV,23,False,True,False,,True,Tera 20,9000,300
+155,Gutermann,cotone,,,0.325,P,P,False,6×3,6,1.5,,PDF,3:29,False,False,False,,False,,,
+156,Gutermann,extra strong M702,4008015161002,750,,P,P,False,4×3,4,1.5,300,PDF,3:30,False,True,False,,True,Gutermann Extra Strong 750,9000,300
+157,Gutermann,extra strong M782,4008015160982,750,0.375,P,P,False,5×3,5,1.65,300,PDF,3:31,False,True,False,,True,Gutermann Extra Strong 750,11250,300
+158,Gutermann,poliestere,4008015027445,300,0.225,T,T,False,3×3×5,,1.68,300,PDF,3:32,False,False,False,,False,,,
+159,Gutermann,cotone,,,0.325,P,P,False,7×3,7,1.7,,PDF,3:33,False,False,False,,False,,,
+160,Gutermann,extra strong M702,4008015161002,750,,P,P,False,5×3,5,1.7,300,PDF,3:34,False,True,False,,True,Gutermann Extra Strong 750,11250,300
+161,Gamma,40/2,4606080151616,315,0.225,T,T,False,3×3×4,,1.72,300,PDF,3:35,False,False,False,,False,,,
+162,DorTak Taiwan,40/2,Taiwan 36706,,0.2,T,T,False,3×3×4,,1.78,,PDF,3:36,False,False,False,,False,,,
+163,,Tera 10,,3000,,P,P,False,2×3,2,1.94,200,CSV,25,False,True,False,,True,Tera 10,18000,300
+164,Gutermann,poliestere,4008015159566,300,0.225,P,P,False,1×3,1,,300,PDF,3:37,False,False,False,,False,,,
+165,Gutermann,poliestere,4008015159566,300,0.225,P,P,False,2×3,2,,300,PDF,3:38,False,False,False,,False,,,
+166,Gutermann,poliestere,4008015159948,300,0.225,P,P,False,3×3,3,,300,PDF,3:39,False,False,False,,False,,,
+167,Gutermann,poliestere,4008015159566,300,0.225,P,P,False,3×3,3,,300,PDF,3:40,False,False,False,,False,,,
+168,Gutermann,poliestere,4008015159948,300,0.225,P,P,False,4×3,4,,300,PDF,3:41,False,False,False,,False,,,
+169,Gutermann,poliestere,4008015159566,300,0.225,P,P,False,4×3,4,,300,PDF,3:42,False,False,False,,False,,,
+170,Gutermann,poliestere,4008015159948,300,0.225,P,P,False,5×3,5,,300,PDF,3:43,False,False,False,,False,,,
+171,Gutermann,poliestere,4008015159566,300,0.225,P,P,False,5×3,5,,300,PDF,3:44,False,False,False,,False,,,
+172,Gutermann,poliestere,4008015043766,1000,0.375,P,P,False,3×3,3,,300,PDF,3:45,False,False,False,,False,,,
+173,Gutermann,poliestere,4008015043766,1000,0.375,P,P,False,4×3,4,,300,PDF,3:46,False,False,False,,False,,,
+174,Gutermann,poliestere,4008015043766,1000,0.375,P,P,False,5×3,5,,300,PDF,3:47,False,False,False,,False,,,
+175,Gutermann,Mara 100,4008015028046,300,,,P,True,3×3,3,0.75,200,MEA,,True,True,False,,True,Mara 100,2700,300
+176,HUF 0.04,,,33.33,,,P,True,1х3,1,0.099,30,XLS,,True,True,False,,True,HUF 0.04,99.99,30
+177,TMC 16/0 W,,,40,,,P,True,1х3,1,0.075,30,XLS,,True,True,False,,True,TMC 16/0 W,120,30
+178,TMC 16/0 W,,,40,,,P,True,1х3,1,0.077,30,XLS,,True,True,False,,True,TMC 16/0 W,120,30
+179,UNI-C 20D,,,22.22,,,P,True,1х3,1,0.089,30,XLS,,True,True,False,,True,UNI-C 20D,66.66,30
+180,UNI-C 20D,,,22.22,,,P,True,2х3,2,0.096,30,XLS,,True,True,False,,True,UNI-C 20D,133.32,30
+181,UNI-C 20D,,,22.22,,,P,True,2х3,2,0.048,30,XLS,,True,True,False,,True,UNI-C 20D,133.32,30
+182,UNI-C 20D,,,22.22,,,P,True,2х3,2,0.086,30,XLS,,True,True,False,,True,UNI-C 20D,133.32,30
+183,UNI-C 20D,,,22.22,,,P,True,1х3,1,0.05,30,XLS,,True,True,False,,True,UNI-C 20D,66.66,30
+184,UNI-T 8/0 W,,,80,,,P,True,1х3,1,0.11,30,XLS,,True,True,False,,True,UNI-T 8/0 W,240,50
+185,UNI-T 8/0 W,,,80,,,P,True,2х3,2,0.172,30,XLS,,True,True,False,,True,UNI-T 8/0 W,480,150
+186,UNI-T 8/0 W,,,80,,,P,True,1х3,1,0.109,30,XLS,,True,True,False,,True,UNI-T 8/0 W,240,50
+187,UNI-T 8/0 W,,,80,,,P,True,2х3,2,0.164,30,XLS,,True,True,False,,True,UNI-T 8/0 W,480,150
