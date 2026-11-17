@@ -36,7 +36,7 @@
 останутся два калькулятора и два обработчика.
 
 Проверить, что остатков нет, можно поиском по статье: `THREAD_CATALOG`,
-`diameterByDtex`, `rc-calculator-mode` не должны встречаться.
+`diameterByDtex`, `rc-calculator-mode`, `Tension load` не должны встречаться.
 
 ## Как вставлять в WordPress
 
