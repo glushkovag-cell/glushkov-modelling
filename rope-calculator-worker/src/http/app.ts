@@ -1,18 +1,36 @@
-import { ALGORITHM_VERSION, API_VERSION } from '../core/constants';
+import { ALGORITHM_VERSION, API_VERSION, API_VERSION_V2 } from '../core/constants';
 import { RopeError } from '../core/errors';
 import { computeForward } from '../core/forward';
 import { findMatches } from '../core/reverse';
+import { LOAD_ALGORITHM_VERSION, LOAD_RECOMMENDATION_VERSION } from '../core/load-model';
+import { computeForwardV2, findMatchesV2, parseForwardInputV2, parseReverseInputV2 } from '../core/v2';
 import { parseForwardInput, parseReverseInput } from '../core/validation';
 import { getCatalogSnapshot } from '../catalog/cache';
 import type { Env } from '../catalog/client';
 import { corsHeaders } from './cors';
 import { errorResponse, jsonResponse } from './responses';
 
+/** v1 устарел: сохраняется на переходный период без груза. */
 const ROUTES = {
   health: '/api/rope/v1/health',
   catalog: '/api/rope/v1/catalog',
   forward: '/api/rope/v1/forward',
   reverse: '/api/rope/v1/reverse',
+} as const;
+
+/** v2: учёт груза, алгоритм 3.0.0. */
+const ROUTES_V2 = {
+  health: '/api/rope/v2/health',
+  catalog: '/api/rope/v2/catalog',
+  forward: '/api/rope/v2/forward',
+  reverse: '/api/rope/v2/reverse',
+} as const;
+
+/** Версии в каждом ответе v2. */
+const VERSIONS_V2 = {
+  apiVersion: API_VERSION_V2,
+  algorithmVersion: LOAD_ALGORITHM_VERSION,
+  loadRecommendationVersion: LOAD_RECOMMENDATION_VERSION,
 } as const;
 
 /** Лимит тела запроса. */
@@ -176,6 +194,99 @@ export async function handleRequest(
               threadIds: input.threadIds ?? null,
             },
             results: matches,
+          },
+          200,
+          cors,
+        );
+      }
+
+      case ROUTES_V2.health: {
+        if (request.method !== 'GET') return methodNotAllowed('GET');
+        return jsonResponse({ ok: true, ...VERSIONS_V2 }, 200, cors);
+      }
+
+      case ROUTES_V2.catalog: {
+        if (request.method !== 'GET') return methodNotAllowed('GET');
+        const snapshot = await getCatalogSnapshot(env, options);
+        return jsonResponse(
+          {
+            ...VERSIONS_V2,
+            catalogVersion: snapshot.catalogVersion,
+            fetchedAt: snapshot.fetchedAt,
+            threads: snapshot.threads,
+          },
+          200,
+          cors,
+        );
+      }
+
+      case ROUTES_V2.forward: {
+        if (request.method !== 'POST') return methodNotAllowed('POST');
+
+        const input = parseForwardInputV2(await readJsonBody(request));
+        const load = { loadMode: input.loadMode, loadGrams: input.loadMode === 'manual' ? input.loadGrams : null };
+
+        if (input.basis === 'dtex') {
+          // Ручной dTex: CMS не запрашивается, catalogVersion = null.
+          const { result, warnings } = computeForwardV2(input);
+          return jsonResponse(
+            {
+              ...VERSIONS_V2,
+              catalogVersion: null,
+              fetchedAt: null,
+              basis: 'dtex',
+              input: { dtex: input.dtex, threadsPerStrand: input.threadsPerStrand, ...load },
+              result,
+              warnings,
+            },
+            200,
+            cors,
+          );
+        }
+
+        const snapshot = await getCatalogSnapshot(env, options);
+        const { result, warnings } = computeForwardV2(input, snapshot.threads);
+        return jsonResponse(
+          {
+            ...VERSIONS_V2,
+            catalogVersion: snapshot.catalogVersion,
+            fetchedAt: snapshot.fetchedAt,
+            basis: 'catalog',
+            input: {
+              threadId: input.threadId,
+              dtex: result.dtex,
+              threadsPerStrand: input.threadsPerStrand,
+              ...load,
+            },
+            result,
+            warnings,
+          },
+          200,
+          cors,
+        );
+      }
+
+      case ROUTES_V2.reverse: {
+        if (request.method !== 'POST') return methodNotAllowed('POST');
+
+        const input = parseReverseInputV2(await readJsonBody(request));
+        const snapshot = await getCatalogSnapshot(env, options);
+        const { matches, tolerance, loadMode, warnings } = findMatchesV2(input, snapshot.threads);
+
+        return jsonResponse(
+          {
+            ...VERSIONS_V2,
+            catalogVersion: snapshot.catalogVersion,
+            fetchedAt: snapshot.fetchedAt,
+            input: {
+              targetDiameterMm: input.targetDiameterMm,
+              tolerance,
+              threadIds: input.threadIds ?? null,
+              loadMode,
+              loadGrams: input.loadMode === 'manual' ? input.loadGrams : null,
+            },
+            results: matches,
+            warnings,
           },
           200,
           cors,

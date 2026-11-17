@@ -1,0 +1,575 @@
+{
+  "schema": 1,
+  "source": {
+    "file": "threads_merged.xlsx",
+    "sheet": "Общая таблица",
+    "sha256": "4924e12a2046b9fb034cee444b285fb22da43904ce6e923564ecdd24ebb056eb"
+  },
+  "normalizedCsvSha256": "4b015f8991f4fc816dd4618fdd635715f6ae4bb056ecd132751b0c488b0dc0db",
+  "selection": {
+    "dataRows": 186,
+    "usableMeasurements": 143,
+    "usableOld": 130,
+    "usableNew": 13,
+    "calibrationObservations": 141,
+    "calibrationOld": 128,
+    "calibrationNew": 13,
+    "newRows": [
+      175,
+      187
+    ],
+    "ropeTypeInferredRows": [
+      175,
+      176,
+      177,
+      178,
+      179,
+      180,
+      181,
+      182,
+      183,
+      184,
+      185,
+      186,
+      187
+    ],
+    "excluded": [
+      {
+        "excelRow": 95,
+        "reason": "Skala 240 5×3, measured 0.825 mm: earlier outlier"
+      },
+      {
+        "excelRow": 133,
+        "reason": "Tera 30 2×3, measured 1.000 mm: earlier outlier"
+      }
+    ]
+  },
+  "families": {
+    "count": 22,
+    "members": {
+      "9125 No.120": 5,
+      "Gamma 40/2": 31,
+      "Gutermann Extra Strong 750": 10,
+      "Gutermann Sew-all 300": 32,
+      "Gutermann Top Stitch 1000": 2,
+      "HUF 0.04": 1,
+      "M202 extra fine": 5,
+      "Mara 100": 1,
+      "Maraflex N.120": 5,
+      "Skala 200": 3,
+      "Skala 240": 7,
+      "Skala 360": 8,
+      "TMC 16/0 W": 2,
+      "Tera 10": 2,
+      "Tera 20": 2,
+      "Tera 30": 2,
+      "Tera 40": 3,
+      "Tera 60": 3,
+      "Tera 80": 3,
+      "UNI-C 20D": 5,
+      "UNI-T 8/0 W": 4,
+      "seta": 5
+    }
+  },
+  "loadDistribution": {
+    "30": {
+      "count": 12,
+      "minTotalDtex": 66.66,
+      "medianTotalDtex": 133.32,
+      "maxTotalDtex": 480
+    },
+    "200": {
+      "count": 26,
+      "minTotalDtex": 240,
+      "medianTotalDtex": 2475.0,
+      "maxTotalDtex": 18000
+    },
+    "300": {
+      "count": 105,
+      "minTotalDtex": 240,
+      "medianTotalDtex": 2700.0,
+      "maxTotalDtex": 11250
+    }
+  },
+  "strategies": {
+    "actualLoad": {
+      "description": "coefficients fitted on actual load, used in both modes",
+      "coefficients": {
+        "manual": {
+          "a": 0.014924753908975808,
+          "b": 0.5706838621776749,
+          "c": 0.5130047364692952,
+          "loadExponent": 0.2611805267649173
+        },
+        "auto": {
+          "a": 0.014924753908975808,
+          "b": 0.5706838621776749,
+          "c": 0.5130047364692952,
+          "loadExponent": 0.2611805267649173
+        }
+      },
+      "training": {
+        "manual": {
+          "all": {
+            "count": 141,
+            "rmspePercent": 8.676498501158445,
+            "mapePercent": 5.1750260825526295,
+            "maeMm": 0.027798607484438485,
+            "rmseMm": 0.03756880663779943,
+            "biasPercent": -0.7528162640122501,
+            "biasMm": -0.0028830767606641736
+          },
+          "old": {
+            "count": 128,
+            "rmspePercent": 5.421015144478219,
+            "mapePercent": 4.164962524051636,
+            "maeMm": 0.028872680827821847,
+            "rmseMm": 0.03855432131234641,
+            "biasPercent": -0.3543928620433352,
+            "biasMm": -0.001961807365279614
+          },
+          "new": {
+            "count": 13,
+            "rmspePercent": 22.96003456636454,
+            "mapePercent": 15.120267273947022,
+            "maeMm": 0.01722311610343307,
+            "rmseMm": 0.025937467970005953,
+            "biasPercent": -4.675754375706183,
+            "biasMm": -0.011954036961373675
+          }
+        },
+        "auto": {
+          "all": {
+            "count": 141,
+            "rmspePercent": 11.237955726880298,
+            "mapePercent": 6.588074329020614,
+            "maeMm": 0.03183994603065959,
+            "rmseMm": 0.051802517549564865,
+            "biasPercent": 0.4820480872282179,
+            "biasMm": 0.009160966140277095
+          },
+          "old": {
+            "count": 128,
+            "rmspePercent": 7.30419342241002,
+            "mapePercent": 4.974436917302907,
+            "maeMm": 0.032596885837485476,
+            "rmseMm": 0.05329191327334869,
+            "biasPercent": -0.06822290004070342,
+            "biasMm": 0.00917344633820915
+          },
+          "new": {
+            "count": 13,
+            "rmspePercent": 29.05983691384593,
+            "mapePercent": 22.476196536702663,
+            "maeMm": 0.0243870002403739,
+            "rmseMm": 0.03379807646770927,
+            "biasPercent": 5.900100884952981,
+            "biasMm": 0.009038084191407648
+          }
+        }
+      },
+      "lofo": {
+        "manual": {
+          "all": {
+            "count": 141,
+            "rmspePercent": 9.581668545089448,
+            "mapePercent": 5.699638022934957,
+            "maeMm": 0.0315753882551257,
+            "rmseMm": 0.04307087200391228,
+            "biasPercent": -0.15630360179420077,
+            "biasMm": 0.00016606042224419612
+          },
+          "old": {
+            "count": 128,
+            "rmspePercent": 5.989862498905336,
+            "mapePercent": 4.698251674115399,
+            "maeMm": 0.033054727522336194,
+            "rmseMm": 0.04443211181168277,
+            "biasPercent": 0.004759499015429599,
+            "biasMm": 0.0012255422124763625
+          },
+          "new": {
+            "count": 13,
+            "rmspePercent": 25.347642151733584,
+            "mapePercent": 15.55944207285062,
+            "maeMm": 0.017009586239514676,
+            "rmseMm": 0.026120864713776077,
+            "biasPercent": -1.742155671304409,
+            "biasMm": -0.010265760281580215
+          }
+        },
+        "auto": {
+          "all": {
+            "count": 141,
+            "rmspePercent": 11.931601801687279,
+            "mapePercent": 7.038912301681395,
+            "maeMm": 0.03514539300107947,
+            "rmseMm": 0.05765222444604863,
+            "biasPercent": 1.1035571253010252,
+            "biasMm": 0.012267081230433862
+          },
+          "old": {
+            "count": 128,
+            "rmspePercent": 7.764610087130172,
+            "mapePercent": 5.448978272166383,
+            "maeMm": 0.03630413518700646,
+            "rmseMm": 0.059558064413957265,
+            "biasPercent": 0.30281921494735486,
+            "biasMm": 0.012398164023027104
+          },
+          "new": {
+            "count": 13,
+            "rmspePercent": 30.829788796473206,
+            "mapePercent": 22.693647361521514,
+            "maeMm": 0.02373623917041371,
+            "rmseMm": 0.033530661034217084,
+            "biasPercent": 8.98774578109101,
+            "biasMm": 0.010976419887977326
+          }
+        }
+      }
+    },
+    "separate": {
+      "description": "separate sets: actual load for manual, recommended load for auto",
+      "coefficients": {
+        "manual": {
+          "a": 0.014924753908975808,
+          "b": 0.5706838621776749,
+          "c": 0.5130047364692952,
+          "loadExponent": 0.2611805267649173
+        },
+        "auto": {
+          "a": 0.017356436781712732,
+          "b": 0.5410080240853146,
+          "c": 0.5014240925603182,
+          "loadExponent": 0.3029474125317734
+        }
+      },
+      "training": {
+        "manual": {
+          "all": {
+            "count": 141,
+            "rmspePercent": 8.676498501158445,
+            "mapePercent": 5.1750260825526295,
+            "maeMm": 0.027798607484438485,
+            "rmseMm": 0.03756880663779943,
+            "biasPercent": -0.7528162640122501,
+            "biasMm": -0.0028830767606641736
+          },
+          "old": {
+            "count": 128,
+            "rmspePercent": 5.421015144478219,
+            "mapePercent": 4.164962524051636,
+            "maeMm": 0.028872680827821847,
+            "rmseMm": 0.03855432131234641,
+            "biasPercent": -0.3543928620433352,
+            "biasMm": -0.001961807365279614
+          },
+          "new": {
+            "count": 13,
+            "rmspePercent": 22.96003456636454,
+            "mapePercent": 15.120267273947022,
+            "maeMm": 0.01722311610343307,
+            "rmseMm": 0.025937467970005953,
+            "biasPercent": -4.675754375706183,
+            "biasMm": -0.011954036961373675
+          }
+        },
+        "auto": {
+          "all": {
+            "count": 141,
+            "rmspePercent": 10.973360382543044,
+            "mapePercent": 6.4461760434059645,
+            "maeMm": 0.030479488910399463,
+            "rmseMm": 0.04144529432991135,
+            "biasPercent": -1.2041463802478252,
+            "biasMm": -0.006156425075594717
+          },
+          "old": {
+            "count": 128,
+            "rmspePercent": 7.004266257438317,
+            "mapePercent": 4.8141488036618885,
+            "maeMm": 0.031095819542765135,
+            "rmseMm": 0.04214056510195767,
+            "biasPercent": -1.6796302463356374,
+            "biasMm": -0.007421629580528073
+          },
+          "new": {
+            "count": 13,
+            "rmspePercent": 28.68773056814588,
+            "mapePercent": 22.515367327039957,
+            "maeMm": 0.02441100268402981,
+            "rmseMm": 0.033845311508881384,
+            "biasPercent": 3.477540916616791,
+            "biasMm": 0.006300973126826023
+          }
+        }
+      },
+      "lofo": {
+        "manual": {
+          "all": {
+            "count": 141,
+            "rmspePercent": 9.581668545089448,
+            "mapePercent": 5.699638022934957,
+            "maeMm": 0.0315753882551257,
+            "rmseMm": 0.04307087200391228,
+            "biasPercent": -0.15630360179420077,
+            "biasMm": 0.00016606042224419612
+          },
+          "old": {
+            "count": 128,
+            "rmspePercent": 5.989862498905336,
+            "mapePercent": 4.698251674115399,
+            "maeMm": 0.033054727522336194,
+            "rmseMm": 0.04443211181168277,
+            "biasPercent": 0.004759499015429599,
+            "biasMm": 0.0012255422124763625
+          },
+          "new": {
+            "count": 13,
+            "rmspePercent": 25.347642151733584,
+            "mapePercent": 15.55944207285062,
+            "maeMm": 0.017009586239514676,
+            "rmseMm": 0.026120864713776077,
+            "biasPercent": -1.742155671304409,
+            "biasMm": -0.010265760281580215
+          }
+        },
+        "auto": {
+          "all": {
+            "count": 141,
+            "rmspePercent": 12.080493276148673,
+            "mapePercent": 7.1458366334738,
+            "maeMm": 0.03477587946902577,
+            "rmseMm": 0.04976086248001714,
+            "biasPercent": -0.8359883370506841,
+            "biasMm": -0.005476893731340207
+          },
+          "old": {
+            "count": 128,
+            "rmspePercent": 7.694084152295543,
+            "mapePercent": 5.372198627042542,
+            "maeMm": 0.03562266684056668,
+            "rmseMm": 0.05087057927136789,
+            "biasPercent": -1.6945593636655572,
+            "biasMm": -0.00706929760645411
+          },
+          "new": {
+            "count": 13,
+            "rmspePercent": 31.62258157180603,
+            "mapePercent": 24.609349312181575,
+            "maeMm": 0.026438280733853663,
+            "rmseMm": 0.03710255783086106,
+            "biasPercent": 7.617634078849608,
+            "biasMm": 0.010202159808242843
+          }
+        }
+      }
+    },
+    "shared": {
+      "description": "one shared set fitted on both modes with equal weight (algorithm 3.0.0)",
+      "coefficients": {
+        "manual": {
+          "a": 0.015783234872568733,
+          "b": 0.5592028639641587,
+          "c": 0.5097503466384719,
+          "loadExponent": 0.27528238156976775
+        },
+        "auto": {
+          "a": 0.015783234872568733,
+          "b": 0.5592028639641587,
+          "c": 0.5097503466384719,
+          "loadExponent": 0.27528238156976775
+        }
+      },
+      "training": {
+        "manual": {
+          "all": {
+            "count": 141,
+            "rmspePercent": 8.757658693115596,
+            "mapePercent": 5.267312627440618,
+            "maeMm": 0.028419963079313472,
+            "rmseMm": 0.039031119461569355,
+            "biasPercent": -1.6276832398299474,
+            "biasMm": -0.010639007226065051
+          },
+          "old": {
+            "count": 128,
+            "rmspePercent": 5.5260883629551785,
+            "mapePercent": 4.204958793046865,
+            "maeMm": 0.029410823298336754,
+            "rmseMm": 0.039969090429299074,
+            "biasPercent": -1.1854052149206047,
+            "biasMm": -0.010300948895299547
+          },
+          "new": {
+            "count": 13,
+            "rmspePercent": 23.04744114532758,
+            "mapePercent": 15.727411919932962,
+            "maeMm": 0.018663800922776537,
+            "rmseMm": 0.028174975391788742,
+            "biasPercent": -5.982420715860401,
+            "biasMm": -0.013967581559756158
+          }
+        },
+        "auto": {
+          "all": {
+            "count": 141,
+            "rmspePercent": 11.058491591984819,
+            "mapePercent": 6.40484909649341,
+            "maeMm": 0.029818265280442607,
+            "rmseMm": 0.04547375061565581,
+            "biasPercent": -0.3621849810406456,
+            "biasMm": 0.0017563522954768753
+          },
+          "old": {
+            "count": 128,
+            "rmspePercent": 7.07500865829354,
+            "mapePercent": 4.780762329441867,
+            "maeMm": 0.030417292067985074,
+            "rmseMm": 0.04650546171940604,
+            "biasPercent": -0.9094656651900719,
+            "biasMm": 0.0011322573938307668
+          },
+          "new": {
+            "count": 13,
+            "rmspePercent": 28.87078325518057,
+            "mapePercent": 22.395857264385537,
+            "maeMm": 0.023920155372332105,
+            "rmseMm": 0.03366751593111776,
+            "biasPercent": 5.026424832122936,
+            "biasMm": 0.007901286711684719
+          }
+        }
+      },
+      "lofo": {
+        "manual": {
+          "all": {
+            "count": 141,
+            "rmspePercent": 9.505796417907419,
+            "mapePercent": 5.723358929173508,
+            "maeMm": 0.03191536796827812,
+            "rmseMm": 0.04325628435188934,
+            "biasPercent": -1.1624895267105744,
+            "biasMm": -0.008759570541250298
+          },
+          "old": {
+            "count": 128,
+            "rmspePercent": 5.957684893754748,
+            "mapePercent": 4.684253417869985,
+            "maeMm": 0.03332735864956343,
+            "rmseMm": 0.04451249795019016,
+            "biasPercent": -1.0293016349772128,
+            "biasMm": -0.00849799261617131
+          },
+          "new": {
+            "count": 13,
+            "rmspePercent": 25.111367562884745,
+            "mapePercent": 15.954551655854349,
+            "maeMm": 0.0180126904910073,
+            "rmseMm": 0.028026866951243446,
+            "biasPercent": -2.4738779991621342,
+            "biasMm": -0.011335107034335731
+          }
+        },
+        "auto": {
+          "all": {
+            "count": 141,
+            "rmspePercent": 11.952874542662677,
+            "mapePercent": 6.95285529047838,
+            "maeMm": 0.033387818215027995,
+            "rmseMm": 0.05246481176607844,
+            "biasPercent": 0.13512930066150383,
+            "biasMm": 0.003705095133280961
+          },
+          "old": {
+            "count": 128,
+            "rmspePercent": 7.618514336953321,
+            "mapePercent": 5.271240045306579,
+            "maeMm": 0.03428471127865406,
+            "rmseMm": 0.05391638782823384,
+            "biasPercent": -0.7401575079199312,
+            "biasMm": 0.0029767003664699513
+          },
+          "new": {
+            "count": 13,
+            "rmspePercent": 31.274830401678532,
+            "mapePercent": 23.51029770447763,
+            "maeMm": 0.024556871127017512,
+            "rmseMm": 0.0351014163638811,
+            "biasPercent": 8.753337877463327,
+            "biasMm": 0.010876982068035519
+          }
+        }
+      }
+    }
+  },
+  "shippedAlgorithm3": {
+    "coefficients": {
+      "a": 0.015783234759902807,
+      "b": 0.5592028655918567,
+      "c": 0.5097503439652015,
+      "loadExponent": 0.27528238252976955
+    },
+    "training": {
+      "manual": {
+        "all": {
+          "count": 141,
+          "rmspePercent": 8.757658688255814,
+          "mapePercent": 5.267312643921094,
+          "maeMm": 0.028419963148231312,
+          "rmseMm": 0.03903111944785899,
+          "biasPercent": -1.6276832467039208,
+          "biasMm": -0.010639007084841048
+        },
+        "old": {
+          "count": 128,
+          "rmspePercent": 5.52608837405275,
+          "mapePercent": 4.204958797351055,
+          "maeMm": 0.029410823349630872,
+          "rmseMm": 0.039969090400067006,
+          "biasPercent": -1.1854051879915064,
+          "biasMm": -0.010300948705067097
+        },
+        "new": {
+          "count": 13,
+          "rmspePercent": 23.047441099099338,
+          "mapePercent": 15.727412056303008,
+          "maeMm": 0.018663801165220272,
+          "rmseMm": 0.02817497559409339,
+          "biasPercent": -5.982421055564617,
+          "biasMm": -0.013967581901076867
+        }
+      },
+      "auto": {
+        "all": {
+          "count": 141,
+          "rmspePercent": 11.058491595833479,
+          "mapePercent": 6.40484912363762,
+          "maeMm": 0.029818265586206354,
+          "rmseMm": 0.045473751606048024,
+          "biasPercent": -0.3621849829116461,
+          "biasMm": 0.0017563525081155528
+        },
+        "old": {
+          "count": 128,
+          "rmspePercent": 7.075008721404067,
+          "mapePercent": 4.780762361646343,
+          "maeMm": 0.030417292409304107,
+          "rmseMm": 0.04650546279684563,
+          "biasPercent": -0.9094656339462412,
+          "biasMm": 0.0011322576595930163
+        },
+        "new": {
+          "count": 13,
+          "rmspePercent": 28.87078311889173,
+          "mapePercent": 22.39585724170558,
+          "maeMm": 0.023920155328013167,
+          "rmseMm": 0.033667515786083936,
+          "biasPercent": 5.026424504198215,
+          "biasMm": 0.007901286401260543
+        }
+      }
+    }
+  }
+}

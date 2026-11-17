@@ -134,6 +134,12 @@
     min-width: 0;
 }
 
+/* Одна колонка без боковых плашек: компонент занимает читаемую ширину. */
+.tools-single {
+    max-width: 880px;
+    margin-top: 2rem;
+}
+
 .tools-aside {
     display: grid;
     gap: 16px;

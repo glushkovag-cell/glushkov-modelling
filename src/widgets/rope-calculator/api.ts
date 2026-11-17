@@ -1,4 +1,30 @@
-/** Типы и клиент JSON API калькулятора. Контракт — docs/rope-calculator/spec.md. */
+/**
+ * Типы и клиент JSON API калькулятора: API v2 с учётом груза натяжения.
+ * Контракт — docs/rope-calculator/spec.md, раздел 16. Формулы и порогов
+ * рекомендации здесь нет: груз и диаметр приходят только из ответа Worker.
+ */
+
+export type LoadMode = 'auto' | 'manual';
+
+/** Допустимые грузы, г — список значений селектора, а не правило расчёта. */
+export const LOAD_OPTIONS_GRAMS = [30, 50, 100, 150, 200, 250, 300] as const;
+export type LoadGrams = (typeof LOAD_OPTIONS_GRAMS)[number];
+
+export type LoadSelection =
+  | { loadMode: 'auto' }
+  | { loadMode: 'manual'; loadGrams: LoadGrams };
+
+export interface ApiWarning {
+  code: string;
+  message: string;
+}
+
+export interface LoadFields {
+  totalDtex: number;
+  loadMode: LoadMode;
+  recommendedLoadGrams: number;
+  appliedLoadGrams: number;
+}
 
 export interface CatalogThread {
   threadId: string;
@@ -17,7 +43,8 @@ export interface CatalogResponse {
   threads: CatalogThread[];
 }
 
-export interface ForwardResult {
+export interface ForwardResult extends LoadFields {
+  dtex: number;
   diameterMm: number;
   threadsPerStrand: number;
   strands: number;
@@ -29,10 +56,12 @@ export interface ForwardResponse {
   algorithmVersion: string;
   catalogVersion: string | null;
   fetchedAt: string | null;
+  loadRecommendationVersion: string;
   result: ForwardResult;
+  warnings: ApiWarning[];
 }
 
-export interface ReverseMatch {
+export interface ReverseMatch extends LoadFields {
   threadId: string;
   brand: string;
   number: string;
@@ -48,17 +77,23 @@ export interface ReverseResponse {
   algorithmVersion: string;
   catalogVersion: string;
   fetchedAt: string;
+  loadRecommendationVersion: string;
+  input: { loadMode: LoadMode; loadGrams: number | null; tolerance: number };
   results: ReverseMatch[];
+  warnings: ApiWarning[];
 }
 
-export type ForwardBody =
+export type ForwardBody = (
   | { basis: 'catalog'; threadId: string; threadsPerStrand: number }
-  | { basis: 'dtex'; dtex: number; threadsPerStrand: number };
+  | { basis: 'dtex'; dtex: number; threadsPerStrand: number }
+) & LoadSelection;
 
-export interface ReverseBody {
+export type ReverseBody = {
   targetDiameterMm: number;
   threadIds: string[];
-}
+} & LoadSelection;
+
+const API_PREFIX = '/api/rope/v2';
 
 /** Ошибка API с кодом из контракта, чтобы интерфейс мог различать причины. */
 export class ApiError extends Error {
@@ -126,7 +161,7 @@ async function request<T>(url: string, init: RequestInit): Promise<T> {
 }
 
 export function fetchCatalog(apiBase: string, signal?: AbortSignal): Promise<CatalogResponse> {
-  return request<CatalogResponse>(`${normalizeBase(apiBase)}/api/rope/v1/catalog`, {
+  return request<CatalogResponse>(`${normalizeBase(apiBase)}${API_PREFIX}/catalog`, {
     method: 'GET',
     headers: { accept: 'application/json' },
     signal,
@@ -138,7 +173,7 @@ export function postForward(
   body: ForwardBody,
   signal?: AbortSignal,
 ): Promise<ForwardResponse> {
-  return request<ForwardResponse>(`${normalizeBase(apiBase)}/api/rope/v1/forward`, {
+  return request<ForwardResponse>(`${normalizeBase(apiBase)}${API_PREFIX}/forward`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
@@ -151,7 +186,7 @@ export function postReverse(
   body: ReverseBody,
   signal?: AbortSignal,
 ): Promise<ReverseResponse> {
-  return request<ReverseResponse>(`${normalizeBase(apiBase)}/api/rope/v1/reverse`, {
+  return request<ReverseResponse>(`${normalizeBase(apiBase)}${API_PREFIX}/reverse`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),

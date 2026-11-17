@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "algorithmVersion": "3.0.0",
+  "loadRecommendationVersion": "1.0.0",
+  "formula": "D = a * x^b * n^c * (w / 200)^loadExponent",
+  "objective": "sum of squared relative errors, manual and auto residuals with equal weight",
+  "fitted": {
+    "a": 0.015783234872568733,
+    "b": 0.5592028639641587,
+    "c": 0.5097503466384719,
+    "loadExponent": 0.27528238156976775
+  },
+  "shipped": {
+    "a": 0.015783234759902807,
+    "b": 0.5592028655918567,
+    "c": 0.5097503439652015,
+    "loadExponent": 0.27528238252976955
+  },
+  "loadThresholds": [
+    {
+      "totalDtexBelow": 150,
+      "loadGrams": 30
+    },
+    {
+      "totalDtexBelow": 250,
+      "loadGrams": 50
+    },
+    {
+      "totalDtexBelow": 400,
+      "loadGrams": 100
+    },
+    {
+      "totalDtexBelow": 550,
+      "loadGrams": 150
+    },
+    {
+      "totalDtexBelow": 650,
+      "loadGrams": 200
+    },
+    {
+      "totalDtexBelow": 800,
+      "loadGrams": 250
+    },
+    {
+      "totalDtexBelow": null,
+      "loadGrams": 300
+    }
+  ],
+  "allowedLoadsGrams": [
+    30,
+    50,
+    100,
+    150,
+    200,
+    250,
+    300
+  ]
+}

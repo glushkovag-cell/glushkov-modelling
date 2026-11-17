@@ -11,7 +11,7 @@ interface Candidate {
   deviation: number;
 }
 
-function compareIds(a: string, b: string): number {
+export function compareIds(a: string, b: string): number {
   if (a === b) return 0;
   return a < b ? -1 : 1;
 }
@@ -38,7 +38,7 @@ function compareCandidates(a: Candidate, b: Candidate): number {
   );
 }
 
-function selectThreads(input: ReverseInput, catalog: readonly CatalogThread[]): CatalogThread[] {
+export function selectThreads(input: Pick<ReverseInput, 'threadIds'>, catalog: readonly CatalogThread[]): CatalogThread[] {
   if (!input.threadIds) {
     return catalog.filter((thread) => thread.enabled);
   }
@@ -63,7 +63,7 @@ function selectThreads(input: ReverseInput, catalog: readonly CatalogThread[]): 
   return selected;
 }
 
-/** Обратный подбор: все выбранные нити × 1, 2, 3 нити в пряди. */
+/** Обратный подбор v1: все выбранные нити × 1–5 нитей в пряди. */
 export function findMatches(input: ReverseInput, catalog: readonly CatalogThread[]): ReverseResult {
   const threads = selectThreads(input, catalog);
   const candidates: Candidate[] = [];

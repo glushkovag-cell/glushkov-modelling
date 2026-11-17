@@ -41,43 +41,15 @@ const description =
         <h1>Rope diameter calculator</h1>
         <p class="tools-lede">
           Estimate the diameter of a three-strand rope from a catalog thread or a
-          custom dTex value, or find threads within ±15% of a target diameter.
+          custom dTex value at a chosen tension load, or find threads within ±10%
+          of a target diameter.
         </p>
       </header>
 
-      <div class="tools-layout">
+      <div class="tools-single">
         <gm-rope-calculator>
           <noscript>Enable JavaScript to use the rope calculator.</noscript>
         </gm-rope-calculator>
-
-        <aside class="tools-aside">
-          <div class="tools-aside-card">
-            <h2>How it works</h2>
-            <p>
-              All ropes have three strands. A 2&nbsp;×&nbsp;3 construction uses two
-              threads per strand, six threads in total. The calculator checks 1, 2
-              and 3 threads per strand.
-            </p>
-            <p>
-              Reverse search lists matches by absolute percentage deviation, then by
-              dTex. Diameters are calculated estimates, not measured values.
-            </p>
-          </div>
-
-          <div class="tools-aside-card">
-            <h2>Need a target diameter?</h2>
-            <p>
-              If you already know the rope diameter you need, switch the mode to
-              <strong>Find threads for a target diameter</strong> or open the rigging
-              calculator, whose rows link here with the diameter prefilled.
-            </p>
-          </div>
-
-          <p class="tools-note">
-            <strong>Estimate only.</strong> Actual diameter varies with material,
-            tension and twist. Not a guarantee for full-size rope.
-          </p>
-        </aside>
       </div>
 
       <a class="tools-back" href="/tools">&larr; All tools</a>
