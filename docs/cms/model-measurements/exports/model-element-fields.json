@@ -1,0 +1,199 @@
+[
+    {
+        "key": "group_6afdefa451d46",
+        "title": "ModelElementFields",
+        "fields": [
+            {
+                "key": "field_6afdefa4ab738",
+                "label": "element_code",
+                "name": "element_code",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "",
+                "required": 1,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "prepend": "",
+                "append": "",
+                "show_in_graphql": 1,
+                "graphql_description": "",
+                "graphql_field_name": "elementCode",
+                "graphql_non_null": 0
+            },
+            {
+                "key": "field_6afdeffbab739",
+                "label": "element_kind",
+                "name": "element_kind",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 1,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "mast": "mast",
+                    "yard": "yard"
+                },
+                "default_value": false,
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "show_in_graphql": 1,
+                "graphql_description": "",
+                "graphql_field_name": "elementKind",
+                "graphql_non_null": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+            },
+            {
+                "key": "field_6afdf060ab73a",
+                "label": "element_parent",
+                "name": "element_parent",
+                "aria-label": "",
+                "type": "post_object",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "post_type": [
+                    "model_element"
+                ],
+                "post_status": "",
+                "taxonomy": "",
+                "return_format": "object",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 0,
+                "bidirectional": 0,
+                "show_in_graphql": 1,
+                "graphql_description": "",
+                "graphql_field_name": "elementParent",
+                "graphql_connection_type": "one_to_many",
+                "ui": 1,
+                "bidirectional_target": []
+            },
+            {
+                "key": "field_6afdf098ab73b",
+                "label": "element_description",
+                "name": "element_description",
+                "aria-label": "",
+                "type": "textarea",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "rows": "",
+                "placeholder": "",
+                "new_lines": "",
+                "show_in_graphql": 1,
+                "graphql_description": "",
+                "graphql_field_name": "elementDescription",
+                "graphql_non_null": 0
+            },
+            {
+                "key": "field_6afdf0beab73c",
+                "label": "element_sort_order",
+                "name": "element_sort_order",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": 100,
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "",
+                "show_in_graphql": 1,
+                "graphql_description": "",
+                "graphql_field_name": "elementSortOrder",
+                "graphql_non_null": 0
+            },
+            {
+                "key": "field_6afdf0d5ab73d",
+                "label": "element_active",
+                "name": "element_active",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "message": "",
+                "default_value": 1,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "show_in_graphql": 1,
+                "graphql_description": "",
+                "graphql_field_name": "elementActive",
+                "graphql_non_null": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "model_element"
+                }
+            ]
+        ],
+        "menu_order": 0,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "hide_on_screen": "",
+        "active": true,
+        "description": "",
+        "show_in_rest": 0,
+        "display_title": "",
+        "allow_ai_access": false,
+        "ai_description": "",
+        "show_in_graphql": 1,
+        "graphql_field_name": "modelelementfields",
+        "map_graphql_types_from_location_rules": 0,
+        "graphql_types": ""
+    }
+]

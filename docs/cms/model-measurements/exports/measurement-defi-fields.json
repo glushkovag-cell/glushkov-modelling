@@ -1,0 +1,205 @@
+[
+    {
+        "key": "group_6afdec6bc1571",
+        "title": "MeasurementDefinitionFields",
+        "fields": [
+            {
+                "key": "field_6afdec6c0f063",
+                "label": "measurement_code",
+                "name": "measurement_code",
+                "aria-label": "",
+                "type": "text",
+                "instructions": "",
+                "required": 1,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "prepend": "",
+                "append": "",
+                "show_in_graphql": 1,
+                "graphql_description": "",
+                "graphql_field_name": "measurementCode",
+                "graphql_non_null": 0
+            },
+            {
+                "key": "field_6afded510f064",
+                "label": "measurement_description",
+                "name": "measurement_description",
+                "aria-label": "",
+                "type": "textarea",
+                "instructions": "",
+                "required": 1,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": "",
+                "maxlength": "",
+                "allow_in_bindings": 0,
+                "rows": "",
+                "placeholder": "",
+                "new_lines": "",
+                "show_in_graphql": 1,
+                "graphql_description": "",
+                "graphql_field_name": "measurementDescription",
+                "graphql_non_null": 0
+            },
+            {
+                "key": "field_6afdeda40f065",
+                "label": "measurement_group",
+                "name": "measurement_group",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 1,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "overall": "overall",
+                    "hull": "hull",
+                    "rig": "rig",
+                    "armament": "armament",
+                    "other": "other"
+                },
+                "default_value": false,
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "show_in_graphql": 1,
+                "graphql_description": "",
+                "graphql_field_name": "measurementGroup",
+                "graphql_non_null": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+            },
+            {
+                "key": "field_6afdee3b0f066",
+                "label": "measurement_target_kind",
+                "name": "measurement_target_kind",
+                "aria-label": "",
+                "type": "select",
+                "instructions": "",
+                "required": 1,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "choices": {
+                    "none": "none",
+                    "mast": "mast",
+                    "yard": "yard"
+                },
+                "default_value": false,
+                "return_format": "value",
+                "multiple": 0,
+                "allow_null": 0,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "show_in_graphql": 1,
+                "graphql_description": "",
+                "graphql_field_name": "measurementTargetKind",
+                "graphql_non_null": 0,
+                "ajax": 0,
+                "placeholder": "",
+                "create_options": 0,
+                "save_options": 0
+            },
+            {
+                "key": "field_6afdee810f067",
+                "label": "measurement_sort_order",
+                "name": "measurement_sort_order",
+                "aria-label": "",
+                "type": "number",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "default_value": 100,
+                "min": "",
+                "max": "",
+                "allow_in_bindings": 0,
+                "placeholder": "",
+                "step": "",
+                "prepend": "",
+                "append": "",
+                "show_in_graphql": 1,
+                "graphql_description": "",
+                "graphql_field_name": "measurementSortOrder",
+                "graphql_non_null": 0
+            },
+            {
+                "key": "field_6afdeea00f068",
+                "label": "measurement_active",
+                "name": "measurement_active",
+                "aria-label": "",
+                "type": "true_false",
+                "instructions": "",
+                "required": 0,
+                "conditional_logic": 0,
+                "wrapper": {
+                    "width": "",
+                    "class": "",
+                    "id": ""
+                },
+                "message": "",
+                "default_value": 1,
+                "allow_in_bindings": 0,
+                "ui": 0,
+                "show_in_graphql": 1,
+                "graphql_description": "",
+                "graphql_field_name": "measurementActive",
+                "graphql_non_null": 0,
+                "ui_on_text": "",
+                "ui_off_text": ""
+            }
+        ],
+        "location": [
+            [
+                {
+                    "param": "post_type",
+                    "operator": "==",
+                    "value": "measurement_defi"
+                }
+            ]
+        ],
+        "menu_order": 0,
+        "position": "normal",
+        "style": "default",
+        "label_placement": "top",
+        "instruction_placement": "label",
+        "hide_on_screen": "",
+        "active": true,
+        "description": "",
+        "show_in_rest": 0,
+        "display_title": "",
+        "allow_ai_access": false,
+        "ai_description": "",
+        "show_in_graphql": 1,
+        "graphql_field_name": "measurementdefinitionfields",
+        "map_graphql_types_from_location_rules": 0,
+        "graphql_types": ""
+    }
+]

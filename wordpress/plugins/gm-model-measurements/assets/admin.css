@@ -1,0 +1,254 @@
+/**
+ * Model measurements metabox.
+ *
+ * All selectors are scoped to the measurements editor.
+ */
+
+.gm-measurements {
+    --gm-measurements-border: #c3c4c7;
+    --gm-measurements-surface: #f6f7f7;
+    --gm-measurements-text: #1d2327;
+    --gm-measurements-muted: #50575e;
+    --gm-measurements-warning: #996800;
+    --gm-measurements-error: #b32d2e;
+
+    color: var(--gm-measurements-text);
+}
+
+.gm-measurements,
+.gm-measurements *,
+.gm-measurements *::before,
+.gm-measurements *::after {
+    box-sizing: border-box;
+}
+
+/*
+ * Preserve native hidden behavior even when a hidden element
+ * also has a component class that sets display.
+ */
+.gm-measurements [hidden] {
+    display: none !important;
+}
+
+.gm-measurements > .description {
+    margin: 0 0 12px;
+}
+
+.gm-measurements h4 {
+    margin: 24px 0 8px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.gm-measurements label {
+    display: inline-block;
+    margin-bottom: 4px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.gm-measurements input[type="text"],
+.gm-measurements select,
+.gm-measurements textarea {
+    max-width: 100%;
+    margin: 0;
+}
+
+.gm-measurements textarea {
+    display: block;
+    width: 100%;
+    min-height: 64px;
+    resize: vertical;
+}
+
+.gm-measurements .description {
+    color: var(--gm-measurements-muted);
+    line-height: 1.6;
+}
+
+/* Overall length */
+
+.gm-measurements__overall {
+    min-width: 0;
+    margin: 20px 0;
+    padding: 12px 16px 16px;
+    border: 1px solid var(--gm-measurements-border);
+    background: var(--gm-measurements-surface);
+}
+
+.gm-measurements__overall > legend {
+    padding: 0 6px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.gm-measurements__overall > p {
+    margin: 12px 0 0;
+}
+
+.gm-measurements__overall input[type="text"] {
+    width: 240px;
+    max-width: 100%;
+}
+
+/* Additional measurement rows */
+
+.gm-measurements__rows {
+    display: grid;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.gm-measurements__row {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 2fr)
+        minmax(0, 2fr)
+        minmax(120px, 1fr);
+    gap: 12px 16px;
+    min-width: 0;
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--gm-measurements-border);
+    background: #fff;
+}
+
+.gm-measurements__row > .gm-measurements__field {
+    min-width: 0;
+    margin: 0;
+}
+
+.gm-measurements__row > div.gm-measurements__field > p {
+    margin: 0;
+}
+
+.gm-measurements__row select,
+.gm-measurements__row input[type="text"] {
+    width: 100%;
+}
+
+.gm-measurements__row select {
+    text-overflow: ellipsis;
+}
+
+.gm-measurements__note {
+    grid-column: 1 / -1;
+}
+
+.gm-measurements__row > .gm-measurements__actions {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding-top: 4px;
+}
+
+.gm-measurements__actions .button-link-delete {
+    display: inline-block;
+    max-width: 100%;
+    min-height: 32px;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    line-height: 1.5;
+    text-align: left;
+    white-space: normal;
+    cursor: pointer;
+}
+
+/* Validation and archived references */
+
+.gm-measurements__row .gm-measurements__target-status {
+    margin-top: 6px;
+    color: var(--gm-measurements-error);
+    overflow-wrap: anywhere;
+}
+
+.gm-measurements__target-status:empty {
+    display: none;
+}
+
+.gm-measurements__row > .gm-measurements__archived-warning {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 8px 12px;
+    border-left: 4px solid var(--gm-measurements-warning);
+    background: #fcf9e8;
+    color: var(--gm-measurements-text);
+    overflow-wrap: anywhere;
+}
+
+/*
+ * Native browser validation remains responsible for displaying
+ * required-field and custom-validity messages.
+ *
+ * Do not mark every initially empty required field as an error.
+ */
+.gm-measurements input:user-invalid,
+.gm-measurements select:user-invalid,
+.gm-measurements textarea:user-invalid {
+    border-color: var(--gm-measurements-error);
+}
+
+/* Narrow editors and mobile screens */
+
+@media screen and (max-width: 1100px) {
+    .gm-measurements__row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media screen and (max-width: 782px) {
+    .gm-measurements__overall {
+        padding: 12px;
+    }
+
+    .gm-measurements__row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+        padding: 12px;
+    }
+
+    .gm-measurements__row select,
+    .gm-measurements__row input[type="text"],
+    .gm-measurements__overall input[type="text"] {
+        width: 100%;
+        min-height: 40px;
+    }
+
+    .gm-measurements__actions .button-link-delete {
+        min-height: 44px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .gm-measurements [data-gm-add-row] {
+        min-height: 44px;
+        white-space: normal;
+    }
+}
+
+/* Respect operating-system high-contrast settings */
+
+@media (forced-colors: active) {
+    .gm-measurements__overall,
+    .gm-measurements__row {
+        border-color: CanvasText;
+        background: Canvas;
+        color: CanvasText;
+    }
+
+    .gm-measurements .description {
+        color: CanvasText;
+    }
+
+    .gm-measurements__row > .gm-measurements__archived-warning {
+        border-color: CanvasText;
+        background: Canvas;
+        color: CanvasText;
+    }
+
+    .gm-measurements__row .gm-measurements__target-status {
+        color: CanvasText;
+    }
+}

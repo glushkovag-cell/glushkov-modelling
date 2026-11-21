@@ -1,0 +1,625 @@
+name: WordPress — Deploy Model Measurements
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Режим запуска"
+        required: true
+        default: check
+        type: choice
+        options:
+          - check
+          - deploy-inactive
+
+      confirmation:
+        description: "Для deploy-inactive введите DEPLOY"
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-model-measurements
+  cancel-in-progress: false
+
+env:
+  PLUGIN_SLUG: gm-model-measurements
+  PLUGIN_SOURCE: wordpress/plugins/gm-model-measurements
+
+jobs:
+  check:
+    name: Check and package
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout selected revision
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Validate deployment confirmation
+        if: inputs.mode == 'deploy-inactive'
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "$CONFIRMATION" != "DEPLOY" ]]; then
+            echo "::error::Для развёртывания введите DEPLOY."
+            exit 1
+          fi
+
+      - name: Validate plugin structure
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required=(
+            gm-model-measurements.php
+            includes/dictionaries.php
+            includes/measurements.php
+            includes/validation.php
+            includes/admin.php
+            includes/persistence.php
+            includes/dictionary-guards.php
+            assets/admin.js
+            assets/admin.css
+          )
+
+          if [[ ! -d "$PLUGIN_SOURCE" || -L "$PLUGIN_SOURCE" ]]; then
+            echo "::error::Каталог плагина отсутствует или является ссылкой."
+            exit 1
+          fi
+
+          if [[ -n "$(find "$PLUGIN_SOURCE" -type l -print -quit)" ]]; then
+            echo "::error::Символические ссылки в каталоге плагина запрещены."
+            exit 1
+          fi
+
+          for file in "${required[@]}"; do
+            if [[ ! -f "$PLUGIN_SOURCE/$file" ]]; then
+              echo "::error::Отсутствует обязательный файл: $file"
+              exit 1
+            fi
+          done
+
+      - name: Check PHP syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          command -v php >/dev/null
+          php --version
+
+          while IFS= read -r -d '' file; do
+            php -l "$file"
+          done < <(
+            find "$PLUGIN_SOURCE" -type f -name '*.php' -print0
+          )
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          node --check "$PLUGIN_SOURCE/assets/admin.js"
+
+      - name: Package plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p dist
+
+          tar \
+            -C "$PLUGIN_SOURCE" \
+            -czf "dist/$PLUGIN_SLUG.tar.gz" \
+            gm-model-measurements.php \
+            includes/dictionaries.php \
+            includes/measurements.php \
+            includes/validation.php \
+            includes/admin.php \
+            includes/persistence.php \
+            includes/dictionary-guards.php \
+            assets/admin.js \
+            assets/admin.css
+
+          (
+            cd dist
+            sha256sum "$PLUGIN_SLUG.tar.gz" > SHA256SUMS
+          )
+
+      - name: Upload checked artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-measurements-${{ github.sha }}
+          path: |
+            dist/gm-model-measurements.tar.gz
+            dist/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Write check summary
+        shell: bash
+        run: |
+          {
+            echo "## Model Measurements — checks"
+            echo
+            echo "- Revision: \`$GITHUB_SHA\`"
+            echo "- PHP syntax: passed"
+            echo "- JavaScript syntax: passed"
+            echo "- Deployment archive: created"
+            echo "- Functional tests: not performed"
+            echo "- WordPress activation: not performed"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    name: Deploy inactive plugin
+    if: inputs.mode == 'deploy-inactive'
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    environment: wordpress-production
+
+    env:
+      SSH_HOST: ${{ secrets.DEPLOY_HOST }}
+      SSH_PORT: ${{ secrets.DEPLOY_PORT }}
+      SSH_USER: ${{ secrets.DEPLOY_USER }}
+
+      WP_ROOT: /var/www/cms/wordpress
+      WP_CLI: ${{ vars.WP_CLI || '/usr/local/bin/wp' }}
+
+    steps:
+      - name: Download checked artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: model-measurements-${{ github.sha }}
+          path: dist
+
+      - name: Verify artifact checksum
+        working-directory: dist
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sha256sum --check SHA256SUMS
+
+      - name: Validate deployment settings
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          [[ "$SSH_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]] || {
+            echo "::error::DEPLOY_HOST отсутствует или имеет неподдерживаемый формат."
+            exit 1
+          }
+
+          [[ "$SSH_USER" == "deploy" ]] || {
+            echo "::error::Этот workflow рассчитан на пользователя deploy."
+            exit 1
+          }
+
+          [[ "$SSH_PORT" =~ ^[0-9]+$ ]] || {
+            echo "::error::DEPLOY_PORT должен содержать номер порта."
+            exit 1
+          }
+
+          for path in "$WP_ROOT" "$WP_CLI"; do
+            [[ "$path" =~ ^/[A-Za-z0-9_./-]+$ ]] || {
+              echo "::error::Недопустимый формат удалённого пути."
+              exit 1
+            }
+
+            [[ "$path" != "/" ]]
+            [[ "$path" != *"/../"* ]]
+            [[ "$path" != */.. ]]
+          done
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_HOST"
+          test -n "$SSH_PORT"
+          test -n "$SSH_USER"
+
+          install -d -m 700 "$HOME/.ssh"
+
+          printf '%s\n' "$SSH_PRIVATE_KEY" \
+            > "$HOME/.ssh/wp_deploy"
+
+          chmod 600 "$HOME/.ssh/wp_deploy"
+
+          # Same host-key discovery approach as the existing VPS workflow.
+          ssh-keyscan \
+            -T 15 \
+            -p "$SSH_PORT" \
+            -H "$SSH_HOST" \
+            > "$HOME/.ssh/known_hosts"
+
+          test -s "$HOME/.ssh/known_hosts"
+
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Create private upload directory
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          remote_dir="$(
+            ssh \
+              -i "$HOME/.ssh/wp_deploy" \
+              -p "$SSH_PORT" \
+              -o BatchMode=yes \
+              -o StrictHostKeyChecking=yes \
+              -o ConnectTimeout=15 \
+              "$SSH_USER@$SSH_HOST" \
+              'umask 077; mktemp -d /tmp/gm-measurements-upload.XXXXXXXX'
+          )"
+
+          [[ "$remote_dir" =~ ^/tmp/gm-measurements-upload\.[A-Za-z0-9]+$ ]]
+
+          echo "REMOTE_UPLOAD_DIR=$remote_dir" >> "$GITHUB_ENV"
+
+      - name: Upload checked archive
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          scp \
+            -i "$HOME/.ssh/wp_deploy" \
+            -P "$SSH_PORT" \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=15 \
+            dist/gm-model-measurements.tar.gz \
+            dist/SHA256SUMS \
+            "$SSH_USER@$SSH_HOST:$REMOTE_UPLOAD_DIR/"
+
+      - name: Back up and deploy plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ssh \
+            -i "$HOME/.ssh/wp_deploy" \
+            -p "$SSH_PORT" \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=15 \
+            "$SSH_USER@$SSH_HOST" \
+            "bash -s -- '$WP_ROOT' '$WP_CLI' '$REMOTE_UPLOAD_DIR' '$GITHUB_SHA'" \
+            <<'REMOTE'
+          set -Eeuo pipefail
+          umask 022
+
+          export PATH=/usr/local/bin:/usr/bin:/bin
+
+          wp_root="$1"
+          wp_cli="$2"
+          upload_dir="$3"
+          revision="$4"
+
+          slug="gm-model-measurements"
+          destination="$wp_root/wp-content/plugins/$slug"
+
+          state_dir="$HOME/.local/state/gm-model-measurements"
+          backups_dir="$state_dir/backups"
+
+          stage="$upload_dir/new"
+          restore_dir="$upload_dir/restore"
+
+          backup=""
+          changed=0
+          completed=0
+
+          fail() {
+            printf 'ERROR: %s\n' "$*" >&2
+            exit 1
+          }
+
+          wp_cmd() {
+            timeout 60s \
+              php "$wp_cli" \
+              --path="$wp_root" \
+              --skip-plugins \
+              --skip-themes \
+              "$@"
+          }
+
+          assert_inactive() {
+            local active
+
+            active="$(
+              wp_cmd plugin list --status=active --field=name
+            )"
+
+            if printf '%s\n' "$active" | grep -Fxq "$slug"; then
+              fail "Plugin is active. Replacement refused."
+            fi
+          }
+
+          rollback_on_error() {
+            local status=$?
+            trap - EXIT
+
+            if [[ "$status" -ne 0 &&
+                  "$changed" -eq 1 &&
+                  "$completed" -eq 0 &&
+                  -n "$backup" &&
+                  -f "$backup" ]]; then
+
+              echo "Deployment failed. Attempting rollback." >&2
+
+              if mkdir -p "$restore_dir" &&
+                  tar -xzf "$backup" -C "$restore_dir" &&
+                  rsync \
+                    -r \
+                    --delete \
+                    --perms \
+                    --chmod=D2755,F644 \
+                    --no-owner \
+                    --no-group \
+                    "$restore_dir/" "$destination/"; then
+                echo "Previous plugin files restored." >&2
+              else
+                echo "CRITICAL: Automatic rollback failed." >&2
+                echo "Backup: $backup" >&2
+              fi
+            fi
+
+            exit "$status"
+          }
+
+          trap rollback_on_error EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+
+          [[ "$(id -un)" == "deploy" ]] ||
+            fail "Expected SSH user deploy."
+
+          for executable in \
+            php \
+            rsync \
+            tar \
+            sha256sum \
+            flock \
+            timeout \
+            readlink \
+            stat \
+            find \
+            grep \
+            install
+          do
+            command -v "$executable" >/dev/null ||
+              fail "Required executable not found: $executable"
+          done
+
+          test -f "$wp_root/wp-load.php" ||
+            fail "WordPress entrypoint not found."
+
+          test -f "$wp_cli" ||
+            fail "WP-CLI not found at configured path."
+
+          [[ -d "$destination" && ! -L "$destination" ]] ||
+            fail "Create the plugin directory before deployment."
+
+          [[ "$(readlink -f "$destination")" == "$destination" ]] ||
+            fail "Destination path must not contain symlinks."
+
+          [[ -w "$destination" && -x "$destination" ]] ||
+            fail "deploy cannot write to the plugin directory."
+
+          [[ "$(stat -c '%U:%G' "$destination")" == "deploy:www-data" ]] ||
+            fail "Expected destination owner deploy:www-data."
+
+          [[ "$(stat -c '%a' "$destination")" == "2755" ]] ||
+            fail "Expected destination directory mode 2755."
+
+          if [[ -n "$(find "$destination" -type l -print -quit)" ]]; then
+            fail "Existing plugin contains symlinks."
+          fi
+
+          if [[ -n "$(
+            find "$destination" \
+              \( ! -type d -a ! -type f \) \
+              -print -quit
+          )" ]]; then
+            fail "Existing plugin contains unsupported file types."
+          fi
+
+          if [[ -n "$(
+            find "$destination" \
+              \( ! -user deploy -o ! -group www-data \) \
+              -print -quit
+          )" ]]; then
+            fail "Existing plugin entries must belong to deploy:www-data."
+          fi
+
+          install -d -m 700 "$state_dir" "$backups_dir"
+
+          exec 9>"$state_dir/deploy.lock"
+          flock -n 9 ||
+            fail "Another deployment is running."
+
+          wp_cmd core is-installed >/dev/null
+
+          # Single-site only: do not silently miss per-site activation
+          # in a WordPress Multisite installation.
+          wp_cmd eval '
+            if (is_multisite()) {
+                fwrite(STDERR, "Multisite is not supported by this workflow.\n");
+                exit(1);
+            }
+          '
+
+          assert_inactive
+
+          (
+            cd "$upload_dir"
+            sha256sum --check SHA256SUMS
+          )
+
+          mkdir -m 700 "$stage"
+
+          tar \
+            --no-same-owner \
+            --no-same-permissions \
+            -xzf "$upload_dir/$slug.tar.gz" \
+            -C "$stage"
+
+          required=(
+            gm-model-measurements.php
+            includes/dictionaries.php
+            includes/measurements.php
+            includes/validation.php
+            includes/admin.php
+            includes/persistence.php
+            includes/dictionary-guards.php
+            assets/admin.js
+            assets/admin.css
+          )
+
+          for file in "${required[@]}"; do
+            test -f "$stage/$file" ||
+              fail "Required uploaded file missing: $file"
+          done
+
+          if [[ -n "$(find "$stage" -type l -print -quit)" ]]; then
+            fail "Uploaded plugin contains symlinks."
+          fi
+
+          while IFS= read -r -d '' file; do
+            php -l "$file"
+          done < <(
+            find "$stage" -type f -name '*.php' -print0
+          )
+
+          backup="$backups_dir/$slug-$(date -u +%Y%m%dT%H%M%SZ)-${revision:0:12}-$$.tar.gz"
+
+          tar -C "$destination" -czf "$backup" .
+          chmod 600 "$backup"
+
+          # Confirm archive readability before modifying installed files.
+          tar -tzf "$backup" >/dev/null
+
+          assert_inactive
+
+          changed=1
+
+          rsync \
+            -r \
+            --delete \
+            --perms \
+            --chmod=D2755,F644 \
+            --no-owner \
+            --no-group \
+            "$stage/" "$destination/"
+
+          # Check file contents and absence of unexpected destination files.
+          differences="$(
+            rsync \
+              -rcn \
+              --delete \
+              --itemize-changes \
+              "$stage/" "$destination/"
+          )"
+
+          [[ -z "$differences" ]] ||
+            fail "Installed files do not match the deployment archive."
+
+          if [[ -n "$(
+            find "$destination" \
+              \( ! -user deploy -o ! -group www-data \) \
+              -print -quit
+          )" ]]; then
+            fail "Installed ownership verification failed."
+          fi
+
+          if [[ -n "$(
+            find "$destination" \
+              -type d ! -perm 2755 \
+              -print -quit
+          )" ]]; then
+            fail "Installed directory permissions verification failed."
+          fi
+
+          if [[ -n "$(
+            find "$destination" \
+              -type f ! -perm 0644 \
+              -print -quit
+          )" ]]; then
+            fail "Installed file permissions verification failed."
+          fi
+
+          test -r "$destination/$slug.php" ||
+            fail "Installed plugin entrypoint is not readable."
+
+          completed=1
+
+          echo "Plugin files deployed."
+          echo "Owner: deploy:www-data"
+          echo "Directory mode: 2755"
+          echo "File mode: 644"
+          echo "Backup: $backup"
+          echo "Plugin was not activated."
+          REMOTE
+
+      - name: Remove remote upload directory
+        if: always() && env.REMOTE_UPLOAD_DIR != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          [[ "$REMOTE_UPLOAD_DIR" =~ ^/tmp/gm-measurements-upload\.[A-Za-z0-9]+$ ]]
+
+          ssh \
+            -i "$HOME/.ssh/wp_deploy" \
+            -p "$SSH_PORT" \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=15 \
+            "$SSH_USER@$SSH_HOST" \
+            "rm -rf -- '$REMOTE_UPLOAD_DIR'"
+
+      - name: Remove SSH credentials
+        if: always()
+        shell: bash
+        run: |
+          rm -f \
+            "$HOME/.ssh/wp_deploy" \
+            "$HOME/.ssh/known_hosts"
+
+      - name: Write deployment summary
+        if: success()
+        shell: bash
+        run: |
+          {
+            echo "## Model Measurements — deployed"
+            echo
+            echo "- Revision: \`$GITHUB_SHA\`"
+            echo "- SSH user: deploy"
+            echo "- sudo: not used"
+            echo "- Owner: deploy:www-data"
+            echo "- Directories: 2755"
+            echo "- Files: 644"
+            echo "- Previous contents backed up on the server"
+            echo "- Activation: not performed"
+            echo "- No deployment commands modify the database or WordPress configuration"
+            echo "- Functional acceptance: still required"
+          } >> "$GITHUB_STEP_SUMMARY"
