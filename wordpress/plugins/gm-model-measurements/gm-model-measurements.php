@@ -3,7 +3,7 @@
  * Plugin Name: Glushkov Modelling — Model Measurements
  * Description: Model measurements in millimeters, dictionary validation,
  *              an administration metabox and publication integrity guards.
- * Version: 0.1.2
+ * Version: 0.1.3
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Glushkov Modelling
@@ -16,7 +16,7 @@ namespace GlushkovModelling\ModelMeasurements;
 
 defined('ABSPATH') || exit;
 
-const PLUGIN_VERSION = '0.1.2';
+const PLUGIN_VERSION = '0.1.3';
 
 /*
  * Load definitions before registering hooks.
