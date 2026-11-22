@@ -2,8 +2,9 @@
 /**
  * Plugin Name: Glushkov Modelling — Model Measurements
  * Description: Model measurements in millimeters, dictionary validation,
- *              an administration metabox and publication integrity guards.
- * Version: 0.1.3
+ *              an administration metabox, publication integrity guards
+ *              and a read-only GraphQL API.
+ * Version: 0.1.4
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Glushkov Modelling
@@ -16,19 +17,24 @@ namespace GlushkovModelling\ModelMeasurements;
 
 defined('ABSPATH') || exit;
 
-const PLUGIN_VERSION = '0.1.3';
+const PLUGIN_VERSION = '0.1.4';
 
 /*
- * Load definitions before registering hooks.
+ * Load definitions before registering bootstrap hooks.
  *
  * Order:
  * - dictionary reading and normalization;
  * - measurement reading and structural normalization;
  * - dictionary-aware measurement validation;
+ * - read-only GraphQL types and field registration;
  * - administration rendering;
  * - classic-editor persistence and feedback;
  * - dictionary integrity guards;
  * - cross-context publication and measurement metadata guards.
+ *
+ * The GraphQL module attaches its registration callback to
+ * graphql_register_types. It does not require WPGraphQL to be active
+ * merely to load this plugin.
  *
  * Function calls made by registered callbacks run after all modules
  * have been included.
@@ -39,6 +45,7 @@ const PLUGIN_VERSION = '0.1.3';
 require_once __DIR__ . '/includes/dictionaries.php';
 require_once __DIR__ . '/includes/measurements.php';
 require_once __DIR__ . '/includes/validation.php';
+require_once __DIR__ . '/includes/graphql.php';
 require_once __DIR__ . '/includes/admin.php';
 require_once __DIR__ . '/includes/persistence.php';
 require_once __DIR__ . '/includes/dictionary-guards.php';

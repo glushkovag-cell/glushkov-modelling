@@ -8,6 +8,8 @@ on:
       - 'mcp-server/**'
       - 'infra/**'
       - 'mcp-registry-badge/**'
+      - 'wordpress/plugins/gm-model-measurements/**'
+      - '.github/workflows/deploy-model-measurements.yml'
 
   workflow_dispatch:
 
