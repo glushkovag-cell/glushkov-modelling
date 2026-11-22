@@ -2,7 +2,26 @@
 /**
  * Dictionary-aware validation of model measurements.
  *
- * Requires dictionaries.php and measurements.php.
+ * Requires:
+ * - dictionaries.php
+ * - measurements.php
+ *
+ * Input dictionaries must come from load_dictionaries().
+ *
+ * Rules:
+ * - every measurement references a published definition;
+ * - target presence and kind match the definition;
+ * - referenced elements exist in the published dictionary;
+ * - element kind matches target.kind;
+ * - inactive references may remain only in unchanged stored rows;
+ * - overall_length uses the protected system definition;
+ * - overall_length is required only when explicitly requested.
+ *
+ * This module does not:
+ * - write metadata or change post statuses;
+ * - register hooks, CPTs or ACF fields;
+ * - perform authorization;
+ * - read, modify or synchronize legacy modellength.
  *
  * @package GM_Model_Measurements
  */
@@ -12,19 +31,23 @@ namespace GlushkovModelling\ModelMeasurements;
 defined('ABSPATH') || exit;
 
 /**
- * Validate a complete measurement collection before saving.
+ * Validate a complete measurement collection.
  *
- * Both incoming and previously stored collections are normalized.
+ * Incoming and previously stored collections are both normalized.
  * No partial collection is returned when validation fails.
  *
  * Inactive definitions and elements may remain in an existing row
- * only when that row is completely unchanged.
+ * only when the normalized row is completely unchanged, including
+ * its value, target and note.
+ *
+ * An empty draft collection is permitted when the dictionaries are
+ * valid and require_overall_length is false.
  *
  * Dictionary structure must come from load_dictionaries().
  *
- * @param mixed $rows                   Proposed collection.
- * @param array $dictionaries           Loaded dictionaries.
- * @param mixed $existing_rows          Previously stored collection.
+ * @param mixed $rows Proposed collection.
+ * @param array $dictionaries Loaded dictionaries.
+ * @param mixed $existing_rows Previously stored collection.
  * @param bool  $require_overall_length Require overall_length.
  * @return array|\WP_Error Normalized collection or validation errors.
  */
@@ -57,7 +80,13 @@ function validate_model_measurements(
     $definitions = $dictionaries['definitions'];
     $elements = $dictionaries['elements'];
 
-    $system_definition = validate_overall_length_definition($definitions);
+    /*
+     * A valid system definition is required independently of whether
+     * the current collection must contain an overall_length value.
+     */
+    $system_definition = validate_overall_length_definition(
+        $definitions
+    );
 
     if (is_wp_error($system_definition)) {
         return $system_definition;
@@ -104,7 +133,10 @@ function validate_model_measurements(
 
     if (
         $require_overall_length
-        && find_measurement($measurements, 'overall_length') === null
+        && find_measurement(
+            $measurements,
+            'overall_length'
+        ) === null
     ) {
         $errors->add(
             'gm_measurements_overall_length_required',
@@ -120,7 +152,8 @@ function validate_model_measurements(
 /**
  * Validate the protected overall_length dictionary definition.
  *
- * Its group and target kind are part of the storage contract.
+ * Its stable code, group, target kind and active state are part
+ * of the contract.
  *
  * @param array $definitions Definitions indexed by stable code.
  * @return true|\WP_Error
@@ -138,7 +171,8 @@ function validate_overall_length_definition(array $definitions)
     $definition = $definitions['overall_length'];
 
     if (
-        ($definition['code'] ?? null) !== 'overall_length'
+        !is_array($definition)
+        || ($definition['code'] ?? null) !== 'overall_length'
         || ($definition['group'] ?? null) !== 'overall'
         || ($definition['targetKind'] ?? null) !== 'none'
         || ($definition['active'] ?? null) !== true
@@ -156,14 +190,17 @@ function validate_overall_length_definition(array $definitions)
 /**
  * Validate a normalized row against loaded dictionaries.
  *
- * Existing rows may preserve references to inactive entries,
- * but not to missing entries or incompatible element kinds.
+ * Existing rows may retain references to inactive entries, but not
+ * to missing entries or incompatible element kinds.
+ *
+ * This helper expects normalized dictionary entries supplied by
+ * load_dictionaries(), not arbitrary request data.
  *
  * @param array $measurement Normalized proposed row.
  * @param array $definitions Definitions indexed by stable code.
- * @param array $elements    Elements indexed by stable code.
- * @param array $existing    Normalized previously stored collection.
- * @param int   $position    One-based row position.
+ * @param array $elements Elements indexed by stable code.
+ * @param array $existing Normalized previously stored collection.
+ * @param int   $position One-based row position.
  * @return true|\WP_Error
  */
 function validate_measurement_against_dictionaries(
@@ -295,11 +332,13 @@ function validate_measurement_against_dictionaries(
 /**
  * Check whether a normalized row exactly matches a stored row.
  *
- * Normalization makes numeric input formats and object key ordering
- * irrelevant before this comparison.
+ * Normalization makes equivalent numeric input formats and object
+ * key ordering irrelevant before this comparison.
+ *
+ * Collection ordering is not part of a measurement's identity.
  *
  * @param array $measurement Normalized proposed row.
- * @param array $existing    Normalized stored collection.
+ * @param array $existing Normalized stored collection.
  * @return bool
  */
 function measurement_row_is_unchanged(
@@ -321,12 +360,13 @@ function measurement_row_is_unchanged(
 /**
  * Build a dictionary-aware row validation error.
  *
- * Row-specific error codes preserve context when errors are collected.
+ * Row-specific error codes retain context when errors from multiple
+ * rows are collected in one WP_Error.
  *
  * @param string $reason_code Stable reason code.
- * @param int    $position    One-based row position.
- * @param string $reason      Human-readable failure description.
- * @param array  $context     Additional error context.
+ * @param int    $position One-based row position.
+ * @param string $reason Human-readable failure description.
+ * @param array  $context Additional error context.
  * @return \WP_Error
  */
 function measurement_validation_row_error(

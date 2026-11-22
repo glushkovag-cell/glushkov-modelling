@@ -1,15 +1,18 @@
 /**
  * Model measurements metabox.
  *
- * No AJAX, persistence or publication rules are implemented here.
+ * Matches the markup rendered by includes/admin.php.
+ *
+ * Responsibilities:
+ * - add and remove additional measurement rows;
+ * - synchronize element choices with measurement definitions;
+ * - preserve incompatible selections visibly instead of replacing them;
+ * - prevent reselecting released inactive options in the same row;
+ * - maintain expected_rows and the final completion marker;
+ * - maintain unique DOM IDs and accessible descriptions.
+ *
+ * No AJAX, metadata writes or publication enforcement are implemented.
  * Server-side validation remains authoritative.
- *
- * Form integrity controls:
- * - expected_rows: number of additional measurement rows;
- * - complete: final marker after all measurement fields.
- *
- * These controls help detect incomplete submissions. They do not
- * replace server-side validation, capability checks or the nonce.
  */
 (function () {
     'use strict';
@@ -18,9 +21,12 @@
     const ROW_SELECTOR = '[data-gm-measurement-row]';
 
     /**
-     * Read the target kind from a definition option.
+     * Read the selected definition's target kind.
      *
      * null means that no usable definition is selected.
+     *
+     * @param {HTMLSelectElement} definitionSelect
+     * @returns {string|null}
      */
     function getTargetKind(definitionSelect) {
         const option = definitionSelect.selectedOptions[0];
@@ -31,20 +37,27 @@
 
         const kind = option.dataset.targetKind;
 
-        return ['none', 'mast', 'yard'].includes(kind) ? kind : null;
+        return ['none', 'mast', 'yard'].includes(kind)
+            ? kind
+            : null;
     }
 
     /**
-     * Synchronize the element selector with the chosen definition.
+     * Synchronize the target controls with the selected definition.
      *
-     * An incompatible selected element is retained visibly as an error,
-     * rather than silently replaced with a different element.
+     * An incompatible selected element is kept visible with an error.
+     * It is never silently replaced with another element.
+     *
+     * @param {HTMLElement} row
+     * @returns {void}
      */
     function synchronizeTarget(row) {
         const definitionSelect = row.querySelector(
             '[data-gm-definition]'
         );
-        const targetSelect = row.querySelector('[data-gm-target]');
+        const targetSelect = row.querySelector(
+            '[data-gm-target]'
+        );
         const targetKindInput = row.querySelector(
             '[data-gm-target-kind]'
         );
@@ -56,9 +69,9 @@
         );
 
         if (
-            !definitionSelect ||
-            !targetSelect ||
-            !targetKindInput ||
+            !(definitionSelect instanceof HTMLSelectElement) ||
+            !(targetSelect instanceof HTMLSelectElement) ||
+            !(targetKindInput instanceof HTMLInputElement) ||
             !targetContainer ||
             !targetStatus
         ) {
@@ -70,8 +83,9 @@
 
         targetContainer.hidden = !needsTarget;
         targetSelect.disabled = !needsTarget;
-        targetKindInput.disabled = !needsTarget;
         targetSelect.required = needsTarget;
+
+        targetKindInput.disabled = !needsTarget;
         targetKindInput.value = needsTarget ? kind : '';
 
         targetSelect.setCustomValidity('');
@@ -105,8 +119,11 @@
                 return;
             }
 
-            option.hidden = !compatible || (unavailable && !retained);
-            option.disabled = !compatible || (unavailable && !retained);
+            const selectable = compatible &&
+                (!unavailable || retained);
+
+            option.hidden = !selectable;
+            option.disabled = !selectable;
         });
 
         if (incompatibleSelection) {
@@ -120,10 +137,16 @@
     }
 
     /**
-     * An archived option may be retained while it remains selected.
+     * Release inactive options after the user selects another option.
      *
-     * After choosing a different option, it cannot be selected again.
-     * The server independently checks the saved collection.
+     * An inactive stored option may remain while selected. Once it is
+     * released, the user cannot select it again in this row without
+     * reloading the editor.
+     *
+     * The server independently checks the stored collection.
+     *
+     * @param {HTMLSelectElement} select
+     * @returns {void}
      */
     function releaseUnselectedArchivedOptions(select) {
         Array.from(select.options).forEach(function (option) {
@@ -140,6 +163,9 @@
 
     /**
      * Return actual additional rows, excluding template contents.
+     *
+     * @param {HTMLElement} rowsContainer
+     * @returns {Element[]}
      */
     function getRows(rowsContainer) {
         return Array.from(rowsContainer.children).filter(
@@ -150,16 +176,25 @@
     }
 
     /**
-     * Initialize one independently addressable metabox.
+     * Initialize one metabox.
+     *
+     * @param {HTMLElement} root
+     * @returns {void}
      */
     function initializeMetabox(root) {
         if (root.dataset.gmInitialized === '1') {
             return;
         }
 
-        const rowsContainer = root.querySelector('[data-gm-rows]');
-        const template = root.querySelector('[data-gm-row-template]');
-        const addButton = root.querySelector('[data-gm-add-row]');
+        const rowsContainer = root.querySelector(
+            '[data-gm-rows]'
+        );
+        const template = root.querySelector(
+            '[data-gm-row-template]'
+        );
+        const addButton = root.querySelector(
+            '[data-gm-add-row]'
+        );
         const announcement = root.querySelector(
             '[data-gm-announcement]'
         );
@@ -177,7 +212,7 @@
         if (
             !rowsContainer ||
             !(template instanceof HTMLTemplateElement) ||
-            !addButton ||
+            !(addButton instanceof HTMLButtonElement) ||
             !announcement ||
             !integrityContainer ||
             !(expectedRowsInput instanceof HTMLInputElement) ||
@@ -187,12 +222,17 @@
             return;
         }
 
+        /*
+         * Missing or mismatched server-rendered controls must not
+         * be repaired by creating replacement markers in JavaScript.
+         */
         if (
             expectedRowsInput.type !== 'hidden' ||
             expectedRowsInput.name !==
             'gm_measurements[expected_rows]' ||
             completeInput.type !== 'hidden' ||
-            completeInput.name !== 'gm_measurements[complete]' ||
+            completeInput.name !==
+            'gm_measurements[complete]' ||
             !integrityContainer.contains(expectedRowsInput) ||
             !integrityContainer.contains(completeInput)
         ) {
@@ -204,11 +244,12 @@
         let nextIndex = 0;
 
         /**
-         * Synchronize controls used by the server to detect truncation.
+         * Update the row count and keep the completion marker last.
          *
-         * Keep complete last, after the row count and all measurement
-         * fields. Do not create missing integrity controls in JavaScript:
-         * PHP must render them so that the form also works without JS.
+         * These controls detect incomplete submissions. They do not
+         * authenticate the request or replace server-side validation.
+         *
+         * @returns {void}
          */
         function synchronizeFormIntegrity() {
             expectedRowsInput.disabled = false;
@@ -221,6 +262,7 @@
 
             integrityContainer.appendChild(expectedRowsInput);
             integrityContainer.appendChild(completeInput);
+
             root.appendChild(integrityContainer);
         }
 
@@ -237,9 +279,13 @@
         synchronizeFormIntegrity();
 
         /**
-         * Replace only the dedicated template index token.
+         * Create a row using the server-rendered inert template.
          *
+         * Replace only the dedicated index token in known attributes.
          * No user-provided content is inserted as HTML.
+         *
+         * @param {number} index
+         * @returns {Element|null}
          */
         function createRow(index) {
             const fragment = template.content.cloneNode(true);
@@ -268,6 +314,10 @@
 
                     const value = element.getAttribute(attribute);
 
+                    if (value === null) {
+                        return;
+                    }
+
                     element.setAttribute(
                         attribute,
                         value.split('__INDEX__').join(String(index))
@@ -279,7 +329,10 @@
         }
 
         addButton.addEventListener('click', function () {
-            if (!Number.isSafeInteger(nextIndex + 1)) {
+            if (
+                !Number.isSafeInteger(nextIndex) ||
+                !Number.isSafeInteger(nextIndex + 1)
+            ) {
                 announcement.textContent =
                     'Невозможно добавить ещё одну строку.';
                 return;
@@ -294,6 +347,7 @@
             }
 
             nextIndex += 1;
+
             rowsContainer.appendChild(row);
 
             synchronizeTarget(row);
@@ -303,7 +357,7 @@
                 '[data-gm-definition]'
             );
 
-            if (definitionSelect) {
+            if (definitionSelect instanceof HTMLSelectElement) {
                 definitionSelect.focus();
             }
 
@@ -324,12 +378,14 @@
             }
 
             if (
-                control.matches('[data-gm-definition]') ||
-                control.matches('[data-gm-target]')
+                !control.matches('[data-gm-definition]') &&
+                !control.matches('[data-gm-target]')
             ) {
-                releaseUnselectedArchivedOptions(control);
-                synchronizeTarget(row);
+                return;
             }
+
+            releaseUnselectedArchivedOptions(control);
+            synchronizeTarget(row);
         });
 
         root.addEventListener('click', function (event) {
@@ -341,38 +397,44 @@
                 '[data-gm-remove-row]'
             );
 
-            if (!button || !rowsContainer.contains(button)) {
+            if (
+                !(button instanceof HTMLButtonElement) ||
+                !rowsContainer.contains(button)
+            ) {
                 return;
             }
 
             const row = button.closest(ROW_SELECTOR);
 
-            if (!row) {
+            if (!row || !rowsContainer.contains(row)) {
                 return;
             }
 
-            const nextRow = row.nextElementSibling;
-            const previousRow = row.previousElementSibling;
+            const rows = getRows(rowsContainer);
+            const position = rows.indexOf(row);
+            const focusRow = rows[position + 1] ||
+                rows[position - 1] ||
+                null;
 
             row.remove();
+
             synchronizeFormIntegrity();
 
-            const focusRow = nextRow || previousRow;
             const focusControl = focusRow
                 ? focusRow.querySelector('[data-gm-definition]')
                 : addButton;
 
-            if (focusControl) {
+            if (focusControl instanceof HTMLElement) {
                 focusControl.focus();
+            } else {
+                addButton.focus();
             }
 
             announcement.textContent = 'Строка измерения удалена.';
         });
 
-        /**
-         * Refresh the count before normal form submission.
-         *
-         * Updating after every add/remove also covers submission paths
+        /*
+         * Updating after each row change also covers submission paths
          * that do not dispatch a submit event.
          */
         form.addEventListener(
@@ -384,6 +446,11 @@
         );
     }
 
+    /**
+     * Initialize all matching metaboxes on the current page.
+     *
+     * @returns {void}
+     */
     function initialize() {
         document.querySelectorAll(ROOT_SELECTOR).forEach(
             initializeMetabox
@@ -391,9 +458,11 @@
     }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initialize, {
-            once: true
-        });
+        document.addEventListener(
+            'DOMContentLoaded',
+            initialize,
+            { once: true }
+        );
     } else {
         initialize();
     }

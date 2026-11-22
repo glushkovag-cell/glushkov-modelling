@@ -4,6 +4,18 @@
  *
  * Includes validation of a proposed dictionary publication state.
  *
+ * Dictionary CPTs and ACF fields are registered elsewhere.
+ * This module does not register or modify them.
+ *
+ * Value fields are read from current WordPress post metadata.
+ * ACF's value cache and formatting are deliberately not used.
+ *
+ * Published entries participate in the runtime dictionaries.
+ * Inactive published entries remain available for resolving
+ * previously stored measurements.
+ *
+ * This file does not register hooks or write data.
+ *
  * @package GM_Model_Measurements
  */
 
@@ -12,9 +24,11 @@ namespace GlushkovModelling\ModelMeasurements;
 defined('ABSPATH') || exit;
 
 /**
- * Return known value field names for one dictionary type.
+ * Return value field names for a dictionary CPT.
  *
- * @param string $post_type Dictionary post type.
+ * ACF underscore-prefixed field-reference metadata is excluded.
+ *
+ * @param string $post_type Dictionary CPT.
  * @return string[]
  */
 function dictionary_value_field_names($post_type)
@@ -45,22 +59,89 @@ function dictionary_value_field_names($post_type)
 }
 
 /**
- * Load both dictionaries.
+ * Read current raw dictionary value fields.
  *
- * Only published entries participate in the contract.
- * Inactive entries remain available for resolving saved measurements.
+ * Missing fields are represented as false.
+ * Duplicate rows and recognizable noncanonical key aliases cause
+ * an error instead of silently choosing a value.
+ *
+ * Alias detection covers case, trailing whitespace and Latin accents.
+ * It is not an emulator for every possible database collation.
+ *
+ * No functions from dictionary-guards.php are required here.
+ *
+ * @param int    $post_id Existing dictionary post ID.
+ * @param string $post_type Dictionary CPT.
+ * @return array|\WP_Error
+ */
+function read_dictionary_value_fields($post_id, $post_type)
+{
+    $known_fields = dictionary_value_field_names($post_type);
+
+    if ($known_fields === []) {
+        return new \WP_Error(
+            'gm_measurements_invalid_dictionary',
+            'Неизвестный тип справочника измерений.'
+        );
+    }
+
+    $canonical_by_folded = [];
+
+    foreach ($known_fields as $name) {
+        $canonical_by_folded[strtolower($name)] = $name;
+    }
+
+    $all_meta = get_post_meta($post_id);
+
+    foreach ($all_meta as $stored_key => $values) {
+        $folded = strtolower(rtrim(
+            remove_accents((string) $stored_key),
+            " \t\n\r\0\x0B"
+        ));
+
+        if (
+            isset($canonical_by_folded[$folded])
+            && $stored_key !== $canonical_by_folded[$folded]
+        ) {
+            return dictionary_entry_error(
+                $post_id,
+                'обнаружено неканоническое имя поля справочника; '
+                . 'требуется отдельное исправление данных'
+            );
+        }
+    }
+
+    $fields = [];
+
+    foreach ($known_fields as $name) {
+        $values = get_post_meta($post_id, $name, false);
+
+        if (count($values) > 1) {
+            return dictionary_entry_error(
+                $post_id,
+                sprintf(
+                    'поле %s имеет несколько метазаписей',
+                    $name
+                )
+            );
+        }
+
+        $fields[$name] = $values === [] ? false : $values[0];
+    }
+
+    return $fields;
+}
+
+/**
+ * Load both runtime dictionaries.
+ *
+ * Only published entries participate.
+ * Inactive entries remain available for resolving saved references.
  *
  * @return array|\WP_Error
  */
 function load_dictionaries()
 {
-    if (!function_exists('get_field')) {
-        return new \WP_Error(
-            'gm_measurements_acf_unavailable',
-            'Для работы справочников измерений требуется активный ACF.'
-        );
-    }
-
     $definitions = load_dictionary('measurement_defi');
 
     if (is_wp_error($definitions)) {
@@ -86,42 +167,45 @@ function load_dictionaries()
 }
 
 /**
- * Load a published dictionary indexed by stable codes.
+ * Load one published dictionary indexed by stable codes.
  *
- * A candidate entry may be excluded when validating its proposed
- * replacement. This permits validation without first writing changes.
+ * A candidate may be excluded when validating its proposed state.
+ * No candidate data is written by this function.
  *
- * @param string $post_type       Dictionary post type.
- * @param int    $exclude_post_id Optional candidate ID to exclude.
+ * @param string $post_type Dictionary CPT.
+ * @param int    $exclude_post_id Candidate ID to exclude.
  * @return array|\WP_Error
  */
 function load_dictionary($post_type, $exclude_post_id = 0)
 {
-    if (!in_array($post_type, ['measurement_defi', 'model_element'], true)) {
+    if (
+        !in_array(
+            $post_type,
+            ['measurement_defi', 'model_element'],
+            true
+        )
+    ) {
         return new \WP_Error(
             'gm_measurements_invalid_dictionary',
             'Неизвестный тип справочника измерений.'
         );
     }
 
-    if (!function_exists('get_field')) {
-        return new \WP_Error(
-            'gm_measurements_acf_unavailable',
-            'Для работы справочников измерений требуется активный ACF.'
-        );
-    }
-
     if (!post_type_exists($post_type)) {
         return new \WP_Error(
             'gm_measurements_dictionary_unavailable',
-            sprintf('Тип записей %s не зарегистрирован.', $post_type)
+            sprintf(
+                'Тип записей %s не зарегистрирован.',
+                $post_type
+            )
         );
     }
 
     if (!is_int($exclude_post_id) || $exclude_post_id < 0) {
         return new \WP_Error(
             'gm_measurements_invalid_dictionary_exclusion',
-            'Исключаемый ID справочной записи должен быть целым числом.'
+            'Исключаемый ID справочной записи '
+            . 'должен быть неотрицательным целым числом.'
         );
     }
 
@@ -132,7 +216,7 @@ function load_dictionary($post_type, $exclude_post_id = 0)
         'orderby'          => 'ID',
         'order'            => 'ASC',
         'no_found_rows'    => true,
-        'suppress_filters' => false,
+        'suppress_filters' => true,
     ];
 
     if ($exclude_post_id > 0) {
@@ -166,13 +250,16 @@ function load_dictionary($post_type, $exclude_post_id = 0)
         $dictionary[$code] = $entry;
     }
 
-    uasort($dictionary, static function ($left, $right) {
-        $comparison = $left['sortOrder'] <=> $right['sortOrder'];
+    uasort(
+        $dictionary,
+        static function ($left, $right) {
+            $comparison = $left['sortOrder'] <=> $right['sortOrder'];
 
-        return $comparison !== 0
-            ? $comparison
-            : strcmp($left['code'], $right['code']);
-    });
+            return $comparison !== 0
+                ? $comparison
+                : strcmp($left['code'], $right['code']);
+        }
+    );
 
     return $dictionary;
 }
@@ -180,14 +267,16 @@ function load_dictionary($post_type, $exclude_post_id = 0)
 /**
  * Normalize one dictionary entry.
  *
- * Unformatted ACF values are used deliberately.
+ * Overrides describe an unsaved proposed state:
+ * - keys are canonical value field names, not ACF field keys;
+ * - values are raw and unslashed.
  *
- * Overrides contain unslashed raw values indexed by ACF field names.
- * They describe a proposed state and are never written by this function.
+ * Stored fields are read directly from WordPress metadata.
+ * The WP_Post object and metadata are never modified.
  *
- * @param \WP_Post $post       Existing or cloned dictionary post.
- * @param string   $post_type  Dictionary post type.
- * @param array    $overrides  Proposed raw field values.
+ * @param \WP_Post $post Existing or cloned dictionary post.
+ * @param string   $post_type Dictionary CPT.
+ * @param array    $overrides Proposed field values.
  * @return array|\WP_Error
  */
 function normalize_dictionary_entry(
@@ -219,28 +308,21 @@ function normalize_dictionary_entry(
         );
     }
 
-    if (!function_exists('get_field')) {
-        return new \WP_Error(
-            'gm_measurements_acf_unavailable',
-            'Для работы справочников измерений требуется активный ACF.'
-        );
+    $stored = read_dictionary_value_fields(
+        (int) $post->ID,
+        $post_type
+    );
+
+    if (is_wp_error($stored)) {
+        return $stored;
     }
 
+    $fields = array_replace($stored, $overrides);
     $is_definition = $post_type === 'measurement_defi';
     $prefix = $is_definition ? 'measurement_' : 'element_';
 
-    $read = static function ($suffix) use (
-        $post,
-        $prefix,
-        $overrides
-    ) {
-        $name = $prefix . $suffix;
-
-        if (array_key_exists($name, $overrides)) {
-            return $overrides[$name];
-        }
-
-        return get_field($name, $post->ID, false);
+    $read = static function ($suffix) use ($fields, $prefix) {
+        return $fields[$prefix . $suffix];
     };
 
     $code = $read('code');
@@ -348,7 +430,11 @@ function normalize_dictionary_entry(
 
         if (
             !is_string($target_kind)
-            || !in_array($target_kind, ['none', 'mast', 'yard'], true)
+            || !in_array(
+                $target_kind,
+                ['none', 'mast', 'yard'],
+                true
+            )
         ) {
             return dictionary_entry_error(
                 $post->ID,
@@ -358,6 +444,21 @@ function normalize_dictionary_entry(
 
         $entry['group'] = $group;
         $entry['targetKind'] = $target_kind;
+
+        if (
+            $code === 'overall_length'
+            && (
+                $group !== 'overall'
+                || $target_kind !== 'none'
+                || $entry['active'] !== true
+            )
+        ) {
+            return dictionary_entry_error(
+                $post->ID,
+                'системный вид overall_length должен иметь '
+                . 'group=overall, target_kind=none и active=1'
+            );
+        }
 
         return $entry;
     }
@@ -394,7 +495,7 @@ function normalize_dictionary_entry(
         if ($parent_id === false) {
             return dictionary_entry_error(
                 $post->ID,
-                'некорректный ID родителя'
+                'ID родителя выходит за допустимый диапазон'
             );
         }
     } else {
@@ -412,25 +513,24 @@ function normalize_dictionary_entry(
 }
 
 /**
- * Validate the complete proposed state of an existing dictionary post.
+ * Validate the complete proposed publication state of a dictionary post.
  *
- * This function does not save data, change statuses or register hooks.
- *
- * The caller must supply:
+ * Caller supplies:
  * - an existing dictionary post ID;
  * - an optional unslashed proposed title;
  * - optional unslashed raw field overrides.
  *
- * Overrides must use ACF field names, not ACF field keys.
- * Request authorization and conversion from ACF keys belong to
- * the request-handling layer.
+ * Authorization and conversion from ACF field keys belong to the
+ * request-handling layer.
  *
- * A new post without an ID must first exist as a draft/auto-draft.
+ * New records without an ID must first be saved as drafts.
  *
- * @param int         $post_id        Existing dictionary post ID.
- * @param string|null $proposed_title Proposed title or null to retain it.
- * @param array       $overrides      Proposed raw field values.
- * @return array|\WP_Error Normalized candidate or validation error.
+ * This function does not save fields, change status or register hooks.
+ *
+ * @param int         $post_id Existing dictionary post ID.
+ * @param string|null $proposed_title Proposed title or null.
+ * @param array       $overrides Proposed field values.
+ * @return array|\WP_Error
  */
 function validate_dictionary_publication_candidate(
     $post_id,
@@ -472,7 +572,7 @@ function validate_dictionary_publication_candidate(
     }
 
     /*
-     * Clone the post: never modify a shared cached WP_Post instance.
+     * Never modify a shared cached WP_Post instance.
      */
     $candidate_post = clone $post;
 
@@ -491,7 +591,7 @@ function validate_dictionary_publication_candidate(
     }
 
     /*
-     * Enforce uniqueness across drafts, trash and other statuses too.
+     * Include drafts, trash and all other registered statuses.
      * This is a preflight check, not a database uniqueness constraint.
      */
     $code_key = $post->post_type === 'measurement_defi'
@@ -507,7 +607,7 @@ function validate_dictionary_publication_candidate(
         'meta_key'         => $code_key,
         'meta_value'       => $candidate['code'],
         'no_found_rows'    => true,
-        'suppress_filters' => false,
+        'suppress_filters' => true,
     ]);
 
     if ($duplicates !== []) {
@@ -523,30 +623,12 @@ function validate_dictionary_publication_candidate(
     }
 
     if ($post->post_type === 'measurement_defi') {
-        if (
-            $candidate['code'] === 'overall_length'
-            && (
-                $candidate['group'] !== 'overall'
-                || $candidate['targetKind'] !== 'none'
-                || $candidate['active'] !== true
-            )
-        ) {
-            return dictionary_entry_error(
-                $post_id,
-                'системный вид overall_length должен иметь '
-                . 'group=overall, target_kind=none и active=1'
-            );
-        }
-
         return $candidate;
     }
 
     /*
-     * Replace the current entry with the candidate in a prospective
-     * published element dictionary.
-     *
-     * Excluding the stored entry before loading also allows repair
-     * of that entry when its old stored state is malformed.
+     * Build a prospective published element dictionary.
+     * Exclude the stored version and insert the candidate instead.
      */
     $elements = load_dictionary('model_element', $post_id);
 
@@ -564,16 +646,12 @@ function validate_dictionary_publication_candidate(
     $elements[$candidate['code']] = $candidate;
 
     /*
-     * Resolve the complete prospective hierarchy.
-     *
-     * This rejects:
+     * Resolves the complete prospective hierarchy, including:
      * - self references;
      * - cycles;
-     * - references to unpublished/missing parents;
-     * - broken ancestor chains.
-     *
-     * Existing published child references to this candidate are
-     * resolved using its unchanged database ID.
+     * - missing or unpublished parents;
+     * - broken ancestor chains;
+     * - existing children referencing this candidate by database ID.
      */
     $validated = validate_element_hierarchy($elements);
 
@@ -585,12 +663,14 @@ function validate_dictionary_publication_candidate(
 }
 
 /**
- * Resolve parents and reject missing references and hierarchy cycles.
+ * Resolve parent references and reject hierarchy errors.
  *
- * A parent may have a different kind: for example, a yard may belong
- * to a mast. No implicit measurement inheritance is introduced.
+ * Input entries must already be normalized and indexed by stable code.
  *
- * @param array $elements Elements indexed by stable code.
+ * A parent may have a different kind: a yard may belong to a mast.
+ * No implicit measurement inheritance is introduced.
+ *
+ * @param array $elements Normalized elements indexed by stable code.
  * @return array|\WP_Error
  */
 function validate_element_hierarchy(array $elements)
@@ -598,11 +678,26 @@ function validate_element_hierarchy(array $elements)
     $codes_by_id = [];
 
     foreach ($elements as $code => $element) {
-        $codes_by_id[$element['databaseId']] = $code;
+        $database_id = $element['databaseId'];
+
+        if (isset($codes_by_id[$database_id])) {
+            return dictionary_entry_error(
+                $database_id,
+                'одна запись элемента присутствует '
+                . 'в справочнике несколько раз'
+            );
+        }
+
+        $codes_by_id[$database_id] = $code;
     }
 
     foreach ($elements as $code => $element) {
         $parent_id = $element['parentDatabaseId'];
+
+        /*
+         * Recompute parentCode instead of trusting a previous result.
+         */
+        $elements[$code]['parentCode'] = null;
 
         if ($parent_id === null) {
             continue;
@@ -612,7 +707,8 @@ function validate_element_hierarchy(array $elements)
             return dictionary_entry_error(
                 $element['databaseId'],
                 sprintf(
-                    'родитель %d отсутствует среди опубликованных элементов',
+                    'родитель %d отсутствует '
+                    . 'среди опубликованных элементов',
                     $parent_id
                 )
             );
@@ -627,12 +723,16 @@ function validate_element_hierarchy(array $elements)
         $path = [];
         $current = $start;
 
-        while ($current !== null && !isset($completed[$current])) {
+        while (
+            $current !== null
+            && !isset($completed[$current])
+        ) {
             if (isset($path[$current])) {
                 return dictionary_entry_error(
                     $elements[$current]['databaseId'],
                     sprintf(
-                        'обнаружен цикл родительских связей у элемента %s',
+                        'обнаружен цикл родительских связей '
+                        . 'у элемента %s',
                         $current
                     )
                 );
@@ -653,7 +753,7 @@ function validate_element_hierarchy(array $elements)
 /**
  * Build an actionable dictionary validation error.
  *
- * @param int    $post_id Entry ID.
+ * @param int    $post_id Dictionary post ID.
  * @param string $reason Validation failure.
  * @return \WP_Error
  */

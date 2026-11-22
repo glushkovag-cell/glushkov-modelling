@@ -2,6 +2,29 @@
 /**
  * Reading and structural normalization of model measurements.
  *
+ * Storage contract:
+ * - definitionCode: stable measurement definition code;
+ * - valueMm: positive finite number in millimeters;
+ * - target: optional element reference with kind and stable code;
+ * - note: optional text.
+ *
+ * Canonical representation:
+ * - collection indexes are consecutive integers;
+ * - valueMm is a float;
+ * - target is omitted for measurements without an element;
+ * - empty notes are omitted;
+ * - object keys have a consistent order.
+ *
+ * This module does not:
+ * - write metadata;
+ * - register hooks, CPTs or ACF fields;
+ * - read, modify or synchronize legacy modellength;
+ * - validate references against dictionaries;
+ * - decide whether a model may be published.
+ *
+ * Dictionary validation belongs to validation.php.
+ * Persistence and publication enforcement are separate modules.
+ *
  * @package GM_Model_Measurements
  */
 
@@ -15,6 +38,8 @@ const MEASUREMENTS_META_KEY = '_gm_model_measurements';
  * Read the canonical measurement collection.
  *
  * Missing metadata means an empty collection.
+ * Duplicate metadata rows cause an error.
+ *
  * Legacy modellength is deliberately not read or converted here.
  *
  * @param int $post_id Model post ID.
@@ -38,7 +63,11 @@ function get_model_measurements($post_id)
         );
     }
 
-    $values = get_post_meta($post_id, MEASUREMENTS_META_KEY, false);
+    $values = get_post_meta(
+        $post_id,
+        MEASUREMENTS_META_KEY,
+        false
+    );
 
     if ($values === []) {
         return [];
@@ -58,11 +87,17 @@ function get_model_measurements($post_id)
 /**
  * Normalize a complete measurement collection.
  *
- * Collection indexes are not significant and may contain gaps after
- * removing rows in the admin UI.
+ * Input collection indexes are not significant and may contain gaps
+ * after removing rows in the administration interface.
  *
- * Unknown fields and invalid rows cause an error. Nothing is silently
- * discarded and no partially normalized collection is returned.
+ * Unknown fields, invalid rows and duplicate measurement identities
+ * cause an error. Nothing is silently discarded and no partially
+ * normalized collection is returned.
+ *
+ * A measurement identity consists of:
+ * - definitionCode;
+ * - target.kind, if present;
+ * - target.id, if present.
  *
  * @param mixed $rows Measurement collection.
  * @return array|\WP_Error
@@ -127,10 +162,14 @@ function normalize_measurements($rows)
 /**
  * Normalize one measurement row.
  *
- * target is omitted for measurements without an element.
+ * Missing values are not converted to zero.
  * Empty notes are omitted from canonical storage.
  *
- * @param mixed $row      Measurement row.
+ * This function checks structure only. Whether a definition requires
+ * a target, and whether its references exist, is checked separately
+ * against the dictionaries.
+ *
+ * @param mixed $row Measurement row.
  * @param int   $position One-based row position for error messages.
  * @return array|\WP_Error
  */
@@ -234,8 +273,15 @@ function normalize_measurement_row($row, $position)
 /**
  * Normalize a positive finite value in millimeters.
  *
- * String input accepts a decimal dot or comma, without thousands
- * separators, units, exponent notation or internal whitespace.
+ * String input accepts a decimal dot or comma, without:
+ * - thousands separators;
+ * - measurement units;
+ * - exponent notation;
+ * - internal whitespace;
+ * - explicit plus or minus signs.
+ *
+ * Integer and float input are accepted directly, provided the final
+ * value is finite and greater than zero.
  *
  * @param mixed $value Raw value.
  * @return float|\WP_Error
@@ -245,7 +291,12 @@ function normalize_measurement_value($value)
     if (is_string($value)) {
         $value = trim($value);
 
-        if (!preg_match('/^[0-9]+(?:[.,][0-9]+)?$/D', $value)) {
+        if (
+            preg_match(
+                '/^[0-9]+(?:[.,][0-9]+)?$/D',
+                $value
+            ) !== 1
+        ) {
             return measurement_data_error(
                 'gm_measurements_invalid_number',
                 'значение должно быть числом без единиц измерения '
@@ -276,6 +327,9 @@ function normalize_measurement_value($value)
 /**
  * Check a stable dictionary code without changing it.
  *
+ * Codes must not be silently trimmed, lowercased or sanitized into
+ * another identifier.
+ *
  * @param mixed $value Candidate code.
  * @return bool
  */
@@ -289,12 +343,15 @@ function is_measurement_code($value)
  * Find a measurement in an already normalized collection.
  *
  * For measurements without a target, pass only the definition code.
- * For targeted measurements, provide both target kind and element code.
+ * For targeted measurements, provide both kind and stable element code.
  *
- * @param array       $measurements   Normalized collection.
+ * This helper assumes the collection has already passed structural
+ * normalization. It does not normalize or validate its input again.
+ *
+ * @param array       $measurements Normalized collection.
  * @param string      $definition_code Measurement definition code.
- * @param string|null $target_kind    Element kind or null.
- * @param string|null $target_id      Stable element code or null.
+ * @param string|null $target_kind Element kind or null.
+ * @param string|null $target_id Stable element code or null.
  * @return array|null
  */
 function find_measurement(
@@ -333,7 +390,7 @@ function find_measurement(
  * Build a structural validation error for a measurement row.
  *
  * @param int    $position One-based row position.
- * @param string $reason   Validation failure.
+ * @param string $reason Validation failure.
  * @return \WP_Error
  */
 function measurement_row_error($position, $reason)
@@ -348,9 +405,9 @@ function measurement_row_error($position, $reason)
 /**
  * Build a measurement data error.
  *
- * @param string $code    Error code.
+ * @param string $code Error code.
  * @param string $message Human-readable message.
- * @param array  $data    Additional error context.
+ * @param array  $data Additional error context.
  * @return \WP_Error
  */
 function measurement_data_error($code, $message, array $data = [])

@@ -3,7 +3,7 @@
  * Plugin Name: Glushkov Modelling — Model Measurements
  * Description: Model measurements in millimeters, dictionary validation,
  *              an administration metabox and publication integrity guards.
- * Version: 0.1.1
+ * Version: 0.1.2
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Glushkov Modelling
@@ -16,18 +16,25 @@ namespace GlushkovModelling\ModelMeasurements;
 
 defined('ABSPATH') || exit;
 
-const PLUGIN_VERSION = '0.1.1';
+const PLUGIN_VERSION = '0.1.2';
 
-/**
- * Load modules without registering their hooks yet.
+/*
+ * Load definitions before registering hooks.
  *
- * Order matters:
- * - validation uses dictionaries and structural normalization;
- * - administration and persistence use validation;
- * - publication guards use persistence and dictionary guard helpers.
+ * Order:
+ * - dictionary reading and normalization;
+ * - measurement reading and structural normalization;
+ * - dictionary-aware measurement validation;
+ * - administration rendering;
+ * - classic-editor persistence and feedback;
+ * - dictionary integrity guards;
+ * - cross-context publication and measurement metadata guards.
  *
- * No activation-time migration, metadata registration or content
- * modification is performed.
+ * Function calls made by registered callbacks run after all modules
+ * have been included.
+ *
+ * No activation-time migration, dictionary registration, metadata
+ * registration or content modification is performed.
  */
 require_once __DIR__ . '/includes/dictionaries.php';
 require_once __DIR__ . '/includes/measurements.php';
@@ -37,8 +44,10 @@ require_once __DIR__ . '/includes/persistence.php';
 require_once __DIR__ . '/includes/dictionary-guards.php';
 require_once __DIR__ . '/includes/publication-guards.php';
 
-/**
+/*
  * Initialize after normal CPT and ACF registration.
+ *
+ * Configuration filters must be registered before this callback.
  */
 add_action(
     'wp_loaded',
@@ -47,7 +56,11 @@ add_action(
 );
 
 /**
- * Validate configuration and register plugin hooks.
+ * Validate installation configuration and register plugin hooks.
+ *
+ * Initialization failure is reported explicitly. If prerequisites
+ * fail, the plugin's administration and integrity hooks are not
+ * registered.
  *
  * @return void
  */
@@ -61,14 +74,22 @@ function bootstrap_model_measurements()
 
     $initialized = true;
 
+    /*
+     * Dictionaries are managed through the existing ACF setup.
+     * Raw dictionary value reads do not require get_field(), but the
+     * supported installation still requires active ACF.
+     */
     if (
         !function_exists('get_field')
         || !function_exists('acf_get_field')
     ) {
         register_measurements_bootstrap_notice(
-            'Модуль размеров не включён: '
-            . 'требуется активный Advanced Custom Fields.'
+            'Модуль размеров не инициализирован: '
+            . 'требуется активный Advanced Custom Fields. '
+            . 'Редактор размеров и проверки целостности '
+            . 'не зарегистрированы.'
         );
+
         return;
     }
 
@@ -79,26 +100,32 @@ function bootstrap_model_measurements()
             register_measurements_bootstrap_notice($message);
         }
 
+        register_measurements_bootstrap_notice(
+            'До исправления конфигурации редактор размеров '
+            . 'и проверки целостности не зарегистрированы.'
+        );
+
         return;
     }
 
     $post_types = $configuration['postTypes'];
     $require_length = $configuration['requireOverallLength'];
 
-    $required_dictionary_types = [
-        'measurement_defi',
-        'model_element',
-    ];
-
-    foreach ($required_dictionary_types as $post_type) {
-        if (!post_type_exists($post_type)) {
+    foreach (
+        ['measurement_defi', 'model_element']
+        as $dictionary_type
+    ) {
+        if (!post_type_exists($dictionary_type)) {
             register_measurements_bootstrap_notice(
                 sprintf(
-                    'Модуль размеров не включён: '
-                    . 'не зарегистрирован справочный CPT %s.',
-                    $post_type
+                    'Модуль размеров не инициализирован: '
+                    . 'не зарегистрирован справочный CPT %s. '
+                    . 'Редактор размеров и проверки целостности '
+                    . 'не зарегистрированы.',
+                    $dictionary_type
                 )
             );
+
             return;
         }
     }
@@ -107,11 +134,14 @@ function bootstrap_model_measurements()
         if (!post_type_exists($post_type)) {
             register_measurements_bootstrap_notice(
                 sprintf(
-                    'Модуль размеров не включён: '
-                    . 'настроенный CPT модели %s не зарегистрирован.',
+                    'Модуль размеров не инициализирован: '
+                    . 'настроенный CPT модели %s не зарегистрирован. '
+                    . 'Редактор размеров и проверки целостности '
+                    . 'не зарегистрированы.',
                     $post_type
                 )
             );
+
             return;
         }
 
@@ -125,21 +155,24 @@ function bootstrap_model_measurements()
         ) {
             register_measurements_bootstrap_notice(
                 sprintf(
-                    'Модуль размеров не включён: '
-                    . 'тип записи %s нельзя использовать как CPT модели.',
+                    'Модуль размеров не инициализирован: '
+                    . 'тип записи %s нельзя использовать '
+                    . 'как CPT модели. '
+                    . 'Редактор размеров и проверки целостности '
+                    . 'не зарегистрированы.',
                     $post_type
                 )
             );
+
             return;
         }
     }
 
     /*
-     * Register guards on frontend, administration, REST, CLI
-     * and cron requests.
+     * Register guards in all normally bootstrapped contexts.
      *
-     * Do not wrap these registrations in is_admin().
-     * Individual handlers restrict their own supported contexts.
+     * Do not restrict these registrations to is_admin().
+     * Individual handlers restrict their own supported operations.
      */
     register_dictionary_guards($post_types);
 
@@ -155,13 +188,14 @@ function bootstrap_model_measurements()
     );
 
     /*
-     * Register after the existing handlers.
+     * The cross-context publication filter runs after the classic
+     * form handler and validates already stored measurements.
      *
-     * The cross-context publication filter has a later priority than
-     * the classic form handler and checks actual stored measurements.
-     *
-     * The module also guards ordinary measurement metadata writes
-     * and wraps the standard scheduled-publication callback.
+     * The publication module also:
+     * - guards ordinary measurement metadata operations;
+     * - guards measurement metadata operations by meta ID;
+     * - wraps the standard scheduled-publication callback;
+     * - registers separate publication-rejection notices.
      */
     register_measurements_publication_guards(
         $post_types,
@@ -172,8 +206,10 @@ function bootstrap_model_measurements()
         register_measurements_bootstrap_notice(
             'Модуль размеров работает в режиме подготовки: '
             . 'обязательность габаритной длины при публикации '
-            . 'пока выключена. Проверки структуры размеров '
-            . 'и целостности справочников остаются включёнными.',
+            . 'выключена. Отсутствие длины само по себе '
+            . 'не блокирует публикацию. '
+            . 'Проверки структуры записываемых размеров '
+            . 'и целостности справочников зарегистрированы.',
             'info'
         );
     }
@@ -182,21 +218,24 @@ function bootstrap_model_measurements()
 /**
  * Read explicit plugin configuration.
  *
- * Configuration sources:
+ * Sources:
  *
- * 1. GM_MODEL_MEASUREMENTS_POST_TYPES constant:
- *    an array of actual model CPT slugs.
+ * 1. GM_MODEL_MEASUREMENTS_POST_TYPES:
+ *    array of actual model CPT slugs.
  *
  * 2. gm_model_measurements_post_types filter:
  *    receives and returns that array.
  *
- * 3. GM_MODEL_MEASUREMENTS_REQUIRE_OVERALL_LENGTH constant:
- *    boolean, false by default.
+ * 3. GM_MODEL_MEASUREMENTS_REQUIRE_OVERALL_LENGTH:
+ *    boolean, false by default for preparation mode.
  *
  * 4. gm_model_measurements_require_overall_length filter:
  *    receives and returns that boolean.
  *
  * Filters must be registered before wp_loaded priority 20.
+ * Configuration must remain stable during the request.
+ *
+ * No default model CPT is guessed.
  *
  * @return array|\WP_Error
  */
@@ -214,7 +253,7 @@ function get_measurements_plugin_configuration()
     if (!is_array($post_types)) {
         return new \WP_Error(
             'gm_measurements_invalid_post_types_configuration',
-            'Модуль размеров не включён: '
+            'Модуль размеров не инициализирован: '
             . 'настройка типов моделей должна быть массивом CPT.'
         );
     }
@@ -222,8 +261,9 @@ function get_measurements_plugin_configuration()
     if ($post_types === []) {
         return new \WP_Error(
             'gm_measurements_missing_post_types_configuration',
-            'Модуль размеров не включён: укажите фактический CPT '
-            . 'модели через GM_MODEL_MEASUREMENTS_POST_TYPES '
+            'Модуль размеров не инициализирован: укажите '
+            . 'фактический CPT модели через '
+            . 'GM_MODEL_MEASUREMENTS_POST_TYPES '
             . 'или фильтр gm_model_measurements_post_types.'
         );
     }
@@ -242,7 +282,7 @@ function get_measurements_plugin_configuration()
         ) {
             return new \WP_Error(
                 'gm_measurements_invalid_post_type_slug',
-                'Модуль размеров не включён: '
+                'Модуль размеров не инициализирован: '
                 . 'обнаружен некорректный идентификатор CPT модели.'
             );
         }
@@ -268,7 +308,7 @@ function get_measurements_plugin_configuration()
     if (!is_bool($require_length)) {
         return new \WP_Error(
             'gm_measurements_invalid_length_requirement',
-            'Модуль размеров не включён: '
+            'Модуль размеров не инициализирован: '
             . 'настройка обязательности длины должна быть '
             . 'логическим значением true или false.'
         );
@@ -284,7 +324,7 @@ function get_measurements_plugin_configuration()
  * Queue an administration notice without writing to storage.
  *
  * @param string $message Notice text.
- * @param string $type    Notice type.
+ * @param string $type WordPress notice type.
  * @return void
  */
 function register_measurements_bootstrap_notice(
@@ -297,6 +337,12 @@ function register_measurements_bootstrap_notice(
         $type = 'error';
     }
 
+    $message = (string) $message;
+
+    if ($message === '') {
+        return;
+    }
+
     add_action(
         'admin_notices',
         static function () use ($message, $type) {
@@ -307,9 +353,7 @@ function register_measurements_bootstrap_notice(
             echo '<div class="notice notice-';
             echo esc_attr($type);
             echo '"><p>';
-
             echo esc_html($message);
-
             echo '</p></div>';
         }
     );

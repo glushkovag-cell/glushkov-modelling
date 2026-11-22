@@ -7,7 +7,20 @@
  * - measurements.php
  * - validation.php
  *
- * Persistence and publication rules are implemented separately.
+ * Persistence and publication enforcement are separate modules.
+ *
+ * This module:
+ * - registers the classic-editor measurements metabox;
+ * - enqueues its administration assets;
+ * - renders stored measurements and dictionary choices;
+ * - renders form completeness controls.
+ *
+ * It does not:
+ * - write measurement metadata;
+ * - register CPTs or ACF fields;
+ * - use an ACF Repeater;
+ * - modify or synchronize legacy modellength;
+ * - expose REST or MCP endpoints.
  *
  * @package GM_Model_Measurements
  */
@@ -17,15 +30,13 @@ namespace GlushkovModelling\ModelMeasurements;
 defined('ABSPATH') || exit;
 
 /**
- * Register the admin interface for explicitly configured post types.
- *
- * Call once from the main plugin file.
+ * Register administration hooks once.
  *
  * $assets_url must point to the plugin's assets directory.
  *
- * @param string[] $post_types Model post types.
+ * @param string[] $post_types Configured model CPTs.
  * @param string   $assets_url Assets directory URL.
- * @param string   $version    Plugin asset version.
+ * @param string   $version Asset version.
  * @return void
  */
 function register_measurements_admin(
@@ -33,6 +44,12 @@ function register_measurements_admin(
     $assets_url,
     $version
 ) {
+    static $registered = false;
+
+    if ($registered) {
+        return;
+    }
+
     $post_types = array_values(array_unique(array_filter(
         $post_types,
         static function ($post_type) {
@@ -43,6 +60,8 @@ function register_measurements_admin(
     if ($post_types === []) {
         return;
     }
+
+    $registered = true;
 
     add_action(
         'add_meta_boxes',
@@ -67,8 +86,9 @@ function register_measurements_admin(
                 'default',
                 [
                     /*
-                     * Full block-editor support needs a separately
-                     * verified REST publication/save flow.
+                     * The supported form-save flow targets the
+                     * classic editor. Do not advertise unverified
+                     * block-editor compatibility.
                      */
                     '__block_editor_compatible_meta_box' => false,
                 ]
@@ -127,8 +147,8 @@ function register_measurements_admin(
 /**
  * Render the measurements metabox.
  *
- * A failed dictionary or storage read must not produce an empty,
- * apparently valid form that could overwrite existing data.
+ * Failed reads must not produce an empty editable form that could
+ * overwrite existing measurements.
  *
  * @param \WP_Post $post Model post.
  * @return void
@@ -157,9 +177,9 @@ function render_measurements_metabox($post)
     }
 
     /*
-     * Existing inactive rows remain valid when unchanged.
-     * Missing or incompatible references must not be hidden.
-     * Overall length is not required just to render a draft.
+     * Overall length is not required merely to render a draft.
+     * Missing or incompatible dictionary references remain errors.
+     * Inactive references may remain in unchanged stored rows.
      */
     $validated = validate_model_measurements(
         $measurements,
@@ -181,11 +201,11 @@ function render_measurements_metabox($post)
 }
 
 /**
- * Render an editor from a normalized, validated collection.
+ * Render an editor from normalized and validated data.
  *
- * @param array $measurements Normalized, validated collection.
+ * @param array $measurements Normalized measurements.
  * @param array $dictionaries Loaded dictionaries.
- * @param int   $post_id      Model post ID.
+ * @param int   $post_id Model ID.
  * @return void
  */
 function render_measurements_editor(
@@ -193,7 +213,10 @@ function render_measurements_editor(
     array $dictionaries,
     $post_id
 ) {
-    $overall = find_measurement($measurements, 'overall_length');
+    $overall = find_measurement(
+        $measurements,
+        'overall_length'
+    );
 
     $rows = array_values(array_filter(
         $measurements,
@@ -202,7 +225,7 @@ function render_measurements_editor(
         }
     ));
 
-    $prefix = 'gm-measurements-' . $post_id;
+    $prefix = 'gm-measurements-' . (int) $post_id;
 
     echo '<div class="gm-measurements" data-gm-measurements>';
 
@@ -216,27 +239,26 @@ function render_measurements_editor(
 
     echo '<noscript><p>';
     echo esc_html(
-        'Для добавления и удаления строк требуется JavaScript. '
-        . 'Без него доступны поля уже показанных измерений.'
+        'Для добавления и удаления строк, смены вида измерения '
+        . 'и выбора соответствующего элемента требуется JavaScript. '
+        . 'Без него изменяйте только значения и примечания '
+        . 'уже показанных измерений.'
     );
     echo '</p></noscript>';
 
     wp_nonce_field(
-        'gm_save_model_measurements_' . $post_id,
+        'gm_save_model_measurements_' . (int) $post_id,
         'gm_measurements_nonce'
     );
 
-    /*
-     * Presence alone does not prove that the whole form arrived.
-     * The persistence handler must also check the final completion
-     * marker and the expected additional row count.
-     */
     echo '<input type="hidden" ';
     echo 'name="gm_measurements[present]" value="1">';
 
     render_overall_length_fields($overall, $prefix);
 
-    echo '<h4>Дополнительные измерения</h4>';
+    echo '<h4>';
+    echo esc_html('Дополнительные измерения');
+    echo '</h4>';
 
     echo '<p class="description">';
     echo esc_html(
@@ -282,14 +304,11 @@ function render_measurements_editor(
     /*
      * Keep these controls after all submitted measurement fields.
      *
-     * JavaScript updates expected_rows after adding/removing rows
-     * and immediately before submission.
-     *
+     * JavaScript maintains the expected row count after changes.
      * Template contents are inert and are not submitted.
      *
-     * These controls detect incomplete form submissions; they are
-     * not authorization tokens and do not replace the nonce,
-     * capability checks or structural validation.
+     * These fields detect incomplete form submission. They do not
+     * replace the nonce, authorization or server-side validation.
      */
     echo '<div hidden data-gm-form-integrity>';
 
@@ -306,13 +325,14 @@ function render_measurements_editor(
 }
 
 /**
- * Render the separate overall length fields.
+ * Render the dedicated overall_length fields.
  *
- * Empty overall length is intentionally not marked required in HTML:
- * drafts must remain saveable without it.
+ * The value is not marked required in HTML because drafts must be
+ * saveable without it. Publication requirements are checked by
+ * the server.
  *
- * @param array|null $measurement Existing overall length.
- * @param string     $prefix      Unique DOM ID prefix.
+ * @param array|null $measurement Existing normalized measurement.
+ * @param string     $prefix Unique DOM ID prefix.
  * @return void
  */
 function render_overall_length_fields($measurement, $prefix)
@@ -368,12 +388,12 @@ function render_overall_length_fields($measurement, $prefix)
 }
 
 /**
- * Render an additional measurement row or a blank template row.
+ * Render one additional row or the blank row template.
  *
  * @param array|null $measurement Normalized measurement or null.
  * @param array      $dictionaries Loaded dictionaries.
- * @param string     $index        Numeric index or template token.
- * @param string     $prefix       Unique DOM ID prefix.
+ * @param string     $index Numeric index or template token.
+ * @param string     $prefix Unique DOM ID prefix.
  * @return void
  */
 function render_measurement_admin_row(
@@ -394,7 +414,11 @@ function render_measurement_admin_row(
         : null;
 
     $target_kind = $definition['targetKind'] ?? 'none';
-    $needs_target = in_array($target_kind, ['mast', 'yard'], true);
+    $needs_target = in_array(
+        $target_kind,
+        ['mast', 'yard'],
+        true
+    );
 
     $value = $measurement !== null
         ? measurement_admin_number($measurement['valueMm'])
@@ -419,7 +443,9 @@ function render_measurement_admin_row(
     echo 'id="' . esc_attr($base_id . '-definition') . '" ';
     echo 'name="' . esc_attr($base_name . '[definitionCode]') . '">';
 
-    echo '<option value="">Выберите измерение</option>';
+    echo '<option value="">';
+    echo esc_html('Выберите измерение');
+    echo '</option>';
 
     foreach ($dictionaries['definitions'] as $code => $entry) {
         if ($code === 'overall_length') {
@@ -435,7 +461,9 @@ function render_measurement_admin_row(
         }
 
         echo '<option value="' . esc_attr($code) . '" ';
-        echo 'data-target-kind="' . esc_attr($entry['targetKind']) . '" ';
+        echo 'data-target-kind="';
+        echo esc_attr($entry['targetKind']);
+        echo '" ';
         echo 'data-unavailable="' . ($inactive ? '1' : '0') . '" ';
         echo 'data-retained="';
         echo ($inactive && $selected) ? '1' : '0';
@@ -449,7 +477,9 @@ function render_measurement_admin_row(
             echo ' disabled hidden';
         }
 
-        echo '>' . esc_html($label) . '</option>';
+        echo '>';
+        echo esc_html($label);
+        echo '</option>';
     }
 
     echo '</select>';
@@ -471,13 +501,17 @@ function render_measurement_admin_row(
 
     echo '<select data-gm-target ';
     echo 'id="' . esc_attr($base_id . '-target') . '" ';
-    echo 'aria-describedby="' . esc_attr($base_id . '-target-status') . '" ';
+    echo 'aria-describedby="';
+    echo esc_attr($base_id . '-target-status');
+    echo '" ';
     echo 'name="' . esc_attr($base_name . '[target][id]') . '"';
 
     echo $needs_target ? ' required' : ' disabled';
     echo '>';
 
-    echo '<option value="">Выберите элемент</option>';
+    echo '<option value="">';
+    echo esc_html('Выберите элемент');
+    echo '</option>';
 
     foreach ($dictionaries['elements'] as $code => $entry) {
         $selected = $code === $target_id;
@@ -507,7 +541,9 @@ function render_measurement_admin_row(
             echo ' disabled hidden';
         }
 
-        echo '>' . esc_html($label) . '</option>';
+        echo '>';
+        echo esc_html($label);
+        echo '</option>';
     }
 
     echo '</select>';
@@ -570,9 +606,9 @@ function render_measurement_admin_row(
 }
 
 /**
- * Explain the unchanged-only rule for existing archived references.
+ * Explain the unchanged-only rule for inactive stored references.
  *
- * @param array|null $measurement Existing measurement.
+ * @param array|null $measurement Existing measurement or null.
  * @param array      $dictionaries Loaded dictionaries.
  * @return void
  */
@@ -618,20 +654,58 @@ function render_measurement_archived_warning(
 }
 
 /**
- * Format a normalized number for an editable input.
+ * Format a normalized number for an editable text input.
  *
  * Avoid localized thousands separators and fixed decimal rounding.
- * Convert exponent notation to decimal notation for compatibility
- * with normalize_measurement_value().
+ * Expand exponent notation because the form parser accepts ordinary
+ * decimal notation only.
+ *
+ * Prefer JSON's compact representation. If the configured JSON
+ * precision changes the float on round-trip, use a 17-digit fallback.
  *
  * @param float|int $value Positive finite normalized number.
  * @return string
  */
 function measurement_admin_number($value)
 {
-    $encoded = wp_json_encode((float) $value);
+    if (
+        (!is_int($value) && !is_float($value))
+        || !is_finite((float) $value)
+        || (float) $value <= 0
+    ) {
+        return '';
+    }
 
-    if (!is_string($encoded)) {
+    $number = (float) $value;
+    $encoded = wp_json_encode($number);
+
+    if (
+        !is_string($encoded)
+        || !is_numeric($encoded)
+        || (float) $encoded !== $number
+    ) {
+        $encoded = sprintf('%.17g', $number);
+
+        $locale = localeconv();
+        $decimal_point = $locale['decimal_point'] ?? '.';
+
+        if (
+            is_string($decimal_point)
+            && $decimal_point !== ''
+            && $decimal_point !== '.'
+        ) {
+            $encoded = str_replace(
+                $decimal_point,
+                '.',
+                $encoded
+            );
+        }
+    }
+
+    if (
+        !is_numeric($encoded)
+        || (float) $encoded !== $number
+    ) {
         return '';
     }
 
@@ -647,7 +721,6 @@ function measurement_admin_number($value)
 
     $mantissa = $parts[0];
     $exponent = (int) $parts[1];
-
     $decimal_position = strpos($mantissa, '.');
 
     if ($decimal_position === false) {
@@ -674,10 +747,10 @@ function measurement_admin_number($value)
 }
 
 /**
- * Render a blocking metabox error.
+ * Render a blocking read/validation error.
  *
- * No form marker or nonce is emitted on this path.
- * The persistence handler must leave stored measurements untouched.
+ * No measurements form marker or nonce is emitted on this path.
+ * Saving other post fields must not clear stored measurements.
  *
  * @param \WP_Error $error Read or validation error.
  * @return void
@@ -697,7 +770,9 @@ function render_measurements_admin_error(\WP_Error $error)
     echo '<ul>';
 
     foreach ($error->get_error_messages() as $message) {
-        echo '<li>' . esc_html($message) . '</li>';
+        if (is_string($message)) {
+            echo '<li>' . esc_html($message) . '</li>';
+        }
     }
 
     echo '</ul>';

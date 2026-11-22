@@ -41,18 +41,34 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Validate deployment confirmation
-        if: inputs.mode == 'deploy-inactive'
+      - name: Validate requested mode
         env:
+          REQUESTED_MODE: ${{ inputs.mode }}
           CONFIRMATION: ${{ inputs.confirmation }}
+          SELECTED_REF: ${{ github.ref }}
         shell: bash
         run: |
           set -euo pipefail
 
-          if [[ "$CONFIRMATION" != "DEPLOY" ]]; then
-            echo "::error::Для развёртывания введите DEPLOY."
-            exit 1
-          fi
+          case "$REQUESTED_MODE" in
+            check)
+              ;;
+            deploy-inactive)
+              if [[ "$CONFIRMATION" != "DEPLOY" ]]; then
+                echo "::error::Для развёртывания введите DEPLOY."
+                exit 1
+              fi
+
+              if [[ "$SELECTED_REF" != "refs/heads/main" ]]; then
+                echo "::error::Развёртывание разрешено только из main."
+                exit 1
+              fi
+              ;;
+            *)
+              echo "::error::Неизвестный режим запуска."
+              exit 1
+              ;;
+          esac
 
       - name: Validate plugin structure
         shell: bash
@@ -79,6 +95,15 @@ jobs:
 
           if [[ -n "$(find "$PLUGIN_SOURCE" -type l -print -quit)" ]]; then
             echo "::error::Символические ссылки в каталоге плагина запрещены."
+            exit 1
+          fi
+
+          if [[ -n "$(
+            find "$PLUGIN_SOURCE" \
+              \( ! -type d -a ! -type f \) \
+              -print -quit
+          )" ]]; then
+            echo "::error::Каталог плагина содержит неподдерживаемые типы файлов."
             exit 1
           fi
 
@@ -141,6 +166,8 @@ jobs:
             sha256sum "$PLUGIN_SLUG.tar.gz" > SHA256SUMS
           )
 
+          tar -tzf "dist/$PLUGIN_SLUG.tar.gz"
+
       - name: Upload checked artifact
         uses: actions/upload-artifact@v4
         with:
@@ -158,11 +185,13 @@ jobs:
             echo "## Model Measurements — checks"
             echo
             echo "- Revision: \`$GITHUB_SHA\`"
-            echo "- PHP syntax: passed"
+            echo "- PHP syntax on runner: passed"
             echo "- JavaScript syntax: passed"
+            echo "- Required plugin files: present"
             echo "- Deployment archive: created"
             echo "- Functional tests: not performed"
             echo "- WordPress activation: not performed"
+            echo "- Server configuration: not checked in check mode"
           } >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
@@ -212,8 +241,13 @@ jobs:
             exit 1
           }
 
-          [[ "$SSH_PORT" =~ ^[0-9]+$ ]] || {
-            echo "::error::DEPLOY_PORT должен содержать номер порта."
+          [[ "$SSH_PORT" =~ ^[1-9][0-9]{0,4}$ ]] || {
+            echo "::error::DEPLOY_PORT должен содержать корректный номер порта."
+            exit 1
+          }
+
+          (( SSH_PORT <= 65535 )) || {
+            echo "::error::DEPLOY_PORT выходит за допустимый диапазон."
             exit 1
           }
 
@@ -228,35 +262,61 @@ jobs:
             [[ "$path" != */.. ]]
           done
 
-      - name: Configure SSH
+      - name: Configure SSH with pinned host key
         env:
           SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         shell: bash
         run: |
           set -euo pipefail
+          umask 077
 
           test -n "$SSH_PRIVATE_KEY"
-          test -n "$SSH_HOST"
-          test -n "$SSH_PORT"
-          test -n "$SSH_USER"
+          test -n "$SSH_KNOWN_HOSTS"
 
           install -d -m 700 "$HOME/.ssh"
 
           printf '%s\n' "$SSH_PRIVATE_KEY" \
-            > "$HOME/.ssh/wp_deploy"
+            > "$HOME/.ssh/gm_measurements_key"
 
-          chmod 600 "$HOME/.ssh/wp_deploy"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" \
+            > "$HOME/.ssh/gm_measurements_known_hosts"
 
-          # Same host-key discovery approach as the existing VPS workflow.
-          ssh-keyscan \
-            -T 15 \
-            -p "$SSH_PORT" \
-            -H "$SSH_HOST" \
-            > "$HOME/.ssh/known_hosts"
+          chmod 600 \
+            "$HOME/.ssh/gm_measurements_key" \
+            "$HOME/.ssh/gm_measurements_known_hosts"
 
-          test -s "$HOME/.ssh/known_hosts"
+          lookup_host="$SSH_HOST"
 
-          chmod 600 "$HOME/.ssh/known_hosts"
+          if [[ "$SSH_PORT" != "22" ]]; then
+            lookup_host="[$SSH_HOST]:$SSH_PORT"
+          fi
+
+          if ! ssh-keygen \
+            -F "$lookup_host" \
+            -f "$HOME/.ssh/gm_measurements_known_hosts" \
+            >/dev/null; then
+            echo "::error::DEPLOY_KNOWN_HOSTS не содержит запись для заданных host и port."
+            exit 1
+          fi
+
+          cat > "$HOME/.ssh/gm_measurements_config" <<EOF
+          Host gm-wordpress-measurements
+            HostName $SSH_HOST
+            Port $SSH_PORT
+            User $SSH_USER
+            IdentityFile $HOME/.ssh/gm_measurements_key
+            UserKnownHostsFile $HOME/.ssh/gm_measurements_known_hosts
+            GlobalKnownHostsFile /dev/null
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking yes
+            ConnectTimeout 15
+            ServerAliveInterval 15
+            ServerAliveCountMax 3
+          EOF
+
+          chmod 600 "$HOME/.ssh/gm_measurements_config"
 
       - name: Create private upload directory
         shell: bash
@@ -265,12 +325,8 @@ jobs:
 
           remote_dir="$(
             ssh \
-              -i "$HOME/.ssh/wp_deploy" \
-              -p "$SSH_PORT" \
-              -o BatchMode=yes \
-              -o StrictHostKeyChecking=yes \
-              -o ConnectTimeout=15 \
-              "$SSH_USER@$SSH_HOST" \
+              -F "$HOME/.ssh/gm_measurements_config" \
+              gm-wordpress-measurements \
               'umask 077; mktemp -d /tmp/gm-measurements-upload.XXXXXXXX'
           )"
 
@@ -284,14 +340,10 @@ jobs:
           set -euo pipefail
 
           scp \
-            -i "$HOME/.ssh/wp_deploy" \
-            -P "$SSH_PORT" \
-            -o BatchMode=yes \
-            -o StrictHostKeyChecking=yes \
-            -o ConnectTimeout=15 \
+            -F "$HOME/.ssh/gm_measurements_config" \
             dist/gm-model-measurements.tar.gz \
             dist/SHA256SUMS \
-            "$SSH_USER@$SSH_HOST:$REMOTE_UPLOAD_DIR/"
+            "gm-wordpress-measurements:$REMOTE_UPLOAD_DIR/"
 
       - name: Back up and deploy plugin
         shell: bash
@@ -299,12 +351,8 @@ jobs:
           set -euo pipefail
 
           ssh \
-            -i "$HOME/.ssh/wp_deploy" \
-            -p "$SSH_PORT" \
-            -o BatchMode=yes \
-            -o StrictHostKeyChecking=yes \
-            -o ConnectTimeout=15 \
-            "$SSH_USER@$SSH_HOST" \
+            -F "$HOME/.ssh/gm_measurements_config" \
+            gm-wordpress-measurements \
             "bash -s -- '$WP_ROOT' '$WP_CLI' '$REMOTE_UPLOAD_DIR' '$GITHUB_SHA'" \
             <<'REMOTE'
           set -Eeuo pipefail
@@ -352,7 +400,7 @@ jobs:
             )"
 
             if printf '%s\n' "$active" | grep -Fxq "$slug"; then
-              fail "Plugin is active. Replacement refused."
+              fail "Plugin is active. File replacement refused."
             fi
           }
 
@@ -366,7 +414,7 @@ jobs:
                   -n "$backup" &&
                   -f "$backup" ]]; then
 
-              echo "Deployment failed. Attempting rollback." >&2
+              echo "Deployment failed. Attempting content rollback." >&2
 
               if mkdir -p "$restore_dir" &&
                   tar -xzf "$backup" -C "$restore_dir" &&
@@ -378,7 +426,7 @@ jobs:
                     --no-owner \
                     --no-group \
                     "$restore_dir/" "$destination/"; then
-                echo "Previous plugin files restored." >&2
+                echo "Previous plugin contents restored." >&2
               else
                 echo "CRITICAL: Automatic rollback failed." >&2
                 echo "Backup: $backup" >&2
@@ -394,6 +442,12 @@ jobs:
 
           [[ "$(id -un)" == "deploy" ]] ||
             fail "Expected SSH user deploy."
+
+          [[ "$revision" =~ ^[0-9a-f]{40}$ ]] ||
+            fail "Invalid revision."
+
+          [[ "$upload_dir" =~ ^/tmp/gm-measurements-upload\.[A-Za-z0-9]+$ ]] ||
+            fail "Invalid upload directory."
 
           for executable in \
             php \
@@ -457,12 +511,12 @@ jobs:
 
           exec 9>"$state_dir/deploy.lock"
           flock -n 9 ||
-            fail "Another deployment is running."
+            fail "Another measurements deployment is running."
 
+          # A failing WordPress bootstrap must stop deployment.
           wp_cmd core is-installed >/dev/null
 
-          # Single-site only: do not silently miss per-site activation
-          # in a WordPress Multisite installation.
+          # Only single-site installations are supported.
           wp_cmd eval '
             if (is_multisite()) {
                 fwrite(STDERR, "Multisite is not supported by this workflow.\n");
@@ -507,6 +561,17 @@ jobs:
             fail "Uploaded plugin contains symlinks."
           fi
 
+          if [[ -n "$(
+            find "$stage" \
+              \( ! -type d -a ! -type f \) \
+              -print -quit
+          )" ]]; then
+            fail "Uploaded plugin contains unsupported file types."
+          fi
+
+          # Repeat syntax checks using the server's PHP CLI.
+          php --version
+
           while IFS= read -r -d '' file; do
             php -l "$file"
           done < <(
@@ -518,9 +583,12 @@ jobs:
           tar -C "$destination" -czf "$backup" .
           chmod 600 "$backup"
 
-          # Confirm archive readability before modifying installed files.
+          # Check backup readability before modifying installed files.
           tar -tzf "$backup" >/dev/null
 
+          # This narrows, but does not eliminate, the activation race.
+          # No administrator or external process may activate the
+          # plugin while this deployment is running.
           assert_inactive
 
           changed=1
@@ -534,7 +602,6 @@ jobs:
             --no-group \
             "$stage/" "$destination/"
 
-          # Check file contents and absence of unexpected destination files.
           differences="$(
             rsync \
               -rcn \
@@ -576,11 +643,12 @@ jobs:
           completed=1
 
           echo "Plugin files deployed."
+          echo "Revision: $revision"
           echo "Owner: deploy:www-data"
           echo "Directory mode: 2755"
           echo "File mode: 644"
           echo "Backup: $backup"
-          echo "Plugin was not activated."
+          echo "No activation command was executed."
           REMOTE
 
       - name: Remove remote upload directory
@@ -592,12 +660,8 @@ jobs:
           [[ "$REMOTE_UPLOAD_DIR" =~ ^/tmp/gm-measurements-upload\.[A-Za-z0-9]+$ ]]
 
           ssh \
-            -i "$HOME/.ssh/wp_deploy" \
-            -p "$SSH_PORT" \
-            -o BatchMode=yes \
-            -o StrictHostKeyChecking=yes \
-            -o ConnectTimeout=15 \
-            "$SSH_USER@$SSH_HOST" \
+            -F "$HOME/.ssh/gm_measurements_config" \
+            gm-wordpress-measurements \
             "rm -rf -- '$REMOTE_UPLOAD_DIR'"
 
       - name: Remove SSH credentials
@@ -605,24 +669,27 @@ jobs:
         shell: bash
         run: |
           rm -f \
-            "$HOME/.ssh/wp_deploy" \
-            "$HOME/.ssh/known_hosts"
+            "$HOME/.ssh/gm_measurements_key" \
+            "$HOME/.ssh/gm_measurements_known_hosts" \
+            "$HOME/.ssh/gm_measurements_config"
 
       - name: Write deployment summary
         if: success()
         shell: bash
         run: |
           {
-            echo "## Model Measurements — deployed"
+            echo "## Model Measurements — files deployed"
             echo
             echo "- Revision: \`$GITHUB_SHA\`"
             echo "- SSH user: deploy"
+            echo "- SSH host key: pinned through DEPLOY_KNOWN_HOSTS"
             echo "- sudo: not used"
             echo "- Owner: deploy:www-data"
             echo "- Directories: 2755"
             echo "- Files: 644"
             echo "- Previous contents backed up on the server"
-            echo "- Activation: not performed"
+            echo "- Activation command: not executed"
             echo "- No explicit database or WordPress configuration changes are requested by this workflow"
-            echo "- Functional acceptance: still required"
+            echo "- Concurrent activation must be prevented operationally"
+            echo "- Functional tests and acceptance: still required"
           } >> "$GITHUB_STEP_SUMMARY"

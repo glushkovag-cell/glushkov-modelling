@@ -1,6 +1,6 @@
 <?php
 /**
- * Model measurements persistence and publication checks.
+ * Model measurements persistence and administration feedback.
  *
  * Requires:
  * - dictionaries.php
@@ -8,7 +8,24 @@
  * - validation.php
  *
  * The metabox submission flow targets the classic post editor.
- * REST publication receives a separate stored-data guard.
+ *
+ * Cross-context publication and metadata guards are registered
+ * separately by publication-guards.php.
+ *
+ * This module:
+ * - validates the classic metabox payload;
+ * - binds the submitted form to its specific post ID;
+ * - detects incomplete form submissions;
+ * - preserves rejected input for administration feedback;
+ * - writes canonical measurements through the ordinary Metadata API;
+ * - checks REST publication against already stored measurements.
+ *
+ * It does not:
+ * - register ACF fields or use an ACF Repeater;
+ * - change or synchronize modellength;
+ * - expose a REST measurements-write endpoint;
+ * - register a new MCP tool;
+ * - perform activation-time migrations.
  *
  * @package GM_Model_Measurements
  */
@@ -18,21 +35,25 @@ namespace GlushkovModelling\ModelMeasurements;
 defined('ABSPATH') || exit;
 
 /**
- * Register persistence hooks.
+ * Register persistence hooks once.
  *
- * Call once from the main plugin file.
- *
- * Publication checks apply to publish and future statuses.
  * Drafts may omit overall_length.
+ * When enabled, publication requires valid stored overall_length.
  *
- * @param string[] $post_types             Model post types.
- * @param bool     $require_overall_length Enable publication requirement.
+ * @param string[] $post_types Configured model CPTs.
+ * @param bool     $require_overall_length Enable length requirement.
  * @return void
  */
 function register_measurements_persistence(
     array $post_types,
     $require_overall_length = false
 ) {
+    static $registered = false;
+
+    if ($registered) {
+        return;
+    }
+
     $post_types = array_values(array_unique(array_filter(
         $post_types,
         static function ($post_type) {
@@ -44,11 +65,12 @@ function register_measurements_persistence(
         return;
     }
 
+    $registered = true;
     $require_overall_length = (bool) $require_overall_length;
 
     /*
      * Request-local state bridges wp_insert_post_data and save_post.
-     * Nothing is persisted here.
+     * No measurements are written from the post-data filter.
      */
     $pending = [];
     $busy = false;
@@ -83,8 +105,9 @@ function register_measurements_persistence(
                 : 0;
 
             /*
-             * The classic editor normally uses an existing auto-draft.
-             * Creation through other APIs is outside this form flow.
+             * The classic editor uses an existing auto-draft.
+             * New records created without an ID are outside this
+             * metabox persistence flow.
              */
             if (
                 $post_id <= 0
@@ -95,18 +118,35 @@ function register_measurements_persistence(
                 return $data;
             }
 
+            $post = get_post($post_id);
+
+            if (
+                !$post instanceof \WP_Post
+                || $post->post_type !== $data['post_type']
+            ) {
+                return $data;
+            }
+
             $status = $data['post_status'] ?? 'draft';
             $needs_length = $require_overall_length
                 && measurement_status_requires_length($status);
 
+            /*
+             * Never apply the current editor's measurements to an
+             * unrelated nested wp_update_post() call.
+             *
+             * Identity is not authorization: capability and nonce
+             * checks are still required below.
+             */
             $has_payload = array_key_exists(
                 'gm_measurements',
                 $_POST
-            );
+            )
+                && measurement_submitted_post_id() === $post_id;
 
             /*
-             * An absent metabox is not a request to clear measurements.
-             * Publication can still require checking stored values.
+             * An absent metabox is not a request to clear metadata.
+             * Publication may still require validating stored values.
              */
             if (!$has_payload && !$needs_length) {
                 return $data;
@@ -151,9 +191,8 @@ function register_measurements_persistence(
                         );
                     } else {
                         /*
-                         * A nonce-verified form was submitted.
-                         * Retain its input for feedback even if its
-                         * completeness check fails.
+                         * Retain nonce-verified input even when the
+                         * completeness or value checks reject it.
                          */
                         $submitted = true;
 
@@ -207,14 +246,6 @@ function register_measurements_persistence(
             }
 
             if ($error !== null) {
-                /*
-                 * An invalid submission must never provide the basis
-                 * for publishing a model.
-                 *
-                 * Keep an existing published/scheduled status only
-                 * when the unchanged stored collection independently
-                 * satisfies the enabled publication requirement.
-                 */
                 if (measurement_status_requires_length($status)) {
                     $data['post_status'] =
                         measurement_failure_status(
@@ -279,11 +310,13 @@ function register_measurements_persistence(
                     $state['error'],
                     $state['payload']
                 );
+
                 return;
             }
 
             /*
-             * No form fields means no metadata write.
+             * Publication checks without a submitted metabox must
+             * not write or clear measurements.
              */
             if (!$state['submitted']) {
                 return;
@@ -292,10 +325,6 @@ function register_measurements_persistence(
             $measurements = $state['measurements'];
             $current = get_model_measurements($post_id);
 
-            /*
-             * update_post_meta() also returns false when unchanged.
-             * Compare before writing and verify after writing.
-             */
             if (
                 !is_wp_error($current)
                 && $current === $measurements
@@ -304,6 +333,13 @@ function register_measurements_persistence(
                 return;
             }
 
+            /*
+             * Ordinary Metadata API expects slashed input.
+             * The metadata guards receive the unslashed collection.
+             *
+             * Do not use the return value alone: false also means
+             * "unchanged". Confirm the actual stored collection.
+             */
             update_post_meta(
                 $post_id,
                 MEASUREMENTS_META_KEY,
@@ -327,9 +363,9 @@ function register_measurements_persistence(
             );
 
             /*
-             * Post and metadata writes are not one transaction.
-             * If the required stored length is missing after a failed
-             * write, attempt to revert the model to draft.
+             * Post and metadata writes are not a transaction.
+             * Recover to draft if a failed write leaves a published
+             * or scheduled model without valid required measurements.
              */
             if (
                 $require_overall_length
@@ -363,7 +399,7 @@ function register_measurements_persistence(
                         $error->add(
                             'gm_measurements_reverted_to_draft',
                             'Модель переведена в черновик, поскольку '
-                            . 'обязательная длина не была сохранена.'
+                            . 'обязательные размеры не подтверждены.'
                         );
                     }
                 } finally {
@@ -382,15 +418,18 @@ function register_measurements_persistence(
     );
 
     /*
-     * This is not a REST measurements write endpoint.
-     * It only prevents REST publication without valid stored data
-     * when the overall length requirement is enabled.
+     * This does not expose measurement writes through REST.
+     * It rejects publication without valid already stored values.
+     *
+     * The cross-context publication guard remains an additional
+     * enforcement layer.
      */
     foreach ($post_types as $post_type) {
         add_filter(
             'rest_pre_insert_' . $post_type,
             static function ($prepared_post, $request) use (
-                $require_overall_length
+                $require_overall_length,
+                $post_type
             ) {
                 if (
                     !$require_overall_length
@@ -411,8 +450,13 @@ function register_measurements_persistence(
                     return $prepared_post;
                 }
 
+                $post = $post_id > 0
+                    ? get_post($post_id)
+                    : null;
+
                 if (
-                    $post_id <= 0
+                    !$post instanceof \WP_Post
+                    || $post->post_type !== $post_type
                     || !stored_measurements_allow_publication(
                         $post_id
                     )
@@ -440,16 +484,45 @@ function register_measurements_persistence(
 }
 
 /**
+ * Read the classic editor's submitted post ID.
+ *
+ * No fallback to a GET parameter or current global post is used.
+ * This function identifies a form; it does not authorize a write.
+ *
+ * @return int Positive post ID or zero.
+ */
+function measurement_submitted_post_id()
+{
+    if (
+        !isset($_POST['post_ID'])
+        || !is_string($_POST['post_ID'])
+    ) {
+        return 0;
+    }
+
+    $value = wp_unslash($_POST['post_ID']);
+
+    if (preg_match('/^[1-9][0-9]*$/D', $value) !== 1) {
+        return 0;
+    }
+
+    $post_id = filter_var(
+        $value,
+        FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1]]
+    );
+
+    return $post_id === false ? 0 : $post_id;
+}
+
+/**
  * Validate measurement form completeness.
  *
- * The completion marker must be rendered after measurement fields.
- * The expected row count must be maintained by the admin interface.
+ * The completion marker must follow the measurement fields.
+ * The expected row count is maintained by the administration UI.
  *
- * Missing rows are permitted only when the expected count is zero.
- * A supplied rows value must always be an array, including when null.
- *
- * These checks detect incomplete submissions. They do not authenticate
- * input and do not replace structural or dictionary validation.
+ * These checks detect incomplete submissions. They do not
+ * authenticate input or replace structural validation.
  *
  * @param array $payload Unslashed form payload.
  * @return true|\WP_Error
@@ -490,10 +563,6 @@ function validate_measurement_form_integrity(array $payload)
         );
     }
 
-    /*
-     * Reject integer overflow instead of coercing an arbitrary
-     * decimal string into the platform integer range.
-     */
     $expected_rows = filter_var(
         $payload['expected_rows'],
         FILTER_VALIDATE_INT,
@@ -504,7 +573,7 @@ function validate_measurement_form_integrity(array $payload)
         return measurement_data_error(
             'gm_measurements_expected_rows_out_of_range',
             'Размеры не сохранены: '
-            . 'счётчик строк формы выходит за допустимый диапазон.'
+            . 'счётчик строк выходит за допустимый диапазон.'
         );
     }
 
@@ -542,10 +611,7 @@ function validate_measurement_form_integrity(array $payload)
 }
 
 /**
- * Convert the metabox payload into the storage contract.
- *
- * Form completeness is checked even when this function is called
- * independently of the registered administration handler.
+ * Convert the metabox payload into the measurements contract.
  *
  * Structural normalization and dictionary validation follow later.
  *
@@ -605,17 +671,13 @@ function measurement_collection_from_form(array $payload)
         );
     }
 
-    /*
-     * Integrity validation has already established that an explicitly
-     * supplied rows value is an array.
-     */
     $rows = array_key_exists('rows', $payload)
         ? $payload['rows']
         : [];
 
     /*
-     * overall_length has exactly one dedicated form location.
-     * Do not allow it to be injected into additional rows.
+     * overall_length has one dedicated form location.
+     * Do not permit another copy in the additional rows.
      */
     foreach ($rows as $row) {
         if (
@@ -656,7 +718,7 @@ function measurement_collection_from_form(array $payload)
 }
 
 /**
- * Check whether a status represents publication or scheduled publication.
+ * Identify publication or scheduled-publication statuses.
  *
  * @param string|false $status Post status.
  * @return bool
@@ -667,14 +729,20 @@ function measurement_status_requires_length($status)
 }
 
 /**
- * Check the actual stored collection against publication requirements.
+ * Check stored measurements against publication requirements.
  *
- * @param int $post_id Model post ID.
+ * @param int $post_id Existing model ID.
  * @return bool
  */
 function stored_measurements_allow_publication($post_id)
 {
-    $measurements = get_model_measurements((int) $post_id);
+    $post_id = (int) $post_id;
+
+    if ($post_id <= 0 || !get_post($post_id)) {
+        return false;
+    }
+
+    $measurements = get_model_measurements($post_id);
 
     if (is_wp_error($measurements)) {
         return false;
@@ -697,12 +765,12 @@ function stored_measurements_allow_publication($post_id)
 }
 
 /**
- * Choose a safe status after rejecting a proposed collection.
+ * Choose a safe status after rejecting proposed measurements.
  *
- * Previously published content is not unnecessarily unpublished if
- * its unchanged stored collection satisfies enabled requirements.
+ * Existing publication is retained only when its unchanged stored
+ * measurements meet the enabled publication requirement.
  *
- * @param int  $post_id        Existing post ID.
+ * @param int  $post_id Existing model ID.
  * @param bool $require_length Whether length is mandatory.
  * @return string
  */
@@ -735,9 +803,12 @@ function measurement_failure_status($post_id, $require_length)
 }
 
 /**
- * Build a per-user, per-post feedback key.
+ * Build a per-user, per-model feedback key.
  *
- * @param int $post_id Model post ID.
+ * Publication-rejection notices use a different key in
+ * publication-guards.php and are not cleared here.
+ *
+ * @param int $post_id Model ID.
  * @return string
  */
 function measurement_admin_feedback_key($post_id)
@@ -750,15 +821,15 @@ function measurement_admin_feedback_key($post_id)
 }
 
 /**
- * Keep errors and rejected form data across the editor redirect.
+ * Preserve errors and rejected form input across editor redirects.
  *
- * The payload is unslashed but not normalized: preserving invalid input
- * is intentional. It must only be displayed with output escaping.
+ * Payload remains unslashed and may contain invalid input.
+ * It must only be rendered with appropriate output escaping.
  *
- * Transients are temporary, not a durable revision mechanism.
+ * Transients are temporary, not durable measurement revisions.
  *
- * @param int       $post_id Model post ID.
- * @param \WP_Error $error   Validation or persistence error.
+ * @param int       $post_id Model ID.
+ * @param \WP_Error $error Validation or persistence error.
  * @param mixed     $payload Rejected payload or null.
  * @return void
  */
@@ -767,6 +838,12 @@ function store_measurement_admin_feedback(
     \WP_Error $error,
     $payload = null
 ) {
+    $post_id = (int) $post_id;
+
+    if ($post_id <= 0 || get_current_user_id() <= 0) {
+        return;
+    }
+
     set_transient(
         measurement_admin_feedback_key($post_id),
         [
@@ -778,28 +855,40 @@ function store_measurement_admin_feedback(
 }
 
 /**
- * Clear rejected input after successful explicit form submission.
+ * Clear form feedback after a successful explicit form submission.
  *
- * @param int $post_id Model post ID.
+ * Does not clear the separate publication-rejection notice.
+ *
+ * @param int $post_id Model ID.
  * @return void
  */
 function clear_measurement_admin_feedback($post_id)
 {
+    $post_id = (int) $post_id;
+
+    if ($post_id <= 0 || get_current_user_id() <= 0) {
+        return;
+    }
+
     delete_transient(
         measurement_admin_feedback_key($post_id)
     );
 }
 
 /**
- * Display errors and a copyable representation of rejected input.
+ * Display errors and copyable rejected form input.
  *
- * Feedback remains available on reload until a successful explicit
- * measurements submission, expiry or transient eviction.
+ * Form feedback remains available until a successful explicit
+ * submission, transient expiry or cache eviction.
  *
  * @return void
  */
 function render_measurement_admin_feedback()
 {
+    if (!function_exists('get_current_screen')) {
+        return;
+    }
+
     $screen = get_current_screen();
 
     if (!$screen || $screen->base !== 'post') {
@@ -874,7 +963,7 @@ function render_measurement_admin_feedback()
                 'Это полученные сервером значения, включая ошибочные. '
                 . 'При усечении формы здесь может быть только часть '
                 . 'отправленного ввода. Метабокс ниже показывает '
-                . 'ранее сохранённые размеры, а не эти данные. '
+                . 'сохранённые размеры, а не эту отклонённую форму. '
                 . 'Скопируйте нужные значения перед повторным сохранением.'
             );
             echo '</p>';
