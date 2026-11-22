@@ -67,6 +67,7 @@ jobs:
             includes/admin.php
             includes/persistence.php
             includes/dictionary-guards.php
+            includes/publication-guards.php
             assets/admin.js
             assets/admin.css
           )
@@ -131,6 +132,7 @@ jobs:
             includes/admin.php \
             includes/persistence.php \
             includes/dictionary-guards.php \
+            includes/publication-guards.php \
             assets/admin.js \
             assets/admin.css
 
@@ -491,6 +493,7 @@ jobs:
             includes/admin.php
             includes/persistence.php
             includes/dictionary-guards.php
+            includes/publication-guards.php
             assets/admin.js
             assets/admin.css
           )
@@ -620,6 +623,6 @@ jobs:
             echo "- Files: 644"
             echo "- Previous contents backed up on the server"
             echo "- Activation: not performed"
-            echo "- No deployment commands modify the database or WordPress configuration"
+            echo "- No explicit database or WordPress configuration changes are requested by this workflow"
             echo "- Functional acceptance: still required"
           } >> "$GITHUB_STEP_SUMMARY"

@@ -69,9 +69,6 @@ function register_measurements_admin(
                     /*
                      * Full block-editor support needs a separately
                      * verified REST publication/save flow.
-                     *
-                     * Do not advertise compatibility before that
-                     * flow is implemented.
                      */
                     '__block_editor_compatible_meta_box' => false,
                 ]
@@ -160,11 +157,8 @@ function render_measurements_metabox($post)
     }
 
     /*
-     * Validate references before building selectors.
-     *
      * Existing inactive rows remain valid when unchanged.
-     * Missing or incompatible dictionary entries are not hidden.
-     *
+     * Missing or incompatible references must not be hidden.
      * Overall length is not required just to render a draft.
      */
     $validated = validate_model_measurements(
@@ -188,10 +182,6 @@ function render_measurements_metabox($post)
 
 /**
  * Render an editor from a normalized, validated collection.
- *
- * Kept separate from loading so that the persistence handler can
- * later render a rejected submission without discarding user input.
- * Rejected input must be checked before calling rendering helpers.
  *
  * @param array $measurements Normalized, validated collection.
  * @param array $dictionaries Loaded dictionaries.
@@ -237,8 +227,9 @@ function render_measurements_editor(
     );
 
     /*
-     * The persistence handler must require both this marker and
-     * a valid nonce. Its absence is not an empty collection.
+     * Presence alone does not prove that the whole form arrived.
+     * The persistence handler must also check the final completion
+     * marker and the expected additional row count.
      */
     echo '<input type="hidden" ';
     echo 'name="gm_measurements[present]" value="1">';
@@ -287,6 +278,29 @@ function render_measurements_editor(
     echo '<p class="screen-reader-text" ';
     echo 'aria-live="polite" aria-atomic="true" ';
     echo 'data-gm-announcement></p>';
+
+    /*
+     * Keep these controls after all submitted measurement fields.
+     *
+     * JavaScript updates expected_rows after adding/removing rows
+     * and immediately before submission.
+     *
+     * Template contents are inert and are not submitted.
+     *
+     * These controls detect incomplete form submissions; they are
+     * not authorization tokens and do not replace the nonce,
+     * capability checks or structural validation.
+     */
+    echo '<div hidden data-gm-form-integrity>';
+
+    echo '<input type="hidden" data-gm-expected-rows ';
+    echo 'name="gm_measurements[expected_rows]" ';
+    echo 'value="' . esc_attr((string) count($rows)) . '">';
+
+    echo '<input type="hidden" data-gm-form-complete ';
+    echo 'name="gm_measurements[complete]" value="1">';
+
+    echo '</div>';
 
     echo '</div>';
 }

@@ -3,6 +3,13 @@
  *
  * No AJAX, persistence or publication rules are implemented here.
  * Server-side validation remains authoritative.
+ *
+ * Form integrity controls:
+ * - expected_rows: number of additional measurement rows;
+ * - complete: final marker after all measurement fields.
+ *
+ * These controls help detect incomplete submissions. They do not
+ * replace server-side validation, capability checks or the nonce.
  */
 (function () {
     'use strict';
@@ -132,6 +139,17 @@
     }
 
     /**
+     * Return actual additional rows, excluding template contents.
+     */
+    function getRows(rowsContainer) {
+        return Array.from(rowsContainer.children).filter(
+            function (element) {
+                return element.matches(ROW_SELECTOR);
+            }
+        );
+    }
+
+    /**
      * Initialize one independently addressable metabox.
      */
     function initializeMetabox(root) {
@@ -145,12 +163,38 @@
         const announcement = root.querySelector(
             '[data-gm-announcement]'
         );
+        const integrityContainer = root.querySelector(
+            '[data-gm-form-integrity]'
+        );
+        const expectedRowsInput = root.querySelector(
+            '[data-gm-expected-rows]'
+        );
+        const completeInput = root.querySelector(
+            '[data-gm-form-complete]'
+        );
+        const form = root.closest('form');
 
         if (
             !rowsContainer ||
             !(template instanceof HTMLTemplateElement) ||
             !addButton ||
-            !announcement
+            !announcement ||
+            !integrityContainer ||
+            !(expectedRowsInput instanceof HTMLInputElement) ||
+            !(completeInput instanceof HTMLInputElement) ||
+            !(form instanceof HTMLFormElement)
+        ) {
+            return;
+        }
+
+        if (
+            expectedRowsInput.type !== 'hidden' ||
+            expectedRowsInput.name !==
+            'gm_measurements[expected_rows]' ||
+            completeInput.type !== 'hidden' ||
+            completeInput.name !== 'gm_measurements[complete]' ||
+            !integrityContainer.contains(expectedRowsInput) ||
+            !integrityContainer.contains(completeInput)
         ) {
             return;
         }
@@ -159,17 +203,38 @@
 
         let nextIndex = 0;
 
-        rowsContainer.querySelectorAll(ROW_SELECTOR).forEach(
-            function (row) {
-                const index = Number(row.dataset.gmRowIndex);
+        /**
+         * Synchronize controls used by the server to detect truncation.
+         *
+         * Keep complete last, after the row count and all measurement
+         * fields. Do not create missing integrity controls in JavaScript:
+         * PHP must render them so that the form also works without JS.
+         */
+        function synchronizeFormIntegrity() {
+            expectedRowsInput.disabled = false;
+            expectedRowsInput.value = String(
+                getRows(rowsContainer).length
+            );
 
-                if (Number.isSafeInteger(index) && index >= 0) {
-                    nextIndex = Math.max(nextIndex, index + 1);
-                }
+            completeInput.disabled = false;
+            completeInput.value = '1';
 
-                synchronizeTarget(row);
+            integrityContainer.appendChild(expectedRowsInput);
+            integrityContainer.appendChild(completeInput);
+            root.appendChild(integrityContainer);
+        }
+
+        getRows(rowsContainer).forEach(function (row) {
+            const index = Number(row.dataset.gmRowIndex);
+
+            if (Number.isSafeInteger(index) && index >= 0) {
+                nextIndex = Math.max(nextIndex, index + 1);
             }
-        );
+
+            synchronizeTarget(row);
+        });
+
+        synchronizeFormIntegrity();
 
         /**
          * Replace only the dedicated template index token.
@@ -186,22 +251,29 @@
 
             row.dataset.gmRowIndex = String(index);
 
-            row.querySelectorAll('[name], [id], [for]').forEach(
-                function (element) {
-                    ['name', 'id', 'for'].forEach(function (attribute) {
-                        if (!element.hasAttribute(attribute)) {
-                            return;
-                        }
+            const attributes = [
+                'name',
+                'id',
+                'for',
+                'aria-describedby'
+            ];
 
-                        const value = element.getAttribute(attribute);
+            row.querySelectorAll(
+                '[name], [id], [for], [aria-describedby]'
+            ).forEach(function (element) {
+                attributes.forEach(function (attribute) {
+                    if (!element.hasAttribute(attribute)) {
+                        return;
+                    }
 
-                        element.setAttribute(
-                            attribute,
-                            value.split('__INDEX__').join(String(index))
-                        );
-                    });
-                }
-            );
+                    const value = element.getAttribute(attribute);
+
+                    element.setAttribute(
+                        attribute,
+                        value.split('__INDEX__').join(String(index))
+                    );
+                });
+            });
 
             return row;
         }
@@ -223,7 +295,9 @@
 
             nextIndex += 1;
             rowsContainer.appendChild(row);
+
             synchronizeTarget(row);
+            synchronizeFormIntegrity();
 
             const definitionSelect = row.querySelector(
                 '[data-gm-definition]'
@@ -281,6 +355,7 @@
             const previousRow = row.previousElementSibling;
 
             row.remove();
+            synchronizeFormIntegrity();
 
             const focusRow = nextRow || previousRow;
             const focusControl = focusRow
@@ -293,6 +368,20 @@
 
             announcement.textContent = 'Строка измерения удалена.';
         });
+
+        /**
+         * Refresh the count before normal form submission.
+         *
+         * Updating after every add/remove also covers submission paths
+         * that do not dispatch a submit event.
+         */
+        form.addEventListener(
+            'submit',
+            function () {
+                synchronizeFormIntegrity();
+            },
+            true
+        );
     }
 
     function initialize() {

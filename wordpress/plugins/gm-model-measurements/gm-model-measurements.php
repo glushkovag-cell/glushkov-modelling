@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Glushkov Modelling — Model Measurements
  * Description: Model measurements in millimeters, dictionary validation,
- *              an administration metabox and dictionary integrity guards.
- * Version: 0.1.0
+ *              an administration metabox and publication integrity guards.
+ * Version: 0.1.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author: Glushkov Modelling
@@ -16,13 +16,18 @@ namespace GlushkovModelling\ModelMeasurements;
 
 defined('ABSPATH') || exit;
 
-const PLUGIN_VERSION = '0.1.0';
+const PLUGIN_VERSION = '0.1.1';
 
 /**
  * Load modules without registering their hooks yet.
  *
- * Order matters: the UI and persistence modules use dictionary,
- * normalization and validation functions.
+ * Order matters:
+ * - validation uses dictionaries and structural normalization;
+ * - administration and persistence use validation;
+ * - publication guards use persistence and dictionary guard helpers.
+ *
+ * No activation-time migration, metadata registration or content
+ * modification is performed.
  */
 require_once __DIR__ . '/includes/dictionaries.php';
 require_once __DIR__ . '/includes/measurements.php';
@@ -30,12 +35,10 @@ require_once __DIR__ . '/includes/validation.php';
 require_once __DIR__ . '/includes/admin.php';
 require_once __DIR__ . '/includes/persistence.php';
 require_once __DIR__ . '/includes/dictionary-guards.php';
+require_once __DIR__ . '/includes/publication-guards.php';
 
 /**
  * Initialize after normal CPT and ACF registration.
- *
- * No activation-time migration, metadata registration or content
- * modification is performed.
  */
 add_action(
     'wp_loaded',
@@ -132,10 +135,11 @@ function bootstrap_model_measurements()
     }
 
     /*
-     * Register on frontend requests too:
-     * metadata guards and REST checks must not depend on is_admin().
+     * Register guards on frontend, administration, REST, CLI
+     * and cron requests.
      *
-     * Individual modules restrict their own administration hooks.
+     * Do not wrap these registrations in is_admin().
+     * Individual handlers restrict their own supported contexts.
      */
     register_dictionary_guards($post_types);
 
@@ -150,11 +154,26 @@ function bootstrap_model_measurements()
         PLUGIN_VERSION
     );
 
+    /*
+     * Register after the existing handlers.
+     *
+     * The cross-context publication filter has a later priority than
+     * the classic form handler and checks actual stored measurements.
+     *
+     * The module also guards ordinary measurement metadata writes
+     * and wraps the standard scheduled-publication callback.
+     */
+    register_measurements_publication_guards(
+        $post_types,
+        $require_length
+    );
+
     if (!$require_length) {
         register_measurements_bootstrap_notice(
             'Модуль размеров работает в режиме подготовки: '
             . 'обязательность габаритной длины при публикации '
-            . 'пока выключена.',
+            . 'пока выключена. Проверки структуры размеров '
+            . 'и целостности справочников остаются включёнными.',
             'info'
         );
     }

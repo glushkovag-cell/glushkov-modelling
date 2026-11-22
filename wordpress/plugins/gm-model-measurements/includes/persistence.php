@@ -150,7 +150,21 @@ function register_measurements_persistence(
                             . 'неверный формат отправленной формы.'
                         );
                     } else {
+                        /*
+                         * A nonce-verified form was submitted.
+                         * Retain its input for feedback even if its
+                         * completeness check fails.
+                         */
                         $submitted = true;
+
+                        $integrity =
+                            validate_measurement_form_integrity(
+                                $payload
+                            );
+
+                        if (is_wp_error($integrity)) {
+                            $error = $integrity;
+                        }
                     }
                 }
             }
@@ -313,9 +327,9 @@ function register_measurements_persistence(
             );
 
             /*
-             * A successful post update and a metadata write are not
-             * one database transaction. If writing measurements fails,
-             * prevent publication without the required stored length.
+             * Post and metadata writes are not one transaction.
+             * If the required stored length is missing after a failed
+             * write, attempt to revert the model to draft.
              */
             if (
                 $require_overall_length
@@ -426,9 +440,113 @@ function register_measurements_persistence(
 }
 
 /**
+ * Validate measurement form completeness.
+ *
+ * The completion marker must be rendered after measurement fields.
+ * The expected row count must be maintained by the admin interface.
+ *
+ * Missing rows are permitted only when the expected count is zero.
+ * A supplied rows value must always be an array, including when null.
+ *
+ * These checks detect incomplete submissions. They do not authenticate
+ * input and do not replace structural or dictionary validation.
+ *
+ * @param array $payload Unslashed form payload.
+ * @return true|\WP_Error
+ */
+function validate_measurement_form_integrity(array $payload)
+{
+    if (($payload['present'] ?? null) !== '1') {
+        return measurement_data_error(
+            'gm_measurements_invalid_form_marker',
+            'Размеры не сохранены: '
+            . 'неверный маркер присутствия формы.'
+        );
+    }
+
+    if (($payload['complete'] ?? null) !== '1') {
+        return measurement_data_error(
+            'gm_measurements_incomplete_form',
+            'Размеры не сохранены: форма получена не полностью '
+            . 'или была открыта до обновления модуля. '
+            . 'Сохранённые размеры оставлены без изменений. '
+            . 'Скопируйте доступный несохранённый ввод, '
+            . 'затем обновите страницу редактора.'
+        );
+    }
+
+    if (
+        !array_key_exists('expected_rows', $payload)
+        || !is_string($payload['expected_rows'])
+        || preg_match(
+            '/^(?:0|[1-9][0-9]*)$/D',
+            $payload['expected_rows']
+        ) !== 1
+    ) {
+        return measurement_data_error(
+            'gm_measurements_invalid_expected_rows',
+            'Размеры не сохранены: '
+            . 'отсутствует корректный счётчик строк формы.'
+        );
+    }
+
+    /*
+     * Reject integer overflow instead of coercing an arbitrary
+     * decimal string into the platform integer range.
+     */
+    $expected_rows = filter_var(
+        $payload['expected_rows'],
+        FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 0]]
+    );
+
+    if ($expected_rows === false) {
+        return measurement_data_error(
+            'gm_measurements_expected_rows_out_of_range',
+            'Размеры не сохранены: '
+            . 'счётчик строк формы выходит за допустимый диапазон.'
+        );
+    }
+
+    if (array_key_exists('rows', $payload)) {
+        if (!is_array($payload['rows'])) {
+            return measurement_data_error(
+                'gm_measurements_invalid_form_rows',
+                'Дополнительные измерения должны быть массивом строк.'
+            );
+        }
+
+        $actual_rows = count($payload['rows']);
+    } else {
+        $actual_rows = 0;
+    }
+
+    if ($actual_rows !== $expected_rows) {
+        return measurement_data_error(
+            'gm_measurements_form_row_count_mismatch',
+            sprintf(
+                'Размеры не сохранены: ожидалось строк — %d, '
+                . 'получено — %d. Форма могла быть усечена. '
+                . 'Сохранённые размеры оставлены без изменений.',
+                $expected_rows,
+                $actual_rows
+            ),
+            [
+                'expectedRows' => $expected_rows,
+                'actualRows'   => $actual_rows,
+            ]
+        );
+    }
+
+    return true;
+}
+
+/**
  * Convert the metabox payload into the storage contract.
  *
- * This function does not sanitize away malformed rows.
+ * Form completeness is checked even when this function is called
+ * independently of the registered administration handler.
+ *
  * Structural normalization and dictionary validation follow later.
  *
  * @param array $payload Unslashed form payload.
@@ -436,7 +554,19 @@ function register_measurements_persistence(
  */
 function measurement_collection_from_form(array $payload)
 {
-    $allowed_keys = ['present', 'overall_length', 'rows'];
+    $integrity = validate_measurement_form_integrity($payload);
+
+    if (is_wp_error($integrity)) {
+        return $integrity;
+    }
+
+    $allowed_keys = [
+        'present',
+        'overall_length',
+        'rows',
+        'expected_rows',
+        'complete',
+    ];
 
     if (array_diff(array_keys($payload), $allowed_keys) !== []) {
         return measurement_data_error(
@@ -475,14 +605,13 @@ function measurement_collection_from_form(array $payload)
         );
     }
 
-    $rows = $payload['rows'] ?? [];
-
-    if (!is_array($rows)) {
-        return measurement_data_error(
-            'gm_measurements_invalid_form_rows',
-            'Дополнительные измерения должны быть массивом строк.'
-        );
-    }
+    /*
+     * Integrity validation has already established that an explicitly
+     * supplied rows value is an array.
+     */
+    $rows = array_key_exists('rows', $payload)
+        ? $payload['rows']
+        : [];
 
     /*
      * overall_length has exactly one dedicated form location.
@@ -742,10 +871,11 @@ function render_measurement_admin_feedback()
 
             echo '<p>';
             echo esc_html(
-                'Это отправленные значения, включая ошибочные. '
-                . 'Метабокс ниже показывает ранее сохранённые размеры, '
-                . 'а не эти данные. Скопируйте нужные значения '
-                . 'перед повторным сохранением.'
+                'Это полученные сервером значения, включая ошибочные. '
+                . 'При усечении формы здесь может быть только часть '
+                . 'отправленного ввода. Метабокс ниже показывает '
+                . 'ранее сохранённые размеры, а не эти данные. '
+                . 'Скопируйте нужные значения перед повторным сохранением.'
             );
             echo '</p>';
 

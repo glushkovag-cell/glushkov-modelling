@@ -1,13 +1,18 @@
 <?php
 /**
- * Dictionary integrity guards.
+ * Dictionary integrity and publication guards.
  *
  * Requires:
  * - dictionaries.php
  * - measurements.php
  *
- * Guards apply through the WordPress metadata and post APIs.
- * Direct SQL writes bypass these guards.
+ * New dictionary entries must first be saved as complete drafts.
+ *
+ * Guards cover the registered WordPress metadata filters and
+ * publication through wp_insert_post()/wp_update_post().
+ *
+ * Direct SQL, metadata-by-ID APIs and direct wp_publish_post()
+ * require separate consideration.
  *
  * @package GM_Model_Measurements
  */
@@ -17,12 +22,59 @@ namespace GlushkovModelling\ModelMeasurements;
 defined('ABSPATH') || exit;
 
 /**
+ * Return protected dictionary value metadata.
+ *
+ * ACF field-key metadata is deliberately excluded.
+ *
+ * @return array
+ */
+function protected_dictionary_meta_keys()
+{
+    return [
+        'measurement_defi' =>
+            dictionary_value_field_names('measurement_defi'),
+        'model_element' =>
+            dictionary_value_field_names('model_element'),
+    ];
+}
+
+/**
+ * Check a protected key without requiring an object ID.
+ *
+ * @param mixed $meta_key Metadata name.
+ * @return bool
+ */
+function is_protected_dictionary_meta_key($meta_key)
+{
+    if (!is_string($meta_key)) {
+        return false;
+    }
+
+    foreach (protected_dictionary_meta_keys() as $keys) {
+        if (in_array($meta_key, $keys, true)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Check whether a dictionary status requires complete valid fields.
+ *
+ * Scheduled entries must already be valid before their future
+ * publication.
+ *
+ * @param string|false $status Post status.
+ * @return bool
+ */
+function dictionary_status_requires_integrity($status)
+{
+    return in_array($status, ['publish', 'future'], true);
+}
+
+/**
  * Register dictionary protection.
- *
- * Call once from the main plugin file.
- *
- * Model references are checked in canonical measurement metadata
- * for all registered statuses, including drafts and trash.
  *
  * @param string[] $model_post_types Model post types.
  * @return void
@@ -36,12 +88,6 @@ function register_dictionary_guards(array $model_post_types)
         }
     )));
 
-    /*
-     * Without configured model CPTs, usage detection would incorrectly
-     * report that no model uses a dictionary entry.
-     *
-     * Refuse destructive changes instead of guessing.
-     */
     $configuration_error = $model_post_types === [];
 
     $check_change = static function (
@@ -68,18 +114,15 @@ function register_dictionary_guards(array $model_post_types)
     };
 
     /*
-     * ACF validation gives a field-level error before form saving.
-     * Metadata filters below remain the final API-level guard.
+     * Field-level ACF feedback.
+     *
+     * Published entries also pass complete candidate validation
+     * inside validate_dictionary_meta_change().
      */
-    $field_names = [
-        'measurement_code',
-        'measurement_group',
-        'measurement_target_kind',
-        'measurement_active',
-        'element_code',
-        'element_kind',
-        'element_parent',
-    ];
+    $field_names = array_values(array_unique(array_merge(
+        dictionary_value_field_names('measurement_defi'),
+        dictionary_value_field_names('model_element')
+    )));
 
     foreach ($field_names as $field_name) {
         add_filter(
@@ -112,6 +155,102 @@ function register_dictionary_guards(array $model_post_types)
         );
     }
 
+    /*
+     * Validate an ACF publication form as a complete candidate.
+     * This improves feedback; it is not the only enforcement layer.
+     */
+    add_action(
+        'acf/validate_save_post',
+        static function () {
+            if (!function_exists('acf_add_validation_error')) {
+                return;
+            }
+
+            $post_id = dictionary_acf_post_id();
+
+            if ($post_id <= 0) {
+                return;
+            }
+
+            $post = get_post($post_id);
+
+            if (
+                !$post instanceof \WP_Post
+                || !is_measurement_dictionary_type($post->post_type)
+            ) {
+                return;
+            }
+
+            $status = $post->post_status;
+
+            if (
+                isset($_POST['post_status'])
+                && is_string($_POST['post_status'])
+            ) {
+                $status = wp_unslash($_POST['post_status']);
+            }
+
+            if (!dictionary_status_requires_integrity($status)) {
+                return;
+            }
+
+            $title = $post->post_title;
+
+            if (
+                isset($_POST['post_title'])
+                && is_string($_POST['post_title'])
+            ) {
+                $title = wp_unslash($_POST['post_title']);
+            }
+
+            $overrides = dictionary_submitted_field_overrides(
+                $post->post_type
+            );
+
+            if (is_wp_error($overrides)) {
+                acf_add_validation_error(
+                    '',
+                    $overrides->get_error_message()
+                );
+                return;
+            }
+
+            /*
+             * Require complete stored fields first.
+             * Do not publish a new/incomplete record while relying
+             * on later ACF writes to supply missing required fields.
+             */
+            $stored = validate_dictionary_publication_candidate(
+                (int) $post_id,
+                $title
+            );
+
+            if (is_wp_error($stored)) {
+                acf_add_validation_error(
+                    '',
+                    $stored->get_error_message()
+                    . ' Сначала сохраните заполненный черновик, '
+                    . 'затем повторите публикацию.'
+                );
+                return;
+            }
+
+            $candidate = validate_dictionary_publication_candidate(
+                (int) $post_id,
+                $title,
+                $overrides
+            );
+
+            if (is_wp_error($candidate)) {
+                acf_add_validation_error(
+                    '',
+                    $candidate->get_error_message()
+                );
+            }
+        },
+        20
+    );
+
     foreach (['add', 'update', 'delete'] as $operation) {
         add_filter(
             $operation . '_post_metadata',
@@ -123,26 +262,27 @@ function register_dictionary_guards(array $model_post_types)
                 $extra
             ) use ($operation, $check_change) {
                 /*
-                 * Respect an earlier filter's explicit decision.
+                 * Global deletes may have object ID zero.
+                 * Check them before attempting post-type resolution.
                  */
+                if (
+                    $operation === 'delete'
+                    && $extra
+                    && is_protected_dictionary_meta_key($meta_key)
+                ) {
+                    dictionary_guard_notice(
+                        'Массовое удаление защищённых полей '
+                        . 'справочника запрещено.'
+                    );
+                    return false;
+                }
+
                 if ($check !== null) {
                     return $check;
                 }
 
                 if (!is_protected_dictionary_meta($post_id, $meta_key)) {
                     return null;
-                }
-
-                /*
-                 * A delete-all metadata operation has no single
-                 * dictionary entry against which to validate.
-                 */
-                if ($operation === 'delete' && $extra) {
-                    dictionary_guard_notice(
-                        'Массовое удаление защищённых полей '
-                        . 'справочника запрещено.'
-                    );
-                    return false;
                 }
 
                 $existing_values = get_post_meta(
@@ -168,18 +308,13 @@ function register_dictionary_guards(array $model_post_types)
                 }
 
                 /*
-                 * update_metadata() unslashes input before invoking
-                 * its filter; add_metadata() invokes its filter before
-                 * unslashing. Normalize only the latter here.
+                 * WordPress already unslashes values before these
+                 * add/update metadata filters.
                  */
-                $value = $operation === 'add'
-                    ? wp_unslash($meta_value)
-                    : $meta_value;
-
                 $result = $check_change(
                     (int) $post_id,
                     $meta_key,
-                    $value,
+                    $meta_value,
                     $operation === 'delete'
                 );
 
@@ -197,9 +332,6 @@ function register_dictionary_guards(array $model_post_types)
         );
     }
 
-    /*
-     * Prevent trashing and permanent deletion of referenced entries.
-     */
     foreach (['pre_trash_post', 'pre_delete_post'] as $hook) {
         add_filter(
             $hook,
@@ -246,8 +378,10 @@ function register_dictionary_guards(array $model_post_types)
     }
 
     /*
-     * A published entry must not disappear from the loaded dictionary
-     * while referenced, including by changing its status to draft.
+     * Check status and title before WordPress writes post data.
+     *
+     * Incoming metadata is checked here as a proposed complete state
+     * and subsequently by the individual metadata guards.
      */
     add_filter(
         'wp_insert_post_data',
@@ -255,51 +389,163 @@ function register_dictionary_guards(array $model_post_types)
             $model_post_types,
             $configuration_error
         ) {
+            $post_type = $data['post_type'] ?? '';
+
+            if (!is_measurement_dictionary_type($post_type)) {
+                return $data;
+            }
+
             $post_id = isset($postarr['ID'])
                 ? absint($postarr['ID'])
                 : 0;
 
+            $post = $post_id > 0 ? get_post($post_id) : null;
+            $new_status = $data['post_status'] ?? 'draft';
+
+            /*
+             * Creation and post-type conversion must not create an
+             * immediately published dictionary entry.
+             */
             if (
-                $post_id <= 0
-                || !is_measurement_dictionary_type(
-                    $data['post_type'] ?? ''
-                )
+                !$post instanceof \WP_Post
+                || $post->post_type !== $post_type
             ) {
+                if (dictionary_status_requires_integrity($new_status)) {
+                    $data['post_status'] = 'draft';
+
+                    dictionary_guard_notice(
+                        'Справочная запись оставлена черновиком. '
+                        . 'Сначала сохраните её поля, '
+                        . 'затем выполните публикацию.'
+                    );
+                }
+
                 return $data;
             }
 
-            $previous_status = get_post_status($post_id);
-            $new_status = $data['post_status'] ?? $previous_status;
-
+            /*
+             * Do not remove a referenced published entry from the
+             * dictionary by changing its status.
+             */
             if (
-                $previous_status !== 'publish'
-                || $new_status === 'publish'
+                $post->post_status === 'publish'
+                && $new_status !== 'publish'
             ) {
+                $removal = $configuration_error
+                    ? dictionary_guard_error(
+                        'configuration_missing',
+                        'Снятие с публикации отменено: '
+                        . 'не настроены типы записей моделей.'
+                    )
+                    : dictionary_entry_may_leave_publication(
+                        $post_id,
+                        $model_post_types
+                    );
+
+                if (is_wp_error($removal)) {
+                    $data['post_status'] = 'publish';
+                    $new_status = 'publish';
+
+                    dictionary_guard_notice(
+                        $removal->get_error_message()
+                    );
+                }
+            }
+
+            if (!dictionary_status_requires_integrity($new_status)) {
                 return $data;
             }
 
-            $result = $configuration_error
-                ? dictionary_guard_error(
+            /*
+             * wp_insert_post_data receives slashed post data.
+             */
+            $title = isset($data['post_title'])
+                && is_string($data['post_title'])
+                ? wp_unslash($data['post_title'])
+                : $post->post_title;
+
+            $error = null;
+
+            if ($configuration_error) {
+                $error = dictionary_guard_error(
                     'configuration_missing',
-                    'Снятие с публикации отменено: '
+                    'Публикация отменена: '
                     . 'не настроены типы записей моделей.'
-                )
-                : dictionary_entry_may_leave_publication(
-                    $post_id,
-                    $model_post_types
-                );
-
-            if (is_wp_error($result)) {
-                $data['post_status'] = $previous_status;
-
-                dictionary_guard_notice(
-                    $result->get_error_message()
                 );
             }
+
+            if ($error === null) {
+                $stored = validate_dictionary_publication_candidate(
+                    (int) $post_id,
+                    $title
+                );
+
+                if (is_wp_error($stored)) {
+                    $error = $stored;
+                }
+            }
+
+            $overrides = [];
+
+            if ($error === null) {
+                $overrides = dictionary_postarr_field_overrides(
+                    $post_type,
+                    $postarr
+                );
+
+                if (is_wp_error($overrides)) {
+                    $error = $overrides;
+                }
+            }
+
+            if ($error === null) {
+                $candidate = validate_dictionary_publication_candidate(
+                    (int) $post_id,
+                    $title,
+                    $overrides
+                );
+
+                if (is_wp_error($candidate)) {
+                    $error = $candidate;
+                }
+            }
+
+            if ($error === null) {
+                return $data;
+            }
+
+            /*
+             * Reject the proposed title/status.
+             *
+             * Preserve an existing publication only when its old
+             * stored state independently passes complete validation.
+             * Individual metadata guards reject invalid field writes.
+             */
+            $previous = validate_dictionary_publication_candidate(
+                (int) $post_id,
+                $post->post_title
+            );
+
+            if (
+                dictionary_status_requires_integrity($post->post_status)
+                && !is_wp_error($previous)
+            ) {
+                $data['post_status'] = $post->post_status;
+                $data['post_title'] = wp_slash($post->post_title);
+            } else {
+                $data['post_status'] = 'draft';
+            }
+
+            dictionary_guard_notice(
+                $error->get_error_message()
+                . ' Публикация или изменение опубликованной '
+                . 'справочной записи отклонено. '
+                . 'Проверьте сохранённые значения.'
+            );
 
             return $data;
         },
-        20,
+        90,
         2
     );
 
@@ -307,6 +553,136 @@ function register_dictionary_guards(array $model_post_types)
         'admin_notices',
         __NAMESPACE__ . '\\render_dictionary_guard_notices'
     );
+}
+
+/**
+ * Read submitted ACF dictionary values without writing them.
+ *
+ * Values are keyed by ACF field names in the returned array.
+ * Other ACF fields are ignored.
+ *
+ * This is validation input, not an authorization mechanism.
+ *
+ * @param string $post_type Dictionary type.
+ * @return array|\WP_Error
+ */
+function dictionary_submitted_field_overrides($post_type)
+{
+    if (!array_key_exists('acf', $_POST)) {
+        return [];
+    }
+
+    if (
+        !is_array($_POST['acf'])
+        || !function_exists('acf_get_field')
+    ) {
+        return dictionary_guard_error(
+            'invalid_acf_payload',
+            'Некорректный формат полей ACF.'
+        );
+    }
+
+    $allowed = dictionary_value_field_names($post_type);
+    $overrides = [];
+
+    foreach ($_POST['acf'] as $field_key => $value) {
+        if (!is_string($field_key)) {
+            return dictionary_guard_error(
+                'invalid_acf_field_key',
+                'Некорректный ключ поля ACF.'
+            );
+        }
+
+        $field = acf_get_field($field_key);
+
+        if (
+            !is_array($field)
+            || !isset($field['name'])
+            || !in_array($field['name'], $allowed, true)
+        ) {
+            continue;
+        }
+
+        $name = $field['name'];
+
+        if (array_key_exists($name, $overrides)) {
+            return dictionary_guard_error(
+                'duplicate_acf_field_name',
+                'В форме повторяется поле справочника.'
+            );
+        }
+
+        $overrides[$name] = wp_unslash($value);
+    }
+
+    return $overrides;
+}
+
+/**
+ * Collect proposed metadata from wp_insert_post_data arguments.
+ *
+ * The received post array is slashed.
+ * Conflicting ACF and meta_input values are rejected.
+ *
+ * @param string $post_type Dictionary type.
+ * @param array  $postarr   Slashed post array.
+ * @return array|\WP_Error
+ */
+function dictionary_postarr_field_overrides(
+    $post_type,
+    array $postarr
+) {
+    $overrides = [];
+    $allowed = dictionary_value_field_names($post_type);
+
+    if (array_key_exists('meta_input', $postarr)) {
+        if (!is_array($postarr['meta_input'])) {
+            return dictionary_guard_error(
+                'invalid_meta_input',
+                'Некорректный формат meta_input справочной записи.'
+            );
+        }
+
+        foreach ($postarr['meta_input'] as $key => $value) {
+            if (in_array($key, $allowed, true)) {
+                $overrides[$key] = wp_unslash($value);
+            }
+        }
+    }
+
+    /*
+     * Use classic-editor ACF input only for the post being edited.
+     * Do not apply that form to unrelated nested post updates.
+     */
+    $post_id = isset($postarr['ID']) ? absint($postarr['ID']) : 0;
+    $form_post_id = dictionary_acf_post_id();
+
+    if ($post_id <= 0 || $form_post_id !== $post_id) {
+        return $overrides;
+    }
+
+    $acf_values = dictionary_submitted_field_overrides($post_type);
+
+    if (is_wp_error($acf_values)) {
+        return $acf_values;
+    }
+
+    foreach ($acf_values as $key => $value) {
+        if (
+            array_key_exists($key, $overrides)
+            && $overrides[$key] !== $value
+        ) {
+            return dictionary_guard_error(
+                'conflicting_field_sources',
+                'ACF и meta_input передают разные значения '
+                . 'одного поля справочника.'
+            );
+        }
+
+        $overrides[$key] = $value;
+    }
+
+    return $overrides;
 }
 
 /**
@@ -325,7 +701,7 @@ function is_measurement_dictionary_type($post_type)
 }
 
 /**
- * Identify protected value metadata, excluding ACF field-key metadata.
+ * Identify protected metadata on one dictionary entry.
  *
  * @param int    $post_id  Dictionary entry ID.
  * @param string $meta_key Metadata name.
@@ -334,20 +710,7 @@ function is_measurement_dictionary_type($post_type)
 function is_protected_dictionary_meta($post_id, $meta_key)
 {
     $post_type = get_post_type($post_id);
-
-    $keys = [
-        'measurement_defi' => [
-            'measurement_code',
-            'measurement_group',
-            'measurement_target_kind',
-            'measurement_active',
-        ],
-        'model_element' => [
-            'element_code',
-            'element_kind',
-            'element_parent',
-        ],
-    ];
+    $keys = protected_dictionary_meta_keys();
 
     return isset($keys[$post_type])
         && in_array($meta_key, $keys[$post_type], true);
@@ -358,7 +721,7 @@ function is_protected_dictionary_meta($post_id, $meta_key)
  *
  * @param int      $post_id          Dictionary entry ID.
  * @param string   $meta_key         ACF field name.
- * @param mixed    $value            Proposed raw value.
+ * @param mixed    $value            Unslashed raw value.
  * @param bool     $deleting         Whether metadata is being deleted.
  * @param string[] $model_post_types Model post types.
  * @return true|\WP_Error
@@ -385,10 +748,6 @@ function validate_dictionary_meta_change(
         && $current_code === 'overall_length';
 
     if ($deleting) {
-        /*
-         * Remove unused entries as posts, not by stripping individual
-         * protected fields from otherwise existing entries.
-         */
         return dictionary_guard_error(
             'field_deletion_forbidden',
             'Удаление защищённого поля справочника запрещено. '
@@ -408,7 +767,7 @@ function validate_dictionary_meta_change(
         $duplicates = get_posts([
             'post_type'        => $post_type,
             'post_status'      => array_values(get_post_stati()),
-            'posts_per_page'   => -1,
+            'posts_per_page'   => 1,
             'fields'           => 'ids',
             'post__not_in'     => [(int) $post_id],
             'meta_key'         => $code_key,
@@ -429,62 +788,97 @@ function validate_dictionary_meta_change(
         }
     }
 
-    if ($meta_key === 'measurement_group') {
-        if (
+    if (
+        $meta_key === 'measurement_group'
+        && (
             !is_string($value)
             || !in_array(
                 $value,
                 ['overall', 'hull', 'rig', 'armament', 'other'],
                 true
             )
-        ) {
-            return dictionary_guard_error(
-                'invalid_group',
-                'Некорректная группа измерения.'
-            );
-        }
+        )
+    ) {
+        return dictionary_guard_error(
+            'invalid_group',
+            'Некорректная группа измерения.'
+        );
     }
 
-    if ($meta_key === 'measurement_target_kind') {
-        if (
+    if (
+        $meta_key === 'measurement_target_kind'
+        && (
             !is_string($value)
             || !in_array($value, ['none', 'mast', 'yard'], true)
-        ) {
-            return dictionary_guard_error(
-                'invalid_target_kind',
-                'Некорректный тип измеряемого элемента.'
-            );
-        }
+        )
+    ) {
+        return dictionary_guard_error(
+            'invalid_target_kind',
+            'Некорректный тип измеряемого элемента.'
+        );
     }
 
-    if ($meta_key === 'element_kind') {
-        if (
+    if (
+        $meta_key === 'element_kind'
+        && (
             !is_string($value)
             || !in_array($value, ['mast', 'yard'], true)
-        ) {
-            return dictionary_guard_error(
-                'invalid_element_kind',
-                'Некорректный тип элемента.'
-            );
-        }
+        )
+    ) {
+        return dictionary_guard_error(
+            'invalid_element_kind',
+            'Некорректный тип элемента.'
+        );
     }
 
-    if ($meta_key === 'measurement_active') {
-        if (!in_array($value, [true, false, 1, 0, '1', '0'], true)) {
-            return dictionary_guard_error(
-                'invalid_active',
-                'Некорректный признак активности измерения.'
-            );
-        }
+    if (
+        in_array(
+            $meta_key,
+            ['measurement_active', 'element_active'],
+            true
+        )
+        && !in_array($value, [true, false, 1, 0, '1', '0'], true)
+    ) {
+        return dictionary_guard_error(
+            'invalid_active',
+            'Некорректный признак активности.'
+        );
     }
 
-    /*
-     * Protect overall_length both when editing it and when assigning
-     * that reserved code to a previously unused definition.
-     *
-     * Full simultaneous ACF field validation is still completed by
-     * subsequent field guards and dictionary loading.
-     */
+    if (
+        in_array(
+            $meta_key,
+            ['measurement_description', 'element_description'],
+            true
+        )
+        && !is_string($value)
+    ) {
+        return dictionary_guard_error(
+            'invalid_description',
+            'Описание справочной записи должно быть текстом.'
+        );
+    }
+
+    if (
+        in_array(
+            $meta_key,
+            ['measurement_sort_order', 'element_sort_order'],
+            true
+        )
+        && !in_array($value, ['', null, false], true)
+        && (
+            !is_scalar($value)
+            || is_bool($value)
+            || !is_numeric($value)
+            || !is_finite((float) $value)
+        )
+    ) {
+        return dictionary_guard_error(
+            'invalid_sort_order',
+            'Порядок отображения должен быть конечным числом.'
+        );
+    }
+
     if ($is_system) {
         $system_value_valid = true;
 
@@ -548,16 +942,16 @@ function validate_dictionary_meta_change(
     }
 
     if ($meta_key === 'element_parent') {
-        return validate_dictionary_parent_change(
+        $parent_result = validate_dictionary_parent_change(
             $post_id,
             $value
         );
+
+        if (is_wp_error($parent_result)) {
+            return $parent_result;
+        }
     }
 
-    /*
-     * Changes to these fields can invalidate stable references or
-     * the meaning of existing target links.
-     */
     $usage_sensitive_keys = [
         'measurement_code',
         'measurement_target_kind',
@@ -589,14 +983,33 @@ function validate_dictionary_meta_change(
         }
     }
 
+    /*
+     * Preserve complete validity after each individual metadata write.
+     *
+     * Multi-field changes that need an invalid intermediate state
+     * are intentionally not supported for published entries.
+     */
+    if (
+        dictionary_status_requires_integrity(
+            get_post_status($post_id)
+        )
+    ) {
+        $candidate = validate_dictionary_publication_candidate(
+            (int) $post_id,
+            null,
+            [$meta_key => $value]
+        );
+
+        if (is_wp_error($candidate)) {
+            return $candidate;
+        }
+    }
+
     return true;
 }
 
 /**
  * Validate one proposed parent and its ancestor chain.
- *
- * Parent kinds are not forced to match child kinds.
- * No measurement inheritance is introduced.
  *
  * @param int   $post_id Element ID.
  * @param mixed $value   Proposed raw parent value.
@@ -631,13 +1044,15 @@ function validate_dictionary_parent_change($post_id, $value)
         }
 
         if (
-            get_post_status($post_id) === 'publish'
+            dictionary_status_requires_integrity(
+                get_post_status($post_id)
+            )
             && get_post_status($parent_id) !== 'publish'
         ) {
             return dictionary_guard_error(
                 'unpublished_parent',
-                'Опубликованный элемент должен ссылаться '
-                . 'на опубликованного родителя.'
+                'Опубликованный или запланированный элемент '
+                . 'должен ссылаться на опубликованного родителя.'
             );
         }
 
@@ -670,9 +1085,7 @@ function validate_dictionary_parent_change($post_id, $value)
 /**
  * Normalize a raw single-parent reference.
  *
- * Arrays are rejected, including arrays with a single item.
- *
- * @param mixed $value Raw ACF parent value.
+ * @param mixed $value Raw parent value.
  * @return int|null|\WP_Error
  */
 function dictionary_parent_id($value)
@@ -685,7 +1098,7 @@ function dictionary_parent_id($value)
         !(is_int($value) && $value > 0)
         && !(
             is_string($value)
-            && preg_match('/^[1-9][0-9]*$/D', $value)
+            && preg_match('/^[1-9][0-9]*$/D', $value) === 1
         )
     ) {
         return dictionary_guard_error(
@@ -714,9 +1127,6 @@ function dictionary_parent_id($value)
 /**
  * Determine whether models or child elements reference an entry.
  *
- * A malformed model collection prevents a reliable usage check.
- * Fail closed instead of assuming that the entry is unused.
- *
  * @param int      $post_id          Dictionary entry ID.
  * @param string[] $model_post_types Model post types.
  * @return bool|\WP_Error
@@ -729,6 +1139,14 @@ function dictionary_entry_is_used(
 
     if (!is_measurement_dictionary_type($post_type)) {
         return false;
+    }
+
+    if ($model_post_types === []) {
+        return dictionary_guard_error(
+            'configuration_missing',
+            'Невозможно проверить использование: '
+            . 'не настроены типы записей моделей.'
+        );
     }
 
     if ($post_type === 'model_element') {
@@ -754,10 +1172,6 @@ function dictionary_entry_is_used(
 
     $code = get_post_meta($post_id, $code_key, true);
 
-    /*
-     * An entry without a stable code cannot be referenced by
-     * a structurally valid canonical model collection.
-     */
     if (!is_measurement_code($code)) {
         return false;
     }
@@ -860,7 +1274,7 @@ function dictionary_entry_may_leave_publication(
 }
 
 /**
- * Resolve the current ACF post context without assuming a CPT.
+ * Resolve the current ACF post context.
  *
  * @return int
  */
