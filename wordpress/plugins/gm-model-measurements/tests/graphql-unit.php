@@ -49,38 +49,44 @@ namespace {
         }
     );
 
-    /**
-     * Minimal error double used only by configuration/cache tests.
+    /*
+     * Conditional declarations are executed only after the
+     * environment check above.
      */
-    class WP_Error
-    {
-        private $code;
-        private $message;
-        private $data;
-
-        public function __construct(
-            $code = '',
-            $message = '',
-            $data = null
-        ) {
-            $this->code = $code;
-            $this->message = $message;
-            $this->data = $data;
-        }
-
-        public function get_error_code()
+    if (!class_exists('WP_Error', false)) {
+        /**
+         * Minimal error double for configuration and cache tests.
+         */
+        class WP_Error
         {
-            return $this->code;
-        }
+            private $code;
+            private $message;
+            private $data;
 
-        public function get_error_message()
-        {
-            return $this->message;
-        }
+            public function __construct(
+                $code = '',
+                $message = '',
+                $data = null
+            ) {
+                $this->code = $code;
+                $this->message = $message;
+                $this->data = $data;
+            }
 
-        public function get_error_data()
-        {
-            return $this->data;
+            public function get_error_code()
+            {
+                return $this->code;
+            }
+
+            public function get_error_message()
+            {
+                return $this->message;
+            }
+
+            public function get_error_data()
+            {
+                return $this->data;
+            }
         }
     }
 
@@ -122,11 +128,13 @@ namespace {
 }
 
 namespace WPGraphQL {
-    /**
-     * Identity-only double, not a WPGraphQL compatibility simulation.
-     */
-    class AppContext
-    {
+    if (!class_exists(AppContext::class, false)) {
+        /**
+         * Identity-only double, not a compatibility simulation.
+         */
+        class AppContext
+        {
+        }
     }
 }
 
@@ -140,7 +148,7 @@ namespace GlushkovModelling\ModelMeasurements {
     }
 
     /**
-     * Dictionary loader dependency double with a call counter.
+     * Dictionary loader double with a call counter.
      */
     function load_dictionaries()
     {
@@ -273,25 +281,35 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
                 ['code', 'label', 'description', 'group']
                 as $name
             ) {
-                same(['non_null' => 'String'], $measurement[$name]['type']);
+                same(
+                    ['non_null' => 'String'],
+                    $measurement[$name]['type']
+                );
             }
 
             same(
                 ['non_null' => 'Float'],
                 $measurement['valueMm']['type']
             );
+
             same(
                 'GmModelMeasurementTarget',
                 $measurement['target']['type']
             );
+
             same('String', $measurement['note']['type']);
 
             foreach (['kind', 'id', 'label'] as $name) {
-                same(['non_null' => 'String'], $target[$name]['type']);
+                same(
+                    ['non_null' => 'String'],
+                    $target[$name]['type']
+                );
             }
 
             check(
-                is_callable($state['fields']['Model']['measurements']['resolve']),
+                is_callable(
+                    $state['fields']['Model']['measurements']['resolve']
+                ),
                 'Registered resolver is not callable.'
             );
         };
@@ -312,7 +330,11 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
 
             $dictionaries = [
                 'definitions' => [
-                    'hull_width' => definition('hull_width', 'hull', 10.5),
+                    'hull_width' => definition(
+                        'hull_width',
+                        'hull',
+                        10.5
+                    ),
                 ],
                 'elements' => [],
             ];
@@ -350,7 +372,11 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
         static function () {
             $dictionaries = [
                 'definitions' => [
-                    'mast_height' => definition('mast_height', 'rig', 10.0),
+                    'mast_height' => definition(
+                        'mast_height',
+                        'rig',
+                        10.0
+                    ),
                 ],
                 'elements' => [
                     'main_mast' => [
@@ -387,6 +413,7 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
             );
 
             same("First line\nSecond line", $result[0]['note']);
+
             same(
                 [
                     'code',
@@ -403,7 +430,10 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
 
     $tests['groups are alphabetic without overall_length priority'] =
         static function () {
-            $dictionaries = ['definitions' => [], 'elements' => []];
+            $dictionaries = [
+                'definitions' => [],
+                'elements' => [],
+            ];
             $rows = [];
 
             foreach (
@@ -425,25 +455,33 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
                 ];
             }
 
-            $result = present_graphql_measurements($rows, $dictionaries);
+            $result = present_graphql_measurements(
+                $rows,
+                $dictionaries
+            );
 
             same(
                 ['armament', 'hull', 'other', 'overall', 'rig'],
                 array_column($result, 'group')
             );
 
-            same(
-                'overall_length',
-                $result[3]['code']
-            );
+            same('overall_length', $result[3]['code']);
         };
 
     $tests['presentation sorts definitions and elements before codes'] =
         static function () {
             $dictionaries = [
                 'definitions' => [
-                    'z_height' => definition('z_height', 'rig', 1.5),
-                    'a_height' => definition('a_height', 'rig', 2.5),
+                    'z_height' => definition(
+                        'z_height',
+                        'rig',
+                        1.5
+                    ),
+                    'a_height' => definition(
+                        'a_height',
+                        'rig',
+                        2.5
+                    ),
                 ],
                 'elements' => [
                     'a_mast' => [
@@ -477,7 +515,10 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
                 ];
             }
 
-            $result = present_graphql_measurements($rows, $dictionaries);
+            $result = present_graphql_measurements(
+                $rows,
+                $dictionaries
+            );
 
             same(
                 [
@@ -487,7 +528,10 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
                 ],
                 array_map(
                     static function ($row) {
-                        return [$row['code'], $row['target']['id']];
+                        return [
+                            $row['code'],
+                            $row['target']['id'],
+                        ];
                     },
                     $result
                 )
@@ -496,38 +540,87 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
 
     $sort_cases = [
         'group precedes all remaining keys' => [
-            ['group' => 'hull', '_definitionOrder' => 999.0],
-            ['group' => 'rig', '_definitionOrder' => -999.0],
+            [
+                'group' => 'hull',
+                '_definitionOrder' => 999.0,
+            ],
+            [
+                'group' => 'rig',
+                '_definitionOrder' => -999.0,
+            ],
         ],
         'definition order precedes element order' => [
-            ['_definitionOrder' => 1.25, '_elementOrder' => 999.0],
-            ['_definitionOrder' => 1.5, '_elementOrder' => -999.0],
+            [
+                '_definitionOrder' => 1.25,
+                '_elementOrder' => 999.0,
+            ],
+            [
+                '_definitionOrder' => 1.5,
+                '_elementOrder' => -999.0,
+            ],
         ],
         'element order precedes measurement code' => [
-            ['_elementOrder' => 1.25, 'code' => 'z_code'],
-            ['_elementOrder' => 1.5, 'code' => 'a_code'],
+            [
+                '_elementOrder' => 1.25,
+                'code' => 'z_code',
+            ],
+            [
+                '_elementOrder' => 1.5,
+                'code' => 'a_code',
+            ],
         ],
         'measurement code breaks numeric ties' => [
             [
                 'code' => 'a_code',
-                'target' => ['kind' => 'yard', 'id' => 'z_element'],
+                'target' => [
+                    'kind' => 'yard',
+                    'id' => 'z_element',
+                ],
             ],
             [
                 'code' => 'z_code',
-                'target' => ['kind' => 'mast', 'id' => 'a_element'],
+                'target' => [
+                    'kind' => 'mast',
+                    'id' => 'a_element',
+                ],
             ],
         ],
         'target kind precedes target id' => [
-            ['target' => ['kind' => 'mast', 'id' => 'z_element']],
-            ['target' => ['kind' => 'yard', 'id' => 'a_element']],
+            [
+                'target' => [
+                    'kind' => 'mast',
+                    'id' => 'z_element',
+                ],
+            ],
+            [
+                'target' => [
+                    'kind' => 'yard',
+                    'id' => 'a_element',
+                ],
+            ],
         ],
         'target id breaks remaining ties' => [
-            ['target' => ['kind' => 'mast', 'id' => 'a_mast']],
-            ['target' => ['kind' => 'mast', 'id' => 'z_mast']],
+            [
+                'target' => [
+                    'kind' => 'mast',
+                    'id' => 'a_mast',
+                ],
+            ],
+            [
+                'target' => [
+                    'kind' => 'mast',
+                    'id' => 'z_mast',
+                ],
+            ],
         ],
         'missing target compares as empty codes' => [
             ['target' => null],
-            ['target' => ['kind' => 'mast', 'id' => 'main_mast']],
+            [
+                'target' => [
+                    'kind' => 'mast',
+                    'id' => 'main_mast',
+                ],
+            ],
         ],
     ];
 
@@ -563,7 +656,10 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
             $GLOBALS['gm_graphql_unit']['configuration']['postTypes'] =
                 ['other_model', 'model'];
 
-            same(true, validate_graphql_measurements_configuration());
+            same(
+                true,
+                validate_graphql_measurements_configuration()
+            );
         };
 
     $tests['missing model configuration is rejected'] =
@@ -573,31 +669,48 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
 
             $result = validate_graphql_measurements_configuration();
 
-            check(is_wp_error($result), 'Expected configuration error.');
+            check(
+                is_wp_error($result),
+                'Expected configuration error.'
+            );
 
             same(
                 'gm_measurements_graphql_model_not_configured',
                 $result->get_error_code()
             );
 
-            same(0, $GLOBALS['gm_graphql_unit']['dictionaryCalls']);
+            same(
+                0,
+                $GLOBALS['gm_graphql_unit']['dictionaryCalls']
+            );
         };
 
     $tests['configuration error is preserved'] = static function () {
-        $error = new \WP_Error('invalid_configuration', 'Test failure');
+        $error = new \WP_Error(
+            'invalid_configuration',
+            'Test failure'
+        );
 
         $GLOBALS['gm_graphql_unit']['configuration'] = $error;
 
-        same($error, validate_graphql_measurements_configuration());
+        same(
+            $error,
+            validate_graphql_measurements_configuration()
+        );
+
         same(0, $GLOBALS['gm_graphql_unit']['dictionaryCalls']);
     };
 
     $tests['same context reuses successful dictionary result'] =
         static function () {
             $context = new AppContext();
-            $expected = ['definitions' => ['first'], 'elements' => []];
+            $expected = [
+                'definitions' => ['first'],
+                'elements' => [],
+            ];
 
-            $GLOBALS['gm_graphql_unit']['dictionaryResult'] = $expected;
+            $GLOBALS['gm_graphql_unit']['dictionaryResult'] =
+                $expected;
 
             same(
                 $expected,
@@ -614,30 +727,57 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
                 load_graphql_measurement_dictionaries($context)
             );
 
-            same(1, $GLOBALS['gm_graphql_unit']['dictionaryCalls']);
+            same(
+                1,
+                $GLOBALS['gm_graphql_unit']['dictionaryCalls']
+            );
         };
 
     $tests['dictionary error is cached and retried for a new context'] =
         static function () {
             $context = new AppContext();
-            $error = new \WP_Error('broken_dictionary', 'Test failure');
+            $error = new \WP_Error(
+                'broken_dictionary',
+                'Test failure'
+            );
 
-            $GLOBALS['gm_graphql_unit']['dictionaryResult'] = $error;
+            $GLOBALS['gm_graphql_unit']['dictionaryResult'] =
+                $error;
 
-            same($error, load_graphql_measurement_dictionaries($context));
+            same(
+                $error,
+                load_graphql_measurement_dictionaries($context)
+            );
 
-            $repaired = ['definitions' => [], 'elements' => []];
-            $GLOBALS['gm_graphql_unit']['dictionaryResult'] = $repaired;
+            $repaired = [
+                'definitions' => [],
+                'elements' => [],
+            ];
 
-            same($error, load_graphql_measurement_dictionaries($context));
-            same(1, $GLOBALS['gm_graphql_unit']['dictionaryCalls']);
+            $GLOBALS['gm_graphql_unit']['dictionaryResult'] =
+                $repaired;
+
+            same(
+                $error,
+                load_graphql_measurement_dictionaries($context)
+            );
+
+            same(
+                1,
+                $GLOBALS['gm_graphql_unit']['dictionaryCalls']
+            );
 
             same(
                 $repaired,
-                load_graphql_measurement_dictionaries(new AppContext())
+                load_graphql_measurement_dictionaries(
+                    new AppContext()
+                )
             );
 
-            same(2, $GLOBALS['gm_graphql_unit']['dictionaryCalls']);
+            same(
+                2,
+                $GLOBALS['gm_graphql_unit']['dictionaryCalls']
+            );
         };
 
     $tests['new context reloads successful dictionaries'] =
@@ -648,7 +788,10 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
             load_graphql_measurement_dictionaries($first);
             load_graphql_measurement_dictionaries($second);
 
-            same(2, $GLOBALS['gm_graphql_unit']['dictionaryCalls']);
+            same(
+                2,
+                $GLOBALS['gm_graphql_unit']['dictionaryCalls']
+            );
         };
 
     $tests['site change reloads dictionaries'] = static function () {
@@ -657,8 +800,14 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
         load_graphql_measurement_dictionaries($context);
 
         $GLOBALS['gm_graphql_unit']['blogId'] = 2;
-        $expected = ['definitions' => ['site_two'], 'elements' => []];
-        $GLOBALS['gm_graphql_unit']['dictionaryResult'] = $expected;
+
+        $expected = [
+            'definitions' => ['site_two'],
+            'elements' => [],
+        ];
+
+        $GLOBALS['gm_graphql_unit']['dictionaryResult'] =
+            $expected;
 
         same(
             $expected,
@@ -674,8 +823,14 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
         load_graphql_measurement_dictionaries($context);
 
         $GLOBALS['gm_graphql_unit']['userId'] = 42;
-        $expected = ['definitions' => ['user_changed'], 'elements' => []];
-        $GLOBALS['gm_graphql_unit']['dictionaryResult'] = $expected;
+
+        $expected = [
+            'definitions' => ['user_changed'],
+            'elements' => [],
+        ];
+
+        $GLOBALS['gm_graphql_unit']['dictionaryResult'] =
+            $expected;
 
         same(
             $expected,
@@ -691,15 +846,23 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
 
             load_graphql_measurement_dictionaries($context);
 
-            $expected = ['definitions' => ['fresh'], 'elements' => []];
-            $GLOBALS['gm_graphql_unit']['dictionaryResult'] = $expected;
+            $expected = [
+                'definitions' => ['fresh'],
+                'elements' => [],
+            ];
+
+            $GLOBALS['gm_graphql_unit']['dictionaryResult'] =
+                $expected;
 
             same(
                 $expected,
                 load_graphql_measurement_dictionaries($context)
             );
 
-            same(2, $GLOBALS['gm_graphql_unit']['dictionaryCalls']);
+            same(
+                2,
+                $GLOBALS['gm_graphql_unit']['dictionaryCalls']
+            );
         };
 
     $tests['missing context bypasses the cache'] = static function () {
@@ -716,6 +879,10 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
         /*
          * Preserve the hook captured while requiring graphql.php
          * for the first test only.
+         *
+         * Cache tests use a fresh AppContext, or bypass caching,
+         * so resetting globals does not require resetting production
+         * function-static cache variables.
          */
         if ($number > 0) {
             reset_environment();
@@ -726,12 +893,22 @@ namespace GlushkovModelling\ModelMeasurements\Tests {
         try {
             $test();
 
-            fwrite(STDOUT, "ok {$number} - {$name}\n");
+            fwrite(
+                STDOUT,
+                "ok {$number} - {$name}\n"
+            );
         } catch (\Throwable $error) {
             ++$failed;
 
-            fwrite(STDERR, "not ok {$number} - {$name}\n");
-            fwrite(STDERR, $error->getMessage() . "\n");
+            fwrite(
+                STDERR,
+                "not ok {$number} - {$name}\n"
+            );
+
+            fwrite(
+                STDERR,
+                $error->getMessage() . "\n"
+            );
         }
     }
 
