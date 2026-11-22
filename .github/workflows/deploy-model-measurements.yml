@@ -262,29 +262,42 @@ jobs:
             [[ "$path" != */.. ]]
           done
 
-      - name: Configure SSH with pinned host key
+      - name: Prepare SSH
         env:
           SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         shell: bash
         run: |
           set -euo pipefail
           umask 077
 
-          test -n "$SSH_PRIVATE_KEY"
-          test -n "$SSH_KNOWN_HOSTS"
+          if [[ -z "$SSH_PRIVATE_KEY" ]]; then
+            echo "::error::DEPLOY_SSH_KEY отсутствует или пуст."
+            exit 1
+          fi
 
           install -d -m 700 "$HOME/.ssh"
 
           printf '%s\n' "$SSH_PRIVATE_KEY" \
             > "$HOME/.ssh/gm_measurements_key"
 
-          printf '%s\n' "$SSH_KNOWN_HOSTS" \
-            > "$HOME/.ssh/gm_measurements_known_hosts"
+          chmod 600 "$HOME/.ssh/gm_measurements_key"
+          test -s "$HOME/.ssh/gm_measurements_key"
 
-          chmod 600 \
-            "$HOME/.ssh/gm_measurements_key" \
-            "$HOME/.ssh/gm_measurements_known_hosts"
+          if ! ssh-keyscan \
+            -T 10 \
+            -p "$SSH_PORT" \
+            -H "$SSH_HOST" \
+            > "$HOME/.ssh/gm_measurements_known_hosts"; then
+            echo "::error::Не удалось получить SSH host keys сервера через ssh-keyscan."
+            exit 1
+          fi
+
+          if [[ ! -s "$HOME/.ssh/gm_measurements_known_hosts" ]]; then
+            echo "::error::ssh-keyscan не вернул SSH host keys сервера."
+            exit 1
+          fi
+
+          chmod 644 "$HOME/.ssh/gm_measurements_known_hosts"
 
           lookup_host="$SSH_HOST"
 
@@ -296,7 +309,7 @@ jobs:
             -F "$lookup_host" \
             -f "$HOME/.ssh/gm_measurements_known_hosts" \
             >/dev/null; then
-            echo "::error::DEPLOY_KNOWN_HOSTS не содержит запись для заданных host и port."
+            echo "::error::Полученные host keys не содержат запись для заданных host и port."
             exit 1
           fi
 
@@ -317,6 +330,16 @@ jobs:
           EOF
 
           chmod 600 "$HOME/.ssh/gm_measurements_config"
+
+      - name: Test SSH connection
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ssh \
+            -F "$HOME/.ssh/gm_measurements_config" \
+            gm-wordpress-measurements \
+            'echo connected'
 
       - name: Create private upload directory
         shell: bash
@@ -682,7 +705,8 @@ jobs:
             echo
             echo "- Revision: \`$GITHUB_SHA\`"
             echo "- SSH user: deploy"
-            echo "- SSH host key: pinned through DEPLOY_KNOWN_HOSTS"
+            echo "- SSH host keys: collected with ssh-keyscan"
+            echo "- StrictHostKeyChecking: yes"
             echo "- sudo: not used"
             echo "- Owner: deploy:www-data"
             echo "- Directories: 2755"
