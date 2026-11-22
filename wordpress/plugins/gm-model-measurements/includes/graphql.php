@@ -2,7 +2,8 @@
 /**
  * Read-only GraphQL presentation of model measurements.
  *
- * Requires dictionaries.php, measurements.php and validation.php.
+ * Requires dictionaries.php, measurements.php, validation.php
+ * and get_measurements_plugin_configuration() from the entrypoint.
  *
  * Does not write metadata, register dictionaries, or modify
  * legacy modellength.
@@ -16,6 +17,9 @@ defined('ABSPATH') || exit;
 
 /**
  * Register measurement types and the Model.measurements field.
+ *
+ * Schema registration remains independent of runtime configuration.
+ * The resolver validates configuration before reading measurements.
  *
  * @return void
  */
@@ -98,16 +102,22 @@ function register_measurements_graphql_types()
 }
 
 /**
- * Resolve measurements only after checking access.
+ * Resolve measurements only after checking access and configuration.
  *
- * Invalid stored data produces a field error, never an empty fallback.
+ * Invalid configuration or stored data produces a field error,
+ * never an empty fallback.
  *
  * @param mixed $source WPGraphQL post model.
+ * @param mixed $args GraphQL field arguments; unused.
+ * @param mixed $context WPGraphQL application context.
  * @return array|null
- * @throws \GraphQL\Error\UserError When measurement data is invalid.
+ * @throws \GraphQL\Error\UserError When configuration or data is invalid.
  */
-function resolve_graphql_measurements($source)
-{
+function resolve_graphql_measurements(
+    $source,
+    $args = [],
+    $context = null
+) {
     if (!$source instanceof \WPGraphQL\Model\Post) {
         return null;
     }
@@ -128,6 +138,12 @@ function resolve_graphql_measurements($source)
         return null;
     }
 
+    $configuration = validate_graphql_measurements_configuration();
+
+    if (is_wp_error($configuration)) {
+        throw_graphql_measurements_error($configuration);
+    }
+
     $rows = get_model_measurements($post_id);
 
     if (is_wp_error($rows)) {
@@ -135,14 +151,14 @@ function resolve_graphql_measurements($source)
     }
 
     /*
-     * A genuinely empty collection does not require dictionary lookup.
-     * This is a read operation, not publication validation.
+     * An empty collection still requires valid plugin configuration,
+     * but does not require dictionary lookup.
      */
     if ($rows === []) {
         return [];
     }
 
-    $dictionaries = load_dictionaries();
+    $dictionaries = load_graphql_measurement_dictionaries($context);
 
     if (is_wp_error($dictionaries)) {
         throw_graphql_measurements_error($dictionaries);
@@ -165,6 +181,94 @@ function resolve_graphql_measurements($source)
     }
 
     return present_graphql_measurements($validated, $dictionaries);
+}
+
+/**
+ * Require valid plugin configuration containing the supported CPT.
+ *
+ * This integration intentionally supports the confirmed mapping:
+ * WordPress CPT model -> GraphQL type Model.
+ *
+ * No fallback CPT is guessed and no configuration is changed.
+ *
+ * @return true|\WP_Error
+ */
+function validate_graphql_measurements_configuration()
+{
+    $configuration = get_measurements_plugin_configuration();
+
+    if (is_wp_error($configuration)) {
+        return $configuration;
+    }
+
+    if (
+        !in_array(
+            'model',
+            $configuration['postTypes'],
+            true
+        )
+    ) {
+        return measurement_data_error(
+            'gm_measurements_graphql_model_not_configured',
+            'Чтение размеров через GraphQL недоступно: '
+            . 'CPT model не включён в конфигурацию модуля размеров.'
+        );
+    }
+
+    return true;
+}
+
+/**
+ * Load dictionaries once for the current GraphQL application context.
+ *
+ * Both successful results and WP_Error results are cached.
+ * A different context, site or user replaces the cached result.
+ *
+ * Only the most recent context is retained. No persistent cache,
+ * metadata, options or transients are used.
+ *
+ * Without a recognized AppContext, load directly rather than sharing
+ * a cache whose request boundary cannot be identified.
+ *
+ * This is a read-only snapshot for the current context. It must not
+ * be reused as validation of a proposed dictionary write.
+ *
+ * @param mixed $context WPGraphQL application context.
+ * @return array|\WP_Error
+ */
+function load_graphql_measurement_dictionaries($context)
+{
+    static $cached_context = null;
+    static $cached_blog_id = null;
+    static $cached_user_id = null;
+    static $cached_result = null;
+
+    if (!$context instanceof \WPGraphQL\AppContext) {
+        return load_dictionaries();
+    }
+
+    $blog_id = get_current_blog_id();
+    $user_id = get_current_user_id();
+
+    if (
+        $cached_context !== $context
+        || $cached_blog_id !== $blog_id
+        || $cached_user_id !== $user_id
+    ) {
+        $cached_context = null;
+        $cached_blog_id = null;
+        $cached_user_id = null;
+        $cached_result = null;
+
+        $result = load_dictionaries();
+
+        $cached_context = $context;
+        $cached_blog_id = $blog_id;
+        $cached_user_id = $user_id;
+        $cached_result = $result;
+    }
+
+    return $cached_result;
 }
 
 /**
@@ -246,13 +350,13 @@ function present_graphql_measurements(
         }
 
         $presented[] = [
-            'code'        => $row['definitionCode'],
-            'label'       => $definition['label'],
-            'description' => $definition['description'],
-            'group'       => $definition['group'],
-            'valueMm'     => $row['valueMm'],
-            'target'      => $target,
-            'note'        => $row['note'] ?? null,
+            'code'             => $row['definitionCode'],
+            'label'            => $definition['label'],
+            'description'      => $definition['description'],
+            'group'            => $definition['group'],
+            'valueMm'          => $row['valueMm'],
+            'target'           => $target,
+            'note'             => $row['note'] ?? null,
             '_definitionOrder' => $definition['sortOrder'],
             '_elementOrder'    => $element_order,
         ];
@@ -319,11 +423,11 @@ function compare_graphql_measurements(array $left, array $right)
 }
 
 /**
- * Report a data failure without exposing internal dictionary details.
+ * Report a failure without exposing internal configuration or data.
  *
  * The original error code remains available for troubleshooting.
  *
- * @param \WP_Error $error Data or dictionary error.
+ * @param \WP_Error $error Configuration, data or dictionary error.
  * @return void
  * @throws \GraphQL\Error\UserError Always.
  */

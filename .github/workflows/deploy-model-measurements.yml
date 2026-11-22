@@ -87,6 +87,7 @@ jobs:
             includes/publication-guards.php
             assets/admin.js
             assets/admin.css
+            tests/graphql-unit.php
           )
 
           if [[ ! -d "$PLUGIN_SOURCE" || -L "$PLUGIN_SOURCE" ]]; then
@@ -128,6 +129,13 @@ jobs:
           done < <(
             find "$PLUGIN_SOURCE" -type f -name '*.php' -print0
           )
+
+      - name: Run GraphQL unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          php "$PLUGIN_SOURCE/tests/graphql-unit.php"
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -188,6 +196,7 @@ jobs:
             echo
             echo "- Revision: \`$GITHUB_SHA\`"
             echo "- PHP syntax on runner: passed"
+            echo "- GraphQL unit tests (standalone doubles): passed"
             echo "- JavaScript syntax: passed"
             echo "- Required plugin files: present"
             echo "- Deployment archive: created"
