@@ -18,6 +18,15 @@ import { formatDiameter, formatMm } from '../lib/rigging/format.ts';
 import { sailSelectable, tierAvailability } from '../lib/rigging/formRules.ts';
 import { parsePreset } from '../lib/rigging/preset.ts';
 import {
+    PREFILL_FIELDS,
+    PREFILL_FIELD_LABELS,
+    mapModelMeasurements,
+    measurementFromPrefill,
+    parseModelScale,
+    type MeasurementSource,
+    type PrefillField,
+} from '../lib/rigging/modelMeasurements.ts';
+import {
     switchProfileSettings,
     type DimensionKey,
 } from '../lib/rigging/profileSwitch.ts';
@@ -888,9 +897,58 @@ const stepScaleMeta = byId('step-scale-meta');
 const expandStepsButton = byId<HTMLButtonElement>('expand-steps');
 const loadPresetButton = byId<HTMLButtonElement>('load-preset');
 const presetFile = byId<HTMLInputElement>('preset-file');
+const modelPrefillSelect = select('model-prefill-select');
+const applyModelPrefillButton = byId<HTMLButtonElement>('apply-model-prefill');
+const modelPrefillStatus = byId('model-prefill-status');
+const modelPrefillData = byId('model-prefill-data');
+
+interface PrefillModelData {
+    slug: string;
+    title: string;
+    scale: string | null;
+    measurements: MeasurementSource[];
+}
+
+function readPrefillModels(): PrefillModelData[] {
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(modelPrefillData.textContent ?? '[]');
+    } catch {
+        return [];
+    }
+    if (!Array.isArray(parsed)) return [];
+
+    const models: PrefillModelData[] = [];
+    for (const entry of parsed) {
+        if (!entry || typeof entry !== 'object') continue;
+        const candidate = entry as Record<string, unknown>;
+        if (typeof candidate.slug !== 'string' || typeof candidate.title !== 'string') continue;
+        if (!Array.isArray(candidate.measurements)) continue;
+        models.push({
+            slug: candidate.slug,
+            title: candidate.title,
+            scale: typeof candidate.scale === 'string' ? candidate.scale : null,
+            measurements: candidate.measurements as MeasurementSource[],
+        });
+    }
+    return models;
+}
+
+const PREFILL_MODELS = readPrefillModels();
+const PREFILL_BY_SLUG = new Map(PREFILL_MODELS.map((model) => [model.slug, model]));
+
+const PREFILL_PREFIX_BY_FIELD: Record<PrefillField, DimPrefix> = {
+    'mastDiameter.fore': 'mast-fore',
+    'mastDiameter.main': 'mast-main',
+    'mastDiameter.mizzen': 'mast-mizzen',
+    bowspritDiameter: 'bowsprit',
+    hullWidth: 'hull-width',
+    gunBore: 'gun-bore',
+};
+
 const ropeModal = byId('rope-modal');
 const ropeModalTarget = byId('rope-modal-target');
-const ropeWidget = ropeModal.querySelector('gm-rope-calculator') as HTMLElement | null;
+const ropeWidget = ropeModal.querySelector('[data-rope-calculator]') as HTMLElement | null;
 
 /**
  * Локальная разработка: каталог нитей на отдельном хосте и не разрешает
@@ -2189,6 +2247,86 @@ exportScopeSelect.addEventListener('change', () => {
     updateExportAvailability();
 });
 
+function setPrefillStatus(text: string, status: '' | 'success' | 'error' = ''): void {
+    modelPrefillStatus.textContent = text;
+    if (status) {
+        modelPrefillStatus.dataset.status = status;
+    } else {
+        delete modelPrefillStatus.dataset.status;
+    }
+}
+
+/**
+ * Заполняет размеры выбранной модели. Адаптер отдаёт только явные
+ * сопоставления; остальные поля очищаются, чтобы демонстрационные значения
+ * не были приняты за измерения модели. Наличие рангоута, профиль и формулы
+ * не меняются.
+ */
+function applySelectedModelPrefill(): void {
+    const model = PREFILL_BY_SLUG.get(modelPrefillSelect.value);
+    if (!model) {
+        setPrefillStatus('Select a model first.', 'error');
+        return;
+    }
+
+    const mapped = mapModelMeasurements(model.measurements);
+    if (mapped.applied.length === 0) {
+        setPrefillStatus(
+            `No usable dimensions were found for ${model.title}. Enter the dimensions manually.`,
+            'error',
+        );
+        return;
+    }
+
+    for (const field of PREFILL_FIELDS) {
+        const prefix = PREFILL_PREFIX_BY_FIELD[field];
+        const valueMm = mapped.values[field];
+        if (valueMm === undefined) {
+            setValue(`${prefix}-value`, null);
+            continue;
+        }
+        const measurement = measurementFromPrefill(valueMm);
+        setValue(`${prefix}-value`, measurement.value);
+        setSelect(`${prefix}-unit`, measurement.unitId);
+        setSelect(`${prefix}-basis`, measurement.basis);
+        state.editedDimensions.add(DIMENSION_KEYS[prefix]);
+    }
+
+    const scale = parseModelScale(model.scale);
+    if (scale !== null) {
+        setValue('scale', scale);
+    }
+
+    initDimState();
+    captureDimensionDraft(state.activeProfile);
+    syncRequiredDimensions();
+    updateStepSummaries();
+    markDirty();
+
+    const appliedLabels = mapped.applied.map((entry) => PREFILL_FIELD_LABELS[entry.field]);
+    const stillRequired = requiredDimensionLabels();
+    const parts = [`Filled from ${model.title}: ${appliedLabels.join(', ')}.`];
+    if (scale === null) {
+        parts.push('The model card scale could not be read; set the scale manually.');
+    }
+    if (stillRequired.length > 0) {
+        parts.push(`Still required by the profile: ${stillRequired.join(', ')}.`);
+    }
+    if (mapped.diagnostics.length > 0) {
+        parts.push(mapped.diagnostics.map((entry) => entry.message).join(' '));
+    }
+
+    setPrefillStatus(parts.join(' '), stillRequired.length > 0 ? 'error' : 'success');
+}
+
+modelPrefillSelect.addEventListener('change', () => {
+    const hasSelection = Boolean(PREFILL_BY_SLUG.get(modelPrefillSelect.value));
+    applyModelPrefillButton.disabled = !hasSelection;
+    setPrefillStatus('');
+});
+
+applyModelPrefillButton.addEventListener('click', applySelectedModelPrefill);
+
 loadPresetButton.addEventListener('click', () => presetFile.click());
 
 presetFile.addEventListener('change', async () => {
@@ -2199,6 +2337,9 @@ presetFile.addEventListener('change', async () => {
         const settings = parsed.settings;
         const profile = PROFILE_DATA.get(settings.profileId)!;
         state.profileUndo = null;
+        modelPrefillSelect.value = '';
+        applyModelPrefillButton.disabled = true;
+        setPrefillStatus('');
         applySettingsToForm(settings);
         applyProfileUi(profile);
         initDimState();
@@ -2259,6 +2400,9 @@ form.addEventListener('reset', () => {
         }
         syncDisabled();
         updateProfileNote();
+        modelPrefillSelect.value = '';
+        applyModelPrefillButton.disabled = true;
+        setPrefillStatus('');
         void calculateAndRender(false);
     }, 0);
 });

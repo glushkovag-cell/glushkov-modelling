@@ -11,6 +11,7 @@ import { getGalleryManifest } from '../../lib/gallery';
 import SeoHead from '../../components/seo/SeoHead.astro';
 import HiResViewer from '../../components/HiResViewer.astro';
 import ContentMediaViewerBridge from '../../components/ContentMediaViewerBridge.astro';
+import ModelMeasurementsDialog from '../../components/models/ModelMeasurementsDialog.astro';
 
 const allNews = await getAllNews();
 const newsFlag = hasFreshNews(allNews);
@@ -252,8 +253,14 @@ const seoDatePublished = info?.donedate ?? undefined;
               </div>
 
               <div class="spec-item">
-                <dt>Length</dt>
-                <dd>{info.modellength ? `${info.modellength} mm` : '—'}</dd>
+                <dt>Dimensions</dt>
+                <dd>
+                  <ModelMeasurementsDialog
+                      modelTitle={model.title}
+                      modelSlug={model.slug}
+                      measurements={model.measurements}
+                  />
+                </dd>
               </div>
 
               <div class="spec-item">

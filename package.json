@@ -18,10 +18,10 @@
     "deploy:gallery": "bash scripts/deploy-gallery.sh"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.10",
-    "@astrojs/node": "^11.1.7",
-    "@astrojs/sitemap": "^3.7.4",
-    "astro": "^7.3.8",
+    "@astrojs/check": "^0.9.12",
+    "@astrojs/node": "^11.1.14",
+    "@astrojs/sitemap": "^3.7.6",
+    "astro": "^7.4.13",
     "typescript": "^6.0.3"
   },
   "devDependencies": {

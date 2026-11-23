@@ -1,6 +1,7 @@
 import { memoizeAsync } from './memo';
 import { fetchWithRetry } from './fetch-retry';
 import { collectAllPages, warnIfAtLimit, type WpPageInfo } from './wp-pagination';
+import type { ModelMeasurement } from './modelMeasurements';
 
 const WP_GRAPHQL_URL = import.meta.env.WP_GRAPHQL_URL;
 const WP_GRAPHQL_SECRET = import.meta.env.WP_GRAPHQL_SECRET;
@@ -39,6 +40,7 @@ interface ModelNode {
   title: string;
   featuredImage?: FeaturedImage | null;
   modelinfo?: ModelInfo | null;
+  measurements?: ModelMeasurement[] | null;
 }
 
 interface NormalizedModel extends ModelNode {
@@ -46,6 +48,7 @@ interface NormalizedModel extends ModelNode {
   heroImageAlt: string;
   buildstatusText: string;
   buildstatusClass: string;
+  measurements: ModelMeasurement[];
 }
 
 interface BuildLog {
@@ -175,6 +178,7 @@ function normalizeModel(model: ModelNode): NormalizedModel {
     heroImageAlt: model.featuredImage?.node?.altText || model.title,
     buildstatusText,
     buildstatusClass,
+    measurements: Array.isArray(model.measurements) ? model.measurements : [],
   };
 }
 
@@ -551,6 +555,19 @@ const GET_ALL_MODELS_PAGE = `
           historicalnote
           donedate
         }
+        measurements {
+          code
+          label
+          description
+          group
+          valueMm
+          target {
+            kind
+            id
+            label
+          }
+          note
+        }
       }
     }
   }
@@ -603,6 +620,19 @@ export async function getModelBySlug(slug: string): Promise<NormalizedModel | nu
             buildstatus
             historicalnote
             donedate
+          }
+          measurements {
+            code
+            label
+            description
+            group
+            valueMm
+            target {
+              kind
+              id
+              label
+            }
+            note
           }
         }
       }

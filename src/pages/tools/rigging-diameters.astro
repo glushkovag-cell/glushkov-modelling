@@ -17,6 +17,8 @@ import {
     TIERS,
     TIER_LABELS,
 } from '../../lib/rigging/profile.ts';
+import { mapModelMeasurements } from '../../lib/rigging/modelMeasurements.ts';
+import { getAllModels } from '../../lib/wordpress';
 
 const documents = listProfileDocuments();
 const entries = documents.map((document) => ({
@@ -27,6 +29,30 @@ const entries = documents.map((document) => ({
 
 const initial = entries[0]!;
 const defaults = initial.defaults;
+
+/*
+ * Список моделей для предзаполнения размеров. В него попадают только модели,
+ * у которых есть хотя бы одно измерение, явно сопоставленное адаптером.
+ */
+const allModels = await getAllModels();
+const prefillModels = allModels
+    .map((model) => ({
+        slug: model.slug,
+        title: model.title,
+        scale: model.modelinfo?.modelscale ?? null,
+        measurements: model.measurements,
+        mappedCount: mapModelMeasurements(model.measurements).applied.length,
+    }))
+    .filter((model) => model.mappedCount > 0);
+
+const prefillJson = JSON.stringify(
+    prefillModels.map((model) => ({
+        slug: model.slug,
+        title: model.title,
+        scale: model.scale,
+        measurements: model.measurements,
+    })),
+).replace(/</g, '\\u003c');
 
 const unitOptions = [
     { value: 'mm', label: 'mm' },
@@ -228,6 +254,45 @@ const description =
           <fieldset class="rig-section rig-section--step">
             <legend class="rig-sr-only">2 · Model scale &amp; dimensions</legend>
 
+            <div class="rig-prefill" data-model-prefill>
+              <div class="rig-prefill__head">
+                <label class="rig-label" for="model-prefill-select">Prefill from a model</label>
+                <p class="rig-prefill__hint" id="model-prefill-hint">
+                  Fill the dimensions below from a published model&rsquo;s CMS
+                  measurements. Only values stored for that model are filled;
+                  missing inputs stay empty and are marked as required. The
+                  measurement point itself is not part of the measurements
+                  contract — check it against the model&rsquo;s measurement
+                  definitions before calculating.
+                </p>
+              </div>
+              <div class="rig-prefill__controls">
+                <select
+                  class="rig-select"
+                  id="model-prefill-select"
+                  aria-describedby="model-prefill-hint"
+                >
+                  <option value="">— Select a model —</option>
+                  {prefillModels.map((model) => (
+                    <option value={model.slug}>
+                      {model.title}{model.scale ? ` · ${model.scale}` : ''}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  class="rig-button rig-button--ghost"
+                  type="button"
+                  id="apply-model-prefill"
+                  disabled
+                >
+                  Fill dimensions
+                </button>
+              </div>
+              <p class="rig-prefill__status" id="model-prefill-status" role="status" aria-live="polite"></p>
+            </div>
+
+            <script type="application/json" id="model-prefill-data" set:html={prefillJson} />
+
             <div class="rig-field rig-field--scale">
               <label class="rig-label" for="scale">Model scale</label>
               <div class="rig-scale">
@@ -269,21 +334,36 @@ const description =
                     inputmode="decimal"
                     value={valueOrEmpty(defaults.masts[mastId].diameter.value)}
                   />
-                  <select class="rig-select" id={`mast-${mastId}-unit`} name={`mast-${mastId}-unit`}>
+                  <select
+                    class="rig-select"
+                    id={`mast-${mastId}-unit`}
+                    name={`mast-${mastId}-unit`}
+                    aria-label={`${MAST_LABELS[mastId].en} diameter unit`}
+                  >
                     {unitOptions.map((option) => (
                       <option value={option.value} selected={defaults.masts[mastId].diameter.unitId === option.value}>
                         {option.label}
                       </option>
                     ))}
                   </select>
-                  <select class="rig-select" id={`mast-${mastId}-basis`} name={`mast-${mastId}-basis`}>
+                  <select
+                    class="rig-select"
+                    id={`mast-${mastId}-basis`}
+                    name={`mast-${mastId}-basis`}
+                    aria-label={`${MAST_LABELS[mastId].en} diameter measurement basis`}
+                  >
                     {basisOptions.map((option) => (
                       <option value={option.value} selected={defaults.masts[mastId].diameter.basis === option.value}>
                         {option.label}
                       </option>
                     ))}
                   </select>
-                  <select class="rig-select" id={`mast-${mastId}-point`} name={`mast-${mastId}-point`}>
+                  <select
+                    class="rig-select"
+                    id={`mast-${mastId}-point`}
+                    name={`mast-${mastId}-point`}
+                    aria-label={`${MAST_LABELS[mastId].en} diameter measurement point`}
+                  >
                     {pointOptions.map((option) => (
                       <option value={option.value} selected={defaults.masts[mastId].diameter.measurementPointId === option.value}>
                         {option.label}
@@ -305,14 +385,24 @@ const description =
                   inputmode="decimal"
                   value={valueOrEmpty(defaults.bowsprit.diameter.value)}
                 />
-                <select class="rig-select" id="bowsprit-unit" name="bowsprit-unit">
+                <select
+                  class="rig-select"
+                  id="bowsprit-unit"
+                  name="bowsprit-unit"
+                  aria-label="Bowsprit diameter unit"
+                >
                   {unitOptions.map((option) => (
                     <option value={option.value} selected={defaults.bowsprit.diameter.unitId === option.value}>
                       {option.label}
                     </option>
                   ))}
                 </select>
-                <select class="rig-select" id="bowsprit-basis" name="bowsprit-basis">
+                <select
+                  class="rig-select"
+                  id="bowsprit-basis"
+                  name="bowsprit-basis"
+                  aria-label="Bowsprit diameter measurement basis"
+                >
                   {basisOptions.map((option) => (
                     <option value={option.value} selected={defaults.bowsprit.diameter.basis === option.value}>
                       {option.label}
@@ -334,14 +424,24 @@ const description =
                   inputmode="decimal"
                   value={valueOrEmpty(defaults.hullWidth.value)}
                 />
-                <select class="rig-select" id="hull-width-unit" name="hull-width-unit">
+                <select
+                  class="rig-select"
+                  id="hull-width-unit"
+                  name="hull-width-unit"
+                  aria-label="Hull width unit"
+                >
                   {unitOptions.map((option) => (
                     <option value={option.value} selected={defaults.hullWidth.unitId === option.value}>
                       {option.label}
                     </option>
                   ))}
                 </select>
-                <select class="rig-select" id="hull-width-basis" name="hull-width-basis">
+                <select
+                  class="rig-select"
+                  id="hull-width-basis"
+                  name="hull-width-basis"
+                  aria-label="Hull width measurement basis"
+                >
                   {basisOptions.map((option) => (
                     <option value={option.value} selected={defaults.hullWidth.basis === option.value}>
                       {option.label}
@@ -363,14 +463,24 @@ const description =
                   inputmode="decimal"
                   value={valueOrEmpty(defaults.gun.bore.value)}
                 />
-                <select class="rig-select" id="gun-bore-unit" name="gun-bore-unit">
+                <select
+                  class="rig-select"
+                  id="gun-bore-unit"
+                  name="gun-bore-unit"
+                  aria-label="Gun bore unit"
+                >
                   {unitOptions.map((option) => (
                     <option value={option.value} selected={defaults.gun.bore.unitId === option.value}>
                       {option.label}
                     </option>
                   ))}
                 </select>
-                <select class="rig-select" id="gun-bore-basis" name="gun-bore-basis">
+                <select
+                  class="rig-select"
+                  id="gun-bore-basis"
+                  name="gun-bore-basis"
+                  aria-label="Gun bore measurement basis"
+                >
                   {basisOptions.map((option) => (
                     <option value={option.value} selected={defaults.gun.bore.basis === option.value}>
                       {option.label}
@@ -516,7 +626,12 @@ const description =
                       />
                     </td>
                     <td>
-                      <select class="rig-select" id={`foreaft-${sailClass}-mast`} name={`foreaft-${sailClass}-mast`}>
+                      <select
+                        class="rig-select"
+                        id={`foreaft-${sailClass}-mast`}
+                        name={`foreaft-${sailClass}-mast`}
+                        aria-label={`${SAIL_CLASS_LABELS[sailClass].en} supporting mast`}
+                      >
                         {mastOptions.map((option) => (
                           <option value={option.value} selected={defaults.foreAndAft[sailClass].supportingMastId === option.value}>
                             {option.label}
@@ -910,7 +1025,8 @@ const description =
       </header>
       <div class="rig-modal__body">
         <p class="rig-modal__target" id="rope-modal-target"></p>
-        <gm-rope-calculator selectable>
+        <!--suppress HtmlUnknownTag -->
+        <gm-rope-calculator selectable data-rope-calculator>
           <noscript>Enable JavaScript to use the rope calculator.</noscript>
         </gm-rope-calculator>
       </div>
@@ -1304,6 +1420,61 @@ const description =
 
     .rig-field {
         margin-bottom: 1rem;
+    }
+
+    .rig-prefill {
+        min-width: 0;
+        margin: 0 0 1.25rem;
+        padding: 0.9rem 1rem 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius);
+        background: color-mix(in srgb, var(--color-primary) 4%, var(--color-surface));
+    }
+
+    .rig-prefill__head {
+        min-width: 0;
+    }
+
+    .rig-prefill__hint {
+        margin: 0 0 0.75rem;
+        color: var(--color-text-muted);
+        font-size: 0.84rem;
+        line-height: 1.5;
+    }
+
+    .rig-prefill__controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        align-items: stretch;
+    }
+
+    .rig-prefill__controls .rig-select {
+        flex: 1 1 16rem;
+        width: auto;
+    }
+
+    .rig-prefill__controls .rig-button {
+        flex: 0 0 auto;
+    }
+
+    .rig-prefill__status {
+        margin: 0.65rem 0 0;
+        color: var(--color-text-muted);
+        font-size: 0.84rem;
+        line-height: 1.5;
+    }
+
+    .rig-prefill__status:empty {
+        display: none;
+    }
+
+    .rig-prefill__status[data-status="error"] {
+        color: #b54708;
+    }
+
+    .rig-prefill__status[data-status="success"] {
+        color: var(--color-text);
     }
 
     .rig-label {

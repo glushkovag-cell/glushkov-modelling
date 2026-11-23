@@ -1,0 +1,367 @@
+---
+/**
+ * Кнопка «Размеры модели» и диалог с измерениями.
+ *
+ * Один компонент используется в карточках списка моделей, на главной и на
+ * странице модели. Разметка диалога рендерится рядом с кнопкой, поэтому
+ * кнопка никогда не оказывается вложенной в ссылку карточки.
+ */
+import {
+  formatMeasurementValue,
+  groupModelMeasurements,
+  measurementDescription,
+  measurementDisplayLabel,
+  type ModelMeasurement,
+} from '../../lib/modelMeasurements';
+
+interface Props {
+  modelTitle: string;
+  modelSlug: string;
+  measurements?: ModelMeasurement[] | null;
+  triggerLabel?: string;
+}
+
+const {
+  modelTitle,
+  modelSlug,
+  measurements = [],
+  triggerLabel = 'Model dimensions',
+} = Astro.props;
+
+const grouped = groupModelMeasurements(measurements);
+const hasAnyMeasurement = Boolean(grouped.overallLength) || grouped.groups.length > 0;
+
+const idBase = `model-measurements-${modelSlug.replace(/[^a-zA-Z0-9_-]+/g, '-')}`;
+const dialogId = idBase;
+const titleId = `${idBase}-title`;
+const summaryId = `${idBase}-summary`;
+---
+
+{hasAnyMeasurement && (
+  <div class="model-measurements">
+    <button
+      type="button"
+      class="model-measurements__trigger"
+      data-model-measurements-open
+      aria-haspopup="dialog"
+      aria-controls={dialogId}
+      aria-label={`${triggerLabel} for ${modelTitle}`}
+    >
+      {triggerLabel}
+    </button>
+
+    <dialog
+      class="model-measurements__dialog"
+      id={dialogId}
+      aria-labelledby={titleId}
+      aria-describedby={summaryId}
+    >
+      <div class="model-measurements__panel">
+        <header class="model-measurements__header">
+          <div class="model-measurements__heading">
+            <p class="model-measurements__eyebrow">Model dimensions</p>
+            <h2 class="model-measurements__title" id={titleId}>{modelTitle}</h2>
+          </div>
+          <button
+            type="button"
+            class="model-measurements__close"
+            data-model-measurements-close
+            aria-label="Close model dimensions"
+          >
+            &times;
+          </button>
+        </header>
+
+        <p class="model-measurements__summary" id={summaryId}>
+          Measurements of the physical model. All values are given in millimetres (mm).
+        </p>
+
+        {grouped.overallLength && (
+          <section class="model-measurements__section model-measurements__section--primary">
+            <h3 class="model-measurements__group">Overall</h3>
+            <ul class="model-measurements__list">
+              <li class="model-measurements__item">
+                <div class="model-measurements__row">
+                  <span class="model-measurements__label">
+                    {measurementDisplayLabel(grouped.overallLength)}
+                  </span>
+                  <span class="model-measurements__value">
+                    {formatMeasurementValue(grouped.overallLength.valueMm)}
+                    <span class="model-measurements__unit">mm</span>
+                  </span>
+                </div>
+                {measurementDescription(grouped.overallLength) && (
+                  <p class="model-measurements__description">
+                    {measurementDescription(grouped.overallLength)}
+                  </p>
+                )}
+                {grouped.overallLength.note && (
+                  <p class="model-measurements__note">Note: {grouped.overallLength.note}</p>
+                )}
+              </li>
+            </ul>
+          </section>
+        )}
+
+        {grouped.groups.map((group) => (
+          <section class="model-measurements__section">
+            <h3 class="model-measurements__group">{group.label}</h3>
+            <ul class="model-measurements__list">
+              {group.measurements.map((measurement) => (
+                <li class="model-measurements__item">
+                  <div class="model-measurements__row">
+                    <span class="model-measurements__label">
+                      {measurementDisplayLabel(measurement)}
+                    </span>
+                    <span class="model-measurements__value">
+                      {formatMeasurementValue(measurement.valueMm)}
+                      <span class="model-measurements__unit">mm</span>
+                    </span>
+                  </div>
+                  {measurementDescription(measurement) && (
+                    <p class="model-measurements__description">
+                      {measurementDescription(measurement)}
+                    </p>
+                  )}
+                  {measurement.note && (
+                    <p class="model-measurements__note">Note: {measurement.note}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+    </dialog>
+  </div>
+)}
+<script>
+  import '../../scripts/modelMeasurementsDialog.ts';
+</script>
+
+<style>
+  .model-measurements {
+    display: inline-flex;
+    max-width: 100%;
+  }
+
+  .model-measurements__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 38%, var(--color-border));
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-primary);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.1;
+    text-align: center;
+    cursor: pointer;
+    transition:
+      background var(--transition),
+      border-color var(--transition),
+      color var(--transition);
+  }
+
+  .model-measurements__trigger:hover {
+    background: color-mix(in srgb, var(--color-primary) 9%, transparent);
+    border-color: var(--color-primary);
+  }
+
+  .model-measurements__trigger:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .model-measurements__dialog {
+    width: min(92vw, 34rem);
+    max-width: 34rem;
+    max-height: min(85dvh, 44rem);
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+
+  .model-measurements__dialog::backdrop {
+    background: rgba(12, 16, 22, 0.58);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .model-measurements__panel {
+    max-height: min(85dvh, 44rem);
+    padding: 1.25rem 1.25rem 1.5rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .model-measurements__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .model-measurements__heading {
+    min-width: 0;
+  }
+
+  .model-measurements__eyebrow {
+    margin: 0 0 0.25rem;
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .model-measurements__title {
+    margin: 0;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.7rem;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+
+  .model-measurements__close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-text-muted);
+    font: inherit;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .model-measurements__close:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
+  .model-measurements__close:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  .model-measurements__summary {
+    margin: 0.85rem 0 1.1rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+
+  .model-measurements__section {
+    margin-top: 1.1rem;
+  }
+
+  .model-measurements__section--primary {
+    margin-top: 0;
+    padding: 0.85rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 26%, var(--color-border));
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-primary) 5%, var(--color-surface));
+  }
+
+  .model-measurements__group {
+    margin: 0 0 0.45rem;
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .model-measurements__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .model-measurements__item {
+    padding: 0.7rem 0;
+    border-top: 1px solid var(--color-divider, var(--color-border));
+  }
+
+  .model-measurements__list > .model-measurements__item:first-child {
+    border-top: none;
+  }
+
+  .model-measurements__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .model-measurements__label {
+    min-width: 0;
+    font-size: 0.98rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .model-measurements__value {
+    flex: 0 0 auto;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+    font-size: 1rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .model-measurements__unit {
+    margin-left: 0.15rem;
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .model-measurements__description,
+  .model-measurements__note {
+    margin: 0.3rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.84rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .model-measurements__note {
+    font-style: italic;
+  }
+
+  @media (max-width: 640px) {
+    .model-measurements__dialog {
+      width: calc(100vw - 1.5rem);
+      max-width: none;
+      max-height: calc(100dvh - 1.5rem);
+    }
+
+    .model-measurements__panel {
+      max-height: calc(100dvh - 1.5rem);
+      padding: 1rem 1rem 1.25rem;
+    }
+
+    .model-measurements__row {
+      flex-wrap: wrap;
+      gap: 0.15rem 0.75rem;
+    }
+  }
+</style>
