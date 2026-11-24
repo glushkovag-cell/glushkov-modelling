@@ -54,74 +54,68 @@ jobs:
             check)
               ;;
             deploy-inactive)
-              if [[ "$CONFIRMATION" != "DEPLOY" ]]; then
+              [[ "$CONFIRMATION" == "DEPLOY" ]] || {
                 echo "::error::Для развёртывания введите DEPLOY."
                 exit 1
-              fi
+              }
 
-              if [[ "$SELECTED_REF" != "refs/heads/main" ]]; then
+              [[ "$SELECTED_REF" == "refs/heads/main" ]] || {
                 echo "::error::Развёртывание разрешено только из main."
                 exit 1
-              fi
+              }
               ;;
             *)
-              echo "::error::Неизвестный режим запуска."
+              echo "::error::Неизвестный режим."
               exit 1
               ;;
           esac
 
-      - name: Validate plugin structure
+      - name: Validate plugin structure and create file manifest
         shell: bash
         run: |
           set -euo pipefail
 
-          required=(
-            gm-model-measurements.php
-            includes/dictionaries.php
-            includes/measurements.php
-            includes/validation.php
-            includes/graphql.php
-            includes/admin.php
-            includes/persistence.php
-            includes/dictionary-guards.php
-            includes/publication-guards.php
-            assets/admin.js
-            assets/admin.css
-            tests/graphql-unit.php
-          )
-
-          if [[ ! -d "$PLUGIN_SOURCE" || -L "$PLUGIN_SOURCE" ]]; then
-            echo "::error::Каталог плагина отсутствует или является ссылкой."
-            exit 1
-          fi
-
-          if [[ -n "$(find "$PLUGIN_SOURCE" -type l -print -quit)" ]]; then
-            echo "::error::Символические ссылки в каталоге плагина запрещены."
-            exit 1
-          fi
+          [[ -d "$PLUGIN_SOURCE" && ! -L "$PLUGIN_SOURCE" ]]
 
           if [[ -n "$(
             find "$PLUGIN_SOURCE" \
               \( ! -type d -a ! -type f \) \
               -print -quit
           )" ]]; then
-            echo "::error::Каталог плагина содержит неподдерживаемые типы файлов."
+            echo "::error::Ссылки и специальные файлы запрещены."
             exit 1
           fi
 
-          for file in "${required[@]}"; do
-            if [[ ! -f "$PLUGIN_SOURCE/$file" ]]; then
+          mkdir -p dist
+
+          cat > dist/plugin-files.txt <<'FILES'
+          gm-model-measurements.php
+          includes/dictionaries.php
+          includes/measurements.php
+          includes/validation.php
+          includes/graphql.php
+          includes/graphql-legacy-length.php
+          includes/admin.php
+          includes/persistence.php
+          includes/dictionary-guards.php
+          includes/publication-guards.php
+          assets/admin.js
+          assets/admin.css
+          FILES
+
+          while IFS= read -r file; do
+            [[ -f "$PLUGIN_SOURCE/$file" ]] || {
               echo "::error::Отсутствует обязательный файл: $file"
               exit 1
-            fi
-          done
+            }
+          done < dist/plugin-files.txt
+
+          test -f "$PLUGIN_SOURCE/tests/graphql-unit.php"
 
       - name: Check PHP syntax
         shell: bash
         run: |
           set -euo pipefail
-
-          command -v php >/dev/null
           php --version
 
           while IFS= read -r -d '' file; do
@@ -130,12 +124,237 @@ jobs:
             find "$PLUGIN_SOURCE" -type f -name '*.php' -print0
           )
 
-      - name: Run GraphQL unit tests
+      - name: Verify legacy module inclusion
         shell: bash
         run: |
           set -euo pipefail
 
+          php <<'PHP'
+          <?php
+          $entrypoint = getenv('PLUGIN_SOURCE')
+              . '/gm-model-measurements.php';
+
+          $source = file_get_contents($entrypoint);
+
+          if ($source === false) {
+              throw new RuntimeException('Cannot read plugin entrypoint.');
+          }
+
+          $tokens = token_get_all($source);
+          $includes = [];
+
+          foreach ($tokens as $index => $token) {
+              if (
+                  !is_array($token)
+                  || !in_array(
+                      $token[0],
+                      [T_REQUIRE, T_REQUIRE_ONCE],
+                      true
+                  )
+              ) {
+                  continue;
+              }
+
+              for ($i = $index + 1; $i < count($tokens); $i++) {
+                  $part = $tokens[$i];
+
+                  if ($part === ';') {
+                      break;
+                  }
+
+                  if (
+                      is_array($part)
+                      && $part[0] === T_CONSTANT_ENCAPSED_STRING
+                  ) {
+                      $includes[] = substr($part[1], 1, -1);
+                  }
+              }
+          }
+
+          $graphql = array_search(
+              '/includes/graphql.php',
+              $includes,
+              true
+          );
+
+          $legacy = array_search(
+              '/includes/graphql-legacy-length.php',
+              $includes,
+              true
+          );
+
+          if (
+              $graphql === false
+              || $legacy === false
+              || $legacy <= $graphql
+          ) {
+              throw new RuntimeException(
+                  'Require graphql-legacy-length.php after graphql.php.'
+              );
+          }
+
+          echo "Legacy module inclusion: passed\n";
+          PHP
+
+      - name: Run existing GraphQL unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
           php "$PLUGIN_SOURCE/tests/graphql-unit.php"
+
+      - name: Run legacy length standalone checks
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          php <<'PHP'
+          <?php
+          define('ABSPATH', __DIR__ . '/');
+
+          $registered = [];
+
+          function add_filter(
+              $hook,
+              $callback,
+              $priority = 10,
+              $accepted_args = 1
+          ) {
+              global $registered;
+
+              $registered[] = [
+                  $hook,
+                  $callback,
+                  $priority,
+                  $accepted_args,
+              ];
+
+              return true;
+          }
+
+          require getenv('PLUGIN_SOURCE')
+              . '/includes/graphql-legacy-length.php';
+
+          $extract = 'GlushkovModelling\\ModelMeasurements\\'
+              . 'legacy_length_string_from_graphql_measurements';
+
+          $configure = 'GlushkovModelling\\ModelMeasurements\\'
+              . 'configure_legacy_model_length_graphql';
+
+          $resolver = 'GlushkovModelling\\ModelMeasurements\\'
+              . 'resolve_legacy_model_length_graphql';
+
+          function expect_same($expected, $actual, $label)
+          {
+              if ($expected !== $actual) {
+                  throw new RuntimeException(
+                      $label . ': expected '
+                      . var_export($expected, true)
+                      . ', got '
+                      . var_export($actual, true)
+                  );
+              }
+          }
+
+          $row = static function ($value, $target = null) {
+              return [
+                  'code' => 'overall_length',
+                  'valueMm' => $value,
+                  'target' => $target,
+              ];
+          };
+
+          $cases = [
+              ['integer', [$row(832)], '832'],
+              ['fraction', [$row(879.5)], '879.5'],
+              ['empty', [], null],
+              ['duplicate', [$row(832), $row(833)], null],
+              ['zero', [$row(0)], null],
+              ['negative', [$row(-1)], null],
+              ['infinity', [$row(INF)], null],
+              ['nan', [$row(NAN)], null],
+              ['string', [$row('832')], null],
+              ['boolean', [$row(true)], null],
+              [
+                  'targeted length',
+                  [$row(832, ['kind' => 'mast', 'id' => 'main_mast'])],
+                  null,
+              ],
+              [
+                  'different measurement',
+                  [['code' => 'hull_width', 'valueMm' => 130]],
+                  null,
+              ],
+          ];
+
+          foreach ($cases as [$label, $input, $expected]) {
+              expect_same($expected, $extract($input), $label);
+          }
+
+          $field = [
+              'type' => 'String',
+              'description' => 'Existing description',
+              'resolve' => 'old_resolver',
+          ];
+
+          $instance = new class {
+              public function get_graphql_field_group_type_name()
+              {
+                  return 'Modelinfo';
+              }
+
+              public function get_graphql_field_name()
+              {
+                  return 'modellength';
+              }
+          };
+
+          $updated = $configure($field, $instance);
+
+          expect_same('String', $updated['type'], 'preserve type');
+          expect_same(
+              $field['description'],
+              $updated['description'],
+              'preserve description'
+          );
+          expect_same(
+              $resolver,
+              $updated['resolve'],
+              'replace resolver'
+          );
+
+          $other = new class {
+              public function get_graphql_field_group_type_name()
+              {
+                  return 'Modelinfo';
+              }
+
+              public function get_graphql_field_name()
+              {
+                  return 'modelscale';
+              }
+          };
+
+          expect_same(
+              $field,
+              $configure($field, $other),
+              'leave other fields unchanged'
+          );
+
+          expect_same(
+              null,
+              $resolver(['modellength' => '999']),
+              'do not return legacy root value'
+          );
+
+          expect_same(
+              'wpgraphql/acf/get_graphql_field_config',
+              $registered[0][0] ?? null,
+              'register ACF configuration filter'
+          );
+
+          echo "Legacy length standalone checks: passed\n";
+          echo "These checks do not bootstrap WordPress or ACF.\n";
+          PHP
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -146,30 +365,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           node --check "$PLUGIN_SOURCE/assets/admin.js"
 
-      - name: Package plugin
+      - name: Package checked plugin
         shell: bash
         run: |
           set -euo pipefail
 
-          mkdir -p dist
-
           tar \
             -C "$PLUGIN_SOURCE" \
             -czf "dist/$PLUGIN_SLUG.tar.gz" \
-            gm-model-measurements.php \
-            includes/dictionaries.php \
-            includes/measurements.php \
-            includes/validation.php \
-            includes/graphql.php \
-            includes/admin.php \
-            includes/persistence.php \
-            includes/dictionary-guards.php \
-            includes/publication-guards.php \
-            assets/admin.js \
-            assets/admin.css
+            -T "$GITHUB_WORKSPACE/dist/plugin-files.txt"
 
           (
             cd dist
@@ -185,6 +391,7 @@ jobs:
           path: |
             dist/gm-model-measurements.tar.gz
             dist/SHA256SUMS
+            dist/plugin-files.txt
           if-no-files-found: error
           retention-days: 14
 
@@ -196,12 +403,14 @@ jobs:
             echo
             echo "- Revision: \`$GITHUB_SHA\`"
             echo "- PHP syntax on runner: passed"
-            echo "- GraphQL unit tests (standalone doubles): passed"
+            echo "- Existing GraphQL standalone unit tests: passed"
+            echo "- Legacy length standalone checks: passed"
+            echo "- Legacy module inclusion: checked"
             echo "- JavaScript syntax: passed"
-            echo "- Required plugin files: present"
-            echo "- Deployment archive: created"
-            echo "- Functional tests: not performed"
-            echo "- WordPress activation: not performed"
+            echo "- Archive includes graphql-legacy-length.php"
+            echo "- WordPress/ACF integration tests: not performed"
+            echo "- Installed WPGraphQL for ACF compatibility: not verified"
+            echo "- Functional acceptance: still required"
             echo "- Server configuration: not checked in check mode"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -218,7 +427,6 @@ jobs:
       SSH_HOST: ${{ secrets.DEPLOY_HOST }}
       SSH_PORT: ${{ secrets.DEPLOY_PORT }}
       SSH_USER: ${{ secrets.DEPLOY_USER }}
-
       WP_ROOT: /var/www/cms/wordpress
       WP_CLI: ${{ vars.WP_CLI || '/usr/local/bin/wp' }}
 
@@ -234,7 +442,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           sha256sum --check SHA256SUMS
 
       - name: Validate deployment settings
@@ -242,32 +449,13 @@ jobs:
         run: |
           set -euo pipefail
 
-          [[ "$SSH_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]] || {
-            echo "::error::DEPLOY_HOST отсутствует или имеет неподдерживаемый формат."
-            exit 1
-          }
-
-          [[ "$SSH_USER" == "deploy" ]] || {
-            echo "::error::Этот workflow рассчитан на пользователя deploy."
-            exit 1
-          }
-
-          [[ "$SSH_PORT" =~ ^[1-9][0-9]{0,4}$ ]] || {
-            echo "::error::DEPLOY_PORT должен содержать корректный номер порта."
-            exit 1
-          }
-
-          (( SSH_PORT <= 65535 )) || {
-            echo "::error::DEPLOY_PORT выходит за допустимый диапазон."
-            exit 1
-          }
+          [[ "$SSH_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]]
+          [[ "$SSH_USER" == "deploy" ]]
+          [[ "$SSH_PORT" =~ ^[1-9][0-9]{0,4}$ ]]
+          (( SSH_PORT <= 65535 ))
 
           for path in "$WP_ROOT" "$WP_CLI"; do
-            [[ "$path" =~ ^/[A-Za-z0-9_./-]+$ ]] || {
-              echo "::error::Недопустимый формат удалённого пути."
-              exit 1
-            }
-
+            [[ "$path" =~ ^/[A-Za-z0-9_./-]+$ ]]
             [[ "$path" != "/" ]]
             [[ "$path" != *"/../"* ]]
             [[ "$path" != */.. ]]
@@ -281,48 +469,31 @@ jobs:
           set -euo pipefail
           umask 077
 
-          if [[ -z "$SSH_PRIVATE_KEY" ]]; then
-            echo "::error::DEPLOY_SSH_KEY отсутствует или пуст."
-            exit 1
-          fi
-
+          [[ -n "$SSH_PRIVATE_KEY" ]]
           install -d -m 700 "$HOME/.ssh"
 
           printf '%s\n' "$SSH_PRIVATE_KEY" \
             > "$HOME/.ssh/gm_measurements_key"
 
           chmod 600 "$HOME/.ssh/gm_measurements_key"
-          test -s "$HOME/.ssh/gm_measurements_key"
 
-          if ! ssh-keyscan \
+          ssh-keyscan \
             -T 10 \
             -p "$SSH_PORT" \
             -H "$SSH_HOST" \
-            > "$HOME/.ssh/gm_measurements_known_hosts"; then
-            echo "::error::Не удалось получить SSH host keys сервера через ssh-keyscan."
-            exit 1
-          fi
+            > "$HOME/.ssh/gm_measurements_known_hosts"
 
-          if [[ ! -s "$HOME/.ssh/gm_measurements_known_hosts" ]]; then
-            echo "::error::ssh-keyscan не вернул SSH host keys сервера."
-            exit 1
-          fi
-
-          chmod 644 "$HOME/.ssh/gm_measurements_known_hosts"
+          test -s "$HOME/.ssh/gm_measurements_known_hosts"
 
           lookup_host="$SSH_HOST"
-
           if [[ "$SSH_PORT" != "22" ]]; then
             lookup_host="[$SSH_HOST]:$SSH_PORT"
           fi
 
-          if ! ssh-keygen \
+          ssh-keygen \
             -F "$lookup_host" \
             -f "$HOME/.ssh/gm_measurements_known_hosts" \
-            >/dev/null; then
-            echo "::error::Полученные host keys не содержат запись для заданных host и port."
-            exit 1
-          fi
+            >/dev/null
 
           cat > "$HOME/.ssh/gm_measurements_config" <<EOF
           Host gm-wordpress-measurements
@@ -342,16 +513,6 @@ jobs:
 
           chmod 600 "$HOME/.ssh/gm_measurements_config"
 
-      - name: Test SSH connection
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          ssh \
-            -F "$HOME/.ssh/gm_measurements_config" \
-            gm-wordpress-measurements \
-            'echo connected'
-
       - name: Create private upload directory
         shell: bash
         run: |
@@ -365,10 +526,9 @@ jobs:
           )"
 
           [[ "$remote_dir" =~ ^/tmp/gm-measurements-upload\.[A-Za-z0-9]+$ ]]
-
           echo "REMOTE_UPLOAD_DIR=$remote_dir" >> "$GITHUB_ENV"
 
-      - name: Upload checked archive
+      - name: Upload checked artifact
         shell: bash
         run: |
           set -euo pipefail
@@ -377,9 +537,10 @@ jobs:
             -F "$HOME/.ssh/gm_measurements_config" \
             dist/gm-model-measurements.tar.gz \
             dist/SHA256SUMS \
+            dist/plugin-files.txt \
             "gm-wordpress-measurements:$REMOTE_UPLOAD_DIR/"
 
-      - name: Back up and deploy plugin
+      - name: Back up and deploy inactive plugin
         shell: bash
         run: |
           set -euo pipefail
@@ -391,7 +552,6 @@ jobs:
             <<'REMOTE'
           set -Eeuo pipefail
           umask 022
-
           export PATH=/usr/local/bin:/usr/bin:/bin
 
           wp_root="$1"
@@ -401,12 +561,10 @@ jobs:
 
           slug="gm-model-measurements"
           destination="$wp_root/wp-content/plugins/$slug"
-
-          state_dir="$HOME/.local/state/gm-model-measurements"
+          state_dir="$HOME/.local/state/$slug"
           backups_dir="$state_dir/backups"
-
           stage="$upload_dir/new"
-          restore_dir="$upload_dir/restore"
+          restore="$upload_dir/restore"
 
           backup=""
           changed=0
@@ -418,8 +576,7 @@ jobs:
           }
 
           wp_cmd() {
-            timeout 60s \
-              php "$wp_cli" \
+            timeout 60s php "$wp_cli" \
               --path="$wp_root" \
               --skip-plugins \
               --skip-themes \
@@ -428,10 +585,7 @@ jobs:
 
           assert_inactive() {
             local active
-
-            active="$(
-              wp_cmd plugin list --status=active --field=name
-            )"
+            active="$(wp_cmd plugin list --status=active --field=name)"
 
             if printf '%s\n' "$active" | grep -Fxq "$slug"; then
               fail "Plugin is active. File replacement refused."
@@ -447,20 +601,15 @@ jobs:
                   "$completed" -eq 0 &&
                   -n "$backup" &&
                   -f "$backup" ]]; then
+              echo "Deployment failed; attempting rollback." >&2
 
-              echo "Deployment failed. Attempting content rollback." >&2
-
-              if mkdir -p "$restore_dir" &&
-                  tar -xzf "$backup" -C "$restore_dir" &&
-                  rsync \
-                    -r \
-                    --delete \
-                    --perms \
+              if mkdir -p "$restore" &&
+                  tar -xzf "$backup" -C "$restore" &&
+                  rsync -r --delete --perms \
                     --chmod=D2755,F644 \
-                    --no-owner \
-                    --no-group \
-                    "$restore_dir/" "$destination/"; then
-                echo "Previous plugin contents restored." >&2
+                    --no-owner --no-group \
+                    "$restore/" "$destination/"; then
+                echo "Previous contents restored." >&2
               else
                 echo "CRITICAL: Automatic rollback failed." >&2
                 echo "Backup: $backup" >&2
@@ -484,53 +633,40 @@ jobs:
             fail "Invalid upload directory."
 
           for executable in \
-            php \
-            rsync \
-            tar \
-            sha256sum \
-            flock \
-            timeout \
-            readlink \
-            stat \
-            find \
-            grep \
-            install
+            php rsync tar sha256sum flock timeout \
+            readlink stat find grep install
           do
             command -v "$executable" >/dev/null ||
-              fail "Required executable not found: $executable"
+              fail "Missing executable: $executable"
           done
 
           test -f "$wp_root/wp-load.php" ||
             fail "WordPress entrypoint not found."
 
           test -f "$wp_cli" ||
-            fail "WP-CLI not found at configured path."
+            fail "WP-CLI not found."
 
           [[ -d "$destination" && ! -L "$destination" ]] ||
-            fail "Create the plugin directory before deployment."
+            fail "Expected existing plugin directory."
 
           [[ "$(readlink -f "$destination")" == "$destination" ]] ||
-            fail "Destination path must not contain symlinks."
+            fail "Destination must not contain symlinks."
 
           [[ -w "$destination" && -x "$destination" ]] ||
-            fail "deploy cannot write to the plugin directory."
+            fail "Plugin directory is not writable."
 
           [[ "$(stat -c '%U:%G' "$destination")" == "deploy:www-data" ]] ||
-            fail "Expected destination owner deploy:www-data."
+            fail "Expected owner deploy:www-data."
 
           [[ "$(stat -c '%a' "$destination")" == "2755" ]] ||
-            fail "Expected destination directory mode 2755."
-
-          if [[ -n "$(find "$destination" -type l -print -quit)" ]]; then
-            fail "Existing plugin contains symlinks."
-          fi
+            fail "Expected directory mode 2755."
 
           if [[ -n "$(
             find "$destination" \
               \( ! -type d -a ! -type f \) \
               -print -quit
           )" ]]; then
-            fail "Existing plugin contains unsupported file types."
+            fail "Existing plugin contains links or special files."
           fi
 
           if [[ -n "$(
@@ -538,22 +674,18 @@ jobs:
               \( ! -user deploy -o ! -group www-data \) \
               -print -quit
           )" ]]; then
-            fail "Existing plugin entries must belong to deploy:www-data."
+            fail "Existing ownership is not deploy:www-data."
           fi
 
           install -d -m 700 "$state_dir" "$backups_dir"
-
           exec 9>"$state_dir/deploy.lock"
-          flock -n 9 ||
-            fail "Another measurements deployment is running."
+          flock -n 9 || fail "Another deployment is running."
 
-          # A failing WordPress bootstrap must stop deployment.
           wp_cmd core is-installed >/dev/null
 
-          # Only single-site installations are supported.
           wp_cmd eval '
             if (is_multisite()) {
-                fwrite(STDERR, "Multisite is not supported by this workflow.\n");
+                fwrite(STDERR, "Multisite is not supported.\n");
                 exit(1);
             }
           '
@@ -573,38 +705,28 @@ jobs:
             -xzf "$upload_dir/$slug.tar.gz" \
             -C "$stage"
 
-          required=(
-            gm-model-measurements.php
-            includes/dictionaries.php
-            includes/measurements.php
-            includes/validation.php
-            includes/graphql.php
-            includes/admin.php
-            includes/persistence.php
-            includes/dictionary-guards.php
-            includes/publication-guards.php
-            assets/admin.js
-            assets/admin.css
-          )
-
-          for file in "${required[@]}"; do
-            test -f "$stage/$file" ||
-              fail "Required uploaded file missing: $file"
-          done
-
-          if [[ -n "$(find "$stage" -type l -print -quit)" ]]; then
-            fail "Uploaded plugin contains symlinks."
-          fi
-
           if [[ -n "$(
             find "$stage" \
               \( ! -type d -a ! -type f \) \
               -print -quit
           )" ]]; then
-            fail "Uploaded plugin contains unsupported file types."
+            fail "Uploaded plugin contains links or special files."
           fi
 
-          # Repeat syntax checks using the server's PHP CLI.
+          while IFS= read -r file; do
+            case "$file" in
+              ""|/*|../*|*/../*|*/..)
+                fail "Invalid file manifest entry."
+                ;;
+            esac
+
+            test -f "$stage/$file" ||
+              fail "Uploaded file missing: $file"
+          done < "$upload_dir/plugin-files.txt"
+
+          test -f "$stage/includes/graphql-legacy-length.php" ||
+            fail "Legacy GraphQL module is missing."
+
           php --version
 
           while IFS= read -r -d '' file; do
@@ -617,36 +739,23 @@ jobs:
 
           tar -C "$destination" -czf "$backup" .
           chmod 600 "$backup"
-
-          # Check backup readability before modifying installed files.
           tar -tzf "$backup" >/dev/null
 
-          # This narrows, but does not eliminate, the activation race.
-          # No administrator or external process may activate the
-          # plugin while this deployment is running.
           assert_inactive
-
           changed=1
 
-          rsync \
-            -r \
-            --delete \
-            --perms \
+          rsync -r --delete --perms \
             --chmod=D2755,F644 \
-            --no-owner \
-            --no-group \
+            --no-owner --no-group \
             "$stage/" "$destination/"
 
           differences="$(
-            rsync \
-              -rcn \
-              --delete \
-              --itemize-changes \
+            rsync -rcn --delete --itemize-changes \
               "$stage/" "$destination/"
           )"
 
           [[ -z "$differences" ]] ||
-            fail "Installed files do not match the deployment archive."
+            fail "Installed files differ from checked artifact."
 
           if [[ -n "$(
             find "$destination" \
@@ -657,31 +766,22 @@ jobs:
           fi
 
           if [[ -n "$(
-            find "$destination" \
-              -type d ! -perm 2755 \
-              -print -quit
+            find "$destination" -type d ! -perm 2755 -print -quit
           )" ]]; then
-            fail "Installed directory permissions verification failed."
+            fail "Installed directory mode verification failed."
           fi
 
           if [[ -n "$(
-            find "$destination" \
-              -type f ! -perm 0644 \
-              -print -quit
+            find "$destination" -type f ! -perm 0644 -print -quit
           )" ]]; then
-            fail "Installed file permissions verification failed."
+            fail "Installed file mode verification failed."
           fi
 
-          test -r "$destination/$slug.php" ||
-            fail "Installed plugin entrypoint is not readable."
-
+          assert_inactive
           completed=1
 
           echo "Plugin files deployed."
           echo "Revision: $revision"
-          echo "Owner: deploy:www-data"
-          echo "Directory mode: 2755"
-          echo "File mode: 644"
           echo "Backup: $backup"
           echo "No activation command was executed."
           REMOTE
@@ -716,16 +816,15 @@ jobs:
             echo "## Model Measurements — files deployed"
             echo
             echo "- Revision: \`$GITHUB_SHA\`"
-            echo "- SSH user: deploy"
-            echo "- SSH host keys: collected with ssh-keyscan"
-            echo "- StrictHostKeyChecking: yes"
-            echo "- sudo: not used"
+            echo "- Checked artifact installed"
+            echo "- Legacy GraphQL module included"
+            echo "- Previous contents backed up"
             echo "- Owner: deploy:www-data"
-            echo "- Directories: 2755"
-            echo "- Files: 644"
-            echo "- Previous contents backed up on the server"
-            echo "- Activation command: not executed"
-            echo "- No explicit database or WordPress configuration changes are requested by this workflow"
+            echo "- Directories: 2755; files: 644"
+            echo "- Activation/deactivation commands: not executed"
+            echo "- Explicit database/configuration changes: not requested"
+            echo "- SSH host keys: collected using ssh-keyscan"
             echo "- Concurrent activation must be prevented operationally"
-            echo "- Functional tests and acceptance: still required"
+            echo "- Installed ACF integration: still requires verification"
+            echo "- Functional acceptance: still required"
           } >> "$GITHUB_STEP_SUMMARY"

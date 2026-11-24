@@ -46,6 +46,7 @@ require_once __DIR__ . '/includes/dictionaries.php';
 require_once __DIR__ . '/includes/measurements.php';
 require_once __DIR__ . '/includes/validation.php';
 require_once __DIR__ . '/includes/graphql.php';
+require_once __DIR__ . '/includes/graphql-legacy-length.php';
 require_once __DIR__ . '/includes/admin.php';
 require_once __DIR__ . '/includes/persistence.php';
 require_once __DIR__ . '/includes/dictionary-guards.php';
