@@ -3,6 +3,9 @@
  * Запросы скопированы 1:1 из src/lib/wordpress.ts основного Astro-репозитория
  * (getAllModels/getModelBySlug/getBuildPartsByModel), чтобы гарантировать
  * совместимость со схемой реальной CMS.
+ *
+ * Исключение: старое поле modelinfo.modellength не запрашивается — длина
+ * для modelLength берётся из overall_length (см. model-measurements.ts).
  */
 import { requestWithTimeout } from "./graphql-client.js";
 import { collectAllPages, type WpPageInfo } from "./wp-pagination.js";
@@ -15,7 +18,6 @@ export interface ModelInfo {
   modelimageurl?: string | null;
   shortdescription?: string | null;
   historicalyear?: string | null;
-  modellength?: string | null;
   totalparts?: string | null;
   buildstatus?: string[] | string | null;
   historicalnote?: string | null;
@@ -69,7 +71,6 @@ const GET_ALL_MODELS = `
           modelimageurl
           shortdescription
           historicalyear
-          modellength
           totalparts
           buildstatus
           historicalnote

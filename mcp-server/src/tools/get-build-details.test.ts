@@ -8,7 +8,9 @@ process.env.CMS_GALLERY_URL = "https://cms.example.test/gallery";
 const { Client } = await import("@modelcontextprotocol/sdk/client/index.js");
 const { InMemoryTransport } = await import("@modelcontextprotocol/sdk/inMemory.js");
 const { createMcpServer } = await import("../server.js");
-const { normalizeModelMeasurements } = await import("../lib/model-measurements.js");
+const { compatModelLength, normalizeModelMeasurements } = await import(
+    "../lib/model-measurements.js"
+);
 
 /** Ответ резолвера в порядке, который задаёт WordPress (group, sort orders, code, target). */
 const BLUENOSE_MEASUREMENTS = [
@@ -58,7 +60,8 @@ const MODELS = [
         modelinfo: {
             manufacturer: "Model Shipways",
             modelscale: "1:64",
-            modellength: "832",
+            // Старое поле намеренно расходится с overall_length: MCP его не читает.
+            modellength: "999",
             buildstatus: ["Done"],
         },
     },
@@ -66,7 +69,7 @@ const MODELS = [
         id: "cG9zdDoxMDg0",
         slug: "empty-model",
         title: "Empty Model",
-        modelinfo: { modellength: null, buildstatus: ["In progress"] },
+        modelinfo: { modellength: "500", buildstatus: ["In progress"] },
     },
 ];
 
@@ -149,8 +152,8 @@ afterEach(() => {
 });
 
 describe("get_build_details measurements", () => {
-    it("returns the GraphQL measurements unchanged and keeps modelLength", async () => {
-        stubWordPress({
+    it("returns the GraphQL measurements unchanged and derives modelLength from overall_length", async () => {
+        const calls = stubWordPress({
             bluenose: { data: { model: { measurements: BLUENOSE_MEASUREMENTS } } },
         });
         const { client, close } = await connect();
@@ -166,8 +169,11 @@ describe("get_build_details measurements", () => {
         expect(body.measurements).toEqual(BLUENOSE_MEASUREMENTS);
         expect(body.measurements[2].valueMm).toBe(8.25);
         expect(body).not.toHaveProperty("measurementsError");
-        // Совместимость: старое строковое поле не меняет источник и тип.
+        // Совместимость: тип прежний (строка), источник — overall_length.
         expect(body.modelLength).toBe("832");
+        // Старое поле не запрашивается.
+        const listQuery = calls.find((call) => call.query.includes("GetAllModels"));
+        expect(listQuery?.query).not.toContain("modellength");
         expect(body.scale).toBe("1:64");
         expect(body.totalBuildLogParts).toBe(1);
 
@@ -215,7 +221,8 @@ describe("get_build_details measurements", () => {
         expect(body.measurementsError.length).toBeGreaterThan(0);
         // Остальные данные модели по-прежнему возвращаются.
         expect(body.title).toBe("Bluenose");
-        expect(body.modelLength).toBe("832");
+        // Без нового источника длина не подменяется старым полем.
+        expect(body.modelLength).toBeNull();
 
         await close();
     });
@@ -233,6 +240,7 @@ describe("get_build_details measurements", () => {
 
         expect(body.measurements).toBeNull();
         expect(body.measurementsError).toContain("not available");
+        expect(body.modelLength).toBeNull();
 
         await close();
     });
@@ -302,5 +310,48 @@ describe("normalizeModelMeasurements", () => {
                 },
             ]),
         ).toThrow(/target\.id/);
+    });
+});
+
+describe("compatModelLength", () => {
+    const ok = (measurements: any[]) => ({ ok: true as const, measurements });
+
+    it("returns overall_length valueMm as a string without rounding", () => {
+        expect(compatModelLength(ok(BLUENOSE_MEASUREMENTS))).toBe("832");
+        expect(
+            compatModelLength(
+                ok([{ ...BLUENOSE_MEASUREMENTS[1], valueMm: 879.5 }]),
+            ),
+        ).toBe("879.5");
+    });
+
+    it("returns null when overall_length is not recorded", () => {
+        expect(compatModelLength(ok([BLUENOSE_MEASUREMENTS[0]]))).toBeNull();
+        expect(compatModelLength(ok([]))).toBeNull();
+    });
+
+    it("returns null when measurements are unavailable", () => {
+        expect(compatModelLength({ ok: false, error: "x" })).toBeNull();
+    });
+
+    it("does not pick one of several overall_length values", () => {
+        expect(
+            compatModelLength(
+                ok([BLUENOSE_MEASUREMENTS[1], { ...BLUENOSE_MEASUREMENTS[1], valueMm: 900 }]),
+            ),
+        ).toBeNull();
+    });
+
+    it("ignores overall_length bound to an element", () => {
+        expect(
+            compatModelLength(
+                ok([
+                    {
+                        ...BLUENOSE_MEASUREMENTS[1],
+                        target: { kind: "mast", id: "main_mast", label: "Mainmast" },
+                    },
+                ]),
+            ),
+        ).toBeNull();
     });
 });
