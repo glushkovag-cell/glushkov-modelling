@@ -10,7 +10,10 @@ import {
   statusTextOf,
   stripHtmlAndTruncate,
 } from "../lib/wp-models.js";
-import { fetchModelMeasurements } from "../lib/model-measurements.js";
+import {
+  compatModelLength,
+  fetchModelMeasurements,
+} from "../lib/model-measurements.js";
 
 const inputSchema = {
   buildName: z
@@ -47,7 +50,7 @@ export function registerGetBuildDetails(server: McpServer): void {
             "Without partNumber or partSlug, returns model metadata, model measurements and a summary list of build-log parts. " +
             "measurements lists the dimensions recorded for the physical model in millimetres (valueMm; not the historical prototype, scale already reflected): code, label, description, group, valueMm, target { kind, id, label } for the measured element (for example a specific mast) or null for the model as a whole, and note or null. " +
             "Only recorded values are listed: an empty list means no measurements are recorded, and a missing measurement does not mean the element is absent. If measurements cannot be read, measurements is null and measurementsError explains why. " +
-            "modelLength is the legacy length text field kept for compatibility; the overall length is the overall_length entry in measurements. " +
+            "modelLength is kept for compatibility as a string: the overall_length value in millimetres from measurements (for example \"832\"), or null when overall_length is not recorded or measurements cannot be read. " +
             "Set partNumber or partSlug to retrieve one build-log part with complete, untruncated content. If both are provided, partSlug takes precedence. " +
             "Returns a not-found result if the model or requested build-log part does not exist.",
         inputSchema,
@@ -124,7 +127,9 @@ export function registerGetBuildDetails(server: McpServer): void {
             status: statusTextOf(model) || null,
             statusSlug: statusSlugOf(model) || null,
             historicalYear: model.modelinfo?.historicalyear ?? null,
-            modelLength: model.modelinfo?.modellength ?? null,
+            modelLength: measurementsResult
+                ? compatModelLength(measurementsResult)
+                : null,
             measurements: measurementsResult?.ok
                 ? measurementsResult.measurements
                 : null,

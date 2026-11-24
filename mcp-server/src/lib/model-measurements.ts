@@ -155,3 +155,28 @@ export async function fetchModelMeasurements(
     };
   }
 }
+
+/** Код системного вида измерения габаритной длины. */
+export const OVERALL_LENGTH_CODE = "overall_length";
+
+/**
+ * Совместимое значение старого строкового поля modelLength из нового
+ * хранилища: overall_length без элемента, valueMm как строка без единиц
+ * и без округления ("832", "8.25"). Старое поле modelinfo.modellength
+ * не читается.
+ *
+ * null — если измерения недоступны (причина в measurementsError) или
+ * overall_length не задан. Несколько overall_length нарушают правило
+ * уникальности; значение не выбирается произвольно.
+ */
+export function compatModelLength(
+    result: ModelMeasurementsResult,
+): string | null {
+  if (!result.ok) return null;
+
+  const matches = result.measurements.filter(
+      (item) => item.code === OVERALL_LENGTH_CODE && item.target === null,
+  );
+
+  return matches.length === 1 ? String(matches[0].valueMm) : null;
+}
