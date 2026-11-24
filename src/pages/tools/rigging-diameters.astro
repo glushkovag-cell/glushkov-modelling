@@ -18,7 +18,7 @@ import {
     TIER_LABELS,
 } from '../../lib/rigging/profile.ts';
 import { mapModelMeasurements } from '../../lib/rigging/modelMeasurements.ts';
-import { getAllModels } from '../../lib/wordpress';
+import { getAllModels, getAllNews, hasFreshNews } from '../../lib/wordpress';
 
 const documents = listProfileDocuments();
 const entries = documents.map((document) => ({
@@ -35,6 +35,8 @@ const defaults = initial.defaults;
  * у которых есть хотя бы одно измерение, явно сопоставленное адаптером.
  */
 const allModels = await getAllModels();
+const allNews = await getAllNews();
+const newsFlag = hasFreshNews(allNews);
 const prefillModels = allModels
     .map((model) => ({
         slug: model.slug,
@@ -97,7 +99,7 @@ const description =
     'Estimate scale-model diameters of standing and running rigging from your model\u2019s key dimensions and an explicitly chosen rigging profile.';
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} hasFreshNews={newsFlag}>
   <SeoHead
       slot="head"
       pageType="default"

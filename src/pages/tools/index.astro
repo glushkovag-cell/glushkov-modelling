@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SeoHead from '../../components/seo/SeoHead.astro';
+import { getAllNews, hasFreshNews } from '../../lib/wordpress';
 import '../../styles/tools.css';
 
 /*
@@ -10,9 +11,12 @@ import '../../styles/tools.css';
 const title = 'Tools — Glushkov Modelling';
 const description =
     'Workshop tools for model ship builders: rope diameter calculator and rigging diameter calculator.';
+
+const allNews = await getAllNews();
+const newsFlag = hasFreshNews(allNews);
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} hasFreshNews={newsFlag}>
   <SeoHead
       slot="head"
       pageType="default"

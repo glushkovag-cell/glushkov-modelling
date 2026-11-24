@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SeoHead from '../../components/seo/SeoHead.astro';
+import { getAllNews, hasFreshNews } from '../../lib/wordpress';
 import '../../styles/tools.css';
 
 /*
@@ -11,9 +12,12 @@ import '../../styles/tools.css';
 const title = 'Rope diameter calculator — Glushkov Modelling';
 const description =
     'Estimate the diameter of a three-strand model rope from a thread or dTex, or find threads within 10% of a target diameter.';
+
+const allNews = await getAllNews();
+const newsFlag = hasFreshNews(allNews);
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} hasFreshNews={newsFlag}>
   <SeoHead
       slot="head"
       pageType="default"
@@ -46,7 +50,8 @@ const description =
       </header>
 
       <div class="tools-single">
-        <gm-rope-calculator>
+        <!--suppress HtmlUnknownTag -->
+        <gm-rope-calculator data-rope-calculator>
           <noscript>Enable JavaScript to use the rope calculator.</noscript>
         </gm-rope-calculator>
 
@@ -75,7 +80,7 @@ const description =
       const MAX_ATTEMPTS = 60;
 
       const apply = () => {
-        const element = document.querySelector('gm-rope-calculator');
+        const element = document.querySelector('[data-rope-calculator]');
         if (!element || !element.shadowRoot) {
           if (++attempts < MAX_ATTEMPTS) setTimeout(apply, 100);
           return;

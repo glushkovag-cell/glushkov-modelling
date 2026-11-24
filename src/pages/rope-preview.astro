@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getAllNews, hasFreshNews } from '../lib/wordpress';
 
 /*
  * Временная проверочная страница: нужна, чтобы прогнать компонент в реальной
@@ -8,11 +9,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
  * production-встраивание.
  */
 const API_BASE = 'http://localhost:8787';
+const allNews = await getAllNews();
+const newsFlag = hasFreshNews(allNews);
 ---
 
 <BaseLayout
     title="Rope calculator preview"
     description="Internal preview of the rope diameter calculator widget."
+    hasFreshNews={newsFlag}
     noindex
 >
   <section class="page-section">
@@ -24,7 +28,8 @@ const API_BASE = 'http://localhost:8787';
         so start it with <code>npx wrangler dev</code> in <code>rope-calculator-worker</code> first.
       </p>
 
-      <gm-rope-calculator api-base={API_BASE}>
+      <!--suppress HtmlUnknownTag -->
+      <gm-rope-calculator api-base={API_BASE} data-rope-calculator>
         <noscript>Enable JavaScript to use the rope calculator.</noscript>
       </gm-rope-calculator>
 
@@ -34,7 +39,8 @@ const API_BASE = 'http://localhost:8787';
         использовать один запрос каталога.
       </p>
 
-      <gm-rope-calculator api-base={API_BASE}>
+      <!--suppress HtmlUnknownTag -->
+      <gm-rope-calculator api-base={API_BASE} data-rope-calculator>
         <noscript>Enable JavaScript to use the rope calculator.</noscript>
       </gm-rope-calculator>
     </div>
@@ -50,7 +56,7 @@ const API_BASE = 'http://localhost:8787';
 
     const apiBase = params.get('api');
     if (apiBase) {
-      for (const element of document.querySelectorAll('gm-rope-calculator')) {
+      for (const element of document.querySelectorAll('[data-rope-calculator]')) {
         element.setAttribute('api-base', apiBase);
       }
     }
@@ -62,7 +68,7 @@ const API_BASE = 'http://localhost:8787';
 
     if (params.get('mode') === 'reverse') {
       customElements.whenDefined('gm-rope-calculator').then(() => {
-        for (const element of document.querySelectorAll('gm-rope-calculator')) {
+        for (const element of document.querySelectorAll('[data-rope-calculator]')) {
           const select = element.shadowRoot?.querySelector<HTMLSelectElement>('#mode');
           if (select) {
             select.value = 'reverse';
