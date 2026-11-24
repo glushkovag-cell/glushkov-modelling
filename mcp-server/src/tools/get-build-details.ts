@@ -10,6 +10,10 @@ import {
   statusTextOf,
   stripHtmlAndTruncate,
 } from "../lib/wp-models.js";
+import {
+  compatModelLength,
+  fetchModelMeasurements,
+} from "../lib/model-measurements.js";
 
 const inputSchema = {
   buildName: z
@@ -43,7 +47,10 @@ export function registerGetBuildDetails(server: McpServer): void {
             "Read-only. Returns detailed information for one sailing-ship model, including vessel background, technical notes, and build-log parts. " +
             "Use list_builds to browse or filter the model catalog, and use list_model_slugs when a model slug must be identified from a name or metadata. " +
             "Use this tool when details for one known model are needed; do not use it for catalog browsing. " +
-            "Without partNumber or partSlug, returns model metadata and a summary list of build-log parts. " +
+            "Without partNumber or partSlug, returns model metadata, model measurements and a summary list of build-log parts. " +
+            "measurements lists the dimensions recorded for the physical model in millimetres (valueMm; not the historical prototype, scale already reflected): code, label, description, group, valueMm, target { kind, id, label } for the measured element (for example a specific mast) or null for the model as a whole, and note or null. " +
+            "Only recorded values are listed: an empty list means no measurements are recorded, and a missing measurement does not mean the element is absent. If measurements cannot be read, measurements is null and measurementsError explains why. " +
+            "modelLength is kept for compatibility as a string: the overall_length value in millimetres from measurements (for example \"832\"), or null when overall_length is not recorded or measurements cannot be read. " +
             "Set partNumber or partSlug to retrieve one build-log part with complete, untruncated content. If both are provided, partSlug takes precedence. " +
             "Returns a not-found result if the model or requested build-log part does not exist.",
         inputSchema,
@@ -61,9 +68,13 @@ export function registerGetBuildDetails(server: McpServer): void {
             );
           }
 
-          const parts = await fetchBuildPartsForSlug(model.slug);
+          const partOnly = Boolean(partSlug) || partNumber !== undefined;
+          const [parts, measurementsResult] = await Promise.all([
+            fetchBuildPartsForSlug(model.slug),
+            partOnly ? null : fetchModelMeasurements(model.slug),
+          ]);
 
-          if (partSlug || partNumber !== undefined) {
+          if (partOnly) {
             const targetPart = partSlug
                 ? parts.find((post) => post.slug === partSlug)
                 : parts.find(
@@ -116,7 +127,15 @@ export function registerGetBuildDetails(server: McpServer): void {
             status: statusTextOf(model) || null,
             statusSlug: statusSlugOf(model) || null,
             historicalYear: model.modelinfo?.historicalyear ?? null,
-            modelLength: model.modelinfo?.modellength ?? null,
+            modelLength: measurementsResult
+                ? compatModelLength(measurementsResult)
+                : null,
+            measurements: measurementsResult?.ok
+                ? measurementsResult.measurements
+                : null,
+            ...(measurementsResult && !measurementsResult.ok
+                ? { measurementsError: measurementsResult.error }
+                : {}),
             totalParts: model.modelinfo?.totalparts ?? null,
             doneDate: model.modelinfo?.donedate ?? null,
             shortDescription: model.modelinfo?.shortdescription ?? null,

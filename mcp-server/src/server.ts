@@ -27,7 +27,7 @@ export function createMcpServer(): McpServer {
   const server = new McpServer(
     {
       name: "glushkov-modelling-mcp-server",
-      version: "0.5.0",
+      version: "0.6.1",
     },
     { capabilities: { tools: {} } },
   );

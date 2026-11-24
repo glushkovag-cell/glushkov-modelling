@@ -31,6 +31,9 @@ on the AI Hub.
 ## What you can explore
 
 - Ship-model projects and build logs.
+- Recorded dimensions of each model in millimetres — overall length,
+  hull, masts and other measured elements — the same values shown in
+  the “Model dimensions” dialog on the website.
 - Tutorials and modelling techniques.
 - Photo galleries documenting modelling projects.
 - Relevant published content through search.
@@ -45,6 +48,7 @@ Once connected, try asking your assistant:
 
 - “What ship-model projects are documented in the archive?”
 - “Find build logs related to hull construction.”
+- “What is the mainmast diameter of the Bluenose model?”
 - “Find tutorials about rigging.”
 - “Show me photographs from a modelling project.”
 - “Help me calculate a rope diameter for my model’s scale.”
